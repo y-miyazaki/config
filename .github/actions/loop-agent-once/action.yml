@@ -26,7 +26,7 @@ inputs:
     required: true
   agent_tool_allowlist:
     default: ""
-    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The host repository''s .claude/settings.json allow rules are not applied (no workspace trust); claude adds a fixed read-only git baseline (git diff/log/show/status), runs makers in acceptEdits and checkers in dontAsk, and always denies a fixed list of GitHub-write, push, network, and env commands. Engines without a per-tool allowlist warn and ignore it.'
     required: false
   github_token:
     description: "Read-only GitHub token for gh CLI and GitHub API reads (the agent job passes github.token; the agent job holds no write credential)"

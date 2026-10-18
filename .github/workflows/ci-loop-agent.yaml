@@ -103,7 +103,7 @@ on:
         type: string
       agent_tool_allowlist:
         default: ""
-        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Empty grants nothing beyond the repository''s .claude/settings.json'
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
         required: false
         type: string
       agent_unchanged_verdict:

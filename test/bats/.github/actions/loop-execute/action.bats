@@ -13,6 +13,7 @@
 # - Install CLI and Run Bounded Loop pass the renamed env vars; no step passes
 #   DETECT_RESULT_JSON (detect JSON comes from the handoff)
 # - no old input or env name remains in the file
+# - agent_tool_allowlist description states host allow rules are not applied
 # - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -50,6 +51,18 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-execute/action.yml"
     run action_yml_input_names "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [ "${output}" = "${expected}" ]
+}
+
+@test "agent_tool_allowlist description states host allow rules are not applied" {
+    local desc
+    desc="$(action_yml_input_field "${ACTION_YML}" agent_tool_allowlist description)"
+    [ -n "${desc}" ]
+    [[ ${desc} != *'is also loaded when present'* ]]
+    [[ ${desc} == *'are not applied (no workspace trust)'* ]]
+    [[ ${desc} == *'acceptEdits'* ]]
+    [[ ${desc} == *'dontAsk'* ]]
+    [[ ${desc} == *'Bash(gh issue view:*)'* ]]
+    [[ ${desc} != *'Bash(gh issue edit:*)'* ]]
 }
 
 @test "agent_unchanged_verdict defaults to empty, not REJECT" {

@@ -11,6 +11,7 @@
 # - action exposes message_json from the run step
 # - Run CLI Agent passes LOOP_MESSAGE_DIR and AGENT_MAKER_* (run.sh maps them onto the role vars) and
 #   never sets the role vars EFFORT / MAX_TURNS / MODEL directly
+# - agent_tool_allowlist description states host allow rules are not applied
 # - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -33,6 +34,18 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-agent-once/action.yml"
     run action_yml_input_names "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [ "${output}" = "${expected}" ]
+}
+
+@test "agent_tool_allowlist description states host allow rules are not applied" {
+    local desc
+    desc="$(action_yml_input_field "${ACTION_YML}" agent_tool_allowlist description)"
+    [ -n "${desc}" ]
+    [[ ${desc} != *'is also loaded when present'* ]]
+    [[ ${desc} == *'are not applied (no workspace trust)'* ]]
+    [[ ${desc} == *'acceptEdits'* ]]
+    [[ ${desc} == *'dontAsk'* ]]
+    [[ ${desc} == *'Bash(gh issue view:*)'* ]]
+    [[ ${desc} != *'Bash(gh issue edit:*)'* ]]
 }
 
 @test "install cli passes AGENT_CLI_VERSION and AGENT_ENGINE" {

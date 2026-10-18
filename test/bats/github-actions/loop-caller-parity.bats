@@ -23,6 +23,7 @@
 # - github-pr-revise watches only its scoped PR head and offers delivery pr_push or pr_create on manual dispatch
 # - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
 # - Dogfood callers declare every command rule their skill needs; host .claude/settings.json allow rules are never active in CI
+# - reusable agent_tool_allowlist descriptions state host allow rules are not applied
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -1324,4 +1325,15 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
     grep -qF 'message_labels.json' <<< "${block}"
     [[ ${block} != *'platform hook'* ]]
     ! grep -qF 'Your final message IS the comment' <<< "${block}"
+}
+
+@test "reusable agent_tool_allowlist descriptions state host allow rules are not applied" {
+    local wf desc
+    for wf in "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}"; do
+        desc="$(awk '/^      agent_tool_allowlist:$/ {f=1; next} f && /^        description:/ {print; exit}' "${wf}")"
+        [ -n "${desc}" ]
+        [[ ${desc} != *'grants nothing beyond the repository'* ]]
+        [[ ${desc} == *'allow rules are not applied in CI'* ]]
+        [[ ${desc} == *'Bash(gh issue view:*)'* ]]
+    done
 }
