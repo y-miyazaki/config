@@ -169,7 +169,7 @@ Callers reference installed paths (e.g. `.agents/skills/<skill-name>/scripts/...
 | ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
-| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `finalize_script` target for finalize                |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `finalize_script` target for finalize                     |
 
 For caller inputs and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
@@ -208,7 +208,7 @@ For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows
 | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/SKILL.md`                          | Select one under-tested target; add tests within the allowlist       |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/detect_test_gap.sh`        | Language-agnostic facts (`hotspots[]`, `ledger`, `verifier_context`) |
-| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `finalize_script` target for finalize                           |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `finalize_script` target for finalize                                |
 
 For caller inputs and behavior, see [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md).
 
@@ -367,7 +367,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Path scope         | `LOOP_ALLOWLIST`, Skill allowed paths                                   | denylist defaults in `loop-execute`, allowlist enforcement                                                                      |
 | Checker checker    | `agent_checker_skill_name` (e.g. `loop-verifier` from `loop` package)   | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`                                 |
 | Checker domain bar | `agent_checker_instructions` in caller `env`                            | Appended to checker prompt `## Task`; embedded fallbacks only when skill files are missing                                      |
-| Domain persistence | `finalize_script` path (optional)                                  | `loop-finalize` invokes script with standard env; no domain logic in action                                                     |
+| Domain persistence | `finalize_script` path (optional)                                       | `loop-finalize` invokes script with standard env; no domain logic in action                                                     |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
@@ -574,15 +574,15 @@ Four recurring shapes, all observed in this repository:
 
 Layer drift is the one that hurts. Detect refusals are correct but late: workflow-level `concurrency` holds a run `pending` **before** job conditions are evaluated, so an event destined for refusal still queues ahead of real work. Refuse at the `if` layer (invariant 9) and the run is skipped without entering the queue.
 
-| Caller                         | Intake                                            | `if` gate                                                                                                                                         |
-| ------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment` | Non-bot sender; no `triage:failed`; labels limited to `needs-triage` / `triage:needs-info` / `triage:ready`; comments require `triage:needs-info` |
-| `on-loop-github-issue-autofix` | `issues` labeled, dispatch                        | `label.name == 'autofix'`                                                                                                                         |
-| `on-loop-github-pr-revise`     | comment webhooks, dispatch                        | Non-bot comment author; `@loop` mention; PR-attached comments only                                                                                |
-| `on-loop-ci-sweeper`           | `workflow_run` completed                          | Same-repository head; `failure` / `startup_failure` only                                                                                          |
-| `on-loop-state-promote`        | `pull_request_target` closed                      | `loop-automation` label                                                                                                                           |
+| Caller                         | Intake                                            | `if` gate                                                                                                                        |
+| ------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment` | Non-bot sender; no `triage:failed`; labels limited to `needs-triage` / `triage:needs-info`; comments require `triage:needs-info` |
+| `on-loop-github-issue-autofix` | `issues` labeled, dispatch                        | `label.name == 'autofix'`                                                                                                        |
+| `on-loop-github-pr-revise`     | comment webhooks, dispatch                        | Non-bot comment author; `@loop` mention; PR-attached comments only                                                               |
+| `on-loop-ci-sweeper`           | `workflow_run` completed                          | Same-repository head; `failure` / `startup_failure` only                                                                         |
+| `on-loop-state-promote`        | `pull_request_target` closed                      | `loop-automation` label                                                                                                          |
 
-Classification labels a triage agent applies itself (`bug`, `feature`, `question`, `documentation`) must stay out of its own intake allowlist. `triage:ready` is the deliberate exception: the detect-job dispatch hook — which runs regardless of the detect skip verdict — turns a human's `triage:ready` into the autofix hand-off, so the event must reach detect even though the agent is skipped.
+Classification labels a triage agent applies itself (`bug`, `feature`, `question`, `documentation`) must stay out of its own intake allowlist, and so must `triage:ready`: detect skips an Issue that carries it, so admitting the event only queues runs that end in a skip.
 
 Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream workflow, and `on-loop-ci-sweeper` shares the `loop-state-main` group with five other callers, so its group cannot be re-keyed per commit without giving up cross-loop state serialization. Duplicate runs are absorbed downstream instead, by the run ledger and the daily budget. Run count is not agent-execution count for this caller.
 
@@ -760,13 +760,13 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 #### Finalize
 
-| Aspect             | Definition                                                                                                                                                                                                                                                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aspect             | Definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility** | Persist the outcome per `delivery`: open fix PR (`pr_create`), push to the PR head (`pr_push`), post the one Issue comment or PR review with allowlisted labels (`issue_comment`, `pr_review`; Deliver Message), delete the agent branch on rejection and after `none` / `issue_comment` / `pr_review`, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
-| **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                                                |
-| **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                                              |
-| **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                                                 |
-| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply maker edits to application/doc source                                                                                                                                                                                                                     |
+| **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply maker edits to application/doc source                                                                                                                                                                                                                                                                                                                                                                                           |
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the finalize action).
 
@@ -774,13 +774,13 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 `DEFAULT_LEVEL` is one switch. **Finalize behavior** is `delivery` + level:
 
-| `delivery`  | L2                                                                                           | L3                                                          |
-| ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `pr_create` | Create fix PR to `to.branch`                                                                 | Create PR + `pr_auto_merge` (allowlist + branch protection) |
-| `pr_push`   | Merge the latest head, then push to the PR head `to.branch`; no new PR                       | Same                                                        |
-| `none`      | No push, no PR; agent branch deleted after APPROVE; nothing is delivered (a `finalize_script` may still run) | Same                                                        |
-| `issue_comment` | Deliver Message posts one Issue comment (and allowlisted labels) from `message.md`; agent branch deleted | Same |
-| `pr_review` | Deliver Message posts one `COMMENT` review from `review.json`; agent branch deleted | Same |
+| `delivery`      | L2                                                                                                           | L3                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `pr_create`     | Create fix PR to `to.branch`                                                                                 | Create PR + `pr_auto_merge` (allowlist + branch protection) |
+| `pr_push`       | Merge the latest head, then push to the PR head `to.branch`; no new PR                                       | Same                                                        |
+| `none`          | No push, no PR; agent branch deleted after APPROVE; nothing is delivered (a `finalize_script` may still run) | Same                                                        |
+| `issue_comment` | Deliver Message posts one Issue comment (and allowlisted labels) from `message.md`; agent branch deleted     | Same                                                        |
+| `pr_review`     | Deliver Message posts one `COMMENT` review from `review.json`; agent branch deleted                          | Same                                                        |
 
 At L1 only `none` and `issue_comment` are valid, and `finalize-l1` runs `loop-finalize` with the message the agent wrote (passed as `message_json`).
 

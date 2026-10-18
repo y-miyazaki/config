@@ -19,7 +19,7 @@ Detect skips when an open/draft PR already references the Issue with a closing k
 ### Supported use cases
 
 - `issues` labeled `autofix` → branch caller detect + L2 agent + fix PR
-- `repository_dispatch` (`loop-github-issue-autofix`) from triage trusted hook when `triage:ready` and `autofix`
+- `repository_dispatch` (`loop-github-issue-autofix`) with `client_payload.issue_number` — an external or manual entry; nothing in this repository sends it
 - `workflow_dispatch` with `issue_number` (optional `pr_draft`) for manual autofix
 
 ### Out of scope
@@ -28,7 +28,7 @@ Detect skips when an open/draft PR already references the Issue with a closing k
 - PR revision from review feedback (axis 3 — see [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md))
 - L3 auto-merge on the fix PR
 - Automatic autofix without the `autofix` label (`repository_dispatch` / `workflow_dispatch` remain explicit human paths)
-- Agent-initiated `repository_dispatch` (trusted hook only)
+- Agent-initiated `repository_dispatch`
 - PR head mode (`detect_pr_enabled` default off) — fixes target the integration branch via `pr_create`
 - Second fix PR when an open/draft PR already references the Issue with a closing keyword (`Fixes #N`, etc.)
 
@@ -91,4 +91,4 @@ Concurrency: `loop-github-issue-autofix-${issue_number || run_id}`.
 
 ## Triage handoff
 
-When Issue has `triage:ready` and `autofix`, triage detect emits dispatch flags; trusted hook posts `repository_dispatch` (`loop-github-issue-autofix`). Agent never dispatches.
+Triage marks `triage:ready` and tells the human that adding `autofix` requests a fix PR. Autofix starts only from the `autofix` label, `workflow_dispatch`, or `repository_dispatch` with `client_payload.issue_number`; neither triage nor the Agent dispatches. To retry after a run that opened no PR (REJECT, budget, closed PR), remove and re-add `autofix`, or run `workflow_dispatch` with `issue_number`.

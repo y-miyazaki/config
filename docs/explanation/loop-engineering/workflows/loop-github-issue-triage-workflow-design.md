@@ -31,7 +31,7 @@ Behaviors to know:
 ### Supported use cases
 
 - `issues` opened/reopened/labeled → entity detect + L1 agent (label removal does not re-trigger triage)
-  - `labeled` intake is limited to `needs-triage`, `triage:needs-info`, and `triage:ready`. Classification labels the agent applies itself stay out, and `autofix` belongs to [Autofix Design](loop-github-issue-autofix-workflow-design.md). `triage:ready` reaches detect only for the dispatch hook — the agent is still skipped for it
+  - `labeled` intake is limited to `needs-triage` and `triage:needs-info`. Classification labels the agent applies itself and `triage:ready` (detect skips it) stay out, and `autofix` belongs to [Autofix Design](loop-github-issue-autofix-workflow-design.md)
   - Bot senders are refused in the job `if`, so agent-applied labels never re-enter the queue (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention))
 - `issue_comment` created by a non-bot author while `triage:needs-info` is present (human answers while awaiting info)
 - `workflow_dispatch` with `issue_number` for manual re-triage
@@ -53,31 +53,30 @@ Open dogfood check: whether GitHub creates a label that does not exist when `POS
 
 Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-caller-entity.yaml`. Entity subset of [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
-| Input / JSON key             | Description                                                                    | Dogfood value                                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                                                           |
-| `agent_checker_instructions` | APPROVE/REJECT rubric (allowlisted labels only)                                | Inline in caller workflow                                                                          |
-| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                                                              |
-| `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                                                                    |
-| `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                                                                    |
-| `agent_engine`               | AI engine                                                                      | `claude`                                                                                           |
-| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                                                                |
-| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                                                           |
-| `agent_maker_instructions`   | Domain maker task (triage skill)                                               | Inline in caller workflow                                                                          |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                                              |
-| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                                                  |
-| `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-triage`                                                                              |
-| `agent_tool_allowlist` | Read-only tool rules for the maker (posting and labels belong to finalize) | `gh api -X GET`, `gh issue view`, `gh label list` |
-| `budget_max_runs_per_day`    | Daily run cap                                                                  | `20`                                                                                               |
-| `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                                                          |
-| `delivery` | Platform delivery (`issue_comment` — finalize posts the comment) | `issue_comment` |
-| `detect_hook_script`         | Trusted post-detect hook (autofix dispatch)                                    | `.agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh`                           |
-| `detect_script`              | Domain detect script                                                           | `.agents/skills/github-issue-triage/scripts/detect_issue.sh`                                       |
-| `finalize_label_allowlist` | Labels finalize may add or remove from `message_labels.json`; others are skipped with a warning | `needs-triage`, `bug`, `feature`, `question`, `documentation`, `triage:needs-info`, `triage:ready`, `triage:failed` |
-| `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                                          |
-| `level`                      | Autonomy (`L1` — no PR)                                                        | `L1`                                                                                               |
-| `loop_name`                  | Loop identifier                                                                | `github-issue-triage`                                                                              |
-| `state_branch`               | `.loop/*` persistence branch                                                   | `main`                                                                                             |
+| Input / JSON key             | Description                                                                                     | Dogfood value                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                  | `medium`                                                                                                            |
+| `agent_checker_instructions` | APPROVE/REJECT rubric (allowlisted labels only)                                                 | Inline in caller workflow                                                                                           |
+| `agent_checker_max_turns`    | Max checker turns                                                                               | `100`                                                                                                               |
+| `agent_checker_model`        | Checker model ID                                                                                | `claude-opus-5`                                                                                                     |
+| `agent_checker_skill_name`   | Checker skill                                                                                   | `loop-verifier`                                                                                                     |
+| `agent_engine`               | AI engine                                                                                       | `claude`                                                                                                            |
+| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                                         | `3`                                                                                                                 |
+| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it                    | `medium`                                                                                                            |
+| `agent_maker_instructions`   | Domain maker task (triage skill)                                                                | Inline in caller workflow                                                                                           |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                                     | `100`                                                                                                               |
+| `agent_maker_model`          | Maker model ID                                                                                  | `claude-sonnet-5`                                                                                                   |
+| `agent_maker_skill_name`     | Skill package                                                                                   | `github-issue-triage`                                                                                               |
+| `agent_tool_allowlist`       | Read-only tool rules for the maker (posting and labels belong to finalize)                      | `gh api -X GET`, `gh issue view`, `gh label list`                                                                   |
+| `budget_max_runs_per_day`    | Daily run cap                                                                                   | `20`                                                                                                                |
+| `budget_max_tokens_per_day`  | Daily token cap                                                                                 | `1000000`                                                                                                           |
+| `delivery`                   | Platform delivery (`issue_comment` — finalize posts the comment)                                | `issue_comment`                                                                                                     |
+| `detect_script`              | Domain detect script                                                                            | `.agents/skills/github-issue-triage/scripts/detect_issue.sh`                                                        |
+| `finalize_label_allowlist`   | Labels finalize may add or remove from `message_labels.json`; others are skipped with a warning | `needs-triage`, `bug`, `feature`, `question`, `documentation`, `triage:needs-info`, `triage:ready`, `triage:failed` |
+| `environment`                | GitHub Environment for env-scoped secrets                                                       | `default`                                                                                                           |
+| `level`                      | Autonomy (`L1` — no PR)                                                                         | `L1`                                                                                                                |
+| `loop_name`                  | Loop identifier                                                                                 | `github-issue-triage`                                                                                               |
+| `state_branch`               | `.loop/*` persistence branch                                                                    | `main`                                                                                                              |
 
 ### Domain detect environment (`detect_env_json`)
 
