@@ -568,7 +568,7 @@ dogfood_value() {
 }
 
 @test "ci-loop-agent passes agent_edit_denylist through unmodified for loop-execute to default" {
-    # loop-execute's lib/paths.sh::apply_platform_denylist_default coerces an
+    # apply_platform_denylist_default (lib/loop/edit_paths.sh) coerces an
     # empty AGENT_EDIT_DENYLIST to the platform default at loop start, so the
     # reusable caller must not hardcode or coalesce a domain-specific default.
     # shellcheck disable=SC2016

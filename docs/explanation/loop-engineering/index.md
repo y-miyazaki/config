@@ -2,6 +2,8 @@
 
 Understanding-oriented design docs for autonomous CI and documentation loops in this repository.
 
+The agent jobs hold no GitHub write credential: they use a read-only `github.token`, and `loop-finalize` verifies and pushes the agent branch.
+
 Documents sit in one folder on disk. **Read them by layer**, not as a flat list. Per-loop callers already live under [`workflows/`](workflows/loop-caller-inputs-reference.md); platform and cross-cutting contracts do not.
 
 ```text

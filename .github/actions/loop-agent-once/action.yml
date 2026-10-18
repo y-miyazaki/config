@@ -29,7 +29,7 @@ inputs:
     description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
     required: false
   github_token:
-    description: "Resolved GitHub token for gh CLI and GitHub API side effects"
+    description: "Read-only GitHub token for gh CLI and GitHub API reads (the agent job passes github.token; the agent job holds no write credential)"
     required: true
   node_version:
     default: "24.21.0"

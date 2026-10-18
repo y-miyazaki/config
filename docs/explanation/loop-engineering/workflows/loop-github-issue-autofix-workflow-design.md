@@ -54,7 +54,7 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 | `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                           |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                               |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-autofix`                                          |
-| `agent_tool_allowlist`       | Tool permission rules for the maker (read Issue, check existing PRs)           | `gh api`, `gh issue view`, `gh pr list`, `gh pr view`           |
+| `agent_tool_allowlist`       | Tool permission rules for the maker (read Issue, check existing PRs)           | `gh api -X GET`, `gh issue view`, `gh pr list`, `gh pr view`           |
 | `agent_unchanged_verdict`    | Verdict when no file diff                                                      | `REJECT`                                                        |
 | `budget_max_runs_per_day`    | Daily run cap                                                                  | `10`                                                            |
 | `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                       |

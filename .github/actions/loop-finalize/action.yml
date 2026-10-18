@@ -62,7 +62,7 @@ inputs:
     required: false
   finalize_script:
     default: ""
-    description: "Optional bash script run once per finalize regardless of delivery (e.g. domain ledger)"
+    description: "Optional bash script run once per finalize regardless of delivery (e.g. domain ledger); EXECUTE_BRANCH is the validated agent branch name, and origin/<branch> exists only when Push Agent Branch pushed it"
     required: false
   github_token:
     description: "GitHub token for the agent branch push, PR creation, state push, and the finalize hook (exported as GH_TOKEN to finalize_script)"
@@ -77,7 +77,7 @@ inputs:
     required: false
   has_changes:
     default: "false"
-    description: "Whether HEAD differs from base in product files (or this run committed)"
+    description: "Agent job has_changes output: true when the agent job wrote a bundle of the agent branch (commits not on the base branch); untrusted, Push Agent Branch fails when it is true but the bundle is missing or invalid"
     required: false
   level:
     description: "Loop level shown in the PR body run metadata (display only; no step branches on it)"

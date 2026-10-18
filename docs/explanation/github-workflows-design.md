@@ -70,6 +70,8 @@ secrets:
 | copilot | `COPILOT_GITHUB_TOKEN` |
 | codex   | `OPENAI_API_KEY`       |
 
+For the `copilot` engine, `AGENT_TOKEN` is a GitHub PAT that stays in the agent job and is not limited by job `permissions:`. Use a fine-grained PAT with only the Copilot Requests permission, so the agent session has no repository write access.
+
 ### GitHub Token Usage
 
 | Purpose                   | Token                  | Rationale                                                    |

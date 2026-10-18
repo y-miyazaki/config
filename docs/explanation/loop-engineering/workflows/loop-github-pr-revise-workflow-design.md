@@ -58,7 +58,7 @@ Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-calle
 | `agent_maker_max_turns`      | Max maker turns per attempt                                                                              | `100`                                                         |
 | `agent_maker_model`          | Maker model ID                                                                                           | `claude-sonnet-5`                                             |
 | `agent_maker_skill_name`     | Skill package                                                                                            | `github-pr-revise`                                            |
-| `agent_tool_allowlist`       | Tool permission rules for the maker (read PR, diff, comment)                                             | `gh api`, `gh pr view`, `gh pr diff`, `gh pr comment`         |
+| `agent_tool_allowlist`       | Tool permission rules for the maker (read PR and diff; the workflow posts, not the agent)                                             | `gh api -X GET`, `gh pr view`, `gh pr diff`         |
 | `agent_unchanged_verdict`    | Verdict when no file diff                                                                                | `REJECT`                                                      |
 | `budget_max_runs_per_day`    | Daily run cap                                                                                            | `10`                                                          |
 | `budget_max_tokens_per_day`  | Daily token cap                                                                                          | `1000000`                                                     |

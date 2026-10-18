@@ -40,7 +40,7 @@ inputs:
     required: false
   agent_edit_denylist:
     default: ""
-    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
+    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/loop/edit_paths.sh"
     required: false
   agent_engine:
     description: "AI engine (claude | copilot | codex | cursor)"

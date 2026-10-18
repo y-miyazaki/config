@@ -3,9 +3,14 @@
 # Requires repository secret: AGENT_TOKEN (engine API key).
 #
 # Delivery: `delivery: pr_review`. The agent writes the report
-# (.loop-review/pr-<n>.json) on the agent branch, which loop-execute pushes.
+# (.loop-review/pr-<n>.json) on the agent branch; the agent job holds no write
+# credential, so loop-finalize (Push Agent Branch) pushes that branch from the
+# agent job's bundle.
 # In finalize, render_review.sh (finalize_script) reads the report from
-# origin/<branch>, validates it, and writes review.json to LOOP_MESSAGE_DIR;
+# origin/<branch>, validates it, and writes review.json to LOOP_MESSAGE_DIR.
+# origin/<branch> is missing when nothing was pushed (no changes, agent
+# failure, or a rejected push), so the hook must tolerate that; it does not run
+# after a failed push.
 # loop-finalize's Deliver Message then posts one COMMENT review with Meta and
 # footer. Neither the agent nor render_review.sh posts. finalize never merges
 # the agent branch into the base and deletes it after finalize.

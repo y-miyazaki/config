@@ -307,7 +307,7 @@ Do **not** name a `workflow_call` secret `GITHUB_TOKEN` or `github_token` — th
 
 ### GitHub token resolution
 
-Each job that talks to GitHub (detect, record-skip, agent-l1/l2, finalize) runs `loop-resolve-push-token` **inside that job** and uses only the same-job step output.
+Each job that writes to GitHub (detect, record-skip, finalize-l1/l2) runs `loop-resolve-push-token` **inside that job** and uses only the same-job step output. The agent jobs (`agent-l1` / `agent-l2`) do **not** resolve a token and receive neither `BOT_APP_*` nor `GH_TOKEN`: they use the read-only job `github.token` (`contents`, `issues`, `pull-requests` read; `actions: read` for `agent-l2`), so the agent session holds no write credential. `agent-l2` hands its branch to `finalize-l2` as a git bundle artifact, and `loop-finalize` (Push Agent Branch) verifies and pushes it with the resolved write token.
 
 **Precedence** (see `.github/actions/loop-resolve-push-token`):
 
@@ -325,7 +325,7 @@ Each job that talks to GitHub (detect, record-skip, agent-l1/l2, finalize) runs 
 
 So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across jobs/workflows; the **resolved token string** is minted per job. Commonization is the resolve **action**, not a single minted value.
 
-`ci-loop-caller` / `ci-loop-caller-entity` pass `BOT_APP_*` + `GH_TOKEN` into `ci-loop-agent`; the agent resolves again in `agent-l1` / `agent-l2` / `finalize`.
+`ci-loop-caller` / `ci-loop-caller-entity` pass `BOT_APP_*` + `GH_TOKEN` into `ci-loop-agent`; `ci-loop-agent` resolves again only in the finalize jobs (`finalize-l1` / `finalize-l2`), never in `agent-l1` / `agent-l2`.
 
 **Fallback and `permissions:`**
 
@@ -335,8 +335,9 @@ For the automatic job `GITHUB_TOKEN`, effective scopes **are** that job's `permi
 | ----------------------- | -------------------------- | -------------------------------------------------------------------------- |
 | `detect`                | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
 | `record-skip`           | push run-log / state PR    | `contents: write`, `pull-requests: write`                                  |
-| `agent-l2` / `finalize` | push, PR create/comment    | `contents: write`, `pull-requests: write`                                  |
-| `agent-l1`              | issue side effects         | `issues: write` (+ `contents: read`)                                       |
+| `finalize-l2`           | push, PR create/comment    | `contents: write`, `issues: write`, `pull-requests: write`                 |
+| `finalize-l1`           | issue side effects         | `contents: write`, `issues: write`                                         |
+| `agent-l1` / `agent-l2` | none (reads only)          | `contents: read`, `issues: read`, `pull-requests: read` (+ `actions: read` on `agent-l2`) |
 
 App tokens and explicit PATs carry **their own** scopes; receiving-job `permissions:` do not reduce those passed tokens.
 

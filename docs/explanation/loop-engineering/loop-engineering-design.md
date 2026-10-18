@@ -508,9 +508,9 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | Level | Path                                                               | Branch / working directory                                  |
 | ----- | ------------------------------------------------------------------ | ----------------------------------------------------------- |
 | L1    | `loop-agent-once`                                                  | Read-only on the checked-out workspace (no worktree branch) |
-| L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch                     |
+| L2/L3 | `loop-worktree-setup` → `loop-execute` (bundle and cleanup internal) | Isolated worktree path and agent branch                     |
 
-**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. Verification runs inside `loop-execute` (separate checker session); finalize and `loop-notify-pr` consume those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. `has_changes` means `loop-execute` wrote a bundle of the agent branch (commits not on the base branch); the agent job never pushes, and `loop-finalize` verifies the bundle and pushes the branch. Verification runs inside `loop-execute` (separate checker session); finalize and `loop-notify-pr` consume those outputs for all engines.
 
 **Worktree principles:**
 
@@ -609,6 +609,19 @@ Absolute rules that must never be violated regardless of loop type, level, or en
 7. **Checkout is the caller's responsibility** — Composite Actions must not perform checkout internally
 8. **Every decision is traceable** — Each phase must produce structured output sufficient to reconstruct why a decision was made (skip reason, reject reason, outcome)
 9. **Intake refuses what detect refuses** — An event-driven caller's job `if` must reject every class its detect script rejects (bot actors, terminal labels, missing opt-in signal). Detect stays authoritative for domain judgement; the `if` exists so refused events never occupy the concurrency queue. See [Intake Gating](#intake-gating-self-retrigger-prevention)
+
+### Agent Credential Isolation
+
+The agent jobs (`agent-l1`, `agent-l2`) hold no GitHub write credential: they do not resolve an App or `GH_TOKEN` token and use the read-only job `github.token`. The agent branch is handed to `finalize-l2` as a git bundle artifact. `loop-finalize` (Push Agent Branch) validates the branch name, the bundle, and the changed paths (allowlist, denylist, `.github/workflows/`), then pushes with the resolved write token. Anything the agent job outputs (`verdict`, `has_changes`, `branch`) is untrusted input to finalize.
+
+Residual risks that this design does not remove:
+
+- **Self-reported values:** `verdict`, `has_changes`, and `finalize_outcome_override` come from the agent job. A forged `APPROVE` can reach a `pr_push` update of a human PR and an L3 auto-merge; the pushed content is bounded by the finalize path checks. There is no separate read-only checker job yet.
+- **Artifact overwrite via the runtime token:** every job holds the Actions runtime token, which can write artifacts. The bundle name is predictable, so the agent could upload first under that name; the upload step does not set `overwrite: true`, and finalize still verifies whatever it downloads.
+- **Caches written via the runtime token:** the runtime token can also write Actions caches. `loop-execute`, `loop-agent-once`, and `loop-install-cli` disable the `setup-node` and `setup-uv` caches so their post steps do not save agent-written content, but an agent can still write a cache directly with the runtime token.
+- **Pushed workflows run with secrets:** a pushed `.github/workflows/` change (allowed for callers whose allowlist has a `.github/` pattern, such as ci-sweeper) runs on `on: push` with repository secrets.
+- **OPEN, awaiting an owner decision:** `on-ci-push-mise-update-lock.yaml` runs on a push to any branch that touches `mise.toml`, with the maintenance App secrets, and runs `mise` on the pushed tree. Finalize pushes agent branches with the App token, so an agent branch can trigger it. Restricting it to `branches: [main]` is a separate change that has not been made.
+- **Engine credential:** `AGENT_TOKEN` stays in the agent job. For the copilot engine it is a GitHub PAT, see [GitHub Workflows Design](../github-workflows-design.md).
 
 ### Metrics
 
@@ -744,7 +757,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Output (L1)**     | Read-only session result (no branch / verdict contract)                                                                                                     |
 | **Output (L2/L3)**  | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json` |
 | **May modify**      | Files within the Skill's allowed paths, on an isolated branch only (L2/L3)                                                                                  |
-| **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly                                                                                     |
+| **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly. Holds no GitHub write credential and does not push (read-only `github.token`; the branch reaches the remote only through finalize)                                                                                     |
 | **Contract**        | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }` regardless of engine strategy   |
 
 #### Verify
@@ -762,7 +775,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Responsibility** | Persist the outcome per `delivery`: open fix PR (`pr_create`), push to the PR head (`pr_push`), post the one Issue comment or PR review with allowlisted labels (`issue_comment`, `pr_review`; Deliver Message), delete the agent branch on rejection and after `none` / `issue_comment` / `pr_review`, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
+| **Responsibility** | Persist the outcome per `delivery`: push the verified agent branch from the agent job bundle (Push Agent Branch), open fix PR (`pr_create`), push to the PR head (`pr_push`), post the one Issue comment or PR review with allowlisted labels (`issue_comment`, `pr_review`; Deliver Message), delete the agent branch on rejection and after `none` / `issue_comment` / `pr_review`, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
 | **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                                                                                                                                                                                                                       |

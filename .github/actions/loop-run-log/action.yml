@@ -20,7 +20,7 @@ inputs:
     required: false
   failure_stage:
     default: ""
-    description: "Platform failure stage (push | notify_context | finalize_pr | deliver_message | agent_execute | finalize | …)"
+    description: "Platform failure stage (bundle | push | notify_context | finalize_pr | deliver_message | agent_execute | finalize | …)"
     required: false
   github_token:
     description: "GitHub token for commit and push"
