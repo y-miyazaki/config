@@ -192,7 +192,7 @@
 - [ ] **Step 1: docs を直す。** DOC-00 に従い、該当する行だけを変える。表の桁揃えは prettier のフックに任せる。
   - `loop-engineering-design.md:579` の `if` gate の列: `labels limited to \`needs-triage\` / \`triage:needs-info\``(`/ \`triage:ready\`` を消す)。
   - `loop-engineering-design.md:585`: `Classification labels a triage agent applies itself (\`bug\`, \`feature\`, \`question\`, \`documentation\`) must stay out of its own intake allowlist, and so must \`triage:ready\`: detect skips an Issue that carries it, so admitting the event only queues runs that end in a skip.`
-  - `loop-caller-inputs-reference.md:37`: `      detect      → loop-entity-detect`(`(+ detect_hook_script)` を消す)。
+  - `loop-caller-inputs-reference.md:37`: `detect      → loop-entity-detect`(`(+ detect_hook_script)` を消す)。
   - `loop-caller-inputs-reference.md:372-377`: 見出し `### Inputs only it accepts` と表と前後の空行を消す(入力が `ci-loop-caller` の部分集合になり、節が空になる。この見出しへのリンクはない)。
   - `loop-github-issue-triage-workflow-design.md:34`: ``- `labeled` intake is limited to `needs-triage` and `triage:needs-info`. Classification labels the agent applies itself and `triage:ready` (detect skips it) stay out, and `autofix` belongs to [Autofix Design](loop-github-issue-autofix-workflow-design.md)``(リンクの文字は今のまま)。
   - `loop-github-issue-triage-workflow-design.md:74`: `detect_hook_script` の行を消す。

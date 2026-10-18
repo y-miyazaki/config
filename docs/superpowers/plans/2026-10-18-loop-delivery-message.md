@@ -207,7 +207,7 @@
   - `loop_message_from_json writes message.md and message_labels.json`
   - `loop_message_from_json writes nothing for empty input`
   - `loop_message_from_json fails on invalid JSON`
-  - `round trip keeps the body byte-identical`: 本文 `printf '## A\n\n`code` and ```fence```\nEOF\n\n'` で `cmp`(Review Focus 3)。
+  - `round trip keeps the body byte-identical`: 本文 ````printf '## A\n\n`code` and ```fence```\nEOF\n\n'```` で `cmp`(Review Focus 3)。
 - [ ] **Step 2: 失敗を確認する。** `bats test/bats/.github/actions/lib/loop/loop_message.bats`。Expected: FAIL(ファイルがない)。
 - [ ] **Step 3: 実装する。** ヘッダーと関数のドキュメントは `delivery.sh` の形に合わせ、関数は a-z の順に置く。
 - [ ] **Step 4: 通ることを確認する。** Step 2 のコマンド。Expected: PASS。
