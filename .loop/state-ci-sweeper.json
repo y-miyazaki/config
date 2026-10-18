@@ -141,18 +141,12 @@
       "last_reject_reason": "No file changes produced on retry; open rejections were not addressed"
     },
     "pull_request:1025": {
-      "pending": {
-        "sha": "d18efc05faeb247f4dd3fb89c9bd527b40424792",
-        "pr": 1026,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/1026",
-        "loop_name": "ci-sweeper",
-        "created_at": "2026-10-18T23:30:00Z"
-      },
-      "last_run": "2026-10-18T23:30:00Z",
-      "outcome": "pr_created",
+      "last_run": "2026-10-18T23:47:34Z",
+      "outcome": "pr_merged",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Prior report-shape rejections fixed: apply-mode report lists all five branch-diff paths under Changes with empty Deferred and honest blocked/pass Verification; diff is minimal and addresses the shell-tests regression"
+      "last_reject_reason": "Prior report-shape rejections fixed: apply-mode report lists all five branch-diff paths under Changes with empty Deferred and honest blocked/pass Verification; diff is minimal and addresses the shell-tests regression",
+      "last_sha": "d18efc05faeb247f4dd3fb89c9bd527b40424792"
     }
   }
 }
