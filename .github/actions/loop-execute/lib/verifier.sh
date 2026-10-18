@@ -192,7 +192,8 @@ function write_verifier_output_contract {
 #
 # Description:
 #   Writes verdict/reason/reject-* files under the attempt directory. On a
-#   denylist violation also writes denylist_blocked=true there so loop.sh can
+#   denylist violation or a changed path with unsafe characters (see
+#   list_diff_paths) also writes denylist_blocked=true there so loop.sh can
 #   force bundle.sh to skip bundling the branch, even if HAS_CHANGES is true.
 #
 # Globals:
@@ -230,8 +231,23 @@ function run_verify {
     # diff fails with "no merge base". Swallowing that failure used to read as
     # "no changes" and approve an unreviewed branch.
     git fetch origin "${BASE_BRANCH}" 2> /dev/null || true
-    if ! changed_files="$(git diff --name-only --no-renames "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
-        2> "${attempt_dir}/branch-diff-error.txt")"; then
+    local diff_status=0
+    changed_files="$(list_diff_paths "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
+        2> "${attempt_dir}/branch-diff-error.txt")" || diff_status=$?
+    if [[ ${diff_status} -eq 2 ]]; then
+        local unsafe_error
+        unsafe_error="$(tr '\n' ' ' < "${attempt_dir}/branch-diff-error.txt" | sed 's/ *$//')"
+        record_structured_reject "${attempt_dir}" "${attempt_num}" "" \
+            "Changed path names contain unsafe characters" \
+            "Rename paths that contain control characters, double quotes, or backslashes" \
+            "Unsafe path: ${unsafe_error}"
+        # Such names cannot be checked against the path guards, so treat them
+        # like a denylist hit: the branch must never reach a remote.
+        printf 'true\n' > "${attempt_dir}/denylist_blocked"
+        cd "${old_pwd}" || return 1
+        return 0
+    fi
+    if [[ ${diff_status} -ne 0 ]]; then
         local diff_error
         diff_error="$(tr '\n' ' ' < "${attempt_dir}/branch-diff-error.txt" | sed 's/ *$//')"
         printf '%s\n' "REJECT" > "${attempt_dir}/verdict"

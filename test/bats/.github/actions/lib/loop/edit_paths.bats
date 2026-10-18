@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/lib/loop/edit_paths.sh
 
 # Use cases:
@@ -16,6 +18,9 @@
 # - collect_denylist_violations flags denylisted paths
 # - collect_denylist_violations matches ** at start of pattern
 # - collect_denylist_violations returns nothing when denylist unset
+# - list_diff_paths lists non-ASCII paths unquoted and both sides of a rename
+# - list_diff_paths fails with 2 on a path with a control char, quote, or backslash
+# - list_diff_paths fails with 1 when git diff fails
 
 # - apply_platform_denylist_default preserves a caller denylist
 
@@ -140,4 +145,52 @@ setup() {
     run collect_denylist_violations $'docs/a.md\n.env'
     [ "$status" -eq 0 ]
     [ -z "$output" ]
+}
+
+# make_diff_repo: repo on main with secrets.txt, branch feature checked out.
+function make_diff_repo {
+    REPO="${BATS_TEST_TMPDIR}/repo"
+    git init -q -b main "${REPO}"
+    git -C "${REPO}" config user.email t@example.com
+    git -C "${REPO}" config user.name t
+    printf 'x\n' > "${REPO}/secrets.txt"
+    git -C "${REPO}" add secrets.txt
+    git -C "${REPO}" commit -q -m base
+    git -C "${REPO}" checkout -q -b feature
+}
+
+@test "list_diff_paths fails with 1 when git diff fails" {
+    make_diff_repo
+    run bash -c 'cd "$1" && source "$2" && list_diff_paths missing-ref...HEAD --' _ "${REPO}" \
+        "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
+    [ "$status" -eq 1 ]
+}
+
+@test "list_diff_paths fails with 2 on unsafe path characters" {
+    local name
+    make_diff_repo
+    for name in $'a\nb.txt' $'a\tb.txt' 'a"b.txt' 'a\b.txt'; do
+        git -C "${REPO}" checkout -q -B feature main
+        printf 'x\n' > "${REPO}/${name}"
+        git -C "${REPO}" add -- "${name}"
+        git -C "${REPO}" commit -q -m unsafe
+        run --separate-stderr bash -c 'cd "$1" && source "$2" && list_diff_paths main...HEAD --' _ "${REPO}" \
+            "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
+        [ "$status" -eq 2 ]
+        [ -z "$output" ]
+        [[ $stderr == *"unsafe characters in changed path"* ]]
+    done
+}
+
+@test "list_diff_paths lists non-ASCII paths unquoted and both sides of a rename" {
+    make_diff_repo
+    mkdir -p "${REPO}/.github/workflows" "${REPO}/dé"
+    printf 'on: push\n' > "${REPO}/.github/workflows/é.yaml"
+    git -C "${REPO}" mv secrets.txt dé/notes.txt
+    git -C "${REPO}" add .github
+    git -C "${REPO}" commit -q -m change
+    run bash -c 'cd "$1" && source "$2" && list_diff_paths main...HEAD --' _ "${REPO}" \
+        "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
+    [ "$status" -eq 0 ]
+    [ "$output" = $'.github/workflows/é.yaml\ndé/notes.txt\nsecrets.txt' ]
 }

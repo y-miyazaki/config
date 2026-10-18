@@ -41,9 +41,16 @@
 #     still shows its old path. .loop/ is not excluded.
 #   - .github/workflows/ changes need an allowlist pattern starting with
 #     .github/; ** or an empty allowlist does not allow them.
-#   - Never force-push; an existing remote branch fails.
-#   - Every failure records stage push in LOOP_FAILURE_FILE, writes
-#     pushed=false failed=true, and exits 0 so later steps can branch on it.
+#   - Changed paths come from list_diff_paths (-z, core.quotePath=false), so
+#     non-ASCII names are checked unquoted; a path with a control character,
+#     double quote, or backslash fails the push.
+#   - Never force-push; an existing remote branch fails. The ls-remote check
+#     and the push are not atomic: a branch created in between is
+#     fast-forwarded when the agent tip descends from it. Accepted (names are
+#     per-second and per-skill, and finalize-only re-runs have no bundle).
+#   - Every failure writes pushed=false failed=true first, then records stage
+#     push in LOOP_FAILURE_FILE (a recording error only warns), and exits 0 so
+#     later steps can branch on it.
 #
 # Output:
 #   GITHUB_OUTPUT, always three lines:
@@ -154,7 +161,7 @@ function configure_git_auth {
 }
 
 #######################################
-# fail_push: Record a push failure, write the outputs, and exit 0
+# fail_push: Write the failure outputs, record the failure, and exit 0
 #
 # Globals:
 #   LOOP_FAILURE_FILE - Failure record path
@@ -164,7 +171,7 @@ function configure_git_auth {
 #   $1 - Failure message
 #
 # Outputs:
-#   Redacted ::error:: line to stdout; three lines to GITHUB_OUTPUT
+#   Three lines to GITHUB_OUTPUT; redacted ::error:: line to stdout
 #
 # Returns:
 #   Exits 0
@@ -172,9 +179,11 @@ function configure_git_auth {
 function fail_push {
     local message="$1"
 
-    loop_failure_record "push" "${message}" "${LOOP_FAILURE_FILE}"
-    printf '::error::push_agent_branch: %s\n' "$(redact_sensitive_text "${message//$'\n'/ }")"
     write_outputs "${VALIDATED_BRANCH}" "false" "true"
+    if ! loop_failure_record "push" "${message}" "${LOOP_FAILURE_FILE}"; then
+        echo "::warning::push_agent_branch: could not write the failure record"
+    fi
+    printf '::error::push_agent_branch: %s\n' "$(redact_sensitive_text "${message//$'\n'/ }")"
     exit 0
 }
 
@@ -190,10 +199,11 @@ function fail_push {
 #   $3 - Agent branch
 #
 # Outputs:
-#   Newline-separated paths to stdout; git errors to stderr
+#   Newline-separated paths to stdout; git errors and unsafe paths to stderr
 #
 # Returns:
-#   0 on success, 1 when git diff fails
+#   0 on success, 1 when git diff fails, 2 when a path has unsafe characters
+#   (see list_diff_paths)
 #######################################
 function list_changed_files {
     local from_ref="$1"
@@ -206,7 +216,7 @@ function list_changed_files {
     else
         range="refs/remotes/origin/${base_branch}...refs/heads/${branch}"
     fi
-    git diff --name-only --no-renames "${range}" -- || return 1
+    list_diff_paths "${range}" --
 }
 
 #######################################
@@ -292,7 +302,7 @@ function write_outputs {
 #   LOOP_FAILURE_FILE is unset
 #######################################
 function main {
-    local branch bundle changed err from_ref quoted remote_status violations
+    local branch bundle changed diff_status err err_file from_ref quoted remote_status violations
 
     if [[ -z ${GITHUB_OUTPUT:-} || -z ${LOOP_FAILURE_FILE:-} ]]; then
         echo "::error::push_agent_branch: GITHUB_OUTPUT and LOOP_FAILURE_FILE are required" >&2
@@ -365,8 +375,18 @@ function main {
 
     # 7. Denylist, allowlist, and workflow re-check on the --no-renames diff
     apply_platform_denylist_default
-    if ! changed="$(list_changed_files "${from_ref}" "${BASE_BRANCH}" "${branch}" 2>&1)"; then
-        fail_push "diff of ${branch} failed: ${changed}"
+    if ! err_file="$(mktemp)"; then
+        fail_push "could not create a temporary file for the diff"
+    fi
+    diff_status=0
+    changed="$(list_changed_files "${from_ref}" "${BASE_BRANCH}" "${branch}" 2> "${err_file}")" || diff_status=$?
+    err="$(cat "${err_file}" 2> /dev/null || true)"
+    rm -f "${err_file}"
+    if [[ ${diff_status} -eq 2 ]]; then
+        fail_push "changed paths of ${branch} include unsafe characters: ${err}"
+    fi
+    if [[ ${diff_status} -ne 0 ]]; then
+        fail_push "diff of ${branch} failed: ${err}"
     fi
     if ! violations="$(
         collect_denylist_violations "${changed}" \

@@ -14,6 +14,9 @@
 # - an empty branch, a failed agent, or no changes push nothing and record nothing
 # - every failure records stage push, writes pushed=false failed=true, and exits 0
 # - missing GITHUB_OUTPUT or LOOP_FAILURE_FILE exits 1
+# - non-ASCII paths are checked unquoted (workflow guard, denylist); paths with
+#   control characters, double quotes, or backslashes fail
+# - an unwritable failure record still writes the three outputs and exits 0
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -112,7 +115,7 @@ function run_push {
         GITHUB_OUTPUT="${OUTPUT_FILE}" \
         GITHUB_TOKEN=dummy \
         HAS_CHANGES="${T_HAS_CHANGES-true}" \
-        LOOP_FAILURE_FILE="${FAILURE_FILE}" \
+        LOOP_FAILURE_FILE="${T_FAILURE_FILE-${FAILURE_FILE}}" \
         STATE_BRANCH="${T_STATE-main}" \
         TARGET_JSON="${T_TARGET-${EMPTY_TARGET}}" \
         TO_BRANCH="${T_TO-main}" \
@@ -166,6 +169,27 @@ function assert_pushed {
     [ "${status}" -ne 0 ]
 }
 
+@test "a denylisted name under a non-ASCII directory is rejected" {
+    make_agent_branch
+    agent_commit 'dé/.env'
+    make_bundle
+    T_ALLOWLIST='**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *"dé/.env"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
+
+    reset_final
+    make_agent_branch
+    agent_commit 'secrets/é.txt'
+    make_bundle
+    T_DENYLIST='secrets/**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *"secrets/é.txt"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
+}
+
 @test "a descendant tip of from.ref is pushed" {
     make_agent_branch "${PR_HEAD_SHA}"
     agent_commit docs/a.md
@@ -175,6 +199,17 @@ function assert_pushed {
     T_TARGET="{\"from\":{\"ref\":\"${PR_HEAD_SHA}\"}}"
     run_push
     assert_pushed
+}
+
+@test "a failure record that cannot be written still writes the outputs" {
+    T_BRANCH='main'
+    T_FAILURE_FILE="${BATS_TEST_TMPDIR}/missing-dir/failure.json"
+    run_push
+    [ "${status}" -eq 0 ]
+    [ "${OUT_LINES}" -eq 3 ]
+    [ "${OUT_BRANCH}" = "" ]
+    [ "${OUT_PUSHED}" = "false" ]
+    [ "${OUT_FAILED}" = "true" ]
 }
 
 @test "a force-pushed PR head still verifies against base" {
@@ -347,6 +382,23 @@ function assert_pushed {
     [ "${status}" -eq 1 ]
 }
 
+@test "non-ASCII workflow files need a .github/ allowlist pattern" {
+    make_agent_branch
+    agent_commit '.github/workflows/é.yaml' 'on: push'
+    make_bundle
+
+    T_ALLOWLIST='**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *".github/workflows/é.yaml"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
+
+    reset_final
+    T_ALLOWLIST='.github/**'
+    run_push
+    assert_pushed
+}
+
 @test "nothing happens for an empty branch" {
     T_BRANCH=''
     run_push
@@ -382,6 +434,21 @@ function assert_pushed {
     [ "${OUT_FAILED}" = "false" ]
     [ ! -e "${FAILURE_FILE}" ]
     [ -z "$(origin_sha "${BRANCH}")" ]
+}
+
+@test "paths with control characters, quotes, or backslashes are rejected" {
+    local name
+    for name in $'docs/a\nb.md' $'docs/a\tb.md' 'docs/a"b.md' 'docs/a\b.md'; do
+        reset_final
+        make_agent_branch
+        agent_commit "${name}"
+        make_bundle
+        T_ALLOWLIST='**'
+        run_push
+        assert_failed "${BRANCH}"
+        [[ ${FAILURE_MESSAGE} == *"unsafe characters"* ]]
+        [ -z "$(origin_sha "${BRANCH}")" ]
+    done
 }
 
 @test "pushes a valid bundle and updates origin/<branch>" {

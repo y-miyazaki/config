@@ -11,6 +11,8 @@
 # - Allowlist and denylist checks run before the LLM checker
 # - Glob patterns follow gitwildmatch-style path rules (** crosses /)
 # - Empty AGENT_EDIT_DENYLIST is coerced to the platform default at loop start
+# - Changed paths come from list_diff_paths (-z, core.quotePath=false): git's
+#   default quoting of non-ASCII names would let them slip past the globs
 #######################################
 
 # Single definition of the platform denylist. Keep it to patterns that are
@@ -223,6 +225,57 @@ function glob_to_ere {
 
     ere+='$'
     printf '%s' "${ere}"
+}
+
+#######################################
+# list_diff_paths: List changed paths unquoted, rejecting unsafe names
+#
+# Description:
+#   Runs git diff --name-only --no-renames -z with core.quotePath=false so
+#   non-ASCII paths are listed as-is (default quoting wraps them in double
+#   quotes, which defeats anchored globs and prefix checks). Paths are read
+#   NUL-separated; a path with a control character (newline, tab, ...), a
+#   double quote, or a backslash cannot be represented safely in a newline
+#   list and fails the call.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Extra git diff arguments (range, then -- and pathspecs)
+#
+# Outputs:
+#   Newline-separated paths to stdout (nothing on failure); git errors and
+#   the unsafe path (shell-quoted) to stderr
+#
+# Returns:
+#   0 on success, 1 when git diff fails, 2 when a path has unsafe characters
+#
+#######################################
+function list_diff_paths {
+    local path git_status quoted
+    local -a paths=()
+
+    while IFS= read -r -d '' path; do
+        paths+=("${path}")
+    done < <(
+        git -c core.quotePath=false diff --name-only --no-renames -z "$@"
+        printf '%d' "$?"
+    )
+    git_status="${path}"
+    if [[ ${git_status} != "0" ]]; then
+        return 1
+    fi
+    for path in "${paths[@]}"; do
+        if [[ ${path} == *[[:cntrl:]]* || ${path} == *'"'* || ${path} == *\\* ]]; then
+            printf -v quoted '%q' "${path}"
+            printf 'unsafe characters in changed path: %s\n' "${quoted}" >&2
+            return 2
+        fi
+    done
+    if [[ ${#paths[@]} -gt 0 ]]; then
+        printf '%s\n' "${paths[@]}"
+    fi
 }
 
 #######################################
