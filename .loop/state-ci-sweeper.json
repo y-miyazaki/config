@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-17T01:10:57Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-10-18T22:40:23Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Test-only stub for the missing terraform binary fixes the logged shell-tests failure; root cause and fix independently reproduced (status 1 -> 0), scope minimal, report format compliant.",
+      "last_reject_reason": "No file changes produced; 8 tool call(s) denied by permission settings",
       "last_sha": "419efa876cac76ab83c4c80fbbf1ff842342dfd6"
     },
     "pull_request:981": {
