@@ -111,3 +111,22 @@ outcome_override:"* ]]
     run grep -c 'package-manager-cache: false' "${ACTION_YML}"
     [ "${output}" = "1" ]
 }
+
+@test "bundle branch replaces push branch and gets no token" {
+    run grep -c 'name: Push Branch' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'name: Bundle Branch' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run action_yml_step_env "${ACTION_YML}" "Bundle Branch"
+    [ "${status}" -eq 0 ]
+    [[ ${output} != *"GITHUB_TOKEN"* ]]
+    [[ ${output} == *'BUNDLE_FILE: ${{ runner.temp }}/loop-agent-bundle/branch.bundle'* ]]
+    run action_yml_step_env "${ACTION_YML}" "Build Notify Context"
+    [[ ${output} == *'HAS_CHANGES: ${{ steps.bundle.outputs.has_changes }}'* ]]
+    run action_yml_output_lines "${ACTION_YML}"
+    [[ ${output} == *'has_changes: ${{ steps.bundle.outputs.has_changes }}'* ]]
+    run grep -c 'description: "true when a bundle of the agent branch was written (commits not on origin/<base_branch>)"' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run action_yml_output_lines "${ACTION_YML}"
+    [[ ${output} == *"bundle_file: \${{ steps.bundle.outputs.has_changes == 'true' && format('{0}/loop-agent-bundle/branch.bundle', runner.temp) || '' }}"* ]]
+}

@@ -193,7 +193,7 @@ function write_verifier_output_contract {
 # Description:
 #   Writes verdict/reason/reject-* files under the attempt directory. On a
 #   denylist violation also writes denylist_blocked=true there so loop.sh can
-#   force push.sh to skip pushing the branch, even if HAS_CHANGES is true.
+#   force bundle.sh to skip bundling the branch, even if HAS_CHANGES is true.
 #
 # Globals:
 #   BASE_BRANCH, AGENT_EDIT_DENYLIST, AGENT_EDIT_ALLOWLIST, WORKTREE_PATH
