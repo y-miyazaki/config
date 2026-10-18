@@ -245,8 +245,8 @@ function deliver_loop_message {
     out_file="$(mktemp)"
     if [[ ${delivery} == "issue_comment" ]]; then
         build_loop_message_body "${text}" "${marker}" "${meta_block}" > "${out_file}"
-        post_loop_issue_comment "${number}" "${out_file}"
-        rc=$?
+        rc=0
+        post_loop_issue_comment "${number}" "${out_file}" || rc=$?
     else
         jq -c \
             --arg body "$(build_loop_message_body "${text}" "${marker}" "${meta_block}")" \
@@ -258,8 +258,8 @@ function deliver_loop_message {
                 fallback_body: (if $fallback == "" then "" else $fallback_body end)
             } + (if (.commit_id // "") != "" then {commit_id: .commit_id} else {} end)' \
             "${dir}/review.json" > "${out_file}"
-        post_loop_pr_review "${number}" "${out_file}"
-        rc=$?
+        rc=0
+        post_loop_pr_review "${number}" "${out_file}" || rc=$?
     fi
     rm -f "${out_file}"
     return "${rc}"
@@ -287,7 +287,7 @@ function deliver_loop_message {
 function fail_loop_message {
     local message="$1"
 
-    echo "::error::Deliver Message failed; see failure_message in the run log"
+    echo "::error::Deliver Message failed (failure_stage=deliver_message; see the loop-finalize failure_message output)"
     if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
         loop_failure_record "deliver_message" "${message}" "${LOOP_FAILURE_FILE}"
     fi

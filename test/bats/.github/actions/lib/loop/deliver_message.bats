@@ -10,6 +10,7 @@
 # - deliver_loop_message reads the number from target_json and checks its kind against delivery
 # - deliver_loop_message applies allowlisted labels before posting (one POST, encoded DELETEs)
 # - deliver_loop_message fails the step and records deliver_message on gh failures, redacted
+# - deliver_loop_message records the failure and removes temp files when run under set -e
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -44,7 +45,6 @@ setup() {
 }
 
 teardown() {
-    rm -rf "${LOOP_MESSAGE_DIR}" "${BATS_TEST_TMPDIR}/bin"
     rm -f "${BATS_TEST_TMPDIR}"/gh.* "${GITHUB_OUTPUT}" "${LOOP_FAILURE_FILE}"
 }
 
@@ -325,6 +325,37 @@ count_of() {
     [[ ${body} == *"| engine | claude |"* ]]
     [ "$(count_of "${body}" "Written by Loop Engineering (LE)")" -eq 1 ]
     [ "$(grep -c '^outcome=' "${GITHUB_OUTPUT}")" -eq 0 ]
+}
+
+@test "records the failure and removes temp files when the post fails under set -e" {
+    local tmp_dir="${BATS_TEST_TMPDIR}/tmpdir"
+    mkdir -p "${tmp_dir}"
+    printf 'text\n' > "${LOOP_MESSAGE_DIR}/message.md"
+    export GH_MOCK_COMMENT_RC="1"
+    export TMPDIR="${tmp_dir}"
+    run bash -c 'set -euo pipefail
+        source .github/actions/lib/loop/created_by.sh
+        source .github/actions/lib/loop/loop_meta.sh
+        source .github/actions/lib/loop/failure_record.sh
+        source .github/actions/lib/loop/deliver_message.sh
+        deliver_loop_message'
+    [ "$status" -eq 1 ]
+    [ "$(jq -r '.failure_stage' "${LOOP_FAILURE_FILE}")" = "deliver_message" ]
+    [ -z "$(ls -A "${tmp_dir}")" ]
+
+    rm -f "${BATS_TEST_TMPDIR}"/gh.* "${LOOP_FAILURE_FILE}"
+    use_pr_review
+    write_review "$(review_fixture)"
+    export GH_MOCK_REVIEW_RC="1"
+    run bash -c 'set -euo pipefail
+        source .github/actions/lib/loop/created_by.sh
+        source .github/actions/lib/loop/loop_meta.sh
+        source .github/actions/lib/loop/failure_record.sh
+        source .github/actions/lib/loop/deliver_message.sh
+        deliver_loop_message'
+    [ "$status" -eq 1 ]
+    [ "$(jq -r '.failure_stage' "${LOOP_FAILURE_FILE}")" = "deliver_message" ]
+    [ -z "$(ls -A "${tmp_dir}")" ]
 }
 
 @test "redacts tokens in the recorded failure message" {

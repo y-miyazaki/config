@@ -222,7 +222,7 @@ STUB
     # JSON encoding keeps the value on one line, so exactly one delimiter pair exists
     [ "$(grep -c "^${delim}$" "${GITHUB_OUTPUT}")" -eq 1 ]
     value="$(awk -v d="${delim}" '$0==d{f=0} f{print} $0=="message_json<<" d{f=1}' "${GITHUB_OUTPUT}")"
-    [ "$(jq -j '.body' <<< "${value}")" = "${body%$'\n'}" ] || [ "$(jq -j '.body' <<< "${value}"; echo x)" = "${body}x" ]
+    [ "$(jq -j '.body' <<< "${value}"; echo x)" = "${body}x" ]
 }
 
 @test "run_loop_agent_once never calls gh" {
