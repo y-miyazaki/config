@@ -34,6 +34,13 @@
       "consecutive_failures": 1,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "entity:pr:1022": {
+      "last_run": "2026-10-18T22:56:52Z",
+      "outcome": "pr_reviewed",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Only the configured report file .loop-review/pr-1022.json was added; SHAs, PR body premises, and the no-findings summary all match PR #1022's actual diff"
     }
   }
 }
