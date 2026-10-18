@@ -258,6 +258,25 @@
       "addLabels": ["goreleaser"]
     },
     {
+      "description": "Rules: Group gitleaks updates across mise and pre-commit",
+      "groupName": "gitleaks",
+      "matchPackageNames": ["aqua:gitleaks/gitleaks", "gitleaks/gitleaks"],
+      "commitMessagePrefix": "renovate(gitleaks):",
+      "addLabels": ["gitleaks"]
+    },
+    {
+      "description": "Rules: Group markdownlint-cli2 updates across the GitHub Actions action, mise, and pre-commit",
+      "groupName": "markdownlint-cli2",
+      "matchPackageNames": [
+        "DavidAnson/markdownlint-cli2",
+        "DavidAnson/markdownlint-cli2-action",
+        "markdownlint-cli2",
+        "npm:markdownlint-cli2"
+      ],
+      "commitMessagePrefix": "renovate(markdownlint-cli2):",
+      "addLabels": ["markdownlint-cli2"]
+    },
+    {
       "description": "Rules: Group markdown-link-check updates across GitHub Actions workflow inputs, mise, and pre-commit",
       "groupName": "markdown-link-check",
       "matchPackageNames": [
