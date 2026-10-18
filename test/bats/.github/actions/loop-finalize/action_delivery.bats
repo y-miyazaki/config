@@ -13,6 +13,11 @@
 # - Create PR resolves detect JSON from the handoff (no detect_result_json input)
 # - Resolve Run Outcome always runs right before Export Failure Diagnostics and owns the outcome output
 # - Write State reads the required state_branch and passes finalize_commit_paths
+# - Push Agent Branch runs right after Parse Target and is the only reader of inputs.branch;
+#   later steps use its validated branch output
+# - a failed agent push skips the hook and delivery, forces outcome error and state mode
+#   metadata, and Fail Agent Push fails the action before Resolve Run Outcome
+# - landing, PR creation, and branch deletion run only after a successful agent push
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -56,6 +61,36 @@ step_if() {
     ' "${ACTION_YML}"
 }
 
+# Print the body of the multi-line run: | block of step $1.
+step_run() {
+    awk -v name="    - name: $1" '
+        /^    - name: / { in_step = ($0 == name); in_run = 0; next }
+        in_step && /^      run: \|$/ { in_run = 1; next }
+        in_step && in_run && /^        / { sub(/^        /, ""); print; next }
+        in_step && in_run { in_run = 0 }
+    ' "${ACTION_YML}"
+}
+
+@test "a recorded push failure resolves to error" {
+    local cmd
+    cmd="$(awk '
+        /^    - name: / { in_step = ($0 == "    - name: Resolve Run Outcome"); next }
+        in_step && /^      run: / { sub(/^      run: /, ""); print }
+    ' "${ACTION_YML}")"
+    [ -n "${cmd}" ]
+    # shellcheck disable=SC1091
+    source "$(bats_workspace_root)/.github/actions/lib/loop/failure_record.sh"
+    loop_failure_record push "agent branch push failed" "${BATS_TEST_TMPDIR}/failure.json"
+    run env GITHUB_ACTION_PATH="$(bats_workspace_root)/.github/actions/loop-finalize" \
+        ACTION_STATUS=failure DELIVERED_OUTCOME=error AGENT_RESULT=success \
+        LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json" \
+        GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/output" \
+        bash -c "${cmd}"
+    [ "${status}" -eq 0 ]
+    grep -qx 'outcome=error' "${BATS_TEST_TMPDIR}/output"
+    [ "$(jq -r '.failure_stage' "${BATS_TEST_TMPDIR}/failure.json")" = "push" ]
+}
+
 @test "action has no finalize strategy or old strategy values" {
     run grep -c -E 'finalize_strategy|FINALIZE_STRATEGY|open_pr|push_head|inputs\.auto_merge|inputs\.base_branch|state_push_branch|detect_result_json|domain_persistence|additional_commit_paths|inputs\.outcome_override|inputs\.engine|inputs\.labels' "${ACTION_YML}"
     [ "${output}" = "0" ]
@@ -64,7 +99,8 @@ step_if() {
 @test "action inputs are the delivery contract in alphabetical order" {
     local expected
     expected="$(printf '%s\n' \
-        agent_engine agent_failure_message agent_failure_stage agent_result branch current_sha delivery execute_branch \
+        agent_branch_prefix agent_bundle_dir agent_edit_allowlist agent_edit_denylist agent_engine \
+        agent_failure_message agent_failure_stage agent_maker_skill_name agent_result branch current_sha delivery \
         finalize_commit_paths finalize_label_allowlist finalize_outcome_override \
         finalize_script github_token handoff_dir handoff_key has_changes level \
         loop_name message_json notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
@@ -77,7 +113,7 @@ step_if() {
 
 @test "create pr runs only for delivery pr_create" {
     run step_if "Create PR"
-    [ "${output}" = "inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.delivery == 'pr_create'" ]
+    [ "${output}" = "inputs.verdict == 'APPROVE' && steps.agent_push.outputs.pushed == 'true' && inputs.delivery == 'pr_create'" ]
 }
 
 @test "create pr reads detect JSON from the handoff and the PR base from the target" {
@@ -93,7 +129,36 @@ step_if() {
 
 @test "delete agent branch keys on REJECT or a delivery that never lands the branch" {
     run step_if "Delete Agent Branch"
-    [ "${output}" = "always() && inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')" ]
+    [ "${output}" = "always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')" ]
+}
+
+@test "determine outcome and state mode receive the push failure" {
+    local step
+    for step in "Determine Outcome" "Resolve State Write Mode"; do
+        run step_env "${step}"
+        [[ ${output} == *$'PUSH_FAILED: ${{ steps.agent_push.outputs.failed }}'* ]]
+    done
+    run grep -c 'determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}" "${PUSH_FAILED}"' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run grep -c 'resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}"' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    local action_path
+    action_path="$(bats_workspace_root)/.github/actions/loop-finalize"
+    step_run "Determine Outcome" > "${BATS_TEST_TMPDIR}/outcome.sh"
+    run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/outcome.out" \
+        AGENT_RESULT=success DELIVERY=pr_push FINALIZE_OUTCOME_OVERRIDE=watch HAS_CHANGES=true \
+        PUSH_FAILED=true VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/outcome.sh"
+    [ "${status}" -eq 0 ]
+    grep -qx 'value=error' "${BATS_TEST_TMPDIR}/outcome.out"
+    step_run "Resolve State Write Mode" > "${BATS_TEST_TMPDIR}/mode.sh"
+    run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/mode.out" \
+        DELIVERY=pr_push HAS_CHANGES=true PUSH_FAILED=true VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
+    [ "${status}" -eq 0 ]
+    grep -qx 'mode=metadata' "${BATS_TEST_TMPDIR}/mode.out"
+    run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/mode_ok.out" \
+        DELIVERY=pr_push HAS_CHANGES=true PUSH_FAILED=false VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
+    [ "${status}" -eq 0 ]
+    grep -qx 'mode=advance' "${BATS_TEST_TMPDIR}/mode_ok.out"
 }
 
 @test "deliver message env is alphabetical and uses the planned outcome" {
@@ -121,7 +186,27 @@ EOF2
 
 @test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent" {
     run step_if "Deliver Message"
-    [ "${output}" = "(inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.agent_result == 'success' && inputs.verdict != 'REJECT'" ]
+    [ "${output}" = "(inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.agent_result == 'success' && inputs.verdict != 'REJECT' && steps.agent_push.outputs.failed != 'true'" ]
+}
+
+@test "fail agent push runs after delete agent branch and before resolve run outcome" {
+    run step_if "Fail Agent Push"
+    [ "${output}" = "always() && steps.agent_push.outputs.failed == 'true'" ]
+    run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | grep -A1 -x 'Delete Agent Branch' | paste -sd, -"
+    [ "${output}" = "Delete Agent Branch,Fail Agent Push" ]
+    run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | grep -A1 -x 'Fail Agent Push' | paste -sd, -"
+    [ "${output}" = "Fail Agent Push,Resolve Run Outcome" ]
+    local body
+    body="$(awk '
+        /^    - name: / { in_step = ($0 == "    - name: Fail Agent Push"); in_run = 0; next }
+        in_step && /^      run: \|$/ { in_run = 1; next }
+        in_step && in_run && /^        / { sub(/^        /, ""); print; next }
+        in_step && in_run { in_run = 0 }
+    ' "${ACTION_YML}")"
+    [[ ${body} == *"exit 1"* ]]
+    run bash -c "${body}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"::error::loop-finalize: the agent branch was not pushed"* ]]
 }
 
 @test "materialize message writes message_json into LOOP_MESSAGE_DIR" {
@@ -158,7 +243,7 @@ EOF2
 
 @test "steps run in spec order" {
     local expected
-    expected="Materialize Message, Parse Target, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Resolve Run Outcome, Export Failure Diagnostics"
+    expected="Materialize Message, Parse Target, Push Agent Branch, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Fail Agent Push, Resolve Run Outcome, Export Failure Diagnostics"
     run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | paste -sd, - | sed 's/,/, /g'"
     [ "${output}" = "${expected}" ]
 }
@@ -166,6 +251,18 @@ EOF2
 @test "enable auto-merge runs only when pr_auto_merge is true" {
     run step_if "Enable Auto-Merge"
     [ "${output}" = "inputs.pr_auto_merge == 'true'" ]
+}
+
+@test "no step after push agent branch reads inputs.branch" {
+    run grep -c 'inputs\.branch' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run step_env "Push Agent Branch"
+    [[ ${output} == *$'AGENT_BRANCH: ${{ inputs.branch }}'* ]]
+    local step
+    for step in "Run Finalize Hook" "Push to Target Branch" "Create PR" "Delete Agent Branch"; do
+        run step_env "${step}"
+        [[ ${output} == *'${{ steps.agent_push.outputs.branch }}'* ]]
+    done
 }
 
 @test "outcome, state mode, and branch delete read inputs.delivery" {
@@ -183,9 +280,52 @@ EOF2
     [[ ${output} == *$'STATE_BRANCH: ${{ inputs.state_branch }}'* ]]
 }
 
+@test "push agent branch failure gates the hook, delivery, landing and deletion" {
+    local step
+    for step in "Run Finalize Hook" "Deliver Message"; do
+        run step_if "${step}"
+        [[ ${output} == *"steps.agent_push.outputs.failed != 'true'"* ]]
+    done
+    for step in "Push to Target Branch" "Create PR" "Delete Agent Branch"; do
+        run step_if "${step}"
+        [[ ${output} == *"steps.agent_push.outputs.pushed == 'true'"* ]]
+        [[ ${output} != *"inputs.has_changes"* ]]
+    done
+}
+
+@test "push agent branch runs the lib script with the validated target and no if" {
+    run step_if "Push Agent Branch"
+    [ -z "${output}" ]
+    run awk '
+        /^    - name: / { in_step = ($0 == "    - name: Push Agent Branch"); next }
+        in_step && /^      (id|run): / { sub(/^      /, ""); print }
+    ' "${ACTION_YML}"
+    [ "${output}" = $'id: agent_push\nrun: bash "${GITHUB_ACTION_PATH}/lib/push_agent_branch.sh"' ]
+    local expected
+    expected="$(cat <<'EOF2'
+AGENT_BRANCH: ${{ inputs.branch }}
+AGENT_BRANCH_PREFIX: ${{ inputs.agent_branch_prefix }}
+AGENT_BUNDLE_DIR: ${{ inputs.agent_bundle_dir }}
+AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
+AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
+AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+AGENT_RESULT: ${{ inputs.agent_result }}
+BASE_BRANCH: ${{ steps.target.outputs.base_branch }}
+GITHUB_TOKEN: ${{ inputs.github_token }}
+HAS_CHANGES: ${{ inputs.has_changes }}
+LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+STATE_BRANCH: ${{ inputs.state_branch }}
+TARGET_JSON: ${{ inputs.target_json }}
+TO_BRANCH: ${{ steps.target.outputs.to_branch }}
+EOF2
+)"
+    run step_env "Push Agent Branch"
+    [ "${output}" = "${expected}" ]
+}
+
 @test "push to target branch runs only for delivery pr_push" {
     run step_if "Push to Target Branch"
-    [ "${output}" = "inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.delivery == 'pr_push'" ]
+    [ "${output}" = "inputs.verdict == 'APPROVE' && steps.agent_push.outputs.pushed == 'true' && inputs.delivery == 'pr_push'" ]
 }
 
 @test "write state reads state_branch and finalize_commit_paths" {
@@ -199,12 +339,12 @@ EOF2
 
 @test "every failure record step uses the same LOOP_FAILURE_FILE" {
     local step count=0
-    for step in "Deliver Message" "Create PR" "Resolve Run Outcome" "Export Failure Diagnostics"; do
+    for step in "Push Agent Branch" "Deliver Message" "Create PR" "Resolve Run Outcome" "Export Failure Diagnostics"; do
         run step_env "${step}"
         [[ ${output} == *$'LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json'* ]]
         count=$((count + 1))
     done
-    [ "${count}" -eq 4 ]
+    [ "${count}" -eq 5 ]
 }
 
 @test "resolve run outcome always runs with the action status and the delivered outcome" {

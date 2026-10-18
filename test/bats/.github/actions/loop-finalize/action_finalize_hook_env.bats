@@ -4,7 +4,9 @@
 # Tests for the "Run Finalize Hook" step in .github/actions/loop-finalize/action.yml
 #
 # Use cases:
-# - the step runs whenever finalize_script is set, regardless of delivery
+# - the step runs whenever finalize_script is set and the agent push did not fail,
+#   regardless of delivery or has_changes (the ledger hook runs without changes)
+# - EXECUTE_BRANCH is the validated Push Agent Branch output, never inputs.branch
 # - FINALIZE_SCRIPT is inputs.finalize_script
 # - GH_TOKEN is the resolved inputs.github_token
 # - GITHUB_REPOSITORY is github.repository
@@ -45,6 +47,14 @@ finalize_hook_if() {
     [ "${keys}" = "${sorted}" ]
 }
 
+@test "finalize hook env sets EXECUTE_BRANCH from the push agent branch output" {
+    run finalize_hook_env
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *$'EXECUTE_BRANCH: ${{ steps.agent_push.outputs.branch }}'* ]]
+    [[ ${output} != *"inputs.branch"* ]]
+    [[ ${output} != *"inputs.execute_branch"* ]]
+}
+
 @test "finalize hook env sets FINALIZE_SCRIPT from inputs.finalize_script" {
     run finalize_hook_env
     [ "${status}" -eq 0 ]
@@ -66,7 +76,9 @@ finalize_hook_if() {
 @test "finalize hook runs whenever finalize_script is set, regardless of delivery" {
     run finalize_hook_if
     [ "${status}" -eq 0 ]
-    [ "${output}" = "inputs.finalize_script != ''" ]
+    [ "${output}" = "inputs.finalize_script != '' && steps.agent_push.outputs.failed != 'true'" ]
+    [[ ${output} != *"has_changes"* ]]
+    [[ ${output} != *"inputs.delivery"* ]]
 }
 
 @test "finalize hook gets LOOP_MESSAGE_DIR and no LOOP_META_BLOCK" {
