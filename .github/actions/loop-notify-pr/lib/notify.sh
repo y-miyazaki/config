@@ -220,12 +220,6 @@ function build_comment_body {
     cat << EOF
 ${marker}
 ## Loop notification: ${LOOP_NAME}
-
-| Field | Value |
-| ----- | ----- |
-| Bot fix PR | ${bot_fix_pr} |
-| Reason | ${reason_display} |
-| Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
 EOF
 
     if [[ -n ${agent_report_overview} ]]; then
@@ -236,6 +230,15 @@ EOF
 ${agent_report_overview}
 EOF
     fi
+
+    cat << EOF
+
+| Field | Value |
+| ----- | ----- |
+| Bot fix PR | ${bot_fix_pr} |
+| Reason | ${reason_display} |
+| Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
+EOF
 
     if [[ -n ${agent_report_summary} ]]; then
         cat << EOF

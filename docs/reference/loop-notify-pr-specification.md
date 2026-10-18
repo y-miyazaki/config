@@ -122,15 +122,15 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 
 ## Loop notification: {loop_name}
 
+### Overview
+
+{agent_report_overview when present}
+
 | Field      | Value                                  |
 | ---------- | -------------------------------------- |
 | Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
 | Reason     | `{reason}` or —                        |
 | Failed run | [{workflow_name} #{run_id}]({run_url}) |
-
-### Overview
-
-{agent_report_overview when present}
 
 ### Summary
 
