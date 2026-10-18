@@ -6,6 +6,7 @@ Load ONLY at synthesis time, after classification and edits complete.
 Rules:
 - Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
 - Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
+- Keep the table columns as written; do not rename, merge, or drop columns.
 - Use ### Deferred (not Skipped) for items not fixed in this run.
 - Do NOT emit ### Candidates, ### Watch, Outcome, or Suggested next action.
 - Overview must name what was recorded/fixed — include scope when many items.

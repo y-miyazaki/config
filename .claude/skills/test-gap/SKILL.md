@@ -40,6 +40,7 @@ metadata:
 - [category-input-schema.md](references/category-input-schema.md) (read when detect JSON is present)
 - [category-automation-envelope.md](references/category-automation-envelope.md) (read on automation path)
 - [category-pr-body-links.md](references/category-pr-body-links.md) (read at PR body synthesis)
+- `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` (load at PR body synthesis; keep their headings and table columns as written)
 
 ## Workflow
 
