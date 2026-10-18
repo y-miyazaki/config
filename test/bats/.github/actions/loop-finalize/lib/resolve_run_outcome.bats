@@ -141,3 +141,154 @@ current_l2_outcome() {
     done <<< "${L2_CASES}"
     [ "${checked}" -eq 14 ]
 }
+
+# Use cases (resolve_run_outcome.sh):
+# - every L2_CASES row resolves to the transcribed outcome, failure stage and message
+# - intended differences from the transcription: cancelled composite, finalize record with a success status, L1 agent_execute, pr_push landing failure
+# - the outcome is resolved before the agent stage is recorded
+# - re-recording an already recorded agent message leaves it unchanged
+# - LOOP_FAILURE_FILE is required
+
+SCRIPT="$(bats_workspace_root)/.github/actions/loop-finalize/lib/resolve_run_outcome.sh"
+
+setup() {
+    bats_source_rel ".github/actions/lib/loop/failure_record.sh"
+    LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json"
+    GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/github_output"
+    export GITHUB_OUTPUT LOOP_FAILURE_FILE
+}
+
+#######################################
+# run_case: Run the script once and set RUN_OUTCOME, RUN_STAGE, RUN_MESSAGE
+#
+# Arguments:
+#   $1 - AGENT_RESULT
+#   $2 - AGENT_STAGE
+#   $3 - AGENT_MESSAGE
+#   $4 - ACTION_STATUS
+#   $5 - RECORD_STAGE (recorded first when non-empty)
+#   $6 - RECORD_MESSAGE
+#   $7 - DELIVERED
+#######################################
+run_case() {
+    rm -f "${LOOP_FAILURE_FILE}" "${GITHUB_OUTPUT}"
+    if [[ -n ${5} ]]; then
+        loop_failure_record "${5}" "${6}" "${LOOP_FAILURE_FILE}"
+    fi
+    run env \
+        ACTION_STATUS="${4}" \
+        AGENT_FAILURE_MESSAGE="${3}" \
+        AGENT_FAILURE_STAGE="${2}" \
+        AGENT_RESULT="${1}" \
+        DELIVERED_OUTCOME="${7}" \
+        bash "${SCRIPT}"
+    RUN_OUTCOME="$(output_value outcome "${GITHUB_OUTPUT}")"
+    RUN_STAGE=""
+    RUN_MESSAGE=""
+    if [[ -f ${LOOP_FAILURE_FILE} ]]; then
+        RUN_STAGE="$(jq -r '.failure_stage // ""' "${LOOP_FAILURE_FILE}")"
+        RUN_MESSAGE="$(jq -r '.failure_message // ""' "${LOOP_FAILURE_FILE}")"
+    fi
+}
+
+#######################################
+# run_named_case: run_case with the inputs of an L2_CASES row
+#
+# Arguments:
+#   $1 - row name
+#   Sets ROW_OUTCOME, ROW_STAGE, ROW_MESSAGE to the transcribed expectations
+#######################################
+run_named_case() {
+    local name agent_result agent_stage agent_message action_status record_stage record_message delivered
+    local row
+    row="$(grep "^${1}|" <<< "${L2_CASES}")"
+    IFS='|' read -r name agent_result agent_stage agent_message action_status record_stage record_message delivered ROW_OUTCOME ROW_STAGE ROW_MESSAGE <<< "${row}"
+    run_case "${agent_result}" "${agent_stage}" "${agent_message}" "${action_status}" "${record_stage}" "${record_message}" "${delivered}"
+}
+
+@test "a cancelled composite is error and records finalize" {
+    run_case success "" "" cancelled "" "" pr_created
+    [ "${status}" -eq 0 ]
+    [ "${RUN_OUTCOME}" = "error" ]
+    [ "${RUN_STAGE}" = "finalize" ]
+    [ "${RUN_MESSAGE}" = "" ]
+}
+
+@test "a finalize record makes the outcome error even when the action status is success" {
+    run_case success "" "" success finalize_pr x pr_created
+    [ "${status}" -eq 0 ]
+    [ "${RUN_OUTCOME}" = "error" ]
+    [ "${RUN_STAGE}" = "finalize_pr" ]
+    [ "${RUN_MESSAGE}" = "x" ]
+}
+
+@test "an L1 agent failure records agent_execute" {
+    run_case failure "" "" success "" "" error
+    [ "${status}" -eq 0 ]
+    [ "${RUN_OUTCOME}" = "error" ]
+    [ "${RUN_STAGE}" = "agent_execute" ]
+    [ "${RUN_MESSAGE}" = "" ]
+}
+
+@test "every L2_CASES row resolves to the transcribed outcome, stage and message" {
+    local checked=0 name
+    while IFS='|' read -r name _; do
+        run_named_case "${name}"
+        if [[ ${status} -ne 0 || ${RUN_OUTCOME} != "${ROW_OUTCOME}" || ${RUN_STAGE} != "${ROW_STAGE}" || ${RUN_MESSAGE} != "${ROW_MESSAGE}" ]]; then
+            echo "case ${name}: status=${status} outcome='${RUN_OUTCOME}' stage='${RUN_STAGE}' message='${RUN_MESSAGE}'" >&2
+            return 1
+        fi
+        checked=$((checked + 1))
+    done <<< "${L2_CASES}"
+    [ "${checked}" -eq 14 ]
+}
+
+@test "fails without LOOP_FAILURE_FILE" {
+    rm -f "${GITHUB_OUTPUT}"
+    run env -u LOOP_FAILURE_FILE ACTION_STATUS=success AGENT_RESULT=success DELIVERED_OUTCOME=unchanged bash "${SCRIPT}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"::error::LOOP_FAILURE_FILE is required"* ]]
+    ! grep -q '^outcome=' "${GITHUB_OUTPUT}" 2> /dev/null
+}
+
+@test "outcome is resolved before the agent stage is recorded" {
+    run_named_case agent_stage_on_success
+    [ "${status}" -eq 0 ]
+    [ "${RUN_STAGE}" = "notify_context" ]
+    [ "${RUN_OUTCOME}" = "pr_created" ]
+}
+
+@test "pr_push landing failure is error for notify and run log alike" {
+    run_named_case push_target_failed_no_record
+    [ "${status}" -eq 0 ]
+    [ "${RUN_OUTCOME}" = "error" ]
+    [ "${RUN_STAGE}" = "finalize" ]
+}
+
+@test "re-recording a recorded agent message keeps it unchanged" {
+    local recorded src long
+    long="$(printf 'a%.0s' {1..600})"
+    for src in "auth failed: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz" "${long}"; do
+        loop_failure_record "push" "${src}" "${BATS_TEST_TMPDIR}/first.json"
+        recorded="$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")"
+        rm -f "${LOOP_FAILURE_FILE}" "${GITHUB_OUTPUT}"
+        run env ACTION_STATUS=success AGENT_FAILURE_MESSAGE="${recorded}" AGENT_FAILURE_STAGE=push AGENT_RESULT=success DELIVERED_OUTCOME=pr_created bash "${SCRIPT}"
+        [ "${status}" -eq 0 ]
+        [ "$(jq -r '.failure_message' "${LOOP_FAILURE_FILE}")" = "${recorded}" ]
+    done
+    [[ ${recorded} == *"aaaa"* ]]
+    [ "${#recorded}" -eq 500 ]
+    loop_failure_record "push" "auth failed: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz" "${BATS_TEST_TMPDIR}/first.json"
+    [[ "$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")" == *"[REDACTED]"* ]]
+    [[ "$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")" != *"ghp_"* ]]
+}
+
+@test "writes no failure record when nothing failed" {
+    local name
+    for name in success_created rejected unchanged watch_override; do
+        run_named_case "${name}"
+        [ "${status}" -eq 0 ]
+        run loop_failure_recorded "${LOOP_FAILURE_FILE}"
+        [ "${status}" -eq 1 ]
+    done
+}
