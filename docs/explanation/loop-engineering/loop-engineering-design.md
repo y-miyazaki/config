@@ -257,6 +257,7 @@ flowchart TD
         F_FIN --> F_STRAT{delivery}
         F_STRAT -->|pr_create L2| F_PENDING[pending cursor + fix PR]
         F_STRAT -->|pr_push| F_PUSH[push_target merge + push]
+        F_STRAT -->|issue_comment / pr_review| F_DELIVER[Deliver Message: one comment or review + allowlisted labels]
         F_STRAT -->|REJECT / metadata| F_META[outcome metadata only]
         F_PENDING --> F_PROMOTE[on-loop-state-promote on merge]
     end
@@ -761,7 +762,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                                                                           |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Responsibility** | Persist the outcome per `delivery`: open fix PR (`pr_create`), push to the PR head (`pr_push`), delete agent branch on rejection, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
+| **Responsibility** | Persist the outcome per `delivery`: open fix PR (`pr_create`), push to the PR head (`pr_push`), post the one Issue comment or PR review with allowlisted labels (`issue_comment`, `pr_review`; Deliver Message), delete the agent branch on rejection and after `none` / `issue_comment` / `pr_review`, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
 | **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                                                |
 | **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                                              |
 | **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                                                 |
@@ -777,13 +778,17 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 | ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `pr_create` | Create fix PR to `to.branch`                                                                 | Create PR + `pr_auto_merge` (allowlist + branch protection) |
 | `pr_push`   | Merge the latest head, then push to the PR head `to.branch`; no new PR                       | Same                                                        |
-| `none`      | No push, no PR; agent branch deleted after APPROVE; report handled by `finalize_script` | Same                                                        |
+| `none`      | No push, no PR; agent branch deleted after APPROVE; nothing is delivered (a `finalize_script` may still run) | Same                                                        |
+| `issue_comment` | Deliver Message posts one Issue comment (and allowlisted labels) from `message.md`; agent branch deleted | Same |
+| `pr_review` | Deliver Message posts one `COMMENT` review from `review.json`; agent branch deleted | Same |
+
+At L1 only `none` and `issue_comment` are valid, and `finalize-l1` runs `loop-finalize` with the message the agent wrote (passed as `message_json`).
 
 **Do not** map `L3` → auto-merge alone. `pr_push` never enables auto-merge.
 
 **Merge-gated cursor (all L2 `pr_create` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `state_branch` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `state_branch` (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
-**GitHub API deliverables (github-issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus checker rubric for API outcome fit.
+**GitHub API deliverables (github-issue-triage, stale-pr):** For `issue_comment` and `pr_review`, the agent or `finalize_script` writes message files (`message.md` or `review.json`, optional `message_labels.json`) to `LOOP_MESSAGE_DIR`, and Finalize posts them once through Deliver Message with Meta and the footer, adding or removing only labels in the caller's `finalize_label_allowlist`. The agent does not write to GitHub for these deliveries. Other API actions (close, stale handling) still run in Execute via the entry skill. Platform work for Tier 2 loops is **caller permissions** (`issues: write` on the finalize job, `pull-requests: write` as needed) plus checker rubric for API outcome fit.
 
 #### State cursor (general rule)
 

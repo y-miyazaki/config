@@ -18,7 +18,15 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 
 On Issue / issue_comment events, classify the Issue when confident, apply allowlisted triage labels, and post analysis or clarifying questions as comments (L1). Does not open PRs.
 
-The agent applies labels and ends its run with the comment text; it does not post. `loop-agent-once` measures the usage in that same stage and posts the text once as one Issue comment with the Meta block and footer (`comment_handoff_key`, `comment_marker`). No later step edits the posted comment.
+The agent does not write to GitHub. It writes the comment to `message.md` and the label changes (`{"add": [...], "remove": [...]}`) to `message_labels.json` in `LOOP_MESSAGE_DIR`; `loop-agent-once` creates that directory, names it at the end of the prompt, and passes the files to `finalize-l1` as the job output `message_json`. `loop-finalize` (Deliver Message) then adds or removes the labels that are in `finalize_label_allowlist`, and posts the comment once as one Issue comment with the Marker, Meta block and footer. No later step edits the posted comment.
+
+Behaviors to know:
+
+- `target_json` is required at every level including L1, because Deliver Message reads the Issue number from `handoff_key`. This is a contract change for external callers of `ci-loop-agent.yaml`.
+- Engines other than claude cannot write to `LOOP_MESSAGE_DIR` (only claude gets the write permission through `--add-dir`). With those engines, no message file exists and Deliver Message posts nothing (`unchanged`). This is a known limitation without an engine-specific flag.
+- Deliver Message runs only when the agent job succeeded and the verdict is not `REJECT`. A failed triage run no longer gets the agent-applied `triage:failed` label or a comment; the run-log shows `error`.
+- A delivery failure (label or post) fails the finalize step and records `failure_stage` `deliver_message`; failure of `finalize-l1` has no `failure_stage` in the run-log until the run-log outcome change lands.
+- The delivery outcome is `issue_commented`, or `unchanged` when the message is missing or blank.
 
 ### Supported use cases
 
@@ -39,6 +47,8 @@ The agent applies labels and ends its run with the comment text; it does not pos
 
 Live `workflow_dispatch` dry-run requires repository secrets (`AGENT_TOKEN`, optional bot app). Treat end-to-end Actions dogfood as deferred until secrets are available; local verification is Bats + `actionlint`.
 
+Open dogfood check: whether GitHub creates a label that does not exist when `POST .../issues/<n>/labels` names it is unverified. The allowlist bounds the effect either way. Record the result here after the first live run.
+
 ## Caller inputs
 
 Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-caller-entity.yaml`. Entity subset of [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
@@ -57,12 +67,13 @@ Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-ca
 | `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                                              |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                                                  |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-triage`                                                                              |
-| `agent_tool_allowlist`       | Tool permission rules for the maker (read and edit Issues, manage labels)      | `gh api`, `gh issue view`, `gh issue edit`, `gh issue comment`, `gh label list`, `gh label create` |
+| `agent_tool_allowlist` | Read-only tool rules for the maker (posting and labels belong to finalize) | `gh api -X GET`, `gh issue view`, `gh label list` |
 | `budget_max_runs_per_day`    | Daily run cap                                                                  | `20`                                                                                               |
 | `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                                                          |
-| `delivery`                   | Platform delivery (`none` — L1 comments/labels only)                           | `none`                                                                                             |
+| `delivery` | Platform delivery (`issue_comment` — finalize posts the comment) | `issue_comment` |
 | `detect_hook_script`         | Trusted post-detect hook (autofix dispatch)                                    | `.agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh`                           |
 | `detect_script`              | Domain detect script                                                           | `.agents/skills/github-issue-triage/scripts/detect_issue.sh`                                       |
+| `finalize_label_allowlist` | Labels finalize may add or remove from `message_labels.json`; others are skipped with a warning | `needs-triage`, `bug`, `feature`, `question`, `documentation`, `triage:needs-info`, `triage:ready`, `triage:failed` |
 | `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                                          |
 | `level`                      | Autonomy (`L1` — no PR)                                                        | `L1`                                                                                               |
 | `loop_name`                  | Loop identifier                                                                | `github-issue-triage`                                                                              |
@@ -86,7 +97,7 @@ on-loop-github-issue-triage.yaml
            detect  → loop-entity-detect
                        (detect_issue.sh reads GITHUB_EVENT_PATH;
                         workflow_dispatch may pass ISSUE_NUMBER via detect_env_json)
-           execute → ci-loop-agent (issues: write; finalize-l1 run-log; L1 has no finalize-l2, so no PR)
+           execute → ci-loop-agent (agent-l1 reads only; finalize-l1 has issues: write and runs loop-finalize (Deliver Message) and the run-log; L1 has no finalize-l2, so no PR)
            record-skip → budget | circuit_breaker
 ```
 
