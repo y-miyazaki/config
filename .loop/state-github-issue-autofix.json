@@ -7,6 +7,13 @@
       "open_rejections": [],
       "last_reject_reason": "Single relevant doc file; Lambda durable functions GA, URL, and async-1-year/sync-15-min claims verified against AWS primary sources; no dispatch, no cheated checks; PR body must still carry Fixes #935 and markdown lint is unverified",
       "last_sha": "8118994bf910df473dc396015f049042067d05ac"
+    },
+    "integration:dogfood/loop-delivery": {
+      "last_run": "2026-10-18T03:12:45Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
