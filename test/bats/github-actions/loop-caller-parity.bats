@@ -6,14 +6,14 @@
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
 # - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
-# - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the finalize outcome
+# - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the loop-finalize outcome and failure stage
 # - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
 # - target_json is required at every level
 # - No workflow step edits a message a loop already posted (no Append Loop Meta step)
 # - No loop-finalize step or lib/loop script edits a posted comment or review
 # - Callers pass the detect outputs delivery and pr_auto_merge straight through (no auto_merge or finalize_enabled expression)
 # - ci-loop-agent derives the handoff key, checkout ref and base from target_json and fails closed when it is empty
-# - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression
+# - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression; run-log and notify read loop-finalize outputs with empty-value defaults only
 # - Every with: key on a pinned loop action or ci-loop-agent call is a declared input of the local definition, and every required input is passed
 # - No pre-rename input or env name remains in the three reusable workflows
 # - Committed .loop state files match the on-loop callers
@@ -511,7 +511,8 @@ dogfood_value() {
     if grep -q 'no-changes' "${AGENT}"; then
         return 1
     fi
-    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 2 ]
+    # The unchanged default now lives in loop-finalize; the workflow keeps none.
+    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 0 ]
 }
 
 @test "ci-loop-agent requires loop_name and does not guard run-log on emptiness" {
@@ -692,13 +693,56 @@ dogfood_value() {
     grep -A15 '^  finalize-l1:' "${AGENT}" | grep -q 'needs: agent-l1'
 }
 
-@test "finalize-l1 run log uses the finalize outcome" {
+@test "finalize jobs log the loop-finalize outcome and failure stage with defaults only" {
+    local job step agent
+    for job in finalize-l1 finalize-l2; do
+        agent="agent-l1"
+        [[ ${job} == finalize-l2 ]] && agent="agent-l2"
+        step="$(job_block "${AGENT}" "${job}" | step_block 'Append Run Log')"
+        grep -qxF '        if: always()' <<< "${step}"
+        # Literal GitHub Actions expressions; do not expand.
+        # shellcheck disable=SC2016
+        grep -qxF "          agent_result: \${{ needs.${agent}.result }}" <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF '          failure_message: ${{ steps.finalize.outputs.failure_message }}' <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF "          failure_stage: \${{ steps.finalize.outputs.failure_stage || (steps.finalize.outputs.outcome == '' && 'finalize' || '') }}" <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF "          outcome: \${{ steps.finalize.outputs.outcome || 'error' }}" <<< "${step}"
+    done
+}
+
+@test "finalize jobs keep no run-log decision outside loop-finalize" {
+    local job block count expected
+    for job in finalize-l1 finalize-l2; do
+        block="$(job_block "${AGENT}" "${job}")"
+        if grep -qE 'run_log_meta|Resolve Run Log Metadata' <<< "${block}"; then
+            echo "${job} still has a run-log decision step" >&2
+            return 1
+        fi
+        # shellcheck disable=SC2016
+        if grep -E '^ +outcome: ' <<< "${block}" | grep -vxF "          outcome: \${{ steps.finalize.outputs.outcome || 'error' }}"; then
+            echo "${job} has an outcome expression other than the default" >&2
+            return 1
+        fi
+        count="$(grep -cE '^ +outcome: ' <<< "${block}")"
+        expected=1
+        [[ ${job} == finalize-l2 ]] && expected=2
+        [ "${count}" -eq "${expected}" ]
+    done
+}
+
+@test "finalize-l2 passes the agent failure stage and message to loop-finalize" {
     local step
-    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Append Run Log')"
-    grep -qxF '        if: always()' <<< "${step}"
-    # Literal GitHub Actions expression; do not expand.
+    step="$(job_block "${AGENT}" finalize-l2 | step_block 'Finalize')"
     # shellcheck disable=SC2016
-    grep -qxF "          outcome: \${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l1.result != 'success' && needs.agent-l1.result != 'skipped' && 'error') || 'unchanged' }}" <<< "${step}"
+    grep -qxF '          agent_failure_message: ${{ needs.agent-l2.outputs.failure_message }}' <<< "${step}"
+    # shellcheck disable=SC2016
+    grep -qxF '          agent_failure_stage: ${{ needs.agent-l2.outputs.failure_stage }}' <<< "${step}"
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    if grep -q 'agent_failure_' <<< "${step}"; then
+        return 1
+    fi
 }
 
 @test "finalize-l1 runs loop-finalize with an empty current_sha and branch" {

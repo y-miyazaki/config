@@ -2,10 +2,9 @@
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
 # Tests for .github/actions/loop-finalize/lib/resolve_run_outcome.sh
-# and, until its removal, the finalize-l2 run-log decisions in .github/workflows/ci-loop-agent.yaml
 
 # Use cases:
-# - L2_CASES is a faithful transcription of the current finalize-l2 Resolve Run Log Metadata and outcome expression
+# - L2_CASES is a a faithful transcription of the former finalize-l2 run-log decisions in ci-loop-agent.yaml
 # - every L2_CASES row resolves to the transcribed outcome, failure stage and message
 # - intended differences from the transcription: cancelled composite, finalize record with a success status, L1 agent_execute, pr_push landing failure
 # - the outcome is resolved before the agent stage is recorded
@@ -19,8 +18,8 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-# Rows transcribed from ci-loop-agent.yaml finalize-l2 (Resolve Run Log Metadata
-# :597-631 and the Append Run Log outcome expression :645) before their removal.
+# Rows transcribed from the former ci-loop-agent.yaml finalize-l2 run-log
+# decisions (metadata step and Append Run Log outcome expression).
 # Columns: name|agent_result|agent_stage|agent_message|action_status|record_stage|
 #   record_message|delivered_outcome|outcome|failure_stage|failure_message
 L2_CASES="$(cat <<'EOT'
@@ -77,33 +76,6 @@ output_value() {
         }
         END { flush() }
     ' "$2"
-}
-
-#######################################
-# current_l2_outcome: Transcription of the ci-loop-agent.yaml:645 expression
-#
-# Arguments:
-#   $1 - steps.finalize.outcome
-#   $2 - steps.finalize.outputs.outcome
-#   $3 - needs.agent-l2.result
-#   $4 - needs.agent-l2.outputs.verdict
-#
-# Outputs:
-#   Outcome
-#######################################
-current_l2_outcome() {
-    local step_result="$1" finalize_outcome="$2" agent_result="$3" verdict="$4"
-    if [[ ${step_result} == "failure" ]]; then
-        echo "error"
-    elif [[ -n ${finalize_outcome} ]]; then
-        echo "${finalize_outcome}"
-    elif [[ ${agent_result} != "success" && ${agent_result} != "skipped" ]]; then
-        echo "error"
-    elif [[ ${verdict} == "REJECT" ]]; then
-        echo "rejected"
-    else
-        echo "unchanged"
-    fi
 }
 
 SCRIPT="$(bats_workspace_root)/.github/actions/loop-finalize/lib/resolve_run_outcome.sh"
@@ -185,47 +157,6 @@ run_named_case() {
     [ "${RUN_OUTCOME}" = "error" ]
     [ "${RUN_STAGE}" = "agent_execute" ]
     [ "${RUN_MESSAGE}" = "" ]
-}
-
-@test "current finalize-l2 run log metadata and outcome match L2_CASES" {
-    local yaml script checked=0 out_file
-    local name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message
-    local got_stage got_message got_outcome
-
-    yaml="$(bats_workspace_root)/.github/workflows/ci-loop-agent.yaml"
-    script="$(awk '/^      - name: Resolve Run Log Metadata$/ {f=1; next} f && /^        run: \|$/ {r=1; next} r && /^          / {sub(/^          /, ""); print; next} r {exit}' "${yaml}")"
-    [ -n "${script}" ]
-    grep -qxF "          outcome: \${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'unchanged' }}" "${yaml}"
-
-    out_file="${BATS_TEST_TMPDIR}/github_output"
-    while IFS='|' read -r name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message; do
-        : > "${out_file}"
-        GITHUB_OUTPUT="${out_file}" \
-            AGENT_RESULT="${agent_result}" \
-            EXEC_FAILURE_STAGE="${agent_stage}" \
-            EXEC_FAILURE_MESSAGE="${agent_message}" \
-            FINALIZE_STEP_RESULT="${action_status}" \
-            FINALIZE_FAILURE_STAGE="${record_stage}" \
-            FINALIZE_FAILURE_MESSAGE="${record_message}" \
-            bash -c "${script}"
-        got_stage="$(output_value failure_stage "${out_file}")"
-        got_message="$(output_value failure_message "${out_file}")"
-        got_outcome="$(current_l2_outcome "${action_status}" "${delivered_outcome}" "${agent_result}" "")"
-        if [[ ${got_stage} != "${failure_stage}" ]]; then
-            echo "case ${name}: failure_stage '${got_stage}' != '${failure_stage}'" >&2
-            return 1
-        fi
-        if [[ ${got_message} != "${failure_message}" ]]; then
-            echo "case ${name}: failure_message '${got_message}' != '${failure_message}'" >&2
-            return 1
-        fi
-        if [[ ${got_outcome} != "${outcome}" ]]; then
-            echo "case ${name}: outcome '${got_outcome}' != '${outcome}'" >&2
-            return 1
-        fi
-        checked=$((checked + 1))
-    done <<< "${L2_CASES}"
-    [ "${checked}" -eq 14 ]
 }
 
 @test "every L2_CASES row resolves to the transcribed outcome, stage and message" {
