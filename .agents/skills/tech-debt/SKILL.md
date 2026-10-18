@@ -53,8 +53,8 @@ Tech-debt report per [common-output-format.md](references/common-output-format.m
 - [category-automation-envelope.md](references/category-automation-envelope.md) (read on automation path)
 - [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
 - Previous report at `previous_report` (read when previous_report path exists)
-- [category-pr-body-links.md](references/category-pr-body-links.md) (read at PR body synthesis; link every path, SHA, and workflow/job)
-- `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` (load at PR body synthesis; keep their headings and table columns as written)
+- [category-pr-body-links.md](references/category-pr-body-links.md) (read when synthesizing the PR body)
+- `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` (read when synthesizing the PR body)
 
 ## Workflow
 

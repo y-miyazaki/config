@@ -46,6 +46,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 - [category-prompt-rules.md](references/category-prompt-rules.md) (always read)
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
+- [category-pr-body-links.md](references/category-pr-body-links.md) (read when writing an Issue comment)
 
 ## Workflow
 

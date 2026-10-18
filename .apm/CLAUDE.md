@@ -67,7 +67,9 @@ Applies to skills that ship `references/category-pr-body-links.md` (`changelog`,
 | Format is not a gate  | Link and column drift is steered by the above, **not** by `validate_agent_report.sh` REJECT — a cosmetic miss must not cost a maker retry                                                                   |
 | Platform safety net   | `loop-finalize` (`linkify_agent_text`) links changed-file paths and detected SHAs the agent left unlinked. Maintainer-only: package sources **MUST NOT** rely on it or mention it                           |
 
-Adding a loop skill that ships `category-pr-body-links.md` means adding it to `LOOP_PR_BODY_LINKS_SKILLS` in the checker.
+Comment-posting skills (`github-issue-triage`, `github-pr-review`) have no PR body template, but their comment/review text carries the same links: each ships `references/category-pr-body-links.md` (the file name is shared across loop skills; here it covers comment and review text) and lists it in `SKILL.md`. `github-pr-review` pins line links to a full commit SHA; `github-issue-triage` links `#N`, commits, and existing paths.
+
+Adding a loop skill that ships `category-pr-body-links.md` means adding it to `LOOP_PR_BODY_LINKS_SKILLS` (PR body skills) or `LOOP_COMMENT_LINKS_SKILLS` (comment-posting skills) in the checker.
 
 ---
 
