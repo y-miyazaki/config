@@ -9,11 +9,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Full diff](https://github.com/y-miyazaki/config/compare/af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6...b6566a844dba52a1b4de8431056ae49e6c427471)
 
+### Added
+
+- (loop) delivery, run-log outcome, credential isolation, trust removal (#1018) ([496f20b](https://github.com/y-miyazaki/config/commit/496f20be4254b3de20818858f75fa55c594f5f14))
+
 ### Changed
 
 - Increase agent_maker_max_turns to 15 across multiple workflows and configuration files (loop) ([5b1f7d8](https://github.com/y-miyazaki/config/commit/5b1f7d8e27c2c3b0949189b91633b97bfac535c9))
 - Reset consecutive failures in state-changelog.json and state-docs-updater.json (loop) ([dec0bbc](https://github.com/y-miyazaki/config/commit/dec0bbc24a584e3a2d44cf32985b32f339289ef9))
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
+
+#### Dependencies
+
+- (github-actions-tool-version) Update mise to v2026.10.8 (#1016) ([14c8e25](https://github.com/y-miyazaki/config/commit/14c8e2561afbdcd14d267e1e5d77562f7a5c1a35))
+
+## [1.8.123] - 2026-10-18
+
+### Added
+
+- (loop) one delivery value, unified Meta and footer, single-post loop messages (#1015) ([35d7eae](https://github.com/y-miyazaki/config/commit/35d7eae213e20f11415032f5e8fdaf367f2350bc))
+- (loop) add github-pr-review loop (first-pass evidence-backed PR review) (#989) ([8a2352d](https://github.com/y-miyazaki/config/commit/8a2352d373da9713a8ab6ba891f7fe53089fa7a5))
+- (apm) add prettier hook to common-hooks packages (#991) ([da95ff7](https://github.com/y-miyazaki/config/commit/da95ff7a28915005657c32faca210342227cb885))
+
+### Fixed
+
+- (apm) run shfmt and prettier hooks after Edit as well as Write (#992) ([b9f136a](https://github.com/y-miyazaki/config/commit/b9f136a2a77366f2b7d8bf6f2b5f873381cb2ffa))
+
+### Changed
+
+- align pins to v1.8.123 (327f577) ([03671a8](https://github.com/y-miyazaki/config/commit/03671a852c31b83e9d728d3e7b17a53fa3a5e91f))
+- finalize all pins v1.8.123 (af9324d) ([327f577](https://github.com/y-miyazaki/config/commit/327f5778c6eeb733921fb00970960c4acafb4bfe))
+- pin all to release v1.8.123 (448fd41) ([af9324d](https://github.com/y-miyazaki/config/commit/af9324d94c342ef5a025c507982fd066403f2e4a))
+- pin all to v1.8.123 (dc81105) ([448fd41](https://github.com/y-miyazaki/config/commit/448fd414009784554ce433ae7bd24e92c62c4c6b))
+- (settings) enhance permissions and shell commands with git fetch and additional rules ([dc81105](https://github.com/y-miyazaki/config/commit/dc81105f4c719550d93f04682ba6f770930bf05f))
+- (docs) update table formatting in CLAUDE.md and enhance settings.json with new edit rules ([554522e](https://github.com/y-miyazaki/config/commit/554522e9185e05eec3950a90d1dee07fc1e040ed))
+- (settings) remove unused git commit command and clean up hooks ([726d4df](https://github.com/y-miyazaki/config/commit/726d4df74feb1ac528deee544579d055f77bd7ad))
+- (ci) update mise lockfile ([98efd7f](https://github.com/y-miyazaki/config/commit/98efd7f8a0ac506c347fa1523ca89a4b25ca05fd))
+- (loop) promote state for PR #980 [skip ci] ([3f4b1b3](https://github.com/y-miyazaki/config/commit/3f4b1b34f4e50a6545e9eea6bed8423d8f4f7e99))
+- loop-automated update (attempt 1) (#980) ([c7639c1](https://github.com/y-miyazaki/config/commit/c7639c15540cba4a30c71dabec785420d4bedc5c))
+- (loop) promote state for PR #977 [skip ci] ([a8aa2f6](https://github.com/y-miyazaki/config/commit/a8aa2f6a48fecd77d3ad02ca8932a399e3c885dd))
+- loop-automated update (attempt 1) (#977) ([98ee783](https://github.com/y-miyazaki/config/commit/98ee783478e0e8cf9ac6a1c9aa26a0c7cfb233ea))
+- (ci) update mise lockfile ([2eed372](https://github.com/y-miyazaki/config/commit/2eed372af024ddaeb5e82a6b6c19b95b0ce49e2d))
+
+#### Dependencies
+
+- (apm-mcp) Update dependency mcp-server-fetch to v2026.10.10 (#1013) ([74380ef](https://github.com/y-miyazaki/config/commit/74380ef07c221de21db4dbc30247d328298a0a29))
+- (mise) Update dependency npm:prettier to v3.9.10 (#993) ([3b4fd72](https://github.com/y-miyazaki/config/commit/3b4fd724621e6173d0f945099a7f51d85e4721c5))
+- (apm-mcp) Update dependency mcp-proxy to v0.13.0 (#995) ([5a39cfa](https://github.com/y-miyazaki/config/commit/5a39cfa5c4a03b0d40d626e6e4a791615c6ebef6))
+- (apm-mcp) Update dependency mcp-compressor to v0.36.1 (#994) ([b9afb55](https://github.com/y-miyazaki/config/commit/b9afb55abfabb94f4ce500694af324b9b8d97cc1))
+- (github-actions) Update astral-sh/setup-uv action to v10.3.0 (#987) ([25d4a79](https://github.com/y-miyazaki/config/commit/25d4a79c2122cd40538edaa57bfe5c41acb9d290))
+- (uv) Update uv to v0.13.0 (#988) ([e779cdc](https://github.com/y-miyazaki/config/commit/e779cdcb1a56f5b578592d842e010a6727bf29d8))
+- (mise) Update dependency github:microsoft/waza to v0.38.10 (#986) ([a0ea567](https://github.com/y-miyazaki/config/commit/a0ea567ce72faea531883190d6ec0f2d2c65bb3f))
+- (mise) Update dependency aqua:aws/aws-cli to v2.37.12 (#985) ([31d858d](https://github.com/y-miyazaki/config/commit/31d858d7e7f2c856bae761c389194234d4616af9))
+- (apm-mcp) Update dependency @upstash/context7-mcp to v4.3.0 (#979) ([96105a7](https://github.com/y-miyazaki/config/commit/96105a7c22c707b39617339d9a160e0eb3ccbee1))
+- (apm-mcp) Update lean-ctx to v3.11.2 (#981) ([7ad2c1f](https://github.com/y-miyazaki/config/commit/7ad2c1fb9d39a0321281f156b982b9f1c8d96820))
+- (mise) Update dependency aqua:aws/aws-sam-cli to v1.168.0 (#984) ([5ab7e51](https://github.com/y-miyazaki/config/commit/5ab7e51ffc9e806cc4f314de2205cd2d3702ba89))
+- (github-actions-tool-version) Update mise to v2026.10.7 (#983) ([cdff9d0](https://github.com/y-miyazaki/config/commit/cdff9d064d495d0d66c0e0f3a6be9c3bdd7b05b5))
+- (mise) Update dependency claude to v2.1.296 (#982) ([973b773](https://github.com/y-miyazaki/config/commit/973b77387fd5b4b293b2ea286a979d73becf3667))
+- (apm-mcp) Update dependency mcp-compressor to v0.36.0 (#976) ([b79a73a](https://github.com/y-miyazaki/config/commit/b79a73a4f10a9b63f08747d93536e9d5d24cb0dc))
+- (mise) Update dependency aqua:github/copilot-cli to v1.0.95 (#978) ([fa84cd1](https://github.com/y-miyazaki/config/commit/fa84cd1f10f0d7b7b9fe836058ecffa3bba1b88d))
 
 ## [1.8.121] - 2026-10-16
 
@@ -2492,6 +2546,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...327f5778c6eeb733921fb00970960c4acafb4bfe
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
 [1.8.119]: https://github.com/y-miyazaki/config/compare/v1.8.118...8103690c11ef708b382835505bbfb7eb5e7c1561
