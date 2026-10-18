@@ -5,7 +5,7 @@
 #
 # Use cases:
 # - derive_pr_auto_merge over level x delivery
-# - validate_delivery_value accepts implemented values and rejects the rest
+# - validate_delivery_value accepts implemented values (incl. issue_comment, pr_review) and rejects the rest
 # - validate_delivery_detect_config rules for branch callers
 # - delivery_requires_pr_number_skip for pr_push
 # - validate_delivery_target per target kind
@@ -257,19 +257,16 @@ GOLDEN_ROWS=(
 
 @test "validate_delivery_value: implemented values pass" {
     local v
-    for v in none pr_create pr_push; do
+    for v in none pr_create pr_push issue_comment pr_review; do
         run validate_delivery_value "${v}"
         [ "$status" -eq 0 ]
     done
 }
 
 @test "validate_delivery_value: unimplemented values fail with not implemented" {
-    local v
-    for v in issue_comment issue_create pr_review; do
-        run validate_delivery_value "${v}"
-        [ "$status" -eq 1 ]
-        [[ $output == *"not implemented"* ]]
-    done
+    run validate_delivery_value issue_create
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery issue_create is not implemented" ]
 }
 
 @test "validate_delivery_value: unknown and empty values fail" {
@@ -279,4 +276,51 @@ GOLDEN_ROWS=(
         [ "$status" -eq 1 ]
         [[ $output == *"::error::"* ]]
     done
+}
+
+@test "validate_delivery_value: unknown and empty values name the full allowed list" {
+    run validate_delivery_value ""
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)" ]
+    run validate_delivery_value bogus
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: bogus)" ]
+}
+
+@test "validate_delivery_target: issue_comment accepts entity issue only" {
+    run validate_delivery_target issue_comment '{"entity":{"kind":"issue"}}'
+    [ "$status" -eq 0 ]
+    run validate_delivery_target issue_comment '{"entity":{"kind":"pr"}}'
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery issue_comment allows only issue targets (got: pr)" ]
+    run validate_delivery_target issue_comment '{"mode":"integration"}'
+    [ "$status" -eq 1 ]
+    run validate_delivery_target issue_comment '{"mode":"pull_request"}'
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_delivery_target: pr_review accepts entity pr only" {
+    run validate_delivery_target pr_review '{"entity":{"kind":"pr"}}'
+    [ "$status" -eq 0 ]
+    run validate_delivery_target pr_review '{"entity":{"kind":"issue"}}'
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery pr_review allows only pr targets (got: issue)" ]
+    run validate_delivery_target pr_review '{"mode":"integration"}'
+    [ "$status" -eq 1 ]
+    run validate_delivery_target pr_review '{"mode":"pull_request"}'
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_delivery_detect_config: issue_comment and pr_review are rejected for branch callers" {
+    local d checked=0
+    for d in issue_comment pr_review; do
+        run validate_delivery_detect_config "${d}" true ""
+        [ "$status" -eq 1 ]
+        [ "$output" = "::error::delivery ${d} requires an entity caller (loop-entity-detect)" ]
+        run validate_delivery_detect_config "${d}" false main
+        [ "$status" -eq 1 ]
+        [ "$output" = "::error::delivery ${d} requires an entity caller (loop-entity-detect)" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
 }

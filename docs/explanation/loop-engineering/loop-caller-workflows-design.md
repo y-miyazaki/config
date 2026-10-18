@@ -91,7 +91,7 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 | Input                  | Example                                                 |
 | ---------------------- | ------------------------------------------------------- |
 | `target_json`          | Matrix cell                                             |
-| `finalize_hook_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
+| `finalize_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
 | `state_branch`         | `state_branch` input (required)                         |
 
 Push branch: `state_branch`, **not** `target.to.branch`.
@@ -215,7 +215,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | Debt                                             | Was                                          | Resolution (current)                                                                      |
 | ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell                                  |
-| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `finalize_hook_script` in `loop-finalize` via `ci-loop-agent`                             |
+| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `finalize_script` in `loop-finalize` via `ci-loop-agent`                             |
 | `auto_merge: level == L3` without finalize check | all L2+ callers                              | `pr_auto_merge` derived once by `loop-detect` (`level == L3` and `delivery == pr_create`) |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `DETECT_BRANCH_MATCH` (`detect_branch_match`)                                             |
 | `docs-updater` detect path                       | `on-loop-docs-updater`                       | `docs-updater/scripts/detect_changes.sh`                                                  |

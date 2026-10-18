@@ -38,7 +38,7 @@ inputs:
     description: "Default daily token limit when budget file is absent or omits max_tokens_per_day"
     required: false
   delivery:
-    description: "Where the agent output is delivered: none | pr_create | pr_push (no default; empty or other values fail)"
+    description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
     required: true
   detect_branch_match:
     default: ""
@@ -75,6 +75,14 @@ inputs:
   detect_script:
     description: "Path to domain detect script (bash)"
     required: true
+  finalize_label_allowlist:
+    default: ""
+    description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
+    required: false
+  finalize_script:
+    default: ""
+    description: "Trusted script that writes the delivery message files (required at L2/L3 for delivery issue_comment or pr_review; must be empty at L1)"
+    required: false
   github_token:
     description: "Resolved GitHub token for PR enumeration and API calls"
     required: true
@@ -104,7 +112,7 @@ outputs:
     description: "Current SHA for first matrix cell (legacy compat)"
     value: ${{ steps.detect.outputs.current_sha }}
   delivery:
-    description: "Declared delivery (none | pr_create | pr_push)"
+    description: "Declared delivery (issue_comment | none | pr_create | pr_push | pr_review)"
     value: ${{ steps.detect.outputs.delivery }}
   handoff_artifact_name:
     description: "Uploaded artifact name for loop-handoff bundle (empty when should_run=false)"
@@ -169,6 +177,8 @@ runs:
         DETECT_PR_ENABLED: ${{ inputs.detect_pr_enabled }}
         DETECT_PR_NUMBER: ${{ inputs.detect_pr_number }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
+        FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
+        FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}

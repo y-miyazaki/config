@@ -1,6 +1,6 @@
 # PR Review Report Format
 
-The agent writes a JSON report. A separate trusted step validates it, verifies quotes at the base commit, and renders and posts a single COMMENT review. See `assets/review-body-template.md` and `assets/inline-comment-template.md` for the rendered result.
+The agent writes a JSON report. The platform validates it, verifies quotes at the base commit, renders a single COMMENT review, and posts it. See `assets/review-body-template.md` and `assets/inline-comment-template.md` for the rendered result.
 
 ## Survey result (`agent_edit_allowed: false`)
 
@@ -31,13 +31,13 @@ Write JSON to `result.report_path` (for example `.loop-review/pr-<n>.json`). Sta
 | Field                 | Type   | Rule                                                                                                  |
 | --------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
 | `pr_number`           | number | Required. Must equal detect `result.pr_number`                                                        |
-| `head_sha`            | string | Required. Copy detect `result.head_sha`; a missing or stale value makes the poster refuse to post     |
+| `head_sha`            | string | Required. Copy detect `result.head_sha`; a missing or stale value makes the platform refuse to post   |
 | `base_sha`            | string | Copy detect `result.base_sha`                                                                         |
 | `response_language`   | string | Language code used for agent-written prose (`en`, `ja`, ...)                                          |
 | `premises`            | object | `pr_body`: what you read from the PR body or `none`; `linked`: array of `#N` / paths, or `none`       |
 | `summary`             | string | What the PR does and the overall assessment; say explicitly when there are no findings                |
 | `findings`            | array  | May be empty. Order by severity, then by importance                                                   |
-| `findings[].id`       | number | Optional sequence hint; the poster numbers findings itself                                            |
+| `findings[].id`       | number | Optional sequence hint; the platform numbers findings itself                                          |
 | `findings[].severity` | string | `Critical`, `Warning`, or `Suggestion`                                                                |
 | `findings[].title`    | string | One-line summary                                                                                      |
 | `findings[].evidence` | object | `kind` (`rule` \| `criteria` \| `bug`); `rule` / `criteria` require `path` and verbatim `quote`       |

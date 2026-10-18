@@ -58,7 +58,7 @@ Per-skill required elements and examples live in each skill's `references/common
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
-| `<details>Meta`       | Collapsed `| Key | Value |` table: outcome, level, target, skip_reason, engine, model, tokens                                                                                                                                  |
+| `<details>Meta`       | Collapsed key/value table: outcome, level, target, skip_reason, engine, model, tokens                                                                                                                                  |
 | Loop footer           | `LOOP_META_FOOTER` — the one fixed `<sub>Written by Loop Engineering (LE)…</sub>` line that closes every loop surface (PR body, PR comment, trigger reply, Issue comment, review), always present, always the same text; Meta is likewise unconditional on every surface and author type |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
@@ -139,7 +139,7 @@ Every loop automation skill MUST:
 9. List `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in the `SKILL.md` reference guide (an agent follows only what `SKILL.md` names); enforced by `check_loop_pr_body_contract.sh`.
 10. Mark linkable items in templates with `<linked path>`, `<linked sha>`, `<linked workflow>`, or `<linked job>`, and state `Keep the table columns as written` in each template's rules block. Link and column drift is steered by these rules, not by a `validate_agent_report.sh` REJECT.
 
-Skills that post comments or reviews instead of a PR body (`github-issue-triage`, `github-pr-review`) ship `references/category-pr-body-links.md` for that text and list it in `SKILL.md`; `check_loop_pr_body_contract.sh` enforces both.
+Skills that write comments or reviews instead of a PR body (`github-issue-triage`, `github-pr-review`) ship `references/category-pr-body-links.md` for that text and list it in `SKILL.md`; `check_loop_pr_body_contract.sh` enforces both. The skill or its `finalize_script` writes only the text; `loop-finalize` (Deliver Message) posts the comment or review once and appends the marker, Meta and the footer.
 
 ## Source of truth
 

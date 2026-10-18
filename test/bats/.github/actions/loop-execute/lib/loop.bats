@@ -163,6 +163,63 @@ _commit_branch_ahead_of_main() {
     [ "${REASON}" = "No file changes produced" ]
 }
 
+@test "run_bounded_loop names permission denials in the no-change reason" {
+    local commit_log="${BATS_TEST_TMPDIR}/commit-messages.txt"
+    STATUS_DIR="${BATS_TEST_TMPDIR}/status-loop"
+    WORKTREE_PATH="${BATS_TEST_TMPDIR}/wt-loop"
+    bats_git_fresh_repo "${WORKTREE_PATH}"
+    printf 'x\n' > "${WORKTREE_PATH}/x.txt"
+    bats_git_commit "${WORKTREE_PATH}" "init"
+    AGENT_LOOP_MAX_ATTEMPTS=1
+    AGENT_MAKER_SKILL_NAME="changelog"
+    AGENT_MAKER_MAX_TURNS="5"
+    AGENT_MAKER_MODEL=""
+    HAS_CHANGES="false"
+    AGENT_COMMIT_MESSAGE="chore: new name"
+    COMMIT_MESSAGE="chore: legacy name"
+    AGENT_UNCHANGED_VERDICT="APPROVE"
+    NO_CHANGES_VERDICT="REJECT"
+    function sync_reject_feedback { :; }
+    function agent_report_skill_requires_format_check { return 1; }
+    function build_agent_prompt { printf 'prompt'; }
+    function run_agent_capture { printf '::warning::Agent permission_denials: [{"tool_name":"Edit"}]\n' > "$1"; }
+    function harvest_workspace_into_worktree { return 0; }
+    function commit_worktree_if_needed {
+        printf '%s\n' "$1" >> "${commit_log}"
+        return 1
+    }
+
+    run_bounded_loop > /dev/null
+    [ "${VERDICT}" = "APPROVE" ]
+    [ "${REASON}" = "No file changes produced; 1 tool call(s) denied by permission settings" ]
+}
+
+@test "permission_denial_note is empty without a denial warning" {
+    printf 'Agent summary: role=maker\n' > "${BATS_TEST_TMPDIR}/out.txt"
+    run permission_denial_note "${BATS_TEST_TMPDIR}/out.txt"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "permission_denial_note is empty when the file is missing" {
+    run permission_denial_note "${BATS_TEST_TMPDIR}/missing.txt"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "permission_denial_note counts denied tool calls" {
+    printf '::warning::Agent permission_denials: [{"tool_name":"Edit"},{"tool_name":"Bash"}]\n' > "${BATS_TEST_TMPDIR}/out.txt"
+    run permission_denial_note "${BATS_TEST_TMPDIR}/out.txt"
+    [ "$status" -eq 0 ]
+    [ "$output" = "; 2 tool call(s) denied by permission settings" ]
+}
+
+@test "permission_denial_note ignores an empty denial list" {
+    printf '::warning::Agent permission_denials: []\n' > "${BATS_TEST_TMPDIR}/out.txt"
+    run permission_denial_note "${BATS_TEST_TMPDIR}/out.txt"
+    [ -z "$output" ]
+}
+
 @test "promote_has_changes_after_attempt leaves HAS_CHANGES false on attempt 1 when HEAD unchanged" {
     HAS_CHANGES="false"
     WORKTREE_PATH="${BATS_TEST_TMPDIR}/wt-a1"

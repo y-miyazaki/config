@@ -65,16 +65,21 @@ jobs:
       agent_maker_instructions: |
         Implement a minimal fix for the Issue from detect JSON.
         Synthesize PR body with Fixes #<N>. Do not call repository_dispatch.
+        Run a validation skill's script from the repository root by this exact form: `bash .claude/skills/<skill>/scripts/validate.sh [path]` (other forms such as cd into the skill directory or an absolute path are denied in CI).
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-autofix
       # Autofix reads the Issue and checks for an existing PR that closes it; the
       # branch push and PR creation are done by the workflow, not by the agent.
       agent_tool_allowlist: |
-        Bash(gh api:*)
+        Bash(gh api -X GET:*)
         Bash(gh issue view:*)
         Bash(gh pr list:*)
         Bash(gh pr view:*)
+        Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000

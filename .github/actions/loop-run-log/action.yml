@@ -4,7 +4,7 @@ description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries old
 inputs:
   agent_result:
     default: ""
-    description: "agent-l2 job result (success | failure | cancelled | skipped)"
+    description: "agent job result (success | failure | cancelled | skipped)"
     required: false
   attempts:
     default: ""
@@ -20,7 +20,7 @@ inputs:
     required: false
   failure_stage:
     default: ""
-    description: "Platform failure stage (push | notify_context | finalize_pr | agent_execute | …)"
+    description: "Platform failure stage (bundle | push | notify_context | finalize_pr | deliver_message | agent_execute | finalize | …)"
     required: false
   github_token:
     description: "GitHub token for commit and push"
@@ -37,7 +37,7 @@ inputs:
     description: "GitHub Actions workflow run ID"
     required: false
   outcome:
-    description: "Run outcome (pr_created | pr_pushed | reported | unchanged | rejected | error | skipped)"
+    description: "Run outcome (pr_created | pr_pushed | reported | issue_commented | pr_reviewed | unchanged | rejected | error | skipped)"
     required: true
   run_log_file:
     default: ".loop/loop-run-log.md"

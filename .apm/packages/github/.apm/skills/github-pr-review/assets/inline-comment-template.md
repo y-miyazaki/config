@@ -1,6 +1,6 @@
 <!--
-Inline review comment rendered by post_review.sh for findings whose lines are inside the PR diff (github-pr-review).
-Load ONLY when you need to see how an in-diff finding is posted. The agent writes report JSON; the poster renders this shape and attaches it to path / line / side (and start_line for ranges).
+Inline review comment rendered by render_review.sh for findings whose lines are inside the PR diff (github-pr-review).
+Load ONLY when you need to see how an in-diff finding is posted. The agent writes report JSON; the platform renders this shape and attaches it to path / line / side (and start_line for ranges).
 Language: headings, labels, severities, and the closing sentence stay English. Agent-written prose (title, impact) uses the response language: Constraints response_language > language of the PR title/body > English. Quotes, code, and paths stay verbatim.
 -->
 

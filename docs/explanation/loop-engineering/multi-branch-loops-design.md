@@ -269,7 +269,7 @@ See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#conc
 | ----- | ---------------------------------------------------------------------- | -------------------------------------------------- |
 | **0** | Single-branch dogfood                                                  | ✅ Done                                            |
 | **1** | `target_matrix`; `targets` map; no double detect; workflow concurrency | ✅ Done                                            |
-| **2** | `target_json` on execute/finalize; `finalize_hook_script`; `pr_push`   | ✅ Done                                            |
+| **2** | `target_json` on execute/finalize; `finalize_script`; `pr_push`   | ✅ Done                                            |
 | **3** | Matrix fan-out; shared workflow concurrency (`loop-state-<branch>`)    | ✅ Done                                            |
 | **4** | `workflow_run` per loop ops checklist                                  | ✅ Done (ci-sweeper dogfood; other loops TBD)      |
 | **5** | L3 integration `push` (opt-in)                                         | Planned                                            |

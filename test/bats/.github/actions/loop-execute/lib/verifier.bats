@@ -14,6 +14,9 @@
 # - run_verify honors AGENT_UNCHANGED_VERDICT when the branch diff is empty
 # - run_verify fails (no REJECT default) when AGENT_UNCHANGED_VERDICT is empty
 # - run_verify writes denylist_blocked when the diff matches the denylist
+# - run_verify rejects a rename away from a denylisted path
+# - run_verify rejects a rename away from a denylisted non-ASCII path
+# - run_verify rejects and blocks a changed path with unsafe characters
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -233,4 +236,91 @@ EOF
     [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
     [ -f "${attempt_dir}/denylist_blocked" ]
     [[ "$(cat "${attempt_dir}/denylist_blocked")" == "true" ]]
+}
+
+@test "run_verify rejects a rename away from a denylisted path" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-rename"
+    work="${BATS_TEST_TMPDIR}/work-rename"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-rename"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'hunter2\n' > "${remote}/secrets.txt" # pragma: allowlist secret
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+    mkdir -p "${work}/docs"
+    bats_git_cmd -C "${work}" mv secrets.txt docs/notes.txt
+    bats_git_commit "${work}" "rename secrets"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    AGENT_EDIT_DENYLIST="secrets*"
+
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+    [ -f "${attempt_dir}/denylist_blocked" ]
+}
+
+@test "run_verify rejects a rename away from a denylisted non-ASCII path" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-rename-utf8"
+    work="${BATS_TEST_TMPDIR}/work-rename-utf8"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-rename-utf8"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'hunter2\n' > "${remote}/secrets-é.txt" # pragma: allowlist secret
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+    mkdir -p "${work}/docs"
+    bats_git_cmd -C "${work}" mv secrets-é.txt docs/notes.txt
+    bats_git_commit "${work}" "rename secrets"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    AGENT_EDIT_DENYLIST="secrets*"
+
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+    [ -f "${attempt_dir}/denylist_blocked" ]
+    grep -q 'secrets-é.txt' "${attempt_dir}/reason"
+}
+
+@test "run_verify rejects and blocks a changed path with unsafe characters" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-unsafe"
+    work="${BATS_TEST_TMPDIR}/work-unsafe"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-unsafe"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/a.txt"
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+    mkdir -p "${work}/docs"
+    printf 'x\n' > "${work}/docs/a\"b.md"
+    bats_git_commit "${work}" "quoted name"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    AGENT_EDIT_DENYLIST="secrets*"
+
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+    [ -f "${attempt_dir}/denylist_blocked" ]
+    grep -q 'unsafe characters' "${attempt_dir}/reason"
+    [[ ${output} == *"::error::Branch diff lists an unsafe path"* ]]
 }

@@ -216,7 +216,8 @@
       "Write(.env)",
       "Write(.env.*)",
       "Write(secrets/**)",
-      "Write(~/**)"
+      "Write(~/.*)",
+      "Write(~/.*/**)"
     ]
   }
 }

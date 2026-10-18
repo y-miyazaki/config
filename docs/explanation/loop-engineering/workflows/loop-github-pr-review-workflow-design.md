@@ -10,13 +10,13 @@ Workflow and domain design for the `github-pr-review` entity loop.
 | Boundaries   | [Entity Caller Responsibility Separation](../../../superpowers/specs/2026-08-11-entity-caller-responsibility-separation-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                                           |
 
-**Artifacts:** `on-loop-github-pr-review.yaml` · skill `github-pr-review` · `detect_pr_review.sh` · `post_review.sh` · `ci-loop-caller-entity.yaml`
+**Artifacts:** `on-loop-github-pr-review.yaml` · skill `github-pr-review` · `detect_pr_review.sh` · `render_review.sh` · `ci-loop-caller-entity.yaml`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md) (entity subset).
 
 ## Purpose
 
-Review a pull request once when it is opened or marked ready, and post the result as a single `COMMENT` pull request review (L2). The agent only writes a JSON report; a trusted script posts it after the checker approves. The loop never approves, requests changes, or edits source files.
+Review a pull request once when it is opened or marked ready, and post the result as a single `COMMENT` pull request review (L2). The agent only writes a JSON report; after the checker approves, the trusted script `render_review.sh` renders it into `review.json`, and `loop-finalize` (Deliver Message) posts it once. The loop never approves, requests changes, or edits source files.
 
 ### Supported use cases
 
@@ -38,18 +38,19 @@ Do not dispatch or enable the workflow until a release that contains all of the 
 
 | Fix        | Change                                                                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_hook_script` |
-| B2         | `loop-finalize` (and `post_review.sh`) always runs at L2/L3 for `delivery: none`; the `finalize_enabled` flag no longer exists                     |
+| P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_script` |
+| B2         | `loop-finalize` (and `render_review.sh`) always runs at L2/L3; the `finalize_enabled` flag no longer exists                                        |
+| Deliver    | `loop-finalize` accepts `delivery: pr_review` and `finalize_script`, and Deliver Message posts the review                                         |
 | B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                       |
 | Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job            |
 
-With older pins, an APPROVE verdict can merge the agent branch, including `.loop-review/pr-<n>.json`, into the base branch, or the review is never posted (see [Finalize with `delivery: none`](#finalize-with-delivery-none)).
+With older pins, an APPROVE verdict can merge the agent branch, including `.loop-review/pr-<n>.json`, into the base branch, or the review is never posted (see [Finalize with `delivery: pr_review`](#finalize-with-delivery-pr_review)).
 
 | Stage                 | Action                                                                                                                                                    |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Before the pin bump   | Do not run the workflow with older pins; the fixes above must be in the pinned release                                                                    |
 | After the pin bump    | The trigger is enabled and `zizmor` covers it; do not downgrade the pins                                                                                  |
-| Manual dispatch       | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `post_review.sh` come from the ref the run starts on |
+| Manual dispatch       | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `render_review.sh` come from the ref the run starts on |
 | Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                                      |
 
 ## Caller inputs
@@ -76,11 +77,11 @@ Keys are passed in `on-loop-github-pr-review.yaml` via `with:` on `ci-loop-calle
 | `agent_unchanged_verdict`    | Verdict when no file diff (a missing report is a failed run)                   | `REJECT`                                                                    |
 | `budget_max_runs_per_day`    | Daily run cap                                                                  | `20`                                                                        |
 | `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                                   |
-| `delivery`                   | Platform delivery (`none` — no push, no PR)                                    | `none`                                                                      |
+| `delivery`                   | Platform delivery (`pr_review` — finalize posts one `COMMENT` review)          | `pr_review`                                                                 |
 | `detect_env_json`            | Detect env (`PR_EXCLUDE_LABELS`, and on dispatch `PR_FORCE`, `PR_NUMBER`)      | See [Domain detect environment](#domain-detect-environment-detect_env_json) |
 | `detect_script`              | Domain detect script                                                           | `.agents/skills/github-pr-review/scripts/detect_pr_review.sh`               |
 | `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                   |
-| `finalize_hook_script`       | Trusted post step run once in finalize                                         | `.agents/skills/github-pr-review/scripts/post_review.sh`                    |
+| `finalize_script`            | Trusted render step run once in finalize; writes `review.json`                 | `.agents/skills/github-pr-review/scripts/render_review.sh`                  |
 | `level`                      | Autonomy                                                                       | `L2`                                                                        |
 | `loop_name`                  | Loop identifier                                                                | `github-pr-review`                                                          |
 | `state_branch`               | `.loop/*` persistence branch                                                   | `main`                                                                      |
@@ -102,8 +103,8 @@ on-loop-github-pr-review.yaml
   loop → uses ci-loop-caller-entity.yaml
            detect  → loop-entity-detect (detect_pr_review.sh)
            execute → ci-loop-agent (maker writes .loop-review/pr-<n>.json; checker verifies)
-           finalize → delivery none: no push, agent branch always deleted;
-                      post_review.sh posts one COMMENT review
+           finalize → delivery pr_review: no push, agent branch deleted;
+                      render_review.sh writes review.json, Deliver Message posts one COMMENT review
            record-skip → budget | circuit_breaker
 ```
 
@@ -122,32 +123,44 @@ See `.apm/packages/github/.apm/skills/github-pr-review/SKILL.md` and its `refere
 - Findings need one of three evidence kinds: `rule` or `criteria` (verbatim quote from a file that exists at the base commit) or `bug` (diff line plus the concrete failing input or state).
 - Severities are `Critical`, `Warning`, `Suggestion`. Pre-existing problems are not reported.
 - Rules are read from the base commit with `git show <base_sha>:<path>`, never from the PR head.
-- The agent never posts. `gh` is read-only in the maker.
+- The agent never posts. `gh` is read-only in the maker, and the platform posts the rendered review.
 
-## Posting contract (`post_review.sh`)
+## Render contract (`render_review.sh`)
 
-`post_review.sh` runs as `finalize_hook_script` in finalize and posts only when the verdict is `APPROVE`.
+`render_review.sh` runs as `finalize_script` in finalize. It renders only when the verdict is `APPROVE`, and it never posts. It writes `review.json` (`{"body", "commit_id", "comments", "fallback_body"}`) to `LOOP_MESSAGE_DIR`. `GH_TOKEN` is used for reads only (`gh pr view`, `gh pr diff`).
 
 | Rule                  | Behavior                                                                                                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Trusted SHAs          | Report `base_sha` / `head_sha` are not trusted. The PR's SHAs come from `gh pr view` and drive evidence checks, all links, and `commit_id`                                       |
-| Stale head            | A report `head_sha` that is missing or differs from the PR head posts nothing (the PR moved). A `base_sha` mismatch only warns                                                   |
+| Stale head            | A report `head_sha` that is missing or differs from the PR head writes no file (the PR moved). A `base_sha` mismatch only warns                                                  |
 | Evidence verification | `rule` / `criteria` findings are kept only when `evidence.quote` is an exact substring of `evidence.path` as committed at the trusted base SHA (via `git`, not the working tree) |
 | Invalid findings      | Dropped; the review body reports the dropped count                                                                                                                               |
-| Finding limit         | At most 20 findings are posted; the most severe are kept (report order breaks ties) and the review body reports the omitted count                                                |
-| In-diff placement     | Findings whose lines are in the PR diff are posted inline; others move to the review body                                                                                        |
+| Finding limit         | At most 20 findings are rendered; the most severe are kept (report order breaks ties) and the review body reports the omitted count                                              |
+| In-diff placement     | Findings whose lines are in the PR diff become inline `comments`; others move to the review body                                                                                 |
 | Link labels           | A path containing a backtick, bracket, or backslash is rendered as escaped text instead of a code span                                                                           |
-| Event                 | Always `COMMENT`; nothing in the report can change it                                                                                                                            |
-| Inline failure        | When GitHub rejects the post with HTTP 422, the script retries once with all findings in the body; other failures are not retried                                                |
-| Exit status           | Always `0`. Failures emit `::warning::` so finalize does not fail                                                                                                                |
+| Fallback body         | `fallback_body` is the same review with every finding in the body, for the delivery retry                                                                                        |
+| Exit status           | Always `0`. Failures emit `::warning::` and write no file, so nothing is posted and finalize does not fail                                                                       |
 
 The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
-## Finalize with `delivery: none`
+## Delivery contract (Deliver Message)
 
-At L2, `loop-finalize` always runs and decides from `delivery: none`. It never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr_created` after APPROVE. The report is persisted only through `finalize_hook_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
+After `finalize_script`, Deliver Message in `loop-finalize` posts `review.json` when `delivery` is `pr_review`, the agent job succeeded, and the verdict is not `REJECT`. It reads the PR number from `target_json` (`handoff_key` `entity:pr:<n>`), not from the file.
 
-`loop-finalize` builds the standard loop Meta and footer (`LOOP_META_BLOCK`: run URL, usage) and passes it to `finalize_hook_script` in the same environment. The hook appends it to the review body before posting, so the review goes out once, complete — nothing edits it afterwards.
+| Rule             | Behavior                                                                                                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Marker, Meta     | The platform adds the marker `<!-- github-pr-review:v1 -->` first when missing, and Meta and the footer last, to both `body` and `fallback_body`, so the review goes out once, complete                 |
+| Event            | Always `COMMENT`; nothing in the file can change it                                                                                                                                            |
+| Inline failure   | When GitHub rejects the post with HTTP 422 and `comments` is non-empty, delivery retries once with `fallback_body` and no `comments`; other failures are not retried and fail the finalize step |
+| Stale `commit_id` | A `commit_id` that GitHub no longer accepts for inline comments is rejected with HTTP 422, so the review is posted from `fallback_body`. Whether GitHub accepts a stale `commit_id` is unverified  |
+| No file          | A missing or blank file posts nothing and lowers the outcome to `unchanged`                                                                                                                    |
+| Outcome          | `pr_reviewed` after a post; `rejected` for a `REJECT` verdict; `unchanged` when nothing is posted                                                                                              |
+
+## Finalize with `delivery: pr_review`
+
+At L2, `loop-finalize` always runs. For `pr_review` it never pushes the agent branch to the target branch, and deletes the agent branch after delivery (also for `none` and `issue_comment`, and for a `REJECT` verdict). The report is persisted only through `finalize_script` and Deliver Message, so `finalize_script` reads the report from the agent branch before it is deleted. When Deliver Message fails, the branch is deleted too; the run log holds the diagnostics.
+
+`finalize_script` receives `GH_TOKEN` (read-only use), `GITHUB_REPOSITORY`, `LOOP_MESSAGE_DIR` (the only place besides the repository root it may write), and `OUTCOME`. `OUTCOME` is the planned value (`pr_reviewed`) and may later become `unchanged` or `error`. The platform passes no Meta block; Deliver Message adds Meta and the footer, and nothing edits the review afterwards.
 
 ## Related changes
 

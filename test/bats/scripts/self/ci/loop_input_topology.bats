@@ -77,7 +77,7 @@ drop_detect_with() {
 
 @test "loop_input_topology fails when a level-dependent input does not reach branch detect" {
     local key
-    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery level; do
+    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery finalize_label_allowlist finalize_script level; do
         rm -rf "${FIXTURE}/.github"
         cp -R "${ROOT}/.github" "${FIXTURE}/.github"
         drop_detect_with "${BRANCH}" loop-detect "${key}"
@@ -92,7 +92,7 @@ drop_detect_with() {
 
 @test "loop_input_topology fails when a level-dependent input does not reach entity detect" {
     local key
-    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery level; do
+    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery finalize_label_allowlist finalize_script level; do
         rm -rf "${FIXTURE}/.github"
         cp -R "${ROOT}/.github" "${FIXTURE}/.github"
         drop_detect_with "${ENTITY}" loop-entity-detect "${key}"
@@ -124,7 +124,7 @@ drop_detect_with() {
     local key row
     run python3 -I "${SCRIPT}" "${ROOT}"
     [ "$status" -eq 0 ]
-    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery level; do
+    for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict delivery finalize_label_allowlist finalize_script level; do
         row="$(grep "^| \`${key}\` |" <<< "${output}")"
         [[ ${row} == *"| はい | はい |"* ]]
     done

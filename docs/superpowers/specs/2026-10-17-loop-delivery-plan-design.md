@@ -96,18 +96,18 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 | 値              | 意味                                                                                                                              | 使えるターゲット           | 状態                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------- |
-| `issue_comment` | 既存の Issue にコメントを投稿する                                                                                                 | Issue の entity            | 未実装。実装されるまで検証で拒否                                                          |
+| `issue_comment` | 既存の Issue にコメントを投稿する                                                                                                 | Issue の entity            | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                 |
 | `issue_create`  | レポートから Issue を新規作成する                                                                                                 | すべて                     | 未実装。実装されるまで検証で拒否                                                          |
-| `none`          | プラットフォームは何も配信しない。エージェントが自分で完結する(L1 triage)か、レポートファイルを finalize の hook スクリプトが扱う | すべて                     | 実装済み                                                                                  |
+| `none`          | プラットフォームは何も配信しない                                                                                                  | すべて                     | 実装済み                                                                                  |
 | `pr_create`     | 新しいブランチと PR を作る(L3 では auto-merge を有効にする。draft にするかは `pr_draft`)                                          | すべて                     | 実装済み(現在の `open_pr`。PR ターゲットでは、現在の `git_landing_pull_request: open_pr`) |
 | `pr_push`       | 既存 PR の head ブランチへ、最新の head を merge して push する。新しい PR は作らない                                             | pull_request(既存の PR)    | 実装済み(現在の `open_pr` + `git_landing_pull_request: push_head`)                        |
-| `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する                                    | pull_request、PR の entity | **Phase P まで未実装**。実装されるまで検証で拒否                                          |
+| `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する                                    | PR の entity               | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                 |
 
 - 名前でソートすると、`issue_*` と `pr_*` が、それぞれ隣に並ぶ。
 - `log` と `notion` は enum から削除する。実装がなく、必要になったときに、複数の loop が使うと分かった時点で追加する。
 - `issue_create` は「作る」、`issue_comment` は「既存に書く」で、1つの値に分岐を隠さない。`pr_create`・`pr_push`・`pr_review` も同じで、PR の扱いの種別ごとに値を分ける。
-- `none` は「何もしない」の意味に限定する。pr-review が `none` で動いている現状は、Phase P で `pr_review` に移るまでの暫定である。
-- `none` 以外は finalize が配信するので、L2 以上でしか使えない(第6節)。
+- `none` は「何も配信しない」の意味に限定する。triage と pr-review は、それぞれ `issue_comment` と `pr_review` に移った。
+- `pr_create`・`pr_push`・`pr_review` は finalize が配信するので、L2 以上でしか使えない(第6節)。`issue_comment` は L1 でも使える。
 - 「使えるターゲット」の種別は、`target_json` から読む。branch caller のターゲットは、既存の `target_json.mode`(`integration` / `pull_request`)で分ける。entity のターゲットは、現在 `target_json` に種別がない(`entity_target.sh:160-177`)。skill の detect スクリプトが、結果に `result.entity.kind`(`issue` / `pr`)を必ず書く。skill は自分が扱う entity の種別を知っているので、起動したイベント(`workflow_dispatch` は Issue か PR かを持たず、`issue_comment` は両方で起きる)にも、`handoff_key` の書式にも頼らない。`loop-entity-detect` は、スキップでない(`skip=false`)ときに `kind` を検証し、`issue` か `pr` でなければ失敗させる。`target_json.entity` は、現在 `result.entity` が空でなければ丸ごと置き換えている(`entity_target.sh:162-167`)。これを、`{handoff_key}` に `result.entity` を重ねるマージに変え、`handoff_key` と `kind` の両方が残るようにする。dogfood では、triage の `detect_issue.sh` が `issue`、pr-review の `detect_pr_review.sh` が `pr` を書く。
 - `pr_create` と `pr_push` は、安全条件が異なる。`pr_push` は、最新の head へ merge してから push し、衝突や non-fast-forward では fail closed にする(`push_target.sh`、`.github/workflows/CLAUDE.md` の push_head の規則)。
 - 現在の `git_landing_integration: push`(integration ブランチへ直接 push する)は、PR を経由しないので、どの値にも当たらない。dogfood の caller は使っていない。ユーザーの方針(「いらないなら削除」)に従い、削除する。
@@ -178,11 +178,11 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 ### 4. finalize の hook スクリプトの契約
 
-現在の `domain_persistence_script` を `finalize_hook_script` に改名する(第7節)。
+現在の `domain_persistence_script` を `finalize_script` に改名する(第7節。最初の改名の `finalize_hook_script` を、`detect_script` と対にするためにさらに改めた)。
 
 - 位置づけ: 配信ではなく、finalize に差し込む**副次的な独自処理**(ledger、ログなど)。
 - 許される範囲: リポジトリルート配下の相対パスのファイル更新のみ(現在の ledger スクリプトが、すでにこれを検証している)。外部システムへの書き込みはしない。
-- 権限: 書き込みトークンを必要としない。ただし、Phase P までは `post_review.sh` が `GH_TOKEN` を使うため、`GH_TOKEN` の受け渡しは残す(過渡的な例外として明記する)。
+- 権限: GitHub への書き込みはしない。書いてよいのは、リポジトリ内のファイルと `LOOP_MESSAGE_DIR` の投稿ファイル(`message.md`、`review.json`、`message_labels.json`)である。`GH_TOKEN` は読み取りに使う。`LOOP_META_BLOCK` は渡さない(Meta とフッターは Deliver Message が付ける)。`OUTCOME` は予定の値で、後で `unchanged` や `error` に変わり得る。
 - 実行条件: `delivery` に関係なく、`loop-finalize` が動くとき(L2/L3)に1回実行する。失敗の扱いは現在の挙動を変えない。
 - 環境: スクリプトは、`detect_env_json`(現在の `detect_domain_env_json`)の値を受け取らない。この値は detect ジョブの `GITHUB_ENV` にだけ入り、finalize ジョブには届かない。スクリプトが書くファイルのパスは、スクリプトの既定値で決め、caller の `finalize_commit_paths` と一致させる。test-gap はすでに従っている(`update_test_gap_ledger.sh:57`)。ci-sweeper は反している(第9節)。
 - `finalize_commit_paths`(現在の `additional_commit_paths`)は、スクリプトの出力のうち commit してよいパスの許可リストとして残す。`loop-finalize` は、スクリプトを先に実行し、後続の `Write State` が、列挙されたパスだけを commit に加える(`write_state.sh:114-150`)。
@@ -197,8 +197,8 @@ caller の `permissions:` を `delivery` から導くことはしない。reusab
 
 | `level` | `delivery`                                                                                               | `agent_edit_target`     | `agent_edit_allowlist`                       | `agent_edit_denylist`     | `agent_unchanged_verdict`   |
 | ------- | -------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------- | ------------------------- | --------------------------- |
-| L1      | `none`                                                                                                   | 指定は拒否              | 指定は拒否                                   | 指定は拒否                | 指定は拒否                  |
-| L2 / L3 | `pr_create`、`pr_push`、`none`(Phase P で `pr_review`、実装時に `issue_create` / `issue_comment` を追加) | `fix` か `report`(必須) | 必須(空は拒否)。制限しないときは `**` を書く | 任意(空は既定の denylist) | `APPROVE` か `REJECT`(必須) |
+| L1      | `none`、`issue_comment`                                                                                  | 指定は拒否              | 指定は拒否                                   | 指定は拒否                | 指定は拒否                  |
+| L2 / L3 | `pr_create`、`pr_push`、`none`、`issue_comment`、`pr_review`(実装時に `issue_create` を追加)             | `fix` か `report`(必須) | 必須(空は拒否)。制限しないときは `**` を書く | 任意(空は既定の denylist) | `APPROVE` か `REJECT`(必須) |
 
 - L1 で `pr_create` / `pr_push` を拒否するのは、現在の検証(L1 で `open_pr` を拒否)と同じである。L1 で `issue` / `log` / `notion` を通している現在の検証は、第1節の削除と fail closed により、`none` だけを通すようになる。
 - L1 で拒否する入力は、L1 では効かない。`agent_unchanged_verdict`(現在の `no_changes_verdict`)は、`agent-l2` の `loop-execute` にだけ渡る(`ci-loop-agent.yaml:508`)。L1 の outcome は、成功なら常に「差分なし」になる(`ci-loop-agent.yaml:365`、`:381`)。`agent_edit_allowlist` は、branch caller では L1 のプロンプトにも入る(`matrix.sh:100-106`、`detect.sh:459-462`)が、L1 のエージェントは編集しないので、効かない。

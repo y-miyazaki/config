@@ -23,7 +23,7 @@ Write the report file per [common-output-format.md](common-output-format.md). Th
 - **Links:** At synthesis, read [category-pr-body-links.md](category-pr-body-links.md).
 - **Overview contract:** trigger → substance → action; name the PR number, the intent sources read, and the number of findings written; omit run URLs and boilerplate
 - **List vs table:** one item → bullet list; two or more rows or multiple columns → markdown table; omit empty `###` headings
-- Do not post from the agent: a trusted step after the checker verdict posts one COMMENT review from the report
+- Do not post from the agent: after the checker verdict, the platform renders the report and posts one COMMENT review
 
 ### Deferred
 

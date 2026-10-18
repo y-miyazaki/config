@@ -78,17 +78,17 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Field           | Source                                                                                |
 | --------------- | ------------------------------------------------------------------------------------- |
 | Loop name       | `loop_name` input                                                                     |
-| Actor           | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
+| Actor (Meta `actor` row) | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
 | Outcome         | finalize outcome enum                                                                 |
 | Verdict         | `APPROVE` / `REJECT` / empty                                                          |
 | Reason          | execute `reason` (checker reject reason or unchanged reason); `—` when empty          |
 | Bot fix PR      | URL/number from finalize when `pr_create` succeeded                                   |
-| Branch          | `target_json.to.branch` (PR head)                                                     |
+| Branch (Meta `branch` row) | `target_json.to.branch` (PR head)                                                     |
 | Human PR number | `target_json.to.pr_number`                                                            |
 | Failed workflow | `target_json.workflow_run_id` + URL from detect `result` or event env                 |
 | Failing job     | detect `failures[].job_name` when present                                             |
-| Loop run URL    | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` |
-| Attempt         | `attempts` / `agent_loop_max_attempts`                                                |
+| Loop run URL (Meta `run` row) | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` |
+| Attempt (Meta `attempt` row) | `attempts` / `agent_loop_max_attempts`                                                |
 | Level           | L2 vs L3 (merge guidance vs auto-merge note)                                          |
 
 ### Layer 2 — Mechanical fix context (required when `has_changes == true`)
@@ -122,20 +122,15 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 
 ## Loop notification: {loop_name}
 
-| Field      | Value                                  |
-| ---------- | -------------------------------------- |
-| Outcome    | `{outcome}`                            |
-| Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
-| Verdict    | `{verdict}` or —                       |
-| Reason     | `{reason}` or —                        |
-| Actor      | `{actor_login}`                        |
-| Branch     | `{to.branch}`                          |
-| Failed run | [{workflow_name} #{run_id}]({run_url}) |
-| Loop run   | [actions run]({loop_run_url})          |
-
 ### Overview
 
 {agent_report_overview when present}
+
+| Field      | Value                                  |
+| ---------- | -------------------------------------- |
+| Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
+| Reason     | `{reason}` or —                        |
+| Failed run | [{workflow_name} #{run_id}]({run_url}) |
 
 ### Summary
 

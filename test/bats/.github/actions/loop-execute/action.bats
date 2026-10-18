@@ -13,6 +13,8 @@
 # - Install CLI and Run Bounded Loop pass the renamed env vars; no step passes
 #   DETECT_RESULT_JSON (detect JSON comes from the handoff)
 # - no old input or env name remains in the file
+# - agent_tool_allowlist description states host allow rules are not applied
+# - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -49,6 +51,18 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-execute/action.yml"
     run action_yml_input_names "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [ "${output}" = "${expected}" ]
+}
+
+@test "agent_tool_allowlist description states host allow rules are not applied" {
+    local desc
+    desc="$(action_yml_input_field "${ACTION_YML}" agent_tool_allowlist description)"
+    [ -n "${desc}" ]
+    [[ ${desc} != *'is also loaded when present'* ]]
+    [[ ${desc} == *'are not applied (no workspace trust)'* ]]
+    [[ ${desc} == *'acceptEdits'* ]]
+    [[ ${desc} == *'dontAsk'* ]]
+    [[ ${desc} == *'Bash(gh issue view:*)'* ]]
+    [[ ${desc} != *'Bash(gh issue edit:*)'* ]]
 }
 
 @test "agent_unchanged_verdict defaults to empty, not REJECT" {
@@ -100,4 +114,32 @@ outcome_override:"* ]]
     done
     [ "${checked}" -eq 7 ]
     [[ ${output} != *"DETECT_RESULT_JSON"* ]]
+}
+
+@test "setup actions do not use or save the Actions cache" {
+    run grep -c 'enable-cache: true' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'enable-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run grep -c 'package-manager-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+}
+
+@test "bundle branch replaces push branch and gets no token" {
+    run grep -c 'name: Push Branch' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'name: Bundle Branch' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run action_yml_step_env "${ACTION_YML}" "Bundle Branch"
+    [ "${status}" -eq 0 ]
+    [[ ${output} != *"GITHUB_TOKEN"* ]]
+    [[ ${output} == *'BUNDLE_FILE: ${{ runner.temp }}/loop-agent-bundle/branch.bundle'* ]]
+    run action_yml_step_env "${ACTION_YML}" "Build Notify Context"
+    [[ ${output} == *'HAS_CHANGES: ${{ steps.bundle.outputs.has_changes }}'* ]]
+    run action_yml_output_lines "${ACTION_YML}"
+    [[ ${output} == *'has_changes: ${{ steps.bundle.outputs.has_changes }}'* ]]
+    run grep -c 'description: "true when a bundle of the agent branch was written (commits not on origin/<base_branch>)"' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run action_yml_output_lines "${ACTION_YML}"
+    [[ ${output} == *"bundle_file: \${{ steps.bundle.outputs.has_changes == 'true' && format('{0}/loop-agent-bundle/branch.bundle', runner.temp) || '' }}"* ]]
 }

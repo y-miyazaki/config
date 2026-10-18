@@ -1,13 +1,15 @@
 # Reusable workflow: Loop agent execution
-# L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
+# L1: agent-l1 (loop-agent-once) → finalize-l1 (loop-finalize and run-log)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (loop-finalize and run-log always)
-# loop-finalize branches on delivery alone (pr_create | pr_push | none); delivery and
+# loop-finalize branches on delivery alone (issue_comment | none | pr_create | pr_push | pr_review); delivery and
 # pr_auto_merge are detect outputs passed through unchanged by the callers.
 # The handoff key, checkout ref and base branch are read from target_json in each job.
 # Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
 # Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
-# Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize-l1 / finalize-l2); pass BOT_APP_* + optional GH_TOKEN.
+# Token resolution: agent jobs (agent-l1 / agent-l2) get only the read-only github.token; only the finalize jobs
+# (finalize-l1 / finalize-l2) resolve a write token from BOT_APP_* + optional GH_TOKEN.
+# agent-l2 hands its branch to finalize-l2 as a git bundle artifact; finalize-l2 verifies and pushes it.
 # Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
 #   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
 name: ci-loop-agent
@@ -101,7 +103,7 @@ on:
         type: string
       agent_tool_allowlist:
         default: ""
-        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Empty grants nothing beyond the repository''s .claude/settings.json'
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
         required: false
         type: string
       agent_unchanged_verdict:
@@ -110,7 +112,7 @@ on:
         required: false
         type: string
       delivery:
-        description: "Where the agent output is delivered: none | pr_create | pr_push (detect output; loop-finalize branches on it)"
+        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (detect output; loop-finalize branches on it)"
         required: true
         type: string
       environment:
@@ -123,14 +125,19 @@ on:
         description: "Comma-separated paths to commit with state after the finalize hook"
         required: false
         type: string
-      finalize_hook_script:
+      finalize_label_allowlist:
         default: ""
-        description: "Optional bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
+        description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
         required: false
         type: string
       finalize_outcome_override:
         default: ""
         description: "Optional explicit finalize outcome (e.g. watch)"
+        required: false
+        type: string
+      finalize_script:
+        default: ""
+        description: "Optional bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
         required: false
         type: string
       handoff_artifact_name:
@@ -202,7 +209,7 @@ on:
         type: string
       target_json:
         default: ""
-        description: "Target descriptor from the loop-detect matrix cell; the handoff key, checkout ref and base are read from it (required at L2/L3; empty fails)"
+        description: "Target descriptor from the loop-detect matrix cell; the handoff key, checkout ref and base are read from it (required at every level; empty fails)"
         required: false
         type: string
       verifier_context:
@@ -240,13 +247,13 @@ on:
         description: "Authentication token for the selected engine"
         required: true
       BOT_APP_CLIENT_ID:
-        description: "GitHub App client ID for ruleset-bypass .loop/* pushes"
+        description: "GitHub App client ID for ruleset-bypass .loop/* pushes (finalize jobs only)"
         required: false
       BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key for ruleset-bypass .loop/* pushes"
+        description: "GitHub App private key for ruleset-bypass .loop/* pushes (finalize jobs only)"
         required: false
       GH_TOKEN:
-        description: "Optional explicit GitHub token (App → GH_TOKEN → job GITHUB_TOKEN)"
+        description: "Optional explicit GitHub token (App → GH_TOKEN → job GITHUB_TOKEN; finalize jobs only)"
         required: false
 
 permissions:
@@ -264,11 +271,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
+      message_json: ${{ steps.agent.outputs.message_json }}
       usage_json: ${{ steps.agent.outputs.usage_json }}
     permissions:
       contents: read
       copilot-requests: write # zizmor: ignore[excessive-permissions]
-      issues: write
+      issues: read
+      pull-requests: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -276,18 +285,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Resolve GitHub Token
-        id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
-
-        with:
-          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          github_token: ${{ secrets.GH_TOKEN }}
-
       - name: Run Agent Once
         id: agent
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           agent_cli_version: ${{ inputs.agent_cli_version }}
@@ -297,12 +297,7 @@ jobs:
           agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
-          # The agent ends its run with the comment text; this stage measures the usage
-          # and posts it once, with Meta and the footer (entity handoff keys only).
-          comment_handoff_key: ${{ fromJSON(inputs.target_json || '{}').key }}
-          comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->
-          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          output_file: ${{ runner.temp }}/loop-agent-output.md
+          github_token: ${{ github.token }}
           prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
@@ -315,7 +310,7 @@ jobs:
     environment: ${{ inputs.environment }}
     permissions:
       contents: write
-      pull-requests: write
+      issues: write
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -326,22 +321,55 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      # GitHub drops a job output that contains a secret value, and a failed
+      # write leaves no message file; either way the agent's text is lost.
+      - name: Warn Missing Message
+        if: needs.agent-l1.result == 'success' && needs.agent-l1.outputs.message_json == '' && inputs.delivery == 'issue_comment'
+        run: |
+          echo "::warning title=loop-agent::agent-l1 succeeded but produced no message_json; nothing is delivered"
+
+      # continue-on-error: a delivery failure must not mask the run log below,
+      # which records it as error. current_sha and branch are empty at L1, so
+      # loop-finalize writes no state and pushes no branch.
+      - name: Finalize
+        continue-on-error: true
+        id: finalize
+        uses: y-miyazaki/config/.github/actions/loop-finalize@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
+
+        with:
+          agent_engine: ${{ inputs.agent_engine }}
+          agent_result: ${{ needs.agent-l1.result }}
+          branch: ""
+          current_sha: ""
+          delivery: ${{ inputs.delivery }}
+          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          level: ${{ inputs.level }}
+          loop_name: ${{ inputs.loop_name }}
+          message_json: ${{ needs.agent-l1.outputs.message_json || '' }}
+          state_branch: ${{ inputs.state_branch }}
+          target_json: ${{ inputs.target_json }}
+          usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
+
       - name: Append Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        if: always()
+        uses: y-miyazaki/config/.github/actions/loop-run-log@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           agent_result: ${{ needs.agent-l1.result }}
+          failure_message: ${{ steps.finalize.outputs.failure_message }}
+          failure_stage: ${{ steps.finalize.outputs.failure_stage || (steps.finalize.outputs.outcome == '' && 'finalize' || '') }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: "false"
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ needs.agent-l1.result == 'success' && 'unchanged' || 'error' }}
+          outcome: ${{ steps.finalize.outputs.outcome || 'error' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
@@ -367,9 +395,10 @@ jobs:
       verdict: ${{ steps.execute.outputs.verdict }}
     permissions:
       actions: read
-      contents: write
+      contents: read
       copilot-requests: write # zizmor: ignore[excessive-permissions]
-      pull-requests: write
+      issues: read
+      pull-requests: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -383,15 +412,6 @@ jobs:
         with:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
-
-      - name: Resolve GitHub Token
-        id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
-
-        with:
-          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          github_token: ${{ secrets.GH_TOKEN }}
 
       # No fallback: an empty or malformed target_json fails here instead of
       # silently running the agent against a guessed branch.
@@ -410,8 +430,10 @@ jobs:
           from_branch="$(jq -er ".from.branch | ${nonempty}" <<< "${TARGET_JSON}")"
           from_ref="$(jq -r '.from.ref // ""' <<< "${TARGET_JSON}")"
           base_branch="$(jq -er "(if .mode == \"pull_request\" then .base.branch else .to.branch end) | ${nonempty}" <<< "${TARGET_JSON}")"
+          bundle_artifact_name="loop-agent-bundle-${GITHUB_RUN_ATTEMPT}-$(printf '%s' "${key}" | sha256sum | cut -c1-16)"
           {
             echo "base_branch=${base_branch}"
+            echo "bundle_artifact_name=${bundle_artifact_name}"
             echo "from_branch=${from_branch}"
             echo "from_ref=${from_ref}"
             echo "key=${key}"
@@ -419,18 +441,18 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           from_branch: ${{ steps.target.outputs.from_branch }}
           from_ref: ${{ steps.target.outputs.from_ref }}
-          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          github_token: ${{ github.token }}
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-execute@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
@@ -454,12 +476,23 @@ jobs:
           agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
           base_branch: ${{ steps.target.outputs.base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}
-          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          github_token: ${{ github.token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ steps.target.outputs.key }}
           prompt_text: ${{ inputs.prompt_text }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
+
+      # No overwrite: the name is predictable, so an artifact the agent uploaded
+      # first under the same name fails this step instead of being replaced.
+      - name: Upload Agent Bundle
+        if: steps.execute.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          if-no-files-found: error
+          name: ${{ steps.target.outputs.bundle_artifact_name }}
+          path: ${{ steps.execute.outputs.bundle_file }}
+          retention-days: 1
 
   finalize-l2:
     if: >-
@@ -472,6 +505,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      issues: write
       pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -497,6 +531,7 @@ jobs:
           TARGET_JSON: ${{ inputs.target_json }}
         run: |
           set -euo pipefail
+          bundle_artifact_name=""
           from_ref=""
           key=""
           pr_number=""
@@ -505,7 +540,11 @@ jobs:
             key="$(jq -r '.key // empty' <<< "${TARGET_JSON}")"
             pr_number="$(jq -r '.to.pr_number // empty' <<< "${TARGET_JSON}")"
           fi
+          if [[ -n "${key}" ]]; then
+            bundle_artifact_name="loop-agent-bundle-${GITHUB_RUN_ATTEMPT}-$(printf '%s' "${key}" | sha256sum | cut -c1-16)"
+          fi
           {
+            echo "bundle_artifact_name=${bundle_artifact_name}"
             echo "from_ref=${from_ref}"
             echo "key=${key}"
             echo "pr_number=${pr_number}"
@@ -513,33 +552,50 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
-      # continue-on-error: git landing / PR creation failure must not mask the
-      # run log. The outcome is still recorded as error by Resolve Run Log
-      # Metadata + Append Run Log below, and surfaced on the human PR by
-      # Notify Pull Request, so the failure stays visible without aborting the
-      # job before those steps run.
+      # continue-on-error: a missing bundle (for example a finalize-l2-only
+      # re-run) leaves agent_bundle_dir without branch.bundle; loop-finalize
+      # then fails closed (stage push) and the run log below still runs.
+      - name: Download Agent Bundle
+        continue-on-error: true
+        if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ steps.target.outputs.bundle_artifact_name }}
+          path: ${{ runner.temp }}/loop-agent-bundle
+
+      # continue-on-error: a landing, PR, or delivery failure must not stop the
+      # run log and the PR notification below. loop-finalize resolves the final
+      # outcome (error when any of its steps failed) and the failure stage; the
+      # steps below only default an empty outcome to error.
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-finalize@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
+          agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
+          agent_bundle_dir: ${{ runner.temp }}/loop-agent-bundle
+          agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
+          agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
           agent_engine: ${{ inputs.agent_engine }}
+          agent_failure_message: ${{ needs.agent-l2.outputs.failure_message }}
+          agent_failure_stage: ${{ needs.agent-l2.outputs.failure_stage }}
+          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           agent_result: ${{ needs.agent-l2.result }}
           branch: ${{ needs.agent-l2.outputs.branch }}
           current_sha: ${{ steps.target.outputs.from_ref }}
           delivery: ${{ inputs.delivery }}
-          execute_branch: ${{ needs.agent-l2.outputs.branch }}
           finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
-          finalize_hook_script: ${{ inputs.finalize_hook_script }}
+          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_outcome_override: ${{ inputs.finalize_outcome_override != '' && inputs.finalize_outcome_override || needs.agent-l2.outputs.finalize_outcome_override }}
+          finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ steps.target.outputs.key }}
@@ -561,55 +617,19 @@ jobs:
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
-      - name: Resolve Run Log Metadata
-        id: run_log_meta
-        if: always()
-        env:
-          AGENT_RESULT: ${{ needs.agent-l2.result }}
-          EXEC_FAILURE_MESSAGE: ${{ needs.agent-l2.outputs.failure_message }}
-          EXEC_FAILURE_STAGE: ${{ needs.agent-l2.outputs.failure_stage }}
-          FINALIZE_FAILURE_MESSAGE: ${{ steps.finalize.outputs.failure_message }}
-          FINALIZE_FAILURE_STAGE: ${{ steps.finalize.outputs.failure_stage }}
-          FINALIZE_STEP_RESULT: ${{ steps.finalize.outcome }}
-        run: |
-          set -euo pipefail
-          stage="${EXEC_FAILURE_STAGE:-}"
-          msg="${EXEC_FAILURE_MESSAGE:-}"
-          if [[ -z "${stage}" && "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
-            stage="agent_execute"
-          fi
-          if [[ "${FINALIZE_STEP_RESULT}" == "failure" ]]; then
-            if [[ -n "${FINALIZE_FAILURE_STAGE}" || -n "${FINALIZE_FAILURE_MESSAGE}" ]]; then
-              stage="${FINALIZE_FAILURE_STAGE:-finalize}"
-              msg="${FINALIZE_FAILURE_MESSAGE}"
-            elif [[ -z "${stage}" ]]; then
-              stage="finalize"
-            fi
-          fi
-          {
-            echo "agent_result=${AGENT_RESULT}"
-            if [[ -n "${stage}" ]]; then
-              echo "failure_stage=${stage}"
-              delim="RUN_LOG_FAILURE_MSG_$(openssl rand -hex 8)"
-              echo "failure_message<<${delim}"
-              printf '%s' "${msg}"
-              echo "${delim}"
-            fi
-          } >> "${GITHUB_OUTPUT}"
-
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-run-log@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
-          agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
+          agent_result: ${{ needs.agent-l2.result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
-          failure_message: ${{ steps.run_log_meta.outputs.failure_message }}
-          failure_stage: ${{ steps.run_log_meta.outputs.failure_stage }}
+          failure_message: ${{ steps.finalize.outputs.failure_message }}
+          failure_stage: ${{ steps.finalize.outputs.failure_stage || (steps.finalize.outputs.outcome == '' && 'finalize' || '') }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'unchanged' }}
+          outcome: ${{ steps.finalize.outputs.outcome || 'error' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
@@ -622,7 +642,7 @@ jobs:
         if: >-
           always() &&
           steps.target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@af1b8a160e79cbd6fccb21d12036eb63fc779932 # v1.8.125
 
         with:
           agent_engine: ${{ inputs.agent_engine }}

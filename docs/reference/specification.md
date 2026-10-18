@@ -388,7 +388,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | ----------------------------- | ---------------------------------------- | -------------------------------------------------------- |
 | Skill                         | `.apm/skills/<name>/SKILL.md`            | Maker behavior, classification, allowed paths            |
 | Detect script                 | `.apm/skills/<name>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`   |
-| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `finalize_hook_script` |
+| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `finalize_script` |
 
 ### Loop Engineering Actions
 
@@ -396,8 +396,8 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                     |
 | `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and maker prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
-| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                          |
-| `loop-finalize`       | Finalize per `delivery` (`pr_create` \| `pr_push` \| `none`), branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `finalize_hook_script`; `.loop/*` to `STATE_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                        |
+| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; never pushes: **Bundle Branch** writes a git bundle of the agent branch (commits not on `origin/<base_branch>`) and `has_changes` means a bundle was written; outputs include `failure_stage` / `failure_message` on bundle/notify failures                                                                          |
+| `loop-finalize`       | Finalize per `delivery` (`pr_create` \| `pr_push` \| `issue_comment` \| `pr_review` \| `none`), branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `finalize_script`; **Push Agent Branch** validates the agent branch name, bundle, and edit paths from the agent job's bundle artifact and is the only step that pushes the agent branch; **Deliver Message** posts the one Issue comment or PR review from the message files (`lib/loop/deliver_message.sh`) and applies allowlisted labels; `.loop/*` to `STATE_BRANCH`; outputs the final run-log outcome and the failure stage / message (finalize record, else the agent stage, `agent_execute`, or `finalize`) from Resolve Run Outcome                                                        |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                       |
 | `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                             |
 | `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md` (optional `failure_stage` / `failure_message`), prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                   |
@@ -485,18 +485,29 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | Output                | Required | Description                                                                                                   |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `notify_context_json` | yes      | Machine fix context for `loop-notify-pr`. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-| `failure_stage`       | no       | Platform failure stage when push/notify fails (empty on success); shared via `lib/loop/failure_record.sh`     |
+| `failure_stage`       | no       | Platform failure stage when bundle/notify fails (empty on success); shared via `lib/loop/failure_record.sh`   |
 | `failure_message`     | no       | Redacted/truncated failure text for run-log diagnostics (empty on success)                                    |
 
-`loop-finalize` likewise outputs `failure_stage` / `failure_message` when finalize PR steps fail. `ci-loop-agent` merges execute and finalize diagnostics into `loop-run-log` inputs.
+Failure stages include `bundle` (execute: the agent branch bundle could not be written) and `push` (finalize: Push Agent Branch rejected or failed to push the branch; later delivery steps are skipped and the outcome is `error`). `loop-finalize` receives `agent_failure_stage` / `agent_failure_message` and merges the run-log diagnostics into one. `ci-loop-agent` passes its outputs as they are to `loop-run-log` and `loop-notify-pr`, and defaults to `error` / `finalize` only when `loop-finalize` did not run.
 
 ### `loop-finalize` inputs (additions)
 
-| Input                  | Required | Description                                                                                                                   |
-| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `target_json`          | yes      | Matrix cell target                                                                                                            |
-| `finalize_hook_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
-| `state_branch`         | no       | Default: repository default branch                                                                                            |
+| Input                      | Required | Description                                                                                                                                                                                                                           |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent_branch_prefix`      | no       | Caller `agent_branch_prefix`; the agent branch must start with `<prefix>/<agent_maker_skill_name>/` followed by `YYYYMMDD-HHMMSS`, and differ from `to.branch` and `state_branch`                                                       |
+| `agent_bundle_dir`         | no       | Directory holding `branch.bundle` downloaded from the agent job; a missing bundle with `has_changes=true` fails the push                                                                                                              |
+| `agent_edit_allowlist`     | no       | Caller allowlist re-checked against the bundle diff before the push; `.github/workflows/` changes need a pattern starting with `.github/`                                                                                             |
+| `agent_edit_denylist`      | no       | Caller denylist re-checked against the bundle diff before the push; empty applies the platform default                                                                                                                                |
+| `agent_failure_message`    | no       | Failure message from the agent job (`loop-execute` `failure_message`); recorded when no finalize step recorded a failure |
+| `agent_failure_stage`      | no       | Failure stage from the agent job (`loop-execute` `failure_stage`); recorded when no finalize step recorded a failure |
+| `agent_maker_skill_name`   | no       | Caller `agent_maker_skill_name`; used in the agent branch name check                                                                                                                                                                  |
+| `target_json`              | yes      | Matrix cell target; required at every level including L1 (Parse Target reads `handoff_key` for the Deliver Message destination)                                                                                                       |
+| `finalize_script`          | no       | Optional bash script (ledger, or the L2/L3 writer of the message files). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` (the validated agent branch name; it is set even when nothing was pushed, so `origin/<branch>` may not exist), `LOOP_MESSAGE_DIR`. no Meta block is passed          |
+| `finalize_label_allowlist` | no       | Newline-separated labels a delivered message may add or remove; allowed only with `delivery: issue_comment` or `pr_review`. Empty ignores `labels` with a warning                                                                      |
+| `message_json`             | no       | L1 message from the agent job (`{body, labels}`); Materialize Message writes it back to `LOOP_MESSAGE_DIR` before Run Finalize Hook. Delivery reads only the files                                                                    |
+| `state_branch`             | no       | Default: repository default branch                                                                                                                                                                                                    |
+
+`finalize_script` writes only under the repository root and `LOOP_MESSAGE_DIR` (`message.md`, `review.json`, `message_labels.json`); `GH_TOKEN` is for reads. `OUTCOME` is the planned value and Deliver Message can later lower it to `unchanged`, and a failed step ends as `error`.
 
 `loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` in the same finalize job (`loop_name` is required on `ci-loop-agent`). Both read outputs from prior steps (not via nested composite `uses:`).
 
@@ -511,10 +522,12 @@ Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy 
 | `pr_created` | Fix PR created (`delivery: pr_create`)         | Reset to 0             |
 | `pr_pushed`  | Pushed to the PR head (`delivery: pr_push`)    | Reset to 0             |
 | `reported`   | APPROVE with `delivery: none` (no PR)          | Reset to 0             |
+| `issue_commented` | One Issue comment posted (`delivery: issue_comment`) | Reset to 0 |
+| `pr_reviewed` | One PR review posted (`delivery: pr_review`) | Reset to 0 |
 | `rejected`   | Actionable; checker REJECT or no-change REJECT | Increment              |
 | `unchanged`  | No changes produced (no actionable result)     | Reset to 0             |
 | `watch`      | Present; Skill Watch (no code edit)            | No increment           |
-| `error`      | Execute failed                                 | Unchanged              |
+| `error`      | Agent or finalize failed, including a cancelled finalize                                 | Unchanged              |
 
 Persisted legacy outcomes are read as their new names: `pr-created` as `pr_created`, `merged` as `pr_merged`, `pr-closed` as `pr_closed`, and `no-changes` / `no-action` as `unchanged` (`.github/actions/lib/loop/outcome.sh`).
 

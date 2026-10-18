@@ -8,6 +8,7 @@
 # - APPROVE with pr_create or pr_push keeps the branch
 # - REJECT with changes keeps the branch for pr_create and pr_push
 # - REJECT without changes deletes the branch for pr_create and pr_push
+# - delivery issue_comment and pr_review delete the branch for any verdict and changes
 # - the old strategy name push_head is not treated as none
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -29,6 +30,20 @@ setup() {
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 2 ]
+}
+
+@test "deletes for issue_comment and pr_review regardless of verdict and changes" {
+    local d v c checked=0
+    for d in issue_comment pr_review; do
+        for v in APPROVE REJECT; do
+            for c in true false; do
+                run should_delete_rejected_branch "$v" "$c" "$d"
+                [ "$status" -eq 0 ]
+                checked=$((checked + 1))
+            done
+        done
+    done
+    [ "${checked}" -eq 8 ]
 }
 
 @test "deletes for delivery none regardless of verdict and changes" {

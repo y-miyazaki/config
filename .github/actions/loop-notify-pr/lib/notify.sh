@@ -104,13 +104,12 @@ source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 function build_comment_body {
     local actor="$1"
     local marker branch to_branch workflow_name workflow_run_id workflow_url
-    local loop_run_url commit_url short_sha verdict_display branch_display fix_context agent_summary
+    local loop_run_url commit_url short_sha commit_display branch_display fix_context agent_summary
     local agent_report_overview agent_report_summary has_agent_narrative
     local changed_files diff_stat fix_summary reject_display reason_display
-    local timestamp bot_fix_pr next_step show_fix_context
+    local bot_fix_pr next_step show_fix_context
 
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
-    timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     if [[ -n ${TARGET_JSON} ]] && jq -e . <<< "${TARGET_JSON}" > /dev/null 2>&1; then
         branch=$(jq -r '.to.branch // "-"' <<< "${TARGET_JSON}")
@@ -138,17 +137,16 @@ function build_comment_body {
         short_sha="-"
         commit_url="#"
     fi
+    if [[ ${short_sha} == "-" ]]; then
+        commit_display="—"
+    else
+        commit_display="[\`${short_sha}\`](${commit_url})"
+    fi
 
     if [[ -n ${to_branch} && ${to_branch} != "-" && -n ${GITHUB_SERVER_URL} && -n ${REPOSITORY} ]]; then
         branch_display="[${to_branch}](${GITHUB_SERVER_URL}/${REPOSITORY}/tree/${to_branch})"
     else
         branch_display="\`${to_branch}\`"
-    fi
-
-    if [[ -n ${VERDICT} ]]; then
-        verdict_display="${VERDICT}"
-    else
-        verdict_display="—"
     fi
 
     if [[ -n ${NOTIFY_CONTEXT_JSON} ]] && jq -e . <<< "${NOTIFY_CONTEXT_JSON}" > /dev/null 2>&1; then
@@ -222,20 +220,6 @@ function build_comment_body {
     cat << EOF
 ${marker}
 ## Loop notification: ${LOOP_NAME}
-
-| Field | Value |
-| ----- | ----- |
-| Outcome | \`${OUTCOME}\` |
-| Bot fix PR | ${bot_fix_pr} |
-| Verdict | ${verdict_display} |
-| Reason | ${reason_display} |
-| Actor | \`${actor}\` |
-| Commit | [\`${short_sha}\`](${commit_url}) |
-| Branch | ${branch_display} |
-| Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
-| Loop run | [actions run](${loop_run_url}) |
-| Attempt | ${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—} |
-| Timestamp | ${timestamp} |
 EOF
 
     if [[ -n ${agent_report_overview} ]]; then
@@ -246,6 +230,15 @@ EOF
 ${agent_report_overview}
 EOF
     fi
+
+    cat << EOF
+
+| Field | Value |
+| ----- | ----- |
+| Bot fix PR | ${bot_fix_pr} |
+| Reason | ${reason_display} |
+| Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
+EOF
 
     if [[ -n ${agent_report_summary} ]]; then
         cat << EOF
@@ -305,6 +298,10 @@ EOF
 
     # Same Meta block and footer as every other loop surface (footer is part of the block)
     loop_meta_reset
+    loop_meta_row "Actor" "\`${actor}\`"
+    loop_meta_row "Branch" "${branch_display}"
+    loop_meta_row "Commit" "${commit_display}"
+    loop_meta_row "Attempt" "${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—}"
     printf '\n%s\n' "$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
 }
 

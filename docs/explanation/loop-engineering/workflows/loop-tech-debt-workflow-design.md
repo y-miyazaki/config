@@ -95,6 +95,7 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `pr_title`                   | PR title when `delivery` is `pr_create`.                                                                                                                                                                                  | `docs(tech-debt): technical debt report (loop-tech-debt)`        |
 | `agent_maker_instructions`   | Domain instructions: classify signals; write dated report; compare previous report.                                                                                                                                       | Inline in caller workflow                                        |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                                                                                                  | `tech-debt`                                                      |
+| `agent_tool_allowlist`       | Tool permission rules for the maker                                                                                                                                                                                       | `git remote get-url`                                             |
 | `agent_edit_target`          | Agent artifact when `agent_edit_allowed` is true (`report` for this loop).                                                                                                                                                | `report`                                                         |
 
 ### Domain detect environment (`detect_env_json`)
@@ -172,7 +173,7 @@ PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (
 
 Always `delivery: pr_create` to `to.branch` at L2. Other deliveries (`pr_push`) are not used by this loop.
 
-No `finalize_hook_script`.
+No `finalize_script`.
 
 **Merge-gated cursor:** Same platform rule as all L2 `pr_create` loops — `pending` at finalize, `last_sha` on report PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
 

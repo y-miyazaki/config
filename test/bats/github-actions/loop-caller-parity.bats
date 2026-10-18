@@ -5,11 +5,16 @@
 # Use cases:
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
-# - agent-l1 gives Run Agent Once the entity handoff key and output file so the comment is posted once, with Meta and the footer
+# - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
+# - agent jobs hold only read GitHub permissions and no App or GH_TOKEN secret; agent-l2 hands the branch to finalize-l2 as a bundle artifact
+# - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the loop-finalize outcome and failure stage
+# - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
+# - target_json is required at every level
 # - No workflow step edits a message a loop already posted (no Append Loop Meta step)
+# - No loop-finalize step or lib/loop script edits a posted comment or review
 # - Callers pass the detect outputs delivery and pr_auto_merge straight through (no auto_merge or finalize_enabled expression)
 # - ci-loop-agent derives the handoff key, checkout ref and base from target_json and fails closed when it is empty
-# - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression
+# - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression; run-log and notify read loop-finalize outputs with empty-value defaults only
 # - Every with: key on a pinned loop action or ci-loop-agent call is a declared input of the local definition, and every required input is passed
 # - No pre-rename input or env name remains in the three reusable workflows
 # - Committed .loop state files match the on-loop callers
@@ -17,6 +22,8 @@
 # - Dogfood callers declare delivery and level per the migration table, pass the level-dependent inputs only on L2+, and repeat no default
 # - github-pr-revise watches only its scoped PR head and offers delivery pr_push or pr_create on manual dispatch
 # - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
+# - Dogfood callers declare every command rule their skill needs; host .claude/settings.json allow rules are never active in CI
+# - reusable agent_tool_allowlist descriptions state host allow rules are not applied
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -198,23 +205,60 @@ dogfood_value() {
     done
 }
 
-@test "agent-l1 gives Run Agent Once the entity handoff key and output file" {
+@test "agent jobs hold no write credentials" {
+    local job block perms expected tokens count
+    for job in agent-l1 agent-l2; do
+        block="$(job_block "${AGENT}" "${job}")"
+        [[ -n ${block} ]]
+        if grep -nF -e loop-resolve-push-token -e secrets.BOT_APP_ -e secrets.GH_TOKEN -e resolve_github_token <<< "${block}"; then
+            echo "${job} still resolves or references a write credential" >&2
+            return 1
+        fi
+        perms="$(awk '/^    permissions:/ {f=1; next} f && /^    [a-z]/ {exit} f' <<< "${block}" | grep -E '^      [a-z-]+: ')"
+        expected="$(printf '%s\n' \
+            '      contents: read' \
+            '      copilot-requests: write # zizmor: ignore[excessive-permissions]' \
+            '      issues: read' \
+            '      pull-requests: read')"
+        [[ ${job} == agent-l2 ]] && expected="$(printf '%s\n%s' '      actions: read' "${expected}")"
+        [ "${perms}" = "${expected}" ]
+        tokens="$(grep -E '^ +github_token:' <<< "${block}")"
+        # Literal GitHub Actions expression; do not expand.
+        # shellcheck disable=SC2016
+        if grep -vxF '          github_token: ${{ github.token }}' <<< "${tokens}"; then
+            echo "${job} passes a github_token other than github.token" >&2
+            return 1
+        fi
+        count="$(grep -c . <<< "${tokens}")"
+        if [[ ${job} == agent-l1 ]]; then
+            [ "${count}" -eq 1 ]
+        else
+            [ "${count}" -eq 2 ]
+        fi
+    done
+}
+
+@test "agent-l1 has no issues write and exposes message_json without comment inputs" {
     local block
     block="$(job_block "${AGENT}" agent-l1)"
-    grep -q 'comment_handoff_key: ${{ fromJSON(inputs.target_json || ' <<< "${block}"
-    grep -q 'comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->' <<< "${block}"
-    grep -q 'output_file: ${{ runner.temp }}/' <<< "${block}"
+    [[ -n ${block} ]]
+    if grep -nE 'issues: write|comment_handoff_key|comment_marker|output_file' <<< "${block}"; then
+        return 1
+    fi
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    grep -qF 'message_json: ${{ steps.agent.outputs.message_json }}' <<< "${block}"
 }
 
 @test "no workflow step edits a message a loop already posted" {
-    if grep -n 'Append Loop Meta\|append_entity_meta\|append_pr_review_meta' "${AGENT}" "${ROOT}"/.github/workflows/*.yaml; then
+    if grep -n 'Append Loop Meta\|append_pr_review_meta' "${AGENT}" "${ROOT}"/.github/workflows/*.yaml; then
         return 1
     fi
 }
 
 @test "agent-l1 exposes usage_json and finalize-l1 passes it to run-log" {
     grep -A25 '^  agent-l1:' "${AGENT}" | grep -q 'usage_json:'
-    grep -A45 '^  finalize-l1:' "${AGENT}" | grep -q "needs.agent-l1.outputs.usage_json"
+    grep -A72 '^  finalize-l1:' "${AGENT}" | grep -q "needs.agent-l1.outputs.usage_json"
 }
 
 @test "agent-l2 parse target derives key, ref and base from an integration target_json" {
@@ -223,11 +267,11 @@ dogfood_value() {
     [[ -n ${script} ]]
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"integration:main","mode":"integration","from":{"branch":"main","ref":"abc123"},"to":{"branch":"main"}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main from_branch=main from_ref=abc123 key=integration:main)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main bundle_artifact_name=loop-agent-bundle-1-138c728d71ab409c from_branch=main from_ref=abc123 key=integration:main)" ]
 }
 
 @test "agent-l2 parse target fails when target_json is empty, invalid, or lacks a key" {
@@ -237,7 +281,7 @@ dogfood_value() {
     out="${BATS_TEST_TMPDIR}/github_output"
     for target_json in '' 'not-json' '{"from":{"branch":"main","ref":"abc"},"to":{"branch":"main"}}'; do
         : > "${out}"
-        run env GITHUB_OUTPUT="${out}" TARGET_JSON="${target_json}" bash -c "${script}"
+        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON="${target_json}" bash -c "${script}"
         [ "$status" -ne 0 ]
         [ ! -s "${out}" ]
     done
@@ -257,11 +301,33 @@ dogfood_value() {
     script="$(job_block "${AGENT}" agent-l2 | step_block 'Parse Target' | run_script)"
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main from_branch=feat from_ref=def456 key=pull_request:7)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_branch=feat from_ref=def456 key=pull_request:7)" ]
+}
+
+@test "agent-l2 uploads the bundle without overwrite" {
+    local step expected
+    # Drop the blank and comment lines that step_block carries over from the next step.
+    step="$(job_block "${AGENT}" agent-l2 | step_block 'Upload Agent Bundle' | grep -vE '^ *(#|$)')"
+    [[ -n ${step} ]]
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    expected="$(printf '%s\n' \
+        '      - name: Upload Agent Bundle' \
+        "        if: steps.execute.outputs.has_changes == 'true'" \
+        '        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2' \
+        '        with:' \
+        '          if-no-files-found: error' \
+        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          path: ${{ steps.execute.outputs.bundle_file }}' \
+        '          retention-days: 1')"
+    [ "${step}" = "${expected}" ]
+    if grep -n 'overwrite' <<< "${step}"; then
+        return 1
+    fi
 }
 
 @test "both callers pass delivery and pr_auto_merge from detect outputs unchanged" {
@@ -305,6 +371,35 @@ dogfood_value() {
     [[ ${branch} == "${entity}" ]]
     [[ -n ${branch} ]]
     [[ ${branch} == *"ci-loop-agent.yaml"* ]]
+}
+
+@test "both parse target steps name the bundle artifact the same way" {
+    local job script out
+    for job in agent-l2 finalize-l2; do
+        script="$(job_block "${AGENT}" "${job}" | step_block 'Parse Target' | run_script)"
+        [[ -n ${script} ]]
+        out="${BATS_TEST_TMPDIR}/github_output_${job}"
+        : > "${out}"
+        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
+            TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
+            bash -c "${script}"
+        [ "$status" -eq 0 ]
+        grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
+    done
+}
+
+@test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {
+    local caller detect execute key
+    for caller in "${BRANCH_CALLER}" "${ENTITY_CALLER}"; do
+        input_block "${caller}" finalize_label_allowlist | grep -qF 'default: ""'
+        detect="$(job_block "${caller}" detect | step_block 'Detect Loop Work')"
+        execute="$(job_block "${caller}" execute)"
+        for key in finalize_label_allowlist finalize_script; do
+            grep -qxF "          ${key}: \${{ inputs.${key} }}" <<< "${detect}"
+            grep -qxF "      ${key}: \${{ inputs.${key} }}" <<< "${execute}"
+        done
+    done
+    input_block "${AGENT}" finalize_label_allowlist | grep -qF 'default: ""'
 }
 
 @test "branch execute waits for ack-trigger success or skip" {
@@ -475,7 +570,7 @@ dogfood_value() {
 }
 
 @test "ci-loop-agent passes agent_edit_denylist through unmodified for loop-execute to default" {
-    # loop-execute's lib/paths.sh::apply_platform_denylist_default coerces an
+    # apply_platform_denylist_default (lib/loop/edit_paths.sh) coerces an
     # empty AGENT_EDIT_DENYLIST to the platform default at loop start, so the
     # reusable caller must not hardcode or coalesce a domain-specific default.
     # shellcheck disable=SC2016
@@ -489,7 +584,8 @@ dogfood_value() {
     if grep -q 'no-changes' "${AGENT}"; then
         return 1
     fi
-    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 2 ]
+    # The unchanged default now lives in loop-finalize; the workflow keeps none.
+    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 0 ]
 }
 
 @test "ci-loop-agent requires loop_name and does not guard run-log on emptiness" {
@@ -559,8 +655,8 @@ dogfood_value() {
         name="${name#on-loop-}"
         case "${name}" in
             github-pr-revise) expected="${revise}" ;;
-            github-issue-triage) expected='none L1' ;;
-            github-pr-review) expected='none L2' ;;
+            github-issue-triage) expected='issue_comment L1' ;;
+            github-pr-review) expected='pr_review L2' ;;
             changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
                 expected='pr_create L2'
                 ;;
@@ -654,10 +750,142 @@ dogfood_value() {
     done
 }
 
+@test "finalize-l1 has issues write and no pull-requests write" {
+    local block
+    block="$(job_block "${AGENT}" finalize-l1)"
+    grep -qxF '      contents: write' <<< "${block}"
+    grep -qxF '      issues: write' <<< "${block}"
+    if grep -n 'pull-requests: write' <<< "${block}"; then
+        return 1
+    fi
+}
+
 @test "finalize-l1 persists run-log after agent-l1" {
-    grep -A40 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
+    grep -A72 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
     grep -A20 '^  finalize-l1:' "${AGENT}" | grep -q "inputs.level == 'L1'"
     grep -A15 '^  finalize-l1:' "${AGENT}" | grep -q 'needs: agent-l1'
+}
+
+@test "finalize jobs log the loop-finalize outcome and failure stage with defaults only" {
+    local job step agent
+    for job in finalize-l1 finalize-l2; do
+        agent="agent-l1"
+        [[ ${job} == finalize-l2 ]] && agent="agent-l2"
+        step="$(job_block "${AGENT}" "${job}" | step_block 'Append Run Log')"
+        grep -qxF '        if: always()' <<< "${step}"
+        # Literal GitHub Actions expressions; do not expand.
+        # shellcheck disable=SC2016
+        grep -qxF "          agent_result: \${{ needs.${agent}.result }}" <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF '          failure_message: ${{ steps.finalize.outputs.failure_message }}' <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF "          failure_stage: \${{ steps.finalize.outputs.failure_stage || (steps.finalize.outputs.outcome == '' && 'finalize' || '') }}" <<< "${step}"
+        # shellcheck disable=SC2016
+        grep -qxF "          outcome: \${{ steps.finalize.outputs.outcome || 'error' }}" <<< "${step}"
+    done
+}
+
+@test "finalize jobs keep no run-log decision outside loop-finalize" {
+    local job block count expected
+    for job in finalize-l1 finalize-l2; do
+        block="$(job_block "${AGENT}" "${job}")"
+        if grep -qE 'run_log_meta|Resolve Run Log Metadata' <<< "${block}"; then
+            echo "${job} still has a run-log decision step" >&2
+            return 1
+        fi
+        # shellcheck disable=SC2016
+        if grep -E '^ +outcome: ' <<< "${block}" | grep -vxF "          outcome: \${{ steps.finalize.outputs.outcome || 'error' }}"; then
+            echo "${job} has an outcome expression other than the default" >&2
+            return 1
+        fi
+        count="$(grep -cE '^ +outcome: ' <<< "${block}")"
+        expected=1
+        [[ ${job} == finalize-l2 ]] && expected=2
+        [ "${count}" -eq "${expected}" ]
+    done
+}
+
+@test "finalize-l2 passes the agent failure stage and message to loop-finalize" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l2 | step_block 'Finalize')"
+    # shellcheck disable=SC2016
+    grep -qxF '          agent_failure_message: ${{ needs.agent-l2.outputs.failure_message }}' <<< "${step}"
+    # shellcheck disable=SC2016
+    grep -qxF '          agent_failure_stage: ${{ needs.agent-l2.outputs.failure_stage }}' <<< "${step}"
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    if grep -q 'agent_failure_' <<< "${step}"; then
+        return 1
+    fi
+}
+
+@test "finalize-l1 runs loop-finalize with an empty current_sha and branch" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    grep -qF 'uses: y-miyazaki/config/.github/actions/loop-finalize@' <<< "${step}"
+    grep -qxF '        continue-on-error: true' <<< "${step}"
+    grep -qxF '        id: finalize' <<< "${step}"
+    grep -qxF '          current_sha: ""' <<< "${step}"
+    grep -qxF '          branch: ""' <<< "${step}"
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    grep -qxF "          message_json: \${{ needs.agent-l1.outputs.message_json || '' }}" <<< "${step}"
+    # shellcheck disable=SC2016
+    grep -qxF '          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}' <<< "${step}"
+}
+
+@test "finalize-l1 warns when a successful agent left no message" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Warn Missing Message')"
+    grep -qxF "        if: needs.agent-l1.result == 'success' && needs.agent-l1.outputs.message_json == '' && inputs.delivery == 'issue_comment'" <<< "${step}"
+    grep -qF '::warning' <<< "${step}"
+}
+
+@test "finalize-l2 downloads the bundle and passes the push inputs" {
+    local block step expected line
+    block="$(job_block "${AGENT}" finalize-l2)"
+    # Drop the blank and comment lines that step_block carries over from the next step.
+    step="$(step_block 'Download Agent Bundle' <<< "${block}" | grep -vE '^ *(#|$)')"
+    [[ -n ${step} ]]
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    expected="$(printf '%s\n' \
+        '      - name: Download Agent Bundle' \
+        '        continue-on-error: true' \
+        "        if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'" \
+        '        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2' \
+        '        with:' \
+        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          path: ${{ runner.temp }}/loop-agent-bundle')"
+    [ "${step}" = "${expected}" ]
+    # The bundle is fetched after the token is resolved and before Finalize runs.
+    awk '/^      - name: Resolve GitHub Token$/ {r=NR} /^      - name: Download Agent Bundle$/ {d=NR} /^      - name: Finalize$/ {f=NR} END {exit !(r && d && f && r < d && d < f)}' <<< "${block}"
+    step="$(step_block 'Finalize' <<< "${block}")"
+    # shellcheck disable=SC2016
+    for line in \
+        '          agent_branch_prefix: ${{ inputs.agent_branch_prefix }}' \
+        '          agent_bundle_dir: ${{ runner.temp }}/loop-agent-bundle' \
+        '          agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}' \
+        '          agent_edit_denylist: ${{ inputs.agent_edit_denylist }}' \
+        '          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}'; do
+        grep -qxF "${line}" <<< "${step}"
+    done
+    if grep -n 'execute_branch' "${AGENT}"; then
+        return 1
+    fi
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    if grep -nE 'agent_(branch_prefix|bundle_dir|edit_allowlist|edit_denylist|maker_skill_name):' <<< "${step}"; then
+        return 1
+    fi
+}
+
+@test "finalize-l2 has issues write" {
+    local block step
+    block="$(job_block "${AGENT}" finalize-l2)"
+    grep -qxF '      issues: write' <<< "${block}"
+    step="$(step_block 'Finalize' <<< "${block}")"
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    grep -qxF '          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}' <<< "${step}"
 }
 
 @test "finalize-l2 job if does not require finalize_enabled" {
@@ -675,11 +903,16 @@ dogfood_value() {
     [[ -n ${script} ]]
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref=def456 key=pull_request:7 pr_number=7)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_ref=def456 key=pull_request:7 pr_number=7)" ]
+    # An empty target_json names no bundle, so Download Agent Bundle cannot match one.
+    : > "${out}"
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON='' bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name= from_ref= key= pr_number=)" ]
 }
 
 @test "finalize-l2 runs loop-finalize with no step if" {
@@ -858,7 +1091,7 @@ dogfood_value() {
         loop_scoped_pr_number max_attempts max_targets_per_schedule max_turns may_edit
         model no_changes_verdict outcome_override pr_enabled pr_exclude pr_include_bots
         priority scoped_pr_number state_push_branch write_target
-        DETECT_DOMAIN_ENV_JSON ENGINE
+        DETECT_DOMAIN_ENV_JSON ENGINE finalize_hook_script FINALIZE_HOOK_SCRIPT detect_hook_script DETECT_HOOK_SCRIPT
     )
     for wf in "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}"; do
         for name in "${old_names[@]}"; do
@@ -871,5 +1104,236 @@ dogfood_value() {
                 return 1
             fi
         done
+    done
+}
+
+@test "target_json is described as required at every level" {
+    input_block "${AGENT}" target_json | grep -qF 'required at every level'
+}
+
+@test "no tracked file outside docs/superpowers names finalize_hook_script" {
+    run git -C "${ROOT}" grep -l -e finalize_hook_script -e FINALIZE_HOOK_SCRIPT -- . ':!docs/superpowers' ':!.agents' ':!.claude/skills' ':!apm_modules' ':!apm.lock.yaml' ':!test/bats/github-actions/loop-caller-parity.bats' ':!scripts/self/ci/loop_input_topology.py'
+    [ "${status}" -eq 1 ]
+    [ -z "${output}" ]
+}
+
+@test "no loop-finalize step or lib/loop script edits a posted comment or review" {
+    run grep -nE -e '-X PATCH' -e '--method PATCH' -e 'edit-last' -e 'pulls/[^ ]*/reviews/[0-9]' "${ROOT}/.github/actions/loop-finalize/action.yml" "${ROOT}"/.github/actions/lib/loop/*.sh
+    [ "${status}" -eq 1 ]
+    [ -z "${output}" ]
+}
+
+# triage_block FILE KEY: print the block scalar lines of KEY in the caller FILE (blank lines kept only inside the block)
+triage_block() {
+    awk -v key="      $2: |" '
+        $0 == key {f=1; next}
+        f && /^$/ {blank++; next}
+        f && /^        / {for (; blank > 0; blank--) print ""; sub(/^        /, ""); print; next}
+        f {exit}
+    ' "$1"
+}
+
+@test "triage caller delivers issue_comment with the label allowlist" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml"
+    [ "$(dogfood_value "${wf}" delivery)" = "issue_comment" ]
+    run triage_block "${wf}" finalize_label_allowlist
+    [ "${status}" -eq 0 ]
+    [ "${output}" = "$(printf '%s\n' needs-triage bug feature question documentation triage:needs-info triage:ready triage:failed)" ]
+    ! grep -q autofix <<< "${output}"
+}
+
+@test "triage caller grants no write gh commands to the agent" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
+    block="$(triage_block "${wf}" agent_tool_allowlist)"
+    [ -n "${block}" ]
+    for pat in 'gh issue edit' 'gh label create' 'gh issue comment' 'Bash(gh api:*)'; do
+        if grep -qF "${pat}" <<< "${block}"; then
+            echo "agent_tool_allowlist grants ${pat}" >&2
+            return 1
+        fi
+    done
+    grep -qxF 'Bash(gh api -X GET:*)' <<< "${block}"
+    grep -qxF 'Bash(gh issue view:*)' <<< "${block}"
+    grep -qxF 'Bash(gh label list:*)' <<< "${block}"
+    grep -qxF 'Bash(gh repo view:*)' <<< "${block}"
+}
+
+@test "L2 callers grant no write gh commands to the agent" {
+    local name wf block pat
+    for name in github-pr-revise github-issue-autofix ci-sweeper github-pr-review; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_tool_allowlist)"
+        [ -n "${block}" ]
+        for pat in 'Bash(gh api:*)' 'gh pr comment' 'gh issue comment' 'gh issue edit' 'gh label create'; do
+            if grep -qF "${pat}" <<< "${block}"; then
+                echo "${name}: agent_tool_allowlist grants ${pat}" >&2
+                return 1
+            fi
+        done
+    done
+}
+
+# expected_tool_allowlist NAME: print the agent_tool_allowlist lines the NAME caller must declare
+expected_tool_allowlist() {
+    case "$1" in
+        changelog) ;;
+        docs-updater | tech-debt | test-gap)
+            cat << 'EOF'
+Bash(git remote get-url:*)
+EOF
+            ;;
+        refactor)
+            cat << 'EOF'
+Bash(git remote get-url:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        ci-sweeper)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh run list:*)
+Bash(gh run view:*)
+Bash(git remote get-url:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-issue-autofix)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh pr list:*)
+Bash(gh pr view:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-pr-revise)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh pr view:*)
+Bash(gh pr diff:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-pr-review)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh pr diff:*)
+Bash(gh pr view:*)
+Bash(git show:*)
+EOF
+            ;;
+        github-issue-triage)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh label list:*)
+Bash(gh repo view:*)
+EOF
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
+
+@test "callers declare the tool rules their skill needs without host allow rules" {
+    local name wf actual expected
+    for name in "${LOOP_AGENT_CALLERS[@]}"; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        [ -f "${wf}" ]
+        actual="$(triage_block "${wf}" agent_tool_allowlist)"
+        expected="$(expected_tool_allowlist "${name}")"
+        if [ "${actual}" != "${expected}" ]; then
+            printf '%s: agent_tool_allowlist mismatch\n--- expected\n%s\n--- actual\n%s\n' "${name}" "${expected}" "${actual}" >&2
+            return 1
+        fi
+    done
+}
+
+@test "callers that run validation scripts pin the script form in maker instructions" {
+    local name wf block rules line
+    local sentence="Run a validation skill's script from the repository root by this exact form: \`bash .claude/skills/<skill>/scripts/validate.sh [path]\` (other forms such as cd into the skill directory or an absolute path are denied in CI)."
+    for name in refactor ci-sweeper github-issue-autofix github-pr-revise; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_maker_instructions)"
+        if ! grep -qF "${sentence}" <<< "${block}"; then
+            echo "${name}: maker instructions lack the validation script form sentence" >&2
+            return 1
+        fi
+        rules="$(triage_block "${wf}" agent_tool_allowlist | grep -F 'validate.sh')"
+        [ -n "${rules}" ]
+        while IFS= read -r line; do
+            if [[ ${line} != 'Bash(bash .claude/skills/'* ]]; then
+                echo "${name}: validation rule not in pinned form: ${line}" >&2
+                return 1
+            fi
+        done <<< "${rules}"
+    done
+}
+
+@test "no caller allowlist repeats the platform read baseline or a platform deny rule" {
+    local name wf block pat
+    for name in "${LOOP_AGENT_CALLERS[@]}"; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_tool_allowlist)"
+        for pat in 'Bash(git diff:*)' 'Bash(git log:*)' 'Bash(git status:*)' 'Bash(gh pr comment' 'Bash(gh issue comment' 'Bash(gh issue edit' 'Bash(gh label create' 'Bash(git push' 'Bash(curl' 'Bash(bash:*)' 'Bash(bash -c'; do
+            if grep -qF "${pat}" <<< "${block}"; then
+                echo "${name}: agent_tool_allowlist contains ${pat}" >&2
+                return 1
+            fi
+        done
+        if [ "${name}" != github-pr-review ] && grep -qF 'Bash(git show:*)' <<< "${block}"; then
+            echo "${name}: agent_tool_allowlist repeats Bash(git show:*)" >&2
+            return 1
+        fi
+    done
+}
+
+@test "triage caller comment no longer says host project settings apply" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" comment
+    ! grep -qF 'still apply via --setting-sources project' "${wf}"
+    comment="$(awk '/^      agent_maker_skill_name:/ {f=1; next} f && /^      #/ {print; next} f {exit}' "${wf}")"
+    [ -n "${comment}" ]
+    grep -qw 'no' <<< "${comment}"
+    grep -qF 'workspace trust' <<< "${comment}"
+}
+
+@test "triage caller intake admits needs-triage and triage:needs-info labels only" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" gate
+    gate="$(awk '/^    if: >-$/ {f=1; next} f && /^    uses:/ {exit} f {print}' "${wf}")"
+    [ -n "${gate}" ]
+    grep -qF "fromJSON('[\"needs-triage\",\"triage:needs-info\"]')" <<< "${gate}"
+    [[ ${gate} != *'triage:ready'* ]]
+}
+
+@test "triage maker instructions point at the message directory" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
+    block="$(triage_block "${wf}" agent_maker_instructions)"
+    grep -qF 'message.md' <<< "${block}"
+    grep -qF 'message_labels.json' <<< "${block}"
+    [[ ${block} != *'platform hook'* ]]
+    ! grep -qF 'Your final message IS the comment' <<< "${block}"
+}
+
+@test "reusable agent_tool_allowlist descriptions state host allow rules are not applied" {
+    local wf desc
+    for wf in "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}"; do
+        desc="$(awk '/^      agent_tool_allowlist:$/ {f=1; next} f && /^        description:/ {print; exit}' "${wf}")"
+        [ -n "${desc}" ]
+        [[ ${desc} != *'grants nothing beyond the repository'* ]]
+        [[ ${desc} == *'allow rules are not applied in CI'* ]]
+        [[ ${desc} == *'Bash(gh issue view:*)'* ]]
     done
 }

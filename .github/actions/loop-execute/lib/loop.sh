@@ -96,6 +96,36 @@ function parse_outcome_override_from_agent_output {
 }
 
 #######################################
+# permission_denial_note: Describe denied tool calls found in maker output
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Path to the maker agent output file
+#
+# Outputs:
+#   "; N tool call(s) denied by permission settings" on stdout, nothing when none
+#
+# Returns:
+#   0 always
+#
+#######################################
+function permission_denial_note {
+    local output_file="${1:?output_file required}"
+    local json count
+
+    [[ -f ${output_file} ]] || return 0
+    json="$(sed -n 's/^::warning::Agent permission_denials: //p' "${output_file}" | tail -1)"
+    [[ -n ${json} ]] || return 0
+    count="$(jq -r 'if type == "array" then length else 0 end' <<< "${json}" 2> /dev/null || echo 0)"
+    if [[ ${count} =~ ^[0-9]+$ && ${count} -gt 0 ]]; then
+        printf '; %s tool call(s) denied by permission settings' "${count}"
+    fi
+    return 0
+}
+
+#######################################
 # promote_has_changes_after_attempt: Set HAS_CHANGES from this attempt only
 #
 # Description:
@@ -310,7 +340,7 @@ function run_bounded_loop {
                 REASON="Skill classified as watch with no file changes"
             else
                 VERDICT="${AGENT_UNCHANGED_VERDICT}"
-                REASON="No file changes produced"
+                REASON="No file changes produced$(permission_denial_note "${attempt_dir}/agent-output.txt")"
             fi
             echo "No changes; verdict=${VERDICT} finalize_outcome_override=${FINALIZE_OUTCOME_OVERRIDE:-none}."
             echo "::endgroup::"

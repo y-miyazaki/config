@@ -1,17 +1,21 @@
 #!/bin/bash
 #######################################
-# Description: Validate a github-pr-review report and post it as a COMMENT PR review
+# Description: Validate a github-pr-review report and render it as a COMMENT review file
 #
-# Usage: ./post_review.sh
-#   Runs as the loop finalize_hook_script in finalize (after the checker verdict).
+# Usage: ./render_review.sh
+#   Runs as the loop finalize_script in finalize (after the checker verdict); the platform
+#   delivers the rendered file as one COMMENT PR review.
 #
 # Output:
-# - Posts one PR review (event COMMENT) via gh api; log lines and ::warning:: annotations on stdout
+# - Writes ${LOOP_MESSAGE_DIR}/review.json = {"body", "commit_id", "comments", "fallback_body"}
+#   (reviews API shape without event); log lines and ::warning:: annotations on stdout
 #
 # Design Rules:
-# - Act only when VERDICT is APPROVE; any other verdict posts nothing
-# - Fail closed: unparseable TARGET_JSON or report, or unavailable trusted SHAs, post nothing,
-#   warn, and exit 0
+# - Render only; never posts (no gh api POST) and never reads LOOP_META_BLOCK (the platform
+#   adds Meta and footer when it delivers)
+# - Act only when VERDICT is APPROVE; any other verdict writes nothing
+# - Fail closed: unset LOOP_MESSAGE_DIR, unparseable TARGET_JSON or report, or unavailable trusted
+#   SHAs write nothing, warn, and exit 0
 # - Report base_sha/head_sha are never trusted: the PR's SHAs come from gh pr view and are used
 #   for evidence checks, all links, and commit_id. A report head_sha that is missing or differs
 #   from the PR head fails closed (the PR moved); a base_sha mismatch is only warned about
@@ -19,11 +23,13 @@
 #   (no normalization) of evidence.path as committed at the trusted base SHA (git cat-file,
 #   not the working tree); other invalid findings are dropped
 # - in_diff findings whose lines are not in the PR diff move to the review body
-# - At most MAX_FINDINGS findings are posted (most severe kept); the omitted count is in the body
+# - At most MAX_FINDINGS findings are rendered (most severe kept); the omitted count is in the body
 # - Paths in link labels are escaped when they contain backticks, brackets, or backslashes
-# - A failed post is retried once with all findings in the body only on HTTP 422
-# - The review event is always COMMENT; nothing in the report can change it
-# - Posting failures and unexpected errors emit ::warning:: and exit 0 so finalize does not fail
+# - fallback_body is always written: the same review with every finding in the body, for the
+#   platform's one retry without inline comments when GitHub rejects them (HTTP 422)
+# - The body starts with the github-pr-review marker; review.json has no event key (the
+#   platform always posts COMMENT)
+# - Unexpected errors emit ::warning:: and exit 0 so finalize does not fail
 #   (main runs in a set -e subshell; the entry guard always exits 0)
 # - Render fixed English headings and labels from the template defs in REVIEW_JQ_LIB
 #   (mirrors assets/review-body-template.md and assets/inline-comment-template.md)
@@ -33,15 +39,15 @@
 # - bash (POSIX bash, /bin/bash)
 # - jq, awk
 # - git (base commit blobs; report fetch when REPORT_FILE is unset); cwd is the repository
-# - gh (posting; gh pr view when PR_BASE_SHA/PR_HEAD_SHA are unset; gh pr diff when PR_DIFF_FILE is unset)
+# - gh (read only: gh pr view when PR_BASE_SHA/PR_HEAD_SHA are unset; gh pr diff when PR_DIFF_FILE is unset)
 #
 # Environment:
-#   VERDICT               Checker verdict; only APPROVE posts
+#   VERDICT               Checker verdict; only APPROVE renders
 #   EXECUTE_BRANCH        Work branch holding the report file
 #   TARGET_JSON           Loop target JSON; PR number from .entity.handoff_key // .key (entity:pr:<n>)
 #   GITHUB_REPOSITORY     owner/repo
-#   GH_TOKEN / GITHUB_TOKEN Token for gh calls
-#   LOOP_META_BLOCK       Optional markdown the caller wants at the end of the review body (posted in the same review)
+#   GH_TOKEN / GITHUB_TOKEN Token for gh read calls
+#   LOOP_MESSAGE_DIR      Directory that receives review.json (required)
 #   REPORT_FILE           Report path to read instead of git fetch + git show (test seam)
 #   PR_DIFF_FILE          Unified diff to read instead of gh pr diff (test seam)
 #   PR_BASE_SHA / PR_HEAD_SHA Trusted PR SHAs instead of gh pr view (test seam; both required)
@@ -62,11 +68,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/all.sh"
 
 readonly REVIEW_MARKER='<!-- github-pr-review:v1 -->'
-# Most findings one review posts; the rest are omitted (most severe kept) and counted in the body
+# Most findings one review renders; the rest are omitted (most severe kept) and counted in the body
 readonly MAX_FINDINGS=20
 
 # jq defs shared by the renderers. review_body_template and inline_comment_template (with
-# finding_item / evidence_line) hold every fixed English string of the posted review; keep them
+# finding_item / evidence_line) hold every fixed English string of the rendered review; keep them
 # in sync with the skill's assets/review-body-template.md and assets/inline-comment-template.md.
 # shellcheck disable=SC2016 # jq program: $vars are jq bindings, not shell expansions
 readonly REVIEW_JQ_LIB='
@@ -240,7 +246,7 @@ function base_evidence_blob {
 }
 
 #######################################
-# build_payload: Build the reviews API payload (event is always COMMENT)
+# build_review_json: Build review.json (reviews API shape without event, plus fallback_body)
 #
 # Globals:
 #   GITHUB_REPOSITORY
@@ -251,16 +257,17 @@ function base_evidence_blob {
 #   $1 - Annotated report JSON
 #
 # Outputs:
-#   Payload JSON to stdout
+#   {"body", "commit_id", "comments", "fallback_body"} JSON to stdout; fallback_body is the
+#   body rendered with every finding moved out of inline comments
 #
 # Returns:
 #   0 on success
 #
 # Usage:
-#   payload="$(build_payload "${annotated}")"
+#   build_review_json "${annotated}" > "${LOOP_MESSAGE_DIR}/review.json"
 #
 #######################################
-function build_payload {
+function build_review_json {
     jq -c --arg repo "${GITHUB_REPOSITORY}" --arg marker "${REVIEW_MARKER}" "${REVIEW_JQ_LIB}"'
         . as $r
         | {
@@ -273,7 +280,7 @@ function build_payload {
                        {start_line: .location.start_line, start_side: .location.side} else {} end)
             ],
             commit_id: $r.head_sha,
-            event: "COMMENT"
+            fallback_body: ($r | .findings |= map(.inline = false) | review_body_template($repo; $marker))
         }' <<< "$1"
 }
 
@@ -385,43 +392,6 @@ function evidence_anchor {
         | ($start + $count - 1) as $end
         | if $end > $start then "L\($start)-L\($end)" else "L\($start)" end
     ' 2> /dev/null || true
-}
-
-#######################################
-# post_payload: POST a review payload with gh api (LOOP_META_BLOCK appended to the body when set)
-#
-# Globals:
-#   GITHUB_REPOSITORY
-#   GH_TOKEN / GITHUB_TOKEN
-#   LOOP_META_BLOCK - Optional markdown appended to the review body
-#
-# Arguments:
-#   $1 - PR number
-#   $2 - Payload file path
-#   $3 - File that receives gh stderr (read to tell an HTTP 422 from other failures)
-#
-# Outputs:
-#   gh stderr to $3
-#
-# Returns:
-#   0 on success, non-zero when gh fails
-#
-# Usage:
-#   post_payload 7 "${payload_file}" "${err_file}"
-#
-#######################################
-function post_payload {
-    local payload="$2" with_meta
-    if [[ -n ${LOOP_META_BLOCK:-} ]]; then
-        with_meta="$(mktemp)"
-        jq --arg meta "${LOOP_META_BLOCK}" '.body += "\n\n" + $meta' "${payload}" > "${with_meta}"
-        payload="${with_meta}"
-    fi
-    GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --method POST "repos/${GITHUB_REPOSITORY}/pulls/$1/reviews" \
-        --input "${payload}" > /dev/null 2> "$3"
-    local rc=$?
-    [[ -n ${with_meta:-} ]] && rm -f "${with_meta}"
-    return "${rc}"
 }
 
 #######################################
@@ -718,20 +688,21 @@ function validate_report {
 #
 #######################################
 function warn {
-    printf '::warning::post_review: %s\n' "$1"
+    printf '::warning::render_review: %s\n' "$1"
 }
 
 #######################################
-# main: Validate the report and post a COMMENT review when VERDICT is APPROVE
+# main: Validate the report and write review.json when VERDICT is APPROVE
 #
 # Globals:
-#   VERDICT, TARGET_JSON, GITHUB_REPOSITORY, PR_DIFF_FILE, REVIEW_BASE_SHA / REVIEW_HEAD_SHA (set)
+#   VERDICT, TARGET_JSON, GITHUB_REPOSITORY, LOOP_MESSAGE_DIR, PR_DIFF_FILE,
+#   REVIEW_BASE_SHA / REVIEW_HEAD_SHA (set)
 #
 # Arguments:
 #   None
 #
 # Outputs:
-#   Log lines and ::warning:: annotations to stdout
+#   ${LOOP_MESSAGE_DIR}/review.json; log lines and ::warning:: annotations to stdout
 #
 # Returns:
 #   0 (never fails finalize)
@@ -741,41 +712,46 @@ function warn {
 #
 #######################################
 function main {
-    local pr_number report annotated payload_file err_file work_dir kept inline_count
+    local pr_number report annotated work_dir kept inline_count message_dir review_file
 
     if [[ ${VERDICT:-} != "APPROVE" ]]; then
-        echo "post_review: VERDICT=${VERDICT:-} (not APPROVE); nothing to post"
+        echo "render_review: VERDICT=${VERDICT:-} (not APPROVE); nothing to render"
+        return 0
+    fi
+    message_dir="${LOOP_MESSAGE_DIR:-}"
+    if [[ -z ${message_dir} ]]; then
+        warn "LOOP_MESSAGE_DIR is not set; review not rendered"
         return 0
     fi
     if ! command -v jq &> /dev/null; then
-        warn "jq is required; review not posted"
+        warn "jq is required; review not rendered"
         return 0
     fi
     if [[ ! ${GITHUB_REPOSITORY:-} =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
-        warn "GITHUB_REPOSITORY is missing or invalid; review not posted"
+        warn "GITHUB_REPOSITORY is missing or invalid; review not rendered"
         return 0
     fi
     if ! pr_number="$(resolve_pr_number "${TARGET_JSON:-}")"; then
-        warn "TARGET_JSON has no entity:pr:<n> handoff key; review not posted"
+        warn "TARGET_JSON has no entity:pr:<n> handoff key; review not rendered"
         return 0
     fi
     if ! report="$(read_report ".loop-review/pr-${pr_number}.json")" || [[ -z ${report} ]]; then
-        warn "report .loop-review/pr-${pr_number}.json could not be read; review not posted"
+        warn "report .loop-review/pr-${pr_number}.json could not be read; review not rendered"
         return 0
     fi
     if ! validate_report "${report}" "${pr_number}"; then
-        warn "report for PR #${pr_number} is invalid (JSON, pr_number, premises, or findings); review not posted"
+        warn "report for PR #${pr_number} is invalid (JSON, pr_number, premises, or findings); review not rendered"
         return 0
     fi
     if ! resolve_trusted_shas "${pr_number}"; then
-        warn "trusted base/head SHAs for PR #${pr_number} unavailable (gh pr view or base commit fetch failed); review not posted"
+        warn "trusted base/head SHAs for PR #${pr_number} unavailable (gh pr view or base commit fetch failed); review not rendered"
         return 0
     fi
     # A head mismatch means the PR moved after the review was written: line numbers may land on
     # the wrong lines, so fail closed. A base mismatch is only a warning (evidence is verified
     # at the trusted base regardless).
     if [[ "$(jq -r '.head_sha // "" | tostring' <<< "${report}")" != "${REVIEW_HEAD_SHA}" ]]; then
-        warn "report head_sha does not match the PR head (${REVIEW_HEAD_SHA}) for PR #${pr_number}; review not posted"
+        warn "report head_sha does not match the PR head (${REVIEW_HEAD_SHA}) for PR #${pr_number}; review not rendered"
         return 0
     fi
     if [[ "$(jq -r '.base_sha // "" | tostring' <<< "${report}")" != "${REVIEW_BASE_SHA}" ]]; then
@@ -801,28 +777,14 @@ function main {
     annotated="$(annotate_report "${report}")"
     kept="$(jq -r '.findings | length' <<< "${annotated}")"
     inline_count="$(jq -r '[.findings[] | select(.inline)] | length' <<< "${annotated}")"
-    echo "post_review: PR #${pr_number} findings kept=${kept} inline=${inline_count} dropped=$(jq -r '.dropped' <<< "${annotated}")"
+    echo "render_review: PR #${pr_number} findings kept=${kept} inline=${inline_count} dropped=$(jq -r '.dropped' <<< "${annotated}")"
 
-    payload_file="${work_dir}/payload.json"
-    err_file="${work_dir}/post.err"
-    build_payload "${annotated}" > "${payload_file}"
-    if post_payload "${pr_number}" "${payload_file}" "${err_file}"; then
-        echo "post_review: posted COMMENT review on PR #${pr_number}"
-        return 0
-    fi
-
-    # Only a 422 (an inline position GitHub rejects) is fixed by moving findings to the body;
-    # auth, rate-limit, and server errors would fail the same way again.
-    if [[ ${inline_count} -gt 0 ]] && grep -q 'HTTP 422' "${err_file}" 2> /dev/null; then
-        warn "posting with inline comments was rejected (HTTP 422) for PR #${pr_number}; retrying with all findings in the body"
-        annotated="$(jq -c '.findings |= map(.inline = false)' <<< "${annotated}")"
-        build_payload "${annotated}" > "${payload_file}"
-        if post_payload "${pr_number}" "${payload_file}" "${err_file}"; then
-            echo "post_review: posted COMMENT review on PR #${pr_number} (body only)"
-            return 0
-        fi
-    fi
-    warn "failed to post review on PR #${pr_number}"
+    # Build in the work dir, then move into place: a failed build never leaves a partial review.json
+    build_review_json "${annotated}" > "${work_dir}/review.json"
+    mkdir -p "${message_dir}"
+    review_file="${message_dir}/review.json"
+    mv "${work_dir}/review.json" "${review_file}"
+    echo "render_review: wrote ${review_file} for PR #${pr_number}"
     return 0
 }
 
@@ -838,7 +800,7 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     )
     main_status=$?
     if [[ ${main_status} -ne 0 ]]; then
-        printf '::warning::post_review: unexpected failure (exit %s); review not posted\n' "${main_status}"
+        printf '::warning::render_review: unexpected failure (exit %s); review not rendered\n' "${main_status}"
     fi
     exit 0
 fi

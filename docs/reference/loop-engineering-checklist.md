@@ -61,7 +61,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] `pr_create`: create PR on APPROVE; `pr_push`: push on APPROVE; delete agent branch on REJECT
 - [ ] L2 with `delivery: none` (`delivery: none`) does not push; the agent branch is deleted after APPROVE; domain persistence reads the report from the agent branch
 - [ ] L3 `auto_merge` only when `delivery: pr_create` — not for `pr_push`
-- [ ] State, run-log, domain ledger via `finalize_hook_script` in finalize job (no caller `git push` for `.loop/*`)
+- [ ] State, run-log, domain ledger via `finalize_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
 - [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `pr_create`

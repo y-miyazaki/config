@@ -2,18 +2,23 @@
 # Design: docs/superpowers/specs/2026-10-17-loop-pr-review-design.md
 # Requires repository secret: AGENT_TOKEN (engine API key).
 #
-# ROLLOUT: enabled. The ci-loop-* `uses:` lines are pinned to a release that
-# contains the platform fixes this loop depends on (do not downgrade the pins):
-# - loop-finalize honors `delivery: none` (never pushes; P1), deletes the
-#   agent branch (P2), and passes GH_TOKEN / GITHUB_REPOSITORY to
-#   finalize_hook_script (P4)
-# - finalize-l2 always runs loop-finalize on L2 / L3, including delivery none (B2)
-# - loop-entity-detect emits target_json.from.branch (B3)
-# - the finalize-l2 PR review meta step guards its handoff key (meta guard)
-# With older pins, an APPROVE verdict can merge the agent branch (including
-# .loop-review/pr-<n>.json) into the base branch, or the review never posts.
+# Delivery: `delivery: pr_review`. The agent writes the report
+# (.loop-review/pr-<n>.json) on the agent branch; the agent job holds no write
+# credential, so loop-finalize (Push Agent Branch) pushes that branch from the
+# agent job's bundle.
+# In finalize, render_review.sh (finalize_script) reads the report from
+# origin/<branch>, validates it, and writes review.json to LOOP_MESSAGE_DIR.
+# origin/<branch> is missing when nothing was pushed (no changes, agent
+# failure, or a rejected push), so the hook must tolerate that; it does not run
+# after a failed push.
+# loop-finalize's Deliver Message then posts one COMMENT review with Meta and
+# footer. Neither the agent nor render_review.sh posts. finalize never merges
+# the agent branch into the base and deletes it after finalize.
+# ROLLOUT: the ci-loop-* `uses:` lines must be pinned to a release whose
+# loop-finalize has Deliver Message and accepts `delivery: pr_review` and
+# `finalize_script` (do not downgrade the pins).
 # - Run workflow_dispatch from the default branch only: the base checkout,
-#   rules, and post_review.sh come from the ref the run starts on.
+#   rules, and render_review.sh come from the ref the run starts on.
 name: on-loop-github-pr-review
 
 run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || inputs.pr_number }}"
@@ -113,8 +118,9 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-pr-review
-      # Review reads the PR and writes a report file only; posting is done by
-      # post_review.sh (finalize_hook_script) after the checker approves.
+      # Review reads the PR and writes a report file only. After the checker
+      # approves, render_review.sh (finalize_script) writes review.json and
+      # loop-finalize's Deliver Message posts one COMMENT review.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
         Bash(gh issue view:*)
@@ -124,10 +130,10 @@ jobs:
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
-      delivery: none
+      delivery: pr_review
       detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"PR_EXCLUDE_LABELS":"no-loop,loop-automation","PR_FORCE":"{0}","PR_NUMBER":"{1}"}}', inputs.force, inputs.pr_number) || '{"PR_EXCLUDE_LABELS":"no-loop,loop-automation"}' }}
       detect_script: .agents/skills/github-pr-review/scripts/detect_pr_review.sh
-      finalize_hook_script: .agents/skills/github-pr-review/scripts/post_review.sh
+      finalize_script: .agents/skills/github-pr-review/scripts/render_review.sh
       level: L2
       loop_name: github-pr-review
       state_branch: main

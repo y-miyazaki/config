@@ -40,7 +40,7 @@ inputs:
     required: false
   agent_edit_denylist:
     default: ""
-    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
+    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/loop/edit_paths.sh"
     required: false
   agent_engine:
     description: "AI engine (claude | copilot | codex | cursor)"
@@ -69,7 +69,7 @@ inputs:
     required: true
   agent_tool_allowlist:
     default: ""
-    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The host repository''s .claude/settings.json allow rules are not applied (no workspace trust); claude adds a fixed read-only git baseline (git diff/log/show/status), runs makers in acceptEdits and checkers in dontAsk, and always denies a fixed list of GitHub-write, push, network, and env commands. Engines without a per-tool allowlist warn and ignore it.'
     required: false
   agent_unchanged_verdict:
     default: ""
@@ -77,13 +77,13 @@ inputs:
     required: false
   base_branch:
     default: "main"
-    description: "Base branch for verify diff"
+    description: "Base branch for verify diff; also sets the bundle range (commits not on origin/<base_branch>)"
     required: false
   branch:
     description: "Worktree branch name"
     required: true
   github_token:
-    description: "Resolved GitHub token for gh CLI, push, and API calls"
+    description: "Read-only GitHub token for fetches and read-only gh calls"
     required: true
   handoff_dir:
     default: ""
@@ -140,21 +140,24 @@ outputs:
   attempts:
     description: "Number of Agent→Verify attempts executed"
     value: ${{ steps.loop.outputs.attempts }}
+  bundle_file:
+    description: "Path of the git bundle of the agent branch (empty when no bundle was written)"
+    value: ${{ steps.bundle.outputs.has_changes == 'true' && format('{0}/loop-agent-bundle/branch.bundle', runner.temp) || '' }}
   denylist_blocked:
-    description: "true when the final attempt's diff still matched the denylist (push is skipped)"
+    description: "true when the final attempt's diff still matched the denylist (the bundle is skipped)"
     value: ${{ steps.loop.outputs.denylist_blocked }}
   failure_message:
     description: "Truncated failure message for run log diagnostics"
     value: ${{ steps.failure_diag.outputs.failure_message }}
   failure_stage:
-    description: "Failure stage when execute push/notify fails (empty on success)"
+    description: "Failure stage when execute bundle/notify fails (empty on success)"
     value: ${{ steps.failure_diag.outputs.failure_stage }}
   finalize_outcome_override:
     description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
     value: ${{ steps.loop.outputs.finalize_outcome_override }}
   has_changes:
-    description: "Whether HEAD differs from base (product files) or this run committed files"
-    value: ${{ steps.push.outputs.has_changes }}
+    description: "true when a bundle of the agent branch was written (commits not on origin/<base_branch>)"
+    value: ${{ steps.bundle.outputs.has_changes }}
   notify_context_json:
     description: "Machine context for loop-notify-pr"
     value: ${{ steps.notify_context.outputs.notify_context_json }}
@@ -178,11 +181,12 @@ runs:
       uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node_version }}
+        package-manager-cache: false
 
     - name: Setup uv
       uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       with:
-        enable-cache: true
+        enable-cache: false
         prune-cache: true
         version: ${{ inputs.uv_version }}
 
@@ -233,17 +237,18 @@ runs:
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
 
-    - name: Push Branch
-      id: push
+    - name: Bundle Branch
+      id: bundle
       shell: bash
       env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        BUNDLE_FILE: ${{ runner.temp }}/loop-agent-bundle/branch.bundle
         LOOP_DENYLIST_BLOCKED: ${{ steps.loop.outputs.denylist_blocked }}
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}
-      run: bash "${GITHUB_ACTION_PATH}/lib/push.sh"
+      run: bash "${GITHUB_ACTION_PATH}/lib/bundle.sh"
 
     - name: Build Notify Context
       id: notify_context
@@ -251,7 +256,7 @@ runs:
       env:
         BASE_BRANCH: ${{ inputs.base_branch }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
-        HAS_CHANGES: ${{ steps.push.outputs.has_changes }}
+        HAS_CHANGES: ${{ steps.bundle.outputs.has_changes }}
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}

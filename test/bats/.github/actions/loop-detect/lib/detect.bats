@@ -691,7 +691,7 @@ EOF
 @test "main exits 1 without skip outputs when input validation fails" {
     local -a cases=(
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
-        'DELIVERY=|::error::delivery must be none|pr_create|pr_push (got: empty)'
+        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
         'LEVEL=|::error::level is required (L1, L2, or L3)'
         'DETECT_BRANCH_MATCH=main|::error::delivery pr_push does not allow detect_branch_match (got: main)'
     )

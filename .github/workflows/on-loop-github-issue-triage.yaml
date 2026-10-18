@@ -33,15 +33,15 @@ concurrency:
 jobs:
   loop:
     # Intake gate mirrors detect_issue.sh should_skip_issue so loop-authored
-    # side effects never re-enter the queue: the agent applies labels and posts
-    # comments with a GitHub App token, which (unlike GITHUB_TOKEN) does raise
-    # new webhooks. Bot senders and triage:failed are refused here, not in
+    # side effects never re-enter the queue: finalize posts the comment and
+    # applies labels with a GitHub App token, which (unlike GITHUB_TOKEN) does
+    # raise new webhooks. Bot senders and triage:failed are refused here, not in
     # detect, so no run is queued behind the in-flight one.
     # Label allowlist is intake-only — classification labels the agent itself
-    # applies (bug/feature/question/documentation) must stay out. triage:ready
-    # is kept for the detect-job dispatch hook (human hand-off to autofix);
-    # detect still skips the agent for it. autofix is owned by
-    # on-loop-github-issue-autofix.yaml and must not double-intake here.
+    # applies (bug/feature/question/documentation) must stay out, and so must
+    # triage:ready (detect skips it, so admitting it only queues skipped runs).
+    # autofix is owned by on-loop-github-issue-autofix.yaml and must not
+    # double-intake here.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -70,7 +70,7 @@ jobs:
           (
             github.event.action == 'labeled' &&
             contains(
-              fromJSON('["needs-triage","triage:needs-info","triage:ready"]'),
+              fromJSON('["needs-triage","triage:needs-info"]'),
               github.event.label.name
             )
           )
@@ -115,29 +115,36 @@ jobs:
       agent_maker_effort: medium
       agent_maker_instructions: |
         Triage the Issue per the github-issue-triage skill.
-        Apply allowlisted labels. The workflow posts the Issue comment itself (with its Meta block
-        and footer): do NOT post one. Your final message IS the comment: only the comment markdown —
-        analysis and any questions — with no preamble, no status line, and no leading "---".
-        Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
+        Do NOT post comments or change labels. Write the comment markdown to message.md, and the
+        label changes as {"add":[...],"remove":[...]} to message_labels.json, in the loop message
+        directory named at the end of this prompt. The comment has no preamble, no status line, and
+        no leading "---". Do not open PRs or call repository_dispatch.
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-triage
-      # Triage applies FSM label transitions and posts analysis comments; it must
-      # not reach PRs or releases. Repository write access comes from the job's
-      # permissions block — these rules only unblock the print-mode approver.
+      # Triage reads Issue facts only; finalize posts the comment and applies the
+      # labels. CI never activates the host .claude/settings.json allow rules (no
+      # workspace trust), so these rules plus the platform read-only git baseline
+      # are the agent's whole command surface; the platform deny list blocks gh writes.
       agent_tool_allowlist: |
-        Bash(gh api:*)
+        Bash(gh api -X GET:*)
         Bash(gh issue view:*)
-        Bash(gh issue edit:*)
         Bash(gh label list:*)
-        Bash(gh label create:*)
+        Bash(gh repo view:*)
       budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
-      delivery: none
+      delivery: issue_comment
       detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
-
-      detect_hook_script: .agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
       detect_script: .agents/skills/github-issue-triage/scripts/detect_issue.sh
+      finalize_label_allowlist: |
+        needs-triage
+        bug
+        feature
+        question
+        documentation
+        triage:needs-info
+        triage:ready
+        triage:failed
       level: L1
       loop_name: github-issue-triage
       state_branch: main

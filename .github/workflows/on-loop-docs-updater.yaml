@@ -66,6 +66,8 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: docs-updater
+      agent_tool_allowlist: |
+        Bash(git remote get-url:*)
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 1000000

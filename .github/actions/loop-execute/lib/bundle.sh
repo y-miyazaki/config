@@ -1,26 +1,32 @@
 #!/bin/bash
 #######################################
-# Description: Push the loop worktree branch when changes exist
+# Description: Bundle the loop worktree branch when changes exist
 #
-# Usage: bash lib/push.sh
+# Usage: bash lib/bundle.sh
 #
 # Environment:
-#   BRANCH - Branch name to push
-#   GITHUB_TOKEN - GitHub token for push authentication
+#   BASE_BRANCH - Base branch; the bundle excludes commits on origin/<base>
+#   BRANCH - Branch name to bundle
+#   BUNDLE_FILE - Output path of the git bundle
+#   GITHUB_OUTPUT - GitHub Actions output file
 #   LOOP_DENYLIST_BLOCKED - true when the final attempt's diff still matched
 #     the denylist (optional; defaults to false)
 #   LOOP_HAS_CHANGES - true when loop step produced commits
+#   STATUS_DIR - Directory for failure.json (optional)
 #   WORKTREE_PATH - Absolute path to the worktree
 #
 # Output:
 #   Writes has_changes to GITHUB_OUTPUT
 #
 # Design Rules:
-#   - Branch names are validated before push
-#   - Uses http.extraheader auth (same pattern as actions/checkout)
-#   - A denylist-blocked attempt never pushes, even if it produced commits:
-#     an ordinary checker REJECT may still push for human inspection, but a
+#   - Branch names are validated before bundling
+#   - No token is read: the bundle is written locally and a later job with
+#     write credentials pushes it
+#   - A denylist-blocked attempt never bundles, even if it produced commits:
+#     an ordinary checker REJECT may still deliver for human inspection, but a
 #     denylist hit (secrets/credentials paths) must never reach the remote.
+#   - LOOP_HAS_CHANGES=true with no commits outside origin/<base> fails with
+#     stage bundle: git refuses an empty bundle, and failing closed is intended
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -30,10 +36,10 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
-_LOOP_PUSH_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+_LOOP_BUNDLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 
 #######################################
-# main: Push branch when loop produced changes
+# main: Bundle branch when loop produced changes
 #
 # Globals:
 #   None
@@ -45,14 +51,15 @@ _LOOP_PUSH_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)
 #   None
 #
 # Returns:
-#   0 on success or when no push is needed
+#   0 on success or when no bundle is needed
 #
 #######################################
 function main {
-    local push_err
+    local bundle_err
 
+    : "${BASE_BRANCH:?}"
     : "${BRANCH:?}"
-    : "${GITHUB_TOKEN:?}"
+    : "${BUNDLE_FILE:?}"
     : "${LOOP_HAS_CHANGES:?}"
     : "${WORKTREE_PATH:?}"
     : "${GITHUB_OUTPUT:?}"
@@ -62,7 +69,7 @@ function main {
         exit 1
     fi
     if [[ ${LOOP_DENYLIST_BLOCKED} == "true" ]]; then
-        echo "::warning::Skipping push: final diff still matches the denylist"
+        echo "::warning::Skipping bundle: final diff still matches the denylist"
         echo "has_changes=false" >> "${GITHUB_OUTPUT}"
         return 0
     fi
@@ -70,16 +77,15 @@ function main {
         echo "has_changes=false" >> "${GITHUB_OUTPUT}"
         return 0
     fi
-    cd "${WORKTREE_PATH}" || exit 1
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
-    if ! push_err="$(git push -u origin "${BRANCH}" 2>&1)"; then
+    mkdir -p "$(dirname "${BUNDLE_FILE}")"
+    if ! bundle_err="$(git -C "${WORKTREE_PATH}" bundle create "${BUNDLE_FILE}" "^origin/${BASE_BRANCH}" "refs/heads/${BRANCH}" 2>&1)"; then
         if [[ -n ${STATUS_DIR:-} ]]; then
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
-            source "${_LOOP_PUSH_LIB_DIR}/failure_record.sh"
-            loop_failure_record "push" "${push_err}" "${STATUS_DIR}/failure.json"
+            source "${_LOOP_BUNDLE_LIB_DIR}/failure_record.sh"
+            loop_failure_record "bundle" "${bundle_err}" "${STATUS_DIR}/failure.json"
         fi
-        printf '%s\n' "${push_err}" >&2
+        printf '%s\n' "${bundle_err}" >&2
         exit 1
     fi
     echo "has_changes=true" >> "${GITHUB_OUTPUT}"

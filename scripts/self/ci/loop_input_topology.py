@@ -45,7 +45,8 @@ SHORT = {
 }
 DETECT_RE = re.compile(r"^loop-(?:entity-)?detect::")
 
-# Section 6: inputs validated by level at detect time, plus the two decision inputs.
+# Section 6: inputs validated by level at detect time, plus the two decision inputs and
+# the finalize inputs detect validates against delivery (delivery message design, section 1).
 # Each must reach detect from both reusables.
 DETECT_REQUIRED = (
     "agent_edit_allowlist",
@@ -53,6 +54,8 @@ DETECT_REQUIRED = (
     "agent_edit_target",
     "agent_unchanged_verdict",
     "delivery",
+    "finalize_label_allowlist",
+    "finalize_script",
     "level",
 )
 
@@ -88,7 +91,6 @@ DECISIONS: dict[str, tuple[str, str, str]] = {
     "detect_branch_match": ("branch_match", "全", "改名。第7-3節"),
     "detect_branch_match_mode": ("branch_match_mode", "全", "改名"),
     "detect_env_json": ("detect_domain_env_json", "全", "改名"),
-    "detect_hook_script": ("dispatch_hook_script", "全", "改名"),
     "detect_max_targets": ("max_targets_per_schedule", "全", "改名"),
     "detect_pr_bot_allowlist": ("pr_include_bots", "全", "改名"),
     "detect_pr_denylist": ("pr_exclude", "全", "改名"),
@@ -98,8 +100,9 @@ DECISIONS: dict[str, tuple[str, str, str]] = {
     "detect_script": ("—", "全", "変更なし"),
     "environment": ("—", "全", "変更なし。caller の既定値と同じ行を削除"),
     "finalize_commit_paths": ("additional_commit_paths", "L2+", "改名"),
-    "finalize_hook_script": ("domain_persistence_script", "L2+", "改名(第4節)"),
+    "finalize_label_allowlist": ("—", "全", "新設(投稿の配信 第5節)"),
     "finalize_outcome_override": ("outcome_override", "L2+", "改名"),
+    "finalize_script": ("finalize_hook_script", "L2+", "改名(投稿の配信 第1節)"),
     "level": ("—", "全", "既定値を削除"),
     "loop_name": ("—", "全", "変更なし"),
     "pr_body": ("—", "L2+", "変更なし"),

@@ -108,10 +108,15 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ $output == *"<!-- loop-notify-pr:v1:ci-sweeper -->"* ]]
     [[ $output == *"## Loop notification: ci-sweeper"* ]]
-    [[ $output == *"| Outcome | \`pr_created\` |"* ]]
+    [[ $output != *"| Outcome |"* ]]
+    [[ $output != *"| Loop run |"* ]]
+    [[ $output != *"| Timestamp |"* ]]
+    [[ $output == *"| outcome | pr_created |"* ]]
     [[ $output == *"| Bot fix PR | [#406]"* ]]
-    [[ $output == *"| Actor | \`loop-bot\` |"* ]]
-    [[ $output == *"| Branch | [feature/x](https://github.com/owner/repo/tree/feature/x) |"* ]]
+    [[ $output == *"| actor | \`loop-bot\` |"* ]]
+    [[ $output == *"| branch | [feature/x](https://github.com/owner/repo/tree/feature/x) |"* ]]
+    [[ $output != *"| Actor |"* ]]
+    [[ $output != *"| Branch |"* ]]
     [[ $output == *"abcdefghijk"* ]]
     [[ $output == *"https://github.com/owner/repo/commit/abcdefghijk"* ]]
     [[ $output == *"actions/runs/99"* ]]
@@ -175,7 +180,8 @@ teardown() {
 @test "build_comment_body renders agent_loop_max_attempts in the attempt row" {
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
-    [[ $output == *"| Attempt | 1/3 |"* ]]
+    [[ $output == *"| attempt | 1/3 |"* ]]
+    [[ $output != *"| Attempt |"* ]]
 }
 
 @test "build_comment_body shows Reason even when changed files exist" {
@@ -200,7 +206,8 @@ teardown() {
     REJECT_REASON="No file changes produced"
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
-    [[ $output == *"| Verdict | REJECT |"* ]]
+    [[ $output != *"| Verdict |"* ]]
+    [[ $output == *"| verdict | REJECT |"* ]]
     [[ $output == *"| Reason | No file changes produced |"* ]]
     [[ $output != *"### Fix context"* ]]
 }

@@ -1,10 +1,38 @@
 name: loop-finalize
-description: "Finalize a loop run per delivery: push or PR, state, optional finalize hook."
+description: "Finalize a loop run per delivery: push, PR, Issue comment, or PR review, state, optional finalize hook."
 
 inputs:
+  agent_branch_prefix:
+    default: ""
+    description: "Agent branch prefix (caller agent_branch_prefix); the agent branch must start with <prefix>/<agent_maker_skill_name>/"
+    required: false
+  agent_bundle_dir:
+    default: ""
+    description: "Directory holding the agent branch bundle (branch.bundle) downloaded from the agent job; missing when no bundle was made"
+    required: false
+  agent_edit_allowlist:
+    default: ""
+    description: "Comma-separated glob allowlist re-checked against the agent branch before the push (empty: no allowlist)"
+    required: false
+  agent_edit_denylist:
+    default: ""
+    description: "Comma-separated glob denylist re-checked against the agent branch before the push (empty: platform default)"
+    required: false
   agent_engine:
     default: ""
     description: "AI engine slug for Created By footer (e.g. cursor)"
+    required: false
+  agent_failure_message:
+    default: ""
+    description: "Failure message from the agent job (loop-execute failure_message); recorded when no finalize step recorded a failure"
+    required: false
+  agent_failure_stage:
+    default: ""
+    description: "Failure stage from the agent job (loop-execute failure_stage); recorded when no finalize step recorded a failure"
+    required: false
+  agent_maker_skill_name:
+    default: ""
+    description: "Maker skill name (caller agent_maker_skill_name); the agent branch must start with <agent_branch_prefix>/<skill>/"
     required: false
   agent_result:
     default: "success"
@@ -12,32 +40,32 @@ inputs:
     required: false
   branch:
     default: ""
-    description: "Agent branch with changes (empty if none)"
+    description: "Agent branch with changes (empty if none); untrusted, read only by Push Agent Branch, which validates it"
     required: false
   current_sha:
     description: "SHA to record in per-target state"
     required: true
   delivery:
-    description: "Declared delivery (pr_create | pr_push | none); every step branches on this value only"
+    description: "Declared delivery (pr_create | pr_push | issue_comment | pr_review | none); every step branches on this value only"
     required: true
-  execute_branch:
-    default: ""
-    description: "Agent branch name for finalize_hook_script env"
-    required: false
   finalize_commit_paths:
     default: ""
     description: "Comma-separated paths to commit with state after the finalize hook"
     required: false
-  finalize_hook_script:
+  finalize_label_allowlist:
     default: ""
-    description: "Optional bash script run once per finalize regardless of delivery (e.g. domain ledger)"
+    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
     required: false
   finalize_outcome_override:
     default: ""
     description: "Optional explicit outcome (e.g. watch from Skill classification)"
     required: false
+  finalize_script:
+    default: ""
+    description: "Optional bash script run once per finalize regardless of delivery (e.g. domain ledger); EXECUTE_BRANCH is the validated agent branch name, and origin/<branch> exists only when Push Agent Branch pushed it"
+    required: false
   github_token:
-    description: "GitHub token for PR creation, state push, and the finalize hook (exported as GH_TOKEN to finalize_hook_script)"
+    description: "GitHub token for the agent branch push, PR creation, state push, and the finalize hook (exported as GH_TOKEN to finalize_script)"
     required: true
   handoff_dir:
     default: ""
@@ -49,7 +77,7 @@ inputs:
     required: false
   has_changes:
     default: "false"
-    description: "Whether HEAD differs from base in product files (or this run committed)"
+    description: "Agent job has_changes output: true when the agent job wrote a bundle of the agent branch (commits not on the base branch); untrusted, Push Agent Branch fails when it is true but the bundle is missing or invalid"
     required: false
   level:
     description: "Loop level shown in the PR body run metadata (display only; no step branches on it)"
@@ -57,6 +85,10 @@ inputs:
   loop_name:
     default: ""
     description: "Loop name / pattern (e.g. docs-updater)"
+    required: false
+  message_json:
+    default: ""
+    description: "Loop message from the agent job ({body, labels}); materialized into LOOP_MESSAGE_DIR before the finalize hook"
     required: false
   notify_context_json:
     default: "{}"
@@ -117,14 +149,14 @@ outputs:
     description: "Commit SHA on target branch after delivery pr_push (empty when not pushed)"
     value: ${{ steps.push_target.outputs.commit_sha }}
   failure_message:
-    description: "Truncated finalize failure message for run log"
+    description: "Redacted, truncated failure message for the run log (empty when nothing failed)"
     value: ${{ steps.failure_diag.outputs.failure_message }}
   failure_stage:
-    description: "Finalize failure stage when a step fails (empty on success)"
+    description: "Failure stage for the run log: the finalize record, else the agent stage, agent_execute, or finalize (empty when nothing failed)"
     value: ${{ steps.failure_diag.outputs.failure_stage }}
   outcome:
-    description: "Final outcome written to state"
-    value: ${{ steps.outcome.outputs.value }}
+    description: "Final outcome for the run log: error when an earlier step failed or was cancelled, else the delivered or determined outcome"
+    value: ${{ steps.run_outcome.outputs.outcome }}
   pr_number:
     description: "Number of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.number }}
@@ -134,6 +166,17 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Materialize Message
+      shell: bash
+      env:
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
+        MESSAGE_JSON: ${{ inputs.message_json }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/loop_message.sh"
+        loop_message_from_json "${MESSAGE_JSON}" "${LOOP_MESSAGE_DIR}"
+
     - name: Parse Target
       id: target
       shell: bash
@@ -142,6 +185,29 @@ runs:
         STATE_BRANCH: ${{ inputs.state_branch }}
         TARGET_JSON: ${{ inputs.target_json }}
       run: bash "${GITHUB_ACTION_PATH}/lib/parse_target.sh"
+
+    # The only step that reads the branch input; every later step uses the
+    # validated steps.agent_push.outputs.branch. It leaves the token in this
+    # checkout's .git/config, so no later step may run code from the agent tree.
+    - name: Push Agent Branch
+      id: agent_push
+      shell: bash
+      env:
+        AGENT_BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH_PREFIX: ${{ inputs.agent_branch_prefix }}
+        AGENT_BUNDLE_DIR: ${{ inputs.agent_bundle_dir }}
+        AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
+        AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_RESULT: ${{ inputs.agent_result }}
+        BASE_BRANCH: ${{ steps.target.outputs.base_branch }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+        STATE_BRANCH: ${{ inputs.state_branch }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        TO_BRANCH: ${{ steps.target.outputs.to_branch }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/push_agent_branch.sh"
 
     - name: Resolve State File
       id: state_path
@@ -163,12 +229,13 @@ runs:
         DELIVERY: ${{ inputs.delivery }}
         FINALIZE_OUTCOME_OVERRIDE: ${{ inputs.finalize_outcome_override }}
         HAS_CHANGES: ${{ inputs.has_changes }}
+        PUSH_FAILED: ${{ steps.agent_push.outputs.failed }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
         # shellcheck source=lib/determine_outcome.sh
         source "${GITHUB_ACTION_PATH}/lib/determine_outcome.sh"
-        outcome="$(determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}")"
+        outcome="$(determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}" "${PUSH_FAILED}")"
         echo "value=${outcome}" >> "$GITHUB_OUTPUT"
 
     - name: Resolve State Write Mode
@@ -177,22 +244,25 @@ runs:
       env:
         DELIVERY: ${{ inputs.delivery }}
         HAS_CHANGES: ${{ inputs.has_changes }}
+        PUSHED: ${{ steps.agent_push.outputs.pushed }}
+        PUSH_FAILED: ${{ steps.agent_push.outputs.failed }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
         # shellcheck source=lib/resolve_state_write_mode.sh
         source "${GITHUB_ACTION_PATH}/lib/resolve_state_write_mode.sh"
-        echo "mode=$(resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}")" >> "$GITHUB_OUTPUT"
+        echo "mode=$(resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}" "${PUSHED}")" >> "$GITHUB_OUTPUT"
 
     - name: Run Finalize Hook
-      if: inputs.finalize_hook_script != ''
+      if: inputs.finalize_script != '' && steps.agent_push.outputs.failed != 'true'
       shell: bash
       env:
         AGENT_ENGINE: ${{ inputs.agent_engine }}
-        EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
-        FINALIZE_HOOK_SCRIPT: ${{ inputs.finalize_hook_script }}
+        EXECUTE_BRANCH: ${{ steps.agent_push.outputs.branch }}
+        FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -200,29 +270,52 @@ runs:
         TARGET_JSON: ${{ inputs.target_json }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
+      run: bash "${FINALIZE_SCRIPT}"
+
+    - name: Deliver Message
+      id: deliver
+      if: >-
+        (inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') &&
+        inputs.agent_result == 'success' &&
+        inputs.verdict != 'REJECT' &&
+        steps.agent_push.outputs.failed != 'true'
+      shell: bash
+      env:
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+        DELIVERY: ${{ inputs.delivery }}
+        FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        # The hook posts the loop's message itself; hand it the Meta block and footer so
-        # they go out in that one message instead of a second edit afterwards.
+        loop_action_lib="${GITHUB_ACTION_PATH}/../lib/loop"
         # shellcheck disable=SC1091
-        source "${GITHUB_ACTION_PATH}/../lib/loop/created_by.sh"
+        source "${loop_action_lib}/created_by.sh"
         # shellcheck disable=SC1091
-        source "${GITHUB_ACTION_PATH}/../lib/loop/loop_meta.sh"
-        loop_meta_reset
-        LOOP_META_BLOCK="$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${RUN_URL}")"
-        export LOOP_META_BLOCK
-        bash "${FINALIZE_HOOK_SCRIPT}"
+        source "${loop_action_lib}/loop_meta.sh"
+        # shellcheck disable=SC1091
+        source "${loop_action_lib}/failure_record.sh"
+        # shellcheck disable=SC1091
+        source "${loop_action_lib}/deliver_message.sh"
+        deliver_loop_message
 
     - name: Push to Target Branch
       id: push_target
       if: >-
         inputs.verdict == 'APPROVE' &&
-        inputs.has_changes == 'true' &&
-        inputs.branch != '' &&
+        steps.agent_push.outputs.pushed == 'true' &&
         inputs.delivery == 'pr_push'
       shell: bash
       env:
-        AGENT_BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         TO_BRANCH: ${{ steps.target.outputs.to_branch }}
       run: bash "${GITHUB_ACTION_PATH}/lib/push_target.sh"
@@ -231,12 +324,11 @@ runs:
       id: pr
       if: >-
         inputs.verdict == 'APPROVE' &&
-        inputs.has_changes == 'true' &&
-        inputs.branch != '' &&
+        steps.agent_push.outputs.pushed == 'true' &&
         inputs.delivery == 'pr_create'
       shell: bash
       env:
-        AGENT_BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}
         AGENT_ENGINE: ${{ inputs.agent_engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
@@ -275,7 +367,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OPEN_REJECTIONS: ${{ inputs.open_rejections }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
+        OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
         PENDING_PR_NUMBER: ${{ steps.pr.outputs.number || '' }}
         PENDING_PR_URL: ${{ steps.pr.outputs.url || '' }}
         REJECT_REASON: ${{ inputs.reject_reason }}
@@ -288,10 +380,10 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Agent Branch
-      if: inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none')
+      if: always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')
       shell: bash
       env:
-        AGENT_BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}
         DELIVERY: ${{ inputs.delivery }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
@@ -309,6 +401,28 @@ runs:
           exit 1
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${AGENT_BRANCH}" 2>/dev/null || true
+
+    # Fails the action after the cleanup steps so github.action_status (and the
+    # run outcome) reflect a failed agent branch push.
+    - name: Fail Agent Push
+      if: always() && steps.agent_push.outputs.failed == 'true'
+      shell: bash
+      run: |
+        echo "::error::loop-finalize: the agent branch was not pushed (see the push failure record)"
+        exit 1
+
+    - name: Resolve Run Outcome
+      if: always()
+      id: run_outcome
+      shell: bash
+      env:
+        ACTION_STATUS: ${{ github.action_status }}
+        AGENT_FAILURE_MESSAGE: ${{ inputs.agent_failure_message }}
+        AGENT_FAILURE_STAGE: ${{ inputs.agent_failure_stage }}
+        AGENT_RESULT: ${{ inputs.agent_result }}
+        DELIVERED_OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+      run: bash "${GITHUB_ACTION_PATH}/lib/resolve_run_outcome.sh"
 
     - name: Export Failure Diagnostics
       if: always()

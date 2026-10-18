@@ -1,6 +1,6 @@
 <!--
-Review body rendered by post_review.sh from the report JSON (github-pr-review).
-Load ONLY when you need to see how the report becomes the posted review body. The agent does not write this file's output directly; it writes the report JSON and the poster renders this shape.
+Review body rendered by render_review.sh from the report JSON (github-pr-review).
+Load ONLY when you need to see how the report becomes the posted review body. The agent does not write this file's output directly; it writes the report JSON and the platform renders this shape.
 Language: headings, labels, severities, fixed phrases, and the marker stay English. Agent-written prose (summary, titles, impact, premises) uses the response language: Constraints response_language > language of the PR title/body > English. Quotes, code, and paths stay verbatim.
 -->
 

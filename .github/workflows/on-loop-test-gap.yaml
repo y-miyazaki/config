@@ -63,13 +63,15 @@ jobs:
       agent_maker_instructions: |
         Select exactly one under-tested target and add tests for it.
         Phase 1: shell scripts with paired Bats suites only. Add or extend `.bats` files under `test/bats/` mirroring the script path.
-        Follow the shell-script-validation skill and the Bats rules (every script needs a paired suite).
+        Follow the shell-script-validation skill's rules without running its validate script, and the Bats rules (every script needs a paired suite).
         Do not select a target whose paired test file path appears in `ledger.processed[]` (adding another new test file for that same target also counts as selecting it again) unless you can state a new reason in the PR body.
         You cannot run the tests here. Do not claim you ran them; state the command CI will run and the expected result.
         Do not edit production code. Report a suspected production bug under Deferred.
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: test-gap
+      agent_tool_allowlist: |
+        Bash(git remote get-url:*)
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 2
       budget_max_tokens_per_day: 1000000
@@ -78,7 +80,7 @@ jobs:
       detect_max_targets: 1
       detect_script: .agents/skills/test-gap/scripts/detect_test_gap.sh
       finalize_commit_paths: .loop/state-test-gap-ledger.json
-      finalize_hook_script: .agents/skills/test-gap/scripts/update_test_gap_ledger.sh
+      finalize_script: .agents/skills/test-gap/scripts/update_test_gap_ledger.sh
       level: L2
       loop_name: test-gap
       pr_title: "test: add missing tests (loop-test-gap)"

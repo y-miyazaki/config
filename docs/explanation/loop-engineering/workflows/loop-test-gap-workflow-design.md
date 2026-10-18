@@ -64,6 +64,7 @@ Schedule: **`0 10 * * 1`**, `timezone: Etc/UTC` (Monday 10:00 UTC, weekly), plus
 | `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                                                       | `100`                                                       |
 | `agent_maker_model`          | Maker model ID.                                                                                                                                        | `claude-sonnet-5`                                           |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                               | `test-gap`                                                  |
+| `agent_tool_allowlist`       | Tool permission rules for the maker                                                                                                                    | `git remote get-url`                                        |
 | `agent_edit_allowlist`       | Comma-separated globs the maker may modify. Tests only. The Checker rubric narrows this to `test/bats/**` (see [Checker criteria](#checker-criteria)). | `test/**`                                                   |
 | `detect_branch_match`        | Comma-separated integration branch patterns to watch.                                                                                                  | `main`                                                      |
 | `state_branch`               | Branch for `.loop/*` persistence, and state migration (it no longer doubles as a watch fallback).                                                      | `main`                                                      |
@@ -72,7 +73,7 @@ Schedule: **`0 10 * * 1`**, `timezone: Etc/UTC` (Monday 10:00 UTC, weekly), plus
 | `delivery`                   | Platform delivery after APPROVE.                                                                                                                       | `pr_create`                                                 |
 | `detect_env_json`            | JSON object of `TEST_GAP_*` env vars passed to the detect script. See [Domain detect environment](#domain-detect-environment-detect_env_json).         | `{}`                                                        |
 | `detect_script`              | Domain detect script path.                                                                                                                             | `.agents/skills/test-gap/scripts/detect_test_gap.sh`        |
-| `finalize_hook_script`       | Script `loop-finalize` runs to update the ledger.                                                                                                      | `.agents/skills/test-gap/scripts/update_test_gap_ledger.sh` |
+| `finalize_script`            | Script `loop-finalize` runs to update the ledger.                                                                                                      | `.agents/skills/test-gap/scripts/update_test_gap_ledger.sh` |
 | `agent_engine`               | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                  | `claude`                                                    |
 | `environment`                | GitHub Environment for env-scoped secrets inside the reusable workflow. Leave `default` when repository secrets suffice.                               | `default`                                                   |
 | `agent_checker_path_pattern` | Extended regex to infer file paths from checker text.                                                                                                  | `test/[^[:space:],)]+\.(bats\|sh\|json\|ya?ml)`             |
@@ -100,7 +101,7 @@ Dogfood passes `{}`; the defaults below apply. `detect_env_json` reaches the **d
 | `TEST_GAP_LEDGER_FILE`    | Ledger path, repository-relative (detect only; must stay at the default, see below)                                                    | `.loop/state-test-gap-ledger.json` |
 | `TEST_GAP_RETENTION_DAYS` | Days a ledger entry stays visible (detect only; must stay at the default, see below). A non-numeric value warns and falls back to `30` | `30`                               |
 
-**Finalize side.** `loop-finalize` passes only `EXECUTE_BRANCH`, `LOOP_NAME`, `OUTCOME`, `STATE_FILE`, `TARGET_JSON`, and `VERDICT` to `finalize_hook_script`; `detect_env_json` does not reach it. `update_test_gap_ledger.sh` therefore always uses the defaults for the ledger file and the retention window, and `TEST_GAP_LEDGER_FILE` and `TEST_GAP_RETENTION_DAYS` overrides must not be set in `detect_env_json`: detect would then read a different file or window than finalize writes. The base branch for the diff is resolved as `TEST_GAP_BASE_BRANCH` when set, else `.to.branch` of `TARGET_JSON` (the integration branch under watch, for example `master` or `trunk`), else `main`.
+**Finalize side.** `loop-finalize` passes only `EXECUTE_BRANCH`, `LOOP_NAME`, `OUTCOME`, `STATE_FILE`, `TARGET_JSON`, and `VERDICT` to `finalize_script`; `detect_env_json` does not reach it. `update_test_gap_ledger.sh` therefore always uses the defaults for the ledger file and the retention window, and `TEST_GAP_LEDGER_FILE` and `TEST_GAP_RETENTION_DAYS` overrides must not be set in `detect_env_json`: detect would then read a different file or window than finalize writes. The base branch for the diff is resolved as `TEST_GAP_BASE_BRANCH` when set, else `.to.branch` of `TARGET_JSON` (the integration branch under watch, for example `master` or `trunk`), else `main`.
 
 ## Detect
 
@@ -147,7 +148,7 @@ The ledger is a separate file because `write_state.sh` only writes `targets[key]
 
 - File: `.loop/state-test-gap-ledger.json` (fixed at the default on the finalize side; see [Domain detect environment](#domain-detect-environment-detect_env_json))
 - Entries are keyed by **test file path**, not by the production target. The exclusion rule therefore applies to a target whose paired test file path appears in `ledger.processed[]`; adding another new test file for that same target also counts as selecting it again
-- Writer: `update_test_gap_ledger.sh`, run by `loop-finalize` as `finalize_hook_script`; `finalize_commit_paths` commits the file with the state update
+- Writer: `update_test_gap_ledger.sh`, run by `loop-finalize` as `finalize_script`; `finalize_commit_paths` commits the file with the state update
 - Reader: `detect_test_gap.sh` (`ledger.processed[]` and `verifier_context`)
 
 Shape:
@@ -233,7 +234,7 @@ Always `delivery: pr_create` to `to.branch` at L2, with the PR body composed by 
 
 Confirmed by reading the code, still to observe on the first real run:
 
-1. Whether `EXECUTE_BRANCH` resolves through `git diff` when `finalize_hook_script` runs. The finalize checkout uses `fetch-depth: 0`, so the agent branch should be fetched; if it is not, the ledger is not updated and a warning is logged
+1. Whether `EXECUTE_BRANCH` resolves through `git diff` when `finalize_script` runs. The finalize checkout uses `fetch-depth: 0`, so the agent branch should be fetched; if it is not, the ledger is not updated and a warning is logged
 2. Whether `loop-finalize` includes `.loop/state-test-gap-ledger.json` from `finalize_commit_paths` in the state commit. `write_state.sh` stages `finalize_commit_paths`; the committed result is still to be observed
 
 Unverified and tracked in the spec's open questions:
@@ -256,7 +257,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 ### Loop-specific
 
 - [x] `test-gap/scripts/detect_test_gap.sh` (facts output, `verifier_context`)
-- [x] `test-gap/scripts/update_test_gap_ledger.sh` (`finalize_hook_script`)
+- [x] `test-gap/scripts/update_test_gap_ledger.sh` (`finalize_script`)
 - [x] `on-loop-test-gap.yaml` dogfood caller via `ci-loop-caller`
 - [ ] First `workflow_dispatch` run and the checks in [Operations and status](#operations-and-status)
 - [ ] Platform follow-up: PR-body check for the Checker (see [Checker criteria](#checker-criteria))

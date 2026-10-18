@@ -70,6 +70,8 @@ secrets:
 | copilot | `COPILOT_GITHUB_TOKEN` |
 | codex   | `OPENAI_API_KEY`       |
 
+For the `copilot` engine, `AGENT_TOKEN` is a GitHub PAT that stays in the agent job and is not limited by job `permissions:`. Use a fine-grained PAT with only the Copilot Requests permission, so the agent session has no repository write access.
+
 ### GitHub Token Usage
 
 | Purpose                   | Token                  | Rationale                                                    |
@@ -145,7 +147,7 @@ When loop composite steps record failure metadata for run logs or action outputs
 | `failure_record.sh`      | Record latest `failure_stage` / `failure_message` (`loop_failure_record`) |
 | `export_failure_diag.sh` | Export recorded diagnostics to `GITHUB_OUTPUT`                            |
 
-`loop-execute` and `loop-finalize` expose `failure_stage` / `failure_message`; `ci-loop-agent` passes them into `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers. Do not write raw `git push`, `gh`, or CLI stderr into committed logs without redaction.
+`loop-execute` diagnostics go into `loop-finalize`, and `loop-finalize` outputs go into the `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers. Do not write raw `git push`, `gh`, or CLI stderr into committed logs without redaction.
 
 ### jq Parse Errors
 

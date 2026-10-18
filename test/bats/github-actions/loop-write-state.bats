@@ -6,6 +6,7 @@
 # Use cases:
 # - validation: missing target_key / missing or invalid state_branch
 # - advance mode: last_sha + outcome; reset consecutive_failures on pr_created
+# - issue_commented and pr_reviewed reset consecutive_failures
 # - rejected, pr_closed, and persisted old pr-closed outcomes increment consecutive_failures
 # - finalize_commit_paths are committed with the state file
 # - no-op when unchanged
@@ -462,6 +463,32 @@ setup() {
          and .targets["integration:main"].open_rejections == []' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
+}
+@test "run.sh resets consecutive_failures on issue_commented and pr_reviewed" {
+    local outcome checked=0
+    for outcome in issue_commented pr_reviewed; do
+        state_write_run \
+            GITHUB_TOKEN='test-token' \
+            STATE_FILE='.loop/state-test.json' \
+            STATE_BRANCH='main' \
+            TARGET_KEY='integration:main' \
+            WRITE_TARGET_STATE='true' \
+            OUTCOME="${outcome}" \
+            SHA='abcdefghi' \
+            OPEN_REJECTIONS='[]' \
+            GITHUB_REPOSITORY='test/repo' \
+            GITHUB_RUN_ID='1' \
+            GITHUB_RUN_ATTEMPT='1'
+        [ "$status" -eq 0 ]
+        run jq -e \
+            --arg outcome "${outcome}" \
+            '.targets["integration:main"].outcome == $outcome
+             and .targets["integration:main"].consecutive_failures == 0' \
+            "${STATE_WRITE_WORK}/.loop/state-test.json"
+        [ "$status" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
 }
 @test "write_state_clear_pending clears pending without advancing last_sha" {
     TARGET_KEY='integration:main'

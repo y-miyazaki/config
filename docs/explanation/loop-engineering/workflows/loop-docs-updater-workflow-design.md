@@ -98,6 +98,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_maker_instructions`   | Domain instructions: run docs-updater automation path; address documented findings.                                                                                                                                       | Inline in caller workflow                                                 |
 | `detect_pr_enabled`          | Enumerate open PR heads. docs-updater uses integration branches only.                                                                                                                                                     | `false`                                                                   |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                                                                                                  | `docs-updater`                                                            |
+| `agent_tool_allowlist`       | Tool permission rules for the maker                                                                                                                                                                                       | `git remote get-url`                                                      |
 
 ### Domain detect environment (`detect_env_json`)
 
@@ -174,7 +175,7 @@ PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (
 
 Always `delivery: pr_create` to `to.branch` at L2. Other deliveries (`pr_push`) are not used by this loop.
 
-No `finalize_hook_script`.
+No `finalize_script`.
 
 **Merge-gated cursor:** Same platform rule as all L2 `pr_create` loops — `pending` at finalize, `last_sha` on fix PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
 

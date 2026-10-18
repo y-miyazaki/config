@@ -48,7 +48,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `apm`, `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `apm`, `ecspresso`, `ecschedule`, `gitleaks`, `golangci-lint`, `goreleaser`, `lean-ctx`, `markdownlint-cli2`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
