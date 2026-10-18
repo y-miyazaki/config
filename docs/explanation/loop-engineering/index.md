@@ -68,3 +68,5 @@ Dated Superpowers specs and plans under `docs/superpowers/` are implementation h
 1. Layer A: [Design](loop-engineering-design.md) → [Reusable caller](loop-caller-reusable-design.md)
 2. Layer B: the loop you are changing
 3. Layer C: only the contract that matches the files you touch
+
+<!-- dogfood review target (disposable) -->
