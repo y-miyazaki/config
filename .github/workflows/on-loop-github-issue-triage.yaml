@@ -123,13 +123,14 @@ jobs:
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-triage
       # Triage reads Issue facts only; finalize posts the comment and applies the
-      # labels. The allowlist is narrowed to read-only gh, but host project settings
-      # (.claude/settings.json) still apply via --setting-sources project until the
-      # credential-isolation work, so the prompt is what stops the agent from writing.
+      # labels. CI never activates the host .claude/settings.json allow rules (no
+      # workspace trust), so these rules plus the platform read-only git baseline
+      # are the agent's whole command surface; the platform deny list blocks gh writes.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
         Bash(gh issue view:*)
         Bash(gh label list:*)
+        Bash(gh repo view:*)
       budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
       delivery: issue_comment

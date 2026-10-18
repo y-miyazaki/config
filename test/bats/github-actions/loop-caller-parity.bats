@@ -22,6 +22,7 @@
 # - Dogfood callers declare delivery and level per the migration table, pass the level-dependent inputs only on L2+, and repeat no default
 # - github-pr-revise watches only its scoped PR head and offers delivery pr_push or pr_create on manual dispatch
 # - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
+# - Dogfood callers declare every command rule their skill needs; host .claude/settings.json allow rules are never active in CI
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -1121,11 +1122,12 @@ dogfood_value() {
     [ -z "${output}" ]
 }
 
-# triage_block FILE KEY: print the block scalar lines of KEY in the triage caller
+# triage_block FILE KEY: print the block scalar lines of KEY in the caller FILE (blank lines kept only inside the block)
 triage_block() {
     awk -v key="      $2: |" '
         $0 == key {f=1; next}
-        f && /^        / {sub(/^        /, ""); print; next}
+        f && /^$/ {blank++; next}
+        f && /^        / {for (; blank > 0; blank--) print ""; sub(/^        /, ""); print; next}
         f {exit}
     ' "$1"
 }
@@ -1152,6 +1154,7 @@ triage_block() {
     grep -qxF 'Bash(gh api -X GET:*)' <<< "${block}"
     grep -qxF 'Bash(gh issue view:*)' <<< "${block}"
     grep -qxF 'Bash(gh label list:*)' <<< "${block}"
+    grep -qxF 'Bash(gh repo view:*)' <<< "${block}"
 }
 
 @test "L2 callers grant no write gh commands to the agent" {
@@ -1167,6 +1170,143 @@ triage_block() {
             fi
         done
     done
+}
+
+# expected_tool_allowlist NAME: print the agent_tool_allowlist lines the NAME caller must declare
+expected_tool_allowlist() {
+    case "$1" in
+        changelog) ;;
+        docs-updater | tech-debt | test-gap)
+            cat << 'EOF'
+Bash(git remote get-url:*)
+EOF
+            ;;
+        refactor)
+            cat << 'EOF'
+Bash(git remote get-url:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        ci-sweeper)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh run list:*)
+Bash(gh run view:*)
+Bash(git remote get-url:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-issue-autofix)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh pr list:*)
+Bash(gh pr view:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-pr-revise)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh pr view:*)
+Bash(gh pr diff:*)
+Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+EOF
+            ;;
+        github-pr-review)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh pr diff:*)
+Bash(gh pr view:*)
+Bash(git show:*)
+EOF
+            ;;
+        github-issue-triage)
+            cat << 'EOF'
+Bash(gh api -X GET:*)
+Bash(gh issue view:*)
+Bash(gh label list:*)
+Bash(gh repo view:*)
+EOF
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
+
+@test "callers declare the tool rules their skill needs without host allow rules" {
+    local name wf actual expected
+    for name in "${LOOP_AGENT_CALLERS[@]}"; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        [ -f "${wf}" ]
+        actual="$(triage_block "${wf}" agent_tool_allowlist)"
+        expected="$(expected_tool_allowlist "${name}")"
+        if [ "${actual}" != "${expected}" ]; then
+            printf '%s: agent_tool_allowlist mismatch\n--- expected\n%s\n--- actual\n%s\n' "${name}" "${expected}" "${actual}" >&2
+            return 1
+        fi
+    done
+}
+
+@test "callers that run validation scripts pin the script form in maker instructions" {
+    local name wf block rules line
+    local sentence="Run a validation skill's script from the repository root by this exact form: \`bash .claude/skills/<skill>/scripts/validate.sh [path]\` (other forms such as cd into the skill directory or an absolute path are denied in CI)."
+    for name in refactor ci-sweeper github-issue-autofix github-pr-revise; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_maker_instructions)"
+        if ! grep -qF "${sentence}" <<< "${block}"; then
+            echo "${name}: maker instructions lack the validation script form sentence" >&2
+            return 1
+        fi
+        rules="$(triage_block "${wf}" agent_tool_allowlist | grep -F 'validate.sh')"
+        [ -n "${rules}" ]
+        while IFS= read -r line; do
+            if [[ ${line} != 'Bash(bash .claude/skills/'* ]]; then
+                echo "${name}: validation rule not in pinned form: ${line}" >&2
+                return 1
+            fi
+        done <<< "${rules}"
+    done
+}
+
+@test "no caller allowlist repeats the platform read baseline or a platform deny rule" {
+    local name wf block pat
+    for name in "${LOOP_AGENT_CALLERS[@]}"; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_tool_allowlist)"
+        for pat in 'Bash(git diff:*)' 'Bash(git log:*)' 'Bash(git status:*)' 'Bash(gh pr comment' 'Bash(gh issue comment' 'Bash(gh issue edit' 'Bash(gh label create' 'Bash(git push' 'Bash(curl' 'Bash(bash:*)' 'Bash(bash -c'; do
+            if grep -qF "${pat}" <<< "${block}"; then
+                echo "${name}: agent_tool_allowlist contains ${pat}" >&2
+                return 1
+            fi
+        done
+        if [ "${name}" != github-pr-review ] && grep -qF 'Bash(git show:*)' <<< "${block}"; then
+            echo "${name}: agent_tool_allowlist repeats Bash(git show:*)" >&2
+            return 1
+        fi
+    done
+}
+
+@test "triage caller comment no longer says host project settings apply" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" comment
+    ! grep -qF 'still apply via --setting-sources project' "${wf}"
+    comment="$(awk '/^      agent_maker_skill_name:/ {f=1; next} f && /^      #/ {print; next} f {exit}' "${wf}")"
+    [ -n "${comment}" ]
+    grep -qw 'no' <<< "${comment}"
+    grep -qF 'workspace trust' <<< "${comment}"
 }
 
 @test "triage caller intake admits needs-triage and triage:needs-info labels only" {
