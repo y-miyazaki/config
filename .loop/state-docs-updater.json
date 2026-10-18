@@ -1,12 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-12T09:19:13Z",
+      "last_run": "2026-10-18T22:55:13Z",
       "outcome": "rejected",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "last_sha": "90ce88824a1c55a61b9941b69dcc18ef0d5e1d27",
       "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
+      "last_reject_reason": "No file changes produced; 9 tool call(s) denied by permission settings"
     }
   }
 }
