@@ -30,12 +30,11 @@ Session report per [common-output-format.md](references/common-output-format.md)
 - Classify Issue type when confident (`bug`, `feature`, `question`, `documentation`)
 - Drive label FSM (`needs-triage`, `triage:needs-info`, `triage:ready`, `triage:failed`) per [category-fsm.md](references/category-fsm.md)
 - Post analysis and clarifying questions as Issue comments
-- On `triage:ready` with human `autofix` label, detect may request dispatch; **Agent must not** HTTP-dispatch or run autofix
 
 ### DO NOT USE FOR:
 
 - Opening or revising PRs (github-issue-autofix / github-pr-revise)
-- Firing `repository_dispatch` or starting github-issue-autofix from the Agent (trusted detect hook only)
+- Firing `repository_dispatch` or starting github-issue-autofix (autofix starts only from a human action, such as adding the `autofix` label)
 - Mentions / `@` triggers
 - Applying labels outside `scripts/labels.json`
 - Relying on AskUserQuestion — questions go to the Issue thread

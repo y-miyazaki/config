@@ -7,7 +7,7 @@
 # - emits issue facts, handoff_key entity:issue:N, and result.entity.kind issue
 # - skips Bot actors, Bot comments, and triage:failed issues
 # - hydrates issue facts from GITHUB_EVENT_PATH and gh api
-# - emits dispatch flags only for the triage:ready + autofix handoff
+# - emits no dispatch_* fields for any event (autofix starts from its own intake)
 # - rejects invalid input with structured errors
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -18,6 +18,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 DETECT_SCRIPT="$(apm_skill_script_path github-issue-triage detect_issue.sh)"
+NO_DISPATCH_FIELDS='([.result | keys[] | select(startswith("dispatch_"))] == [])'
 
 @test "skips when actor_type is Bot" {
     run env ISSUE_NUMBER=1 ISSUE_TITLE=t ISSUE_BODY=b ISSUE_LABELS_JSON='[]' \
@@ -59,14 +60,14 @@ DETECT_SCRIPT="$(apm_skill_script_path github-issue-triage detect_issue.sh)"
     [ "$status" -eq 0 ]
 }
 
-@test "emits result.entity.kind issue when dispatch flags are set" {
+@test "emits result.entity.kind issue and no dispatch fields when triage:ready is labeled with autofix present" {
     run env ISSUE_NUMBER=12 ISSUE_TITLE=t ISSUE_BODY=b \
         ISSUE_LABELS_JSON='["triage:ready","autofix"]' \
         ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=labeled ISSUE_LABEL_NAME=triage:ready \
         ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.result.dispatch_requested == true and .result.entity.kind == "issue"' <<< "${output}"
+    run jq -e ".result.entity.kind == \"issue\" and ${NO_DISPATCH_FIELDS}" <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -136,22 +137,18 @@ EOF
         ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '(.result.dispatch_requested // false) != true' <<< "${output}"
+    run jq -e "${NO_DISPATCH_FIELDS}" <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
-@test "emits dispatch flags when triage:ready labeled with autofix already present" {
+@test "skips triage:ready labeled with autofix present and emits no dispatch fields" {
     run env ISSUE_NUMBER=12 ISSUE_TITLE=t ISSUE_BODY=b \
         ISSUE_LABELS_JSON='["triage:ready","autofix"]' \
         ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=labeled ISSUE_LABEL_NAME=triage:ready \
         ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '
-        .result.dispatch_requested == true
-        and .result.dispatch_event_type == "loop-github-issue-autofix"
-        and .result.dispatch_client_payload.issue_number == "12"
-    ' <<< "${output}"
+    run jq -e ".skip == true and ${NO_DISPATCH_FIELDS}" <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -172,10 +169,10 @@ EOF
         ISSUE_COMMENT_ID=1 ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '
+    run jq -e "
         .skip == true
-        and (.result.dispatch_requested // false) != true
-    ' <<< "${output}"
+        and ${NO_DISPATCH_FIELDS}
+    " <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -186,10 +183,10 @@ EOF
         ISSUE_ACTOR=dependabot ISSUE_ACTOR_TYPE=Bot \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '
+    run jq -e "
         .skip == true
-        and (.result.dispatch_requested // false) != true
-    ' <<< "${output}"
+        and ${NO_DISPATCH_FIELDS}
+    " <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -222,7 +219,7 @@ EOF
         ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '(.result.dispatch_requested // false) != true' <<< "${output}"
+    run jq -e "${NO_DISPATCH_FIELDS}" <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -233,10 +230,10 @@ EOF
         ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '
+    run jq -e "
         .skip == true
-        and (.result.dispatch_requested // false) != true
-    ' <<< "${output}"
+        and ${NO_DISPATCH_FIELDS}
+    " <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -246,4 +243,8 @@ EOF
     [ "$status" -eq 1 ]
     run jq -e '.status == "error" and .skip == true' <<< "${output}"
     [ "$status" -eq 0 ]
+}
+
+@test "skill ships no scripts/hooks directory" {
+    [ ! -e "$(apm_skill_dir github-issue-triage)/scripts/hooks" ]
 }
