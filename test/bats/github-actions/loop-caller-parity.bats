@@ -582,7 +582,7 @@ dogfood_value() {
         case "${name}" in
             github-pr-revise) expected="${revise}" ;;
             github-issue-triage) expected='none L1' ;;
-            github-pr-review) expected='none L2' ;;
+            github-pr-review) expected='pr_review L2' ;;
             changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
                 expected='pr_create L2'
                 ;;
@@ -952,7 +952,7 @@ dogfood_value() {
 }
 
 @test "no tracked file outside docs/superpowers names finalize_hook_script" {
-    run git -C "${ROOT}" grep -l -e finalize_hook_script -e FINALIZE_HOOK_SCRIPT -- . ':!docs/superpowers' ':!.agents' ':!.claude/skills' ':!apm_modules' ':!apm.lock.yaml' ':!.apm/packages/github/.apm/skills/github-pr-review/scripts/post_review.sh' ':!test/bats/github-actions/loop-caller-parity.bats' ':!scripts/self/ci/loop_input_topology.py'
+    run git -C "${ROOT}" grep -l -e finalize_hook_script -e FINALIZE_HOOK_SCRIPT -- . ':!docs/superpowers' ':!.agents' ':!.claude/skills' ':!apm_modules' ':!apm.lock.yaml' ':!test/bats/github-actions/loop-caller-parity.bats' ':!scripts/self/ci/loop_input_topology.py'
     [ "${status}" -eq 1 ]
     [ -z "${output}" ]
 }

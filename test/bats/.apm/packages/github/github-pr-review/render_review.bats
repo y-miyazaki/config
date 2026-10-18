@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2016,SC2030,SC2031,SC2034,SC2154
 
-# Tests for .apm/packages/github/.apm/skills/github-pr-review/scripts/post_review.sh
+# Tests for .apm/packages/github/.apm/skills/github-pr-review/scripts/render_review.sh
 #
 # Use cases:
 # - does nothing unless VERDICT is APPROVE
@@ -12,14 +12,15 @@
 # - keeps bug findings that carry a location; drops malformed findings and escaping paths
 # - checks diff membership per side and hunk (start_line in the same hunk)
 # - moves in_diff findings outside the diff (or without a diff) into the body
-# - posts a COMMENT review with marker, counts, premises, and numbered inline comments
-# - appends LOOP_META_BLOCK to the review body in the same post when the caller supplies it
+# - writes ${LOOP_MESSAGE_DIR}/review.json {body, commit_id, comments, fallback_body} with marker,
+#   counts, premises, and numbered inline comments; never posts (no gh api POST)
+# - never reads LOOP_META_BLOCK (the platform appends Meta when it delivers)
 # - links evidence to the base SHA and locations to the head SHA
 # - reports the dropped findings count
-# - fails closed (no post, exit 0) on unparseable input or unavailable trusted SHAs
-# - posting failure and unexpected errors warn and exit 0
-# - retries once without inline comments only when the first post is rejected with HTTP 422
-# - never sends an event other than COMMENT
+# - fails closed (no review.json, exit 0) on unparseable input, unavailable trusted SHAs, or an
+#   unset LOOP_MESSAGE_DIR; unexpected errors warn and exit 0
+# - fallback_body always holds every finding in the body (the platform retries with it on HTTP 422)
+# - review.json carries no event key
 # - caps findings at 20 (most severe kept) and reports the omitted count
 # - escapes backticks and brackets in path link labels (hostile paths)
 # - verifies evidence at non-ASCII paths
@@ -31,7 +32,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-POST_SCRIPT="$(apm_skill_script_path github-pr-review post_review.sh)"
+RENDER_SCRIPT="$(apm_skill_script_path github-pr-review render_review.sh)"
 MARKER='<!-- github-pr-review:v1 -->'
 HEAD_SHA="$(printf 'a%.0s' {1..40})"
 FORGED_SHA="$(printf 'c%.0s' {1..40})"
@@ -80,27 +81,6 @@ DIFF
     cat > "${BIN_DIR}/gh" << 'STUB'
 #!/bin/bash
 echo "$*" >> "${GH_LOG}"
-if [[ $1 == "api" && " $* " == *" --method POST "* ]]; then
-    prev=""
-    for arg in "$@"; do
-        if [[ ${prev} == "--input" ]]; then
-            n=$(find "${GH_CAPTURE_DIR}" -name 'post-*.json' | wc -l)
-            cp "${arg}" "${GH_CAPTURE_DIR}/post-$((n + 1)).json"
-        fi
-        prev="${arg}"
-    done
-    if [[ -n ${GH_POST_FAIL_FIRST:-} && ! -f ${GH_CAPTURE_DIR}/.failed ]]; then
-        touch "${GH_CAPTURE_DIR}/.failed"
-        echo "gh: Unprocessable Entity (HTTP ${GH_POST_FAIL_FIRST})" >&2
-        exit 1
-    fi
-    if [[ -n ${GH_POST_FAIL:-} ]]; then
-        echo "gh: Server Error (HTTP 500)" >&2
-        exit 1
-    fi
-    echo '{}'
-    exit 0
-fi
 if [[ $1 == "pr" && $2 == "view" && -n ${GH_PR_VIEW_JSON:-} ]]; then
     printf '%s' "${GH_PR_VIEW_JSON}"
     exit 0
@@ -109,13 +89,13 @@ exit 1
 STUB
     chmod +x "${BIN_DIR}/gh"
     GH_LOG="${BATS_TEST_TMPDIR}/gh.log"
-    GH_CAPTURE_DIR="${BATS_TEST_TMPDIR}/capture"
-    mkdir -p "${GH_CAPTURE_DIR}"
+    MSG_DIR="${BATS_TEST_TMPDIR}/msg"
+    REVIEW_JSON="${MSG_DIR}/review.json"
     : > "${GH_LOG}"
     REPORT="${BATS_TEST_TMPDIR}/report.json"
 
     # shellcheck disable=SC1090
-    source "${POST_SCRIPT}"
+    source "${RENDER_SCRIPT}"
     REVIEW_BASE_SHA="${BASE_SHA}"
     PR_DIFF_FILE="${DIFF_FILE}"
     GITHUB_REPOSITORY=o/r
@@ -125,7 +105,7 @@ STUB
 
 teardown() {
     cd "${BATS_TEST_TMPDIR}" || return 1
-    rm -rf "${GIT_TEST_REPO}" "${BIN_DIR}" "${GH_CAPTURE_DIR}" "${DIFF_FILE}" "${GH_LOG}" "${REPORT}" \
+    rm -rf "${GIT_TEST_REPO}" "${BIN_DIR}" "${MSG_DIR}" "${DIFF_FILE}" "${GH_LOG}" "${REPORT}" \
         "${BATS_TEST_TMPDIR}/outside.md" "${BATS_TEST_TMPDIR}/work"
 }
 
@@ -150,25 +130,45 @@ write_report() {
           premises: {pr_body: "checked", linked: ["#120"]}, summary: "Adds a thing.", findings: $f}' > "${REPORT}"
 }
 
-# run_in_repo: Run post_review.sh with a clean env from repo dir $1; remaining args are env assignments
+# run_in_repo: Run render_review.sh with a clean env from repo dir $1; remaining args are env assignments
+#   (a review.json left by an earlier run in the same test is removed first)
 run_in_repo() {
     local dir="$1"
     shift
+    rm -f "${REVIEW_JSON}"
     run env -i PATH="${BIN_DIR}:${PATH}" HOME="${HOME}" GH_TOKEN=x GITHUB_REPOSITORY=o/r \
-        GH_LOG="${GH_LOG}" GH_CAPTURE_DIR="${GH_CAPTURE_DIR}" \
+        GH_LOG="${GH_LOG}" LOOP_MESSAGE_DIR="${MSG_DIR}" \
         VERDICT=APPROVE EXECUTE_BRANCH=loop/x TARGET_JSON='{"entity":{"handoff_key":"entity:pr:7"}}' \
-        "$@" bash -c 'cd "$1" && exec bash "$2"' _ "${dir}" "${POST_SCRIPT}"
+        "$@" bash -c 'cd "$1" && exec bash "$2"' _ "${dir}" "${RENDER_SCRIPT}"
 }
 
-# run_post: Run post_review.sh in the base repo with seeded SHAs, report, and diff
-run_post() {
+# run_render: Run render_review.sh in the base repo with seeded SHAs, report, and diff
+run_render() {
     run_in_repo "${GIT_TEST_REPO}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" \
         REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" "$@"
 }
 
-# posted: Print the last posted JSON payload
-posted() {
-    cat "$(find "${GH_CAPTURE_DIR}" -name 'post-*.json' | sort | tail -n 1)"
+# rendered: Print the review.json render_review.sh wrote
+rendered() { cat "${BATS_TEST_TMPDIR}/msg/review.json"; }
+
+@test "caps findings at 20, keeping the most severe, and reports the omitted count" {
+    local findings f i
+    findings="$(rule_finding Suggestion "${RULE_QUOTE}" 10 false)"
+    for i in $(seq 1 21); do
+        findings+=", $(bug_finding Warning 2 true | jq -c --arg t "W${i}" '.title = $t')"
+    done
+    findings+=", $(bug_finding Critical 3 false | jq -c '.title = "Last critical"')"
+    write_report "[${findings}]"
+    run_render
+    [ "$status" -eq 0 ]
+    body="$(rendered | jq -r '.body')"
+    [[ ${body} == *"Findings: 20 (Critical: 1 / Warning: 19 / Suggestion: 0)"* ]]
+    [[ ${body} == *"Omitted: 3 (over the limit of 20 findings)"* ]]
+    [[ ${body} == *"20. **[Critical]** Last critical"* ]]
+    [[ ${body} != *"W20"* && ${body} != *"W21"* ]]
+    [[ ${body} != *"Dropped:"* ]]
+    f="$(rendered | jq -r '[.comments[].body | capture("^\\*\\*#(?<n>[0-9]+) ").n] | join(",")')"
+    [ "${f}" = "$(seq -s, 1 19)" ]
 }
 
 @test "diff_contains_line checks side and hunk ranges" {
@@ -199,9 +199,9 @@ posted() {
 
 @test "does nothing unless VERDICT is APPROVE" {
     write_report '[]'
-    run_post VERDICT=REJECT
+    run_render VERDICT=REJECT
     [ "$status" -eq 0 ]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 }
 
 @test "drops a criteria finding whose file does not exist on base" {
@@ -220,11 +220,11 @@ posted() {
     [ "$status" -eq 1 ]
 
     write_report "[$(rule_finding Warning "Uncommitted rule text" 2 true)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    run jq -e '(.comments | length) == 0' <<< "$(posted)"
+    run jq -e '(.comments | length) == 0' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    [[ "$(posted | jq -r '.body')" == *"Dropped: 1"* ]]
+    [[ "$(rendered | jq -r '.body')" == *"Dropped: 1"* ]]
 }
 
 @test "drops a rule finding whose quote differs only by whitespace" {
@@ -256,57 +256,72 @@ posted() {
     [ "$status" -eq 1 ]
 }
 
-@test "exits 0 without posting on an unexpected failure" {
-    write_report "[$(bug_finding Critical 2 true)]"
-    run_post TMPDIR="${BATS_TEST_TMPDIR}/no-such-dir"
+@test "escapes backticks and brackets in path link labels" {
+    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh" | .location.in_diff = false')]"
+    run_render
     [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::post_review: unexpected failure"* ]]
-    [ "$(find "${GH_CAPTURE_DIR}" -name 'post-*.json' | wc -l)" -eq 0 ]
+    body="$(rendered | jq -r '.body')"
+    [[ ${body} == *'- Location: https://github.com/o/r/blob/'"${HEAD_SHA}"'/we%60ird%5D.sh#L2'* ]]
+
+    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh"')]"
+    printf 'diff --git a/we`ird].sh b/we`ird].sh\n--- a/we`ird].sh\n+++ b/we`ird].sh\n@@ -1,1 +1,2 @@\n x\n+y\n' \
+        > "${BATS_TEST_TMPDIR}/odd.diff"
+    run_render PR_DIFF_FILE="${BATS_TEST_TMPDIR}/odd.diff"
+    [ "$status" -eq 0 ]
+    body="$(rendered | jq -r '.body')"
+    [[ ${body} == *'— inline: [we\`ird\].sh#L2](https://github.com/o/r/pull/7/files)'* ]]
 }
 
-@test "fails closed without posting on unparseable input" {
+@test "exits 0 without writing review.json on an unexpected failure" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_render TMPDIR="${BATS_TEST_TMPDIR}/no-such-dir"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::render_review: unexpected failure"* ]]
+    [ ! -e "${REVIEW_JSON}" ]
+}
+
+@test "fails closed without writing review.json on unparseable input" {
     printf 'not json' > "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 
     write_report '[]'
     jq '.pr_number = 8' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 
     write_report '[]'
     jq '.findings = {}' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 
     write_report '[]'
-    run_post TARGET_JSON='{"key":"entity:issue:7"}'
+    run_render TARGET_JSON='{"key":"entity:issue:7"}'
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 
-    run_post TARGET_JSON='not json'
+    run_render TARGET_JSON='not json'
     [ "$status" -eq 0 ]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 
-    run_post REPORT_FILE="${BATS_TEST_TMPDIR}/missing.json"
+    run_render REPORT_FILE="${BATS_TEST_TMPDIR}/missing.json"
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
 }
 
-@test "fails closed without posting when trusted SHAs are unavailable" {
+@test "fails closed without writing review.json when trusted SHAs are unavailable" {
     write_report "[$(bug_finding Critical 2 true)]"
     # gh pr view fails (stub has no GH_PR_VIEW_JSON) and no PR_*_SHA seeds
     run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}"
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"*"trusted base/head SHAs"* ]]
-    run grep -c -- '--method POST' "${GH_LOG}"
-    [ "$output" -eq 0 ]
+    [ ! -e "${REVIEW_JSON}" ]
 
     # gh answers, but the base commit is unknown locally and cannot be fetched
     : > "${GH_LOG}"
@@ -314,51 +329,47 @@ posted() {
         GH_PR_VIEW_JSON="{\"baseRefOid\":\"${FORGED_SHA}\",\"headRefOid\":\"${HEAD_SHA}\"}"
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
-    run grep -c -- '--method POST' "${GH_LOG}"
-    [ "$output" -eq 0 ]
+    [ ! -e "${REVIEW_JSON}" ]
 
     # gh returns malformed SHAs
     run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" \
         GH_PR_VIEW_JSON='{"baseRefOid":"abc","headRefOid":"def"}'
     [ "$status" -eq 0 ]
-    run grep -c -- '--method POST' "${GH_LOG}"
-    [ "$output" -eq 0 ]
+    [ ! -e "${REVIEW_JSON}" ]
 }
 
-@test "caps findings at 20, keeping the most severe, and reports the omitted count" {
-    local findings f i
-    findings="$(rule_finding Suggestion "${RULE_QUOTE}" 10 false)"
-    for i in $(seq 1 21); do
-        findings+=", $(bug_finding Warning 2 true | jq -c --arg t "W${i}" '.title = $t')"
+@test "fallback_body holds every finding and the same marker" {
+    write_report "[$(bug_finding Critical 2 true), $(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
+    run_render
+    [ "$status" -eq 0 ]
+    run jq -e '(.comments | length) == 1' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
+    [[ "$(rendered | jq -r '.body')" == *"— inline: "* ]]
+    fallback="$(rendered | jq -r '.fallback_body')"
+    [[ ${fallback} == "${MARKER}"* ]]
+    [[ ${fallback} == *"Findings: 2 (Critical: 1 / Warning: 1 / Suggestion: 0)"* ]]
+    [[ ${fallback} == *"1. **[Critical]** Bug here"$'\n'"   - Evidence: empty input crashes"* ]]
+    [[ ${fallback} == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L2"* ]]
+    [[ ${fallback} == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L10"* ]]
+    [[ ${fallback} != *"inline:"* ]]
+}
+
+@test "fallback_body is never empty when review.json has inline comments" {
+    local findings
+    for findings in "[$(bug_finding Critical 2 true)]" \
+        "[$(bug_finding Critical 4 true | jq -c '.location.start_line = 2'), $(bug_finding Suggestion 22 true)]" \
+        "[$(rule_finding Warning "${RULE_QUOTE}" 2 true)]"; do
+        write_report "${findings}"
+        run_render
+        [ "$status" -eq 0 ]
+        run jq -e '(.comments | length) > 0 and (.fallback_body | type == "string" and length > 0)
+            and (.fallback_body | startswith("<!-- github-pr-review:v1 -->"))' <<< "$(rendered)"
+        [ "$status" -eq 0 ]
     done
-    findings+=", $(bug_finding Critical 3 false | jq -c '.title = "Last critical"')"
-    write_report "[${findings}]"
-    run_post
+    write_report '[]'
+    run_render
+    run jq -e '(.fallback_body | length) > 0' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == *"Findings: 20 (Critical: 1 / Warning: 19 / Suggestion: 0)"* ]]
-    [[ ${body} == *"Omitted: 3 (over the limit of 20 findings)"* ]]
-    [[ ${body} == *"20. **[Critical]** Last critical"* ]]
-    [[ ${body} != *"W20"* && ${body} != *"W21"* ]]
-    [[ ${body} != *"Dropped:"* ]]
-    f="$(posted | jq -r '[.comments[].body | capture("^\\*\\*#(?<n>[0-9]+) ").n] | join(",")')"
-    [ "${f}" = "$(seq -s, 1 19)" ]
-}
-
-@test "escapes backticks and brackets in path link labels" {
-    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh" | .location.in_diff = false')]"
-    run_post
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == *'- Location: https://github.com/o/r/blob/'"${HEAD_SHA}"'/we%60ird%5D.sh#L2'* ]]
-
-    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh"')]"
-    printf 'diff --git a/we`ird].sh b/we`ird].sh\n--- a/we`ird].sh\n+++ b/we`ird].sh\n@@ -1,1 +1,2 @@\n x\n+y\n' \
-        > "${BATS_TEST_TMPDIR}/odd.diff"
-    run_post PR_DIFF_FILE="${BATS_TEST_TMPDIR}/odd.diff"
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == *'— inline: [we\`ird\].sh#L2](https://github.com/o/r/pull/7/files)'* ]]
 }
 
 @test "keeps a bug finding without evidence path" {
@@ -383,28 +394,28 @@ posted() {
 
 @test "links a multi-line quote to its line range" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}"$'\n- Stay within' 2 true)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    inline="$(posted | jq -r '.comments[0].body')"
+    inline="$(rendered | jq -r '.comments[0].body')"
     [[ ${inline} == *"blob/${BASE_SHA}/AGENTS.md#L3-L4) —"$'\n'"  \`\`\`\`text"$'\n'"  ${RULE_QUOTE}"$'\n'"  - Stay within"$'\n'"  \`\`\`\`"* ]]
 }
 
 @test "links evidence to base sha and location to head sha" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
+    body="$(rendered | jq -r '.body')"
     [[ ${body} == *"[\`AGENTS.md#L3\`](https://github.com/o/r/blob/${BASE_SHA}/AGENTS.md#L3) — \"${RULE_QUOTE}\""* ]]
     [[ ${body} == *"blob/${HEAD_SHA}/a.sh#L10"* ]]
 }
 
 @test "moves an in_diff finding outside the diff into the body" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 true)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    run jq -e '(.comments | length) == 0' <<< "$(posted)"
+    run jq -e '(.comments | length) == 0' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
+    body="$(rendered | jq -r '.body')"
     [[ ${body} == *"1. **[Warning]** Rule broken"* ]]
     [[ ${body} == *"- Evidence: "* ]]
     [[ ${body} == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L10"* ]]
@@ -414,103 +425,59 @@ posted() {
 
 @test "moves in_diff findings into the body when the diff is unavailable" {
     write_report "[$(bug_finding Critical 2 true)]"
-    run_post PR_DIFF_FILE="${BATS_TEST_TMPDIR}/missing.diff"
+    run_render PR_DIFF_FILE="${BATS_TEST_TMPDIR}/missing.diff"
     [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
+    run jq -e '(.comments | length) == 0' <<< "$(rendered)"
     [ "$status" -eq 0 ]
 }
 
-@test "never sends REQUEST_CHANGES or APPROVE" {
-    write_report "[$(bug_finding Critical 2 true)]"
-    jq '.event = "REQUEST_CHANGES" | .verdict = "APPROVE"' "${REPORT}" > "${REPORT}.tmp"
-    mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+@test "never calls gh api with POST" {
+    write_report "[$(bug_finding Critical 2 true), $(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
+    run_render
     [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT"' <<< "$(posted)"
+    [ -s "${REVIEW_JSON}" ]
+    run grep -c -e '--method POST' -e '-X POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
+    # Without the SHA seeds the script reads gh pr view and gh pr diff, still never POST
+    run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" \
+        GH_PR_VIEW_JSON="{\"baseRefOid\":\"${BASE_SHA}\",\"headRefOid\":\"${HEAD_SHA}\"}"
     [ "$status" -eq 0 ]
-    write_report '[]'
-    run_post
-    run jq -e '.event == "COMMENT"' <<< "$(posted)"
-    [ "$status" -eq 0 ]
+    [ -s "${REVIEW_JSON}" ]
+    run grep -c -e '--method POST' -e '-X POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
 }
 
 @test "numbers inline comments to match the body" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false), $(bug_finding Critical 2 true)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
     run jq -e '(.comments | length) == 1 and .comments[0].path == "a.sh" and .comments[0].line == 2
-        and .comments[0].side == "RIGHT" and (.comments[0] | has("start_line") | not)' <<< "$(posted)"
+        and .comments[0].side == "RIGHT" and (.comments[0] | has("start_line") | not)' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    inline="$(posted | jq -r '.comments[0].body')"
+    inline="$(rendered | jq -r '.comments[0].body')"
     [[ ${inline} == "**#2 [Critical]** Bug here"* ]]
     [[ ${inline} == *'To request a fix, reply to this comment with `@loop`.'* ]]
-    body="$(posted | jq -r '.body')"
+    body="$(rendered | jq -r '.body')"
     [[ ${body} == *'2. **[Critical]** Bug here — inline: [`a.sh#L2`](https://github.com/o/r/pull/7/files)'* ]]
     [[ ${body} == *"1. **[Warning]** Rule broken"$'\n'"   - Evidence:"* ]]
 }
 
 @test "numbers the first inline finding #1 and keeps start_line" {
     write_report "[$(bug_finding Critical 4 true | jq -c '.location.start_line = 2')]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    run jq -e '.comments[0].start_line == 2 and .comments[0].start_side == "RIGHT" and .comments[0].line == 4' <<< "$(posted)"
+    run jq -e '.comments[0].start_line == 2 and .comments[0].start_side == "RIGHT" and .comments[0].line == 4' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    [[ "$(posted | jq -r '.comments[0].body')" == "**#1 [Critical]** Bug here"* ]]
-    [[ "$(posted | jq -r '.body')" == *'1. **[Critical]** Bug here — inline: [`a.sh#L2-L4`]'* ]]
-}
-
-@test "posts an explicit no-findings review" {
-    write_report '[]'
-    run_post
-    [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == "${MARKER}"* ]]
-    [[ ${body} == *"Findings: 0 (Critical: 0 / Warning: 0 / Suggestion: 0)"* ]]
-}
-
-@test "posts COMMENT with marker, counts, and premises" {
-    write_report "[$(bug_finding Critical 2 true), $(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
-    run_post
-    [ "$status" -eq 0 ]
-    grep -q -- '--method POST repos/o/r/pulls/7/reviews' "${GH_LOG}"
-    run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h' <<< "$(posted)"
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == "${MARKER}"* ]]
-    [[ ${body} == *"## Code review"* ]]
-    [[ ${body} == *"Findings: 2 (Critical: 1 / Warning: 1 / Suggestion: 0)"* ]]
-    [[ ${body} == *"Adds a thing."* ]]
-    [[ ${body} == *"### Premises checked"* ]]
-    [[ ${body} == *"- PR body: checked"* ]]
-    [[ ${body} == *"- Linked Issue / spec: #120"* ]]
-    [[ ${body} != *"Dropped:"* ]]
-}
-
-@test "appends LOOP_META_BLOCK to the review body in the same post when supplied" {
-    write_report "[$(bug_finding Critical 2 true)]"
-    run_post LOOP_META_BLOCK=$'<details>\n<summary>Meta</summary>\n</details>\n\n<sub>footer</sub>'
-    [ "$status" -eq 0 ]
-    [ "$(grep -c -- '--method POST repos/o/r/pulls/7/reviews' "${GH_LOG}")" -eq 1 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == *"### Premises checked"* ]]
-    [[ ${body} == *$'\n\n<details>\n<summary>Meta</summary>'*"<sub>footer</sub>" ]]
-}
-
-@test "posts the review body unchanged when LOOP_META_BLOCK is absent" {
-    write_report "[$(bug_finding Critical 2 true)]"
-    run_post
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} != *"<summary>Meta</summary>"* ]]
+    [[ "$(rendered | jq -r '.comments[0].body')" == "**#1 [Critical]** Bug here"* ]]
+    [[ "$(rendered | jq -r '.body')" == *'1. **[Critical]** Bug here — inline: [`a.sh#L2-L4`]'* ]]
 }
 
 @test "reads the PR number from TARGET_JSON key" {
     write_report '[]'
-    run_post TARGET_JSON='{"key":"entity:pr:7"}'
+    run_render TARGET_JSON='{"key":"entity:pr:7"}'
     [ "$status" -eq 0 ]
-    grep -q 'pulls/7/reviews' "${GH_LOG}"
+    [[ ${output} == *"for PR #7"* ]]
+    [ -s "${REVIEW_JSON}" ]
 }
 
 @test "reads the report from the work branch via git fetch" {
@@ -526,64 +493,99 @@ posted() {
     bats_git_cmd clone -q "${GIT_TEST_REPO}" "${work}"
     run_in_repo "${work}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" PR_DIFF_FILE="${DIFF_FILE}"
     [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 1' <<< "$(posted)"
+    run jq -e '(.comments | length) == 1' <<< "$(rendered)"
     [ "$status" -eq 0 ]
 
     : > "${GH_LOG}"
     run_in_repo "${work}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" EXECUTE_BRANCH='loop/../x'
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
-    [ ! -s "${GH_LOG}" ]
+    [ ! -e "${REVIEW_JSON}" ]
+}
+
+@test "renders an explicit no-findings review" {
+    write_report '[]'
+    run_render
+    [ "$status" -eq 0 ]
+    run jq -e '(.comments | length) == 0' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
+    body="$(rendered | jq -r '.body')"
+    [[ ${body} == "${MARKER}"* ]]
+    [[ ${body} == *"Findings: 0 (Critical: 0 / Warning: 0 / Suggestion: 0)"* ]]
+}
+
+@test "renders review.json with marker, counts, and premises" {
+    write_report "[$(bug_finding Critical 2 true), $(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
+    run_render
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"render_review: wrote ${REVIEW_JSON} for PR #7"* ]]
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
+    body="$(rendered | jq -r '.body')"
+    [[ ${body} == "${MARKER}"* ]]
+    [[ ${body} == *"## Code review"* ]]
+    [[ ${body} == *"Findings: 2 (Critical: 1 / Warning: 1 / Suggestion: 0)"* ]]
+    [[ ${body} == *"Adds a thing."* ]]
+    [[ ${body} == *"### Premises checked"* ]]
+    [[ ${body} == *"- PR body: checked"* ]]
+    [[ ${body} == *"- Linked Issue / spec: #120"* ]]
+    [[ ${body} != *"Dropped:"* ]]
 }
 
 @test "reports dropped findings count in the body" {
     write_report "[$(rule_finding Warning "not in the file" 2 true), $(bug_finding Critical 2 true)]"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
+    body="$(rendered | jq -r '.body')"
     [[ ${body} == *"Findings: 1 (Critical: 1 / Warning: 0 / Suggestion: 0)"* ]]
     [[ ${body} == *"Dropped: 1"* ]]
-    [[ "$(posted | jq -r '.comments[0].body')" == "**#1 [Critical]**"* ]]
+    [[ "$(rendered | jq -r '.comments[0].body')" == "**#1 [Critical]**"* ]]
 }
 
-@test "retries without inline comments when the first post is rejected" {
+@test "review.json body carries no Meta block even when LOOP_META_BLOCK is set" {
     write_report "[$(bug_finding Critical 2 true)]"
-    run_post GH_POST_FAIL_FIRST=422
+    run_render LOOP_META_BLOCK=$'<details>\n<summary>Meta</summary>\n</details>\n\n<sub>footer</sub>'
     [ "$status" -eq 0 ]
-    [ "$(grep -c -- '--method POST' "${GH_LOG}")" -eq 2 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
+    run jq -e '[.body, .fallback_body, (.comments[].body)] | all(contains("<summary>Meta</summary>") or contains("<sub>footer</sub>") | not)' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    [[ "$(posted | jq -r '.body')" == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L2"* ]]
+    [[ "$(rendered | jq -r '.body')" == *"### Premises checked"* ]]
 }
 
-@test "retries only on HTTP 422; other post failures warn without a retry" {
+@test "review.json has no event key" {
     write_report "[$(bug_finding Critical 2 true)]"
-    run_post GH_POST_FAIL_FIRST=502
+    jq '.event = "REQUEST_CHANGES" | .verdict = "APPROVE"' "${REPORT}" > "${REPORT}.tmp"
+    mv "${REPORT}.tmp" "${REPORT}"
+    run_render
     [ "$status" -eq 0 ]
-    [ "$(grep -c -- '--method POST' "${GH_LOG}")" -eq 1 ]
-    [[ ${output} == *"::warning::post_review: failed to post review on PR #7"* ]]
+    run jq -e 'has("event") | not' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
+    run jq -e 'keys == ["body", "comments", "commit_id", "fallback_body"]' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
+    write_report '[]'
+    run_render
+    run jq -e 'has("event") | not' <<< "$(rendered)"
+    [ "$status" -eq 0 ]
 }
 
-@test "skips posting when the PR head moved after the review" {
+@test "skips rendering when the PR head moved after the review" {
     # Report written against an older head; the author pushed since (well-formed, different SHA)
     write_report "[$(bug_finding Critical 2 true)]"
     jq --arg old "$(printf 'd%.0s' {1..40})" '.head_sha = $old' "${REPORT}" > "${REPORT}.tmp"
     mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::"*"report head_sha does not match the PR head"*"review not posted"* ]]
-    run grep -c -- '--method POST' "${GH_LOG}"
-    [ "$output" -eq 0 ]
+    [[ ${output} == *"::warning::"*"report head_sha does not match the PR head"*"review not rendered"* ]]
+    [ ! -e "${REVIEW_JSON}" ]
 }
 
-@test "skips posting when the report head_sha is forged, malformed, or missing" {
+@test "skips rendering when the report head_sha is forged, malformed, or missing" {
     local mutation
     for mutation in ".head_sha = \"${FORGED_SHA}\" | .base_sha = \"${FORGED_SHA}\"" \
         '.head_sha = "abc"' '.head_sha = 42' 'del(.head_sha)'; do
         write_report "[$(bug_finding Critical 2 true)]"
         jq "${mutation}" "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
         : > "${GH_LOG}"
-        run_post
+        run_render
         [ "$status" -eq 0 ]
         [[ ${output} == *"::warning::"*"report head_sha does not match the PR head"* ]]
         run grep -c -- '--method POST' "${GH_LOG}"
@@ -597,39 +599,42 @@ posted() {
         GH_PR_VIEW_JSON="{\"baseRefOid\":\"${BASE_SHA}\",\"headRefOid\":\"${HEAD_SHA}\"}"
     [ "$status" -eq 0 ]
     grep -q -- 'pr view 7 --repo o/r --json baseRefOid,headRefOid' "${GH_LOG}"
-    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h' <<< "$(posted)"
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    [[ "$(posted | jq -r '.body')" == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
+    [[ "$(rendered | jq -r '.body')" == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
 }
 
 @test "uses trusted SHAs when only the report base_sha is forged" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false), $(bug_finding Critical 2 true)]"
     jq --arg f "${FORGED_SHA}" '.base_sha = $f' "${REPORT}" > "${REPORT}.tmp"
     mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"*"base_sha differs from PR #7"* ]]
-    run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h and (.comments | length) == 1' <<< "$(posted)"
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h and (.comments | length) == 1' <<< "$(rendered)"
     [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
+    body="$(rendered | jq -r '.body')"
     [[ ${body} == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
     [[ ${body} == *"blob/${HEAD_SHA}/a.sh#L10"* ]]
     [[ ${body} != *"${FORGED_SHA}"* ]]
-    [[ "$(posted | jq -r '.comments[0].body')" != *"${FORGED_SHA}"* ]]
+    [[ "$(rendered | jq -r '.comments[0].body')" != *"${FORGED_SHA}"* ]]
 
     # A missing base_sha is warned about the same way
     write_report '[]'
     jq 'del(.base_sha)' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
-    run_post
+    run_render
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"*"base_sha differs"* ]]
-    run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h' <<< "$(posted)"
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h' <<< "$(rendered)"
     [ "$status" -eq 0 ]
 }
 
-@test "warns and exits 0 when posting fails" {
-    write_report '[]'
-    run_post GH_POST_FAIL=1
+@test "writes nothing and warns when LOOP_MESSAGE_DIR is unset" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_render LOOP_MESSAGE_DIR=
     [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::"* ]]
+    [[ ${output} == *"::warning::render_review: LOOP_MESSAGE_DIR is not set; review not rendered"* ]]
+    [ ! -e "${REVIEW_JSON}" ]
+    run grep -c -e '--method POST' -e '-X POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
 }
