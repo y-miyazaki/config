@@ -10,17 +10,17 @@
     },
     "integration:dogfood/loop-delivery": {
       "pending": {
-        "sha": "640d401e9cb3669d401dd99b4486f6be2af31610",
-        "pr": 1006,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/1006",
+        "sha": "f4b50006abf40f2fa908334d43e7098ee162fb93",
+        "pr": 1007,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/1007",
         "loop_name": "changelog",
-        "created_at": "2026-10-18T02:09:30Z"
+        "created_at": "2026-10-18T02:17:15Z"
       },
-      "last_run": "2026-10-18T02:09:30Z",
+      "last_run": "2026-10-18T02:17:15Z",
       "outcome": "pr_created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only diff; all 9 detect commits promoted into the detect-listed 1.8.128 release with correct links, footer entry, no duplicates, and a compliant apply-mode report"
+      "last_reject_reason": "Only CHANGELOG.md changed; both detect releases (1.8.129, 1.8.128) promoted with all 7 commits mapped once, commit links present, footer links added, no deletions or duplicates."
     }
   }
 }
