@@ -76,7 +76,7 @@ setup() {
 @test "check_loop_pr_body_contract does not require automation format for non-split skills" {
     local skills_root skill
     skills_root="${TEST_TMP}/skills"
-    for skill in changelog ci-sweeper docs-updater github-issue-autofix github-pr-revise refactor tech-debt test-gap; do
+    for skill in changelog ci-sweeper docs-updater github-issue-autofix github-issue-triage github-pr-review github-pr-revise refactor tech-debt test-gap; do
         mkdir -p "${skills_root}/${skill}"
         cp -R "$(apm_skill_dir "${skill}")/." "${skills_root}/${skill}/"
     done
