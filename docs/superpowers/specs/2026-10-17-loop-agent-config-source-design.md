@@ -1,6 +1,6 @@
 # Loop エージェントの skill と設定の読み元
 
-**Status:** Draft(CI の権限の設定を読まない決定と、skill の書き方を追記。レビュー前)
+**Status:** Draft(CI の権限の方針は、信頼の付与をやめる方向に更新。実機の確認待ち)
 **Date:** 2026-10-17
 **Related:** [Loop 配信設計](2026-10-17-loop-delivery-plan-design.md)(この spec は、配信設計の第10節として書いたものを切り出した)
 注記: 既存 spec に合わせて日本語で記述する。
@@ -55,6 +55,17 @@ PR を対象にするターゲット(pr-revise、ci-sweeper の PR ターゲッ�
 - **これは、ほとんどの caller を壊す変更である。** 今の `append_claude_permission_args`(`agent.sh:51-65`)は、caller の許可リストだけを渡す。`grant_claude_workspace_trust`(`agent.sh:164-197`)は、導入先の `allow` を有効にするためだけにある。次の caller には許可リストが無い: changelog、docs-updater、refactor、tech-debt、test-gap。ほかの caller の許可リストは `gh` 系(と pr-review の `git show`)だけである。今は `settings.json` の `allow` が、`git diff`(maker のプロンプト自身が使う: `agent.sh:125`)、`Bash(bash:*)`(skill のスクリプト)、`go test`、`bats`、`jq`、`yq`、`grep`、`rg`、`find`、`WebFetch`、MCP のツール(`mcp__github` など。`mcp.sh:40` はサーバを有効にするだけ)を許している。checker(`verifier.sh:376`)も同じ許可リストを受ける。同じ変更で、各 caller の許可リストを組み直す。方法は、(a) 各 caller が、skill の必要とするコマンドを全て書く、(b) action が、読み取りだけの最小の基準(`git diff`、`log`、`show`、`status`)を持ち、文書にする(今の action は何も許さない: `agent.sh:14`)、のどちらかで、実装の最初に決める。
 - **deny の規則と hooks も失われる。** 今の `settings.json` の deny(`Read(./.env)`、`Read(**/*.pem)`、`Bash(printenv:*)`、`Bash(env:*)`、`Bash(curl:*)`、`Bash(wget:*)`、`Bash(rm -rf:*)` など)は、CI で効かなくなる。caller の入力に deny を渡す経路は今は無い。失う deny は、トークンの権限と、チェックアウトに秘密のファイルが無いことで受け止める、とするか、deny の入力を足すかを、配信設計の「新しい設定値を増やさない」と合わせて決める(未決)。`Stop` と `PostToolUse` の hooks(lint、shfmt、prettier、`sync_apm_artifacts.sh`)も、CI の maker では動かなくなる。整形や同期は、skill の手順か finalize に移すか、失うことを受け入れるかを決める(未決)。
 - 許可リストだけでは、書き込みを止められない。公式ドキュメントによると、`Bash(gh api -X GET:*)` は `gh api -X GET` で始まるコマンド全体に一致し、後ろに `-X POST` を足した形も許す。deny の規則も、`sh -c` や `git -C . push` のような別の形は一致しない。許可リストは「手順の指示」を強める層であり、止める本体は、トークンの権限である。
+
+**方向(2026-10-18 追記。調査の結果。ユーザーは「管理設定(B 案)」を想定。下の実現手段で確認待ち):**
+
+- 目的は「導入先の中身(CLAUDE.md、rules、skill、subagent、`.mcp.json`、hooks)は使い、導入先の権限の規則は CI に効かせない」である。`--setting-sources user` や `--bare` は、中身まで失うので採らない。
+- 導入先の `permissions.allow` を CI で効かせている原因は、自前のコードである。`grant_claude_workspace_trust`(`agent.sh:197`、呼び出しは `:434`)が、`~/.claude.json` に `hasTrustDialogAccepted=true` を書いている。公式ドキュメント(permissions「What runs before you trust a folder」)によると、`claude -p` は、信頼を一度も受け入れていないフォルダでは、`.claude/settings.json` の `permissions.allow` と `additionalDirectories` を使わない(警告が stderr に出る)。CLAUDE.md、skill、hooks、`env`、`.mcp.json` は使う。deny と ask は適用される。したがって、第一の手段は、この信頼の付与をやめることである。`--setting-sources project` は残す。
+- 前項により、先に挙げた「deny の規則が失われる」は、この手段では当てはまらない(deny は効いたまま)。hooks も動く。なお、許可リストの組み直し(caller に許可リストが無い5つの caller など)は、同じ変更で行う必要がある。
+- `--permission-mode` は毎回明示する(`dontAsk`、または maker に `acceptEdits`)。公式ドキュメントでは、CLI のフラグが、導入先の `defaultMode` に勝つ。`--disallowedTools` に、許さないコマンドを入れる(deny はどの階層の allow にも勝つ)。許可リストの前方一致の穴(`Bash(gh api -X GET:*)` に `-X POST` が続く形)は、これで補う。
+- 強化の手段(任意): `/etc/claude-code/managed-settings.json` に `allowManagedPermissionRulesOnly: true` と、CI の許可リスト(`permissions.allow`)を書く。GitHub のホストのランナーは sudo が使えるので書ける。このキーは、導入先の allow・ask・deny と、CLI の `--allowedTools` も無視する(許可リストは、管理設定の側に書く必要がある)。skill の `allowed-tools` の事前承認も止められる(v2.1.282 以降)。`--disallowedTools` は引き続き効く。`--settings` や環境変数では、管理設定の代わりにならない。maker と checker で許可が違うなら、実行ごとに書き換える。セルフホストのランナーでは、後片付けが要る。
+- 信頼の付与をやめても残る穴: (1) 導入先の skill の `allowed-tools` は、信頼に関係なく有効で、`Bash(*)` を事前承認できる(止められるのは管理設定だけ)。(2) 導入先の `PreToolUse` hook は、`allow` を返して確認を飛ばせる(deny と ask は上書きできない。`--disallowedTools` が防御線)。(3) 設定の `env` と `apiKeyHelper` は、信頼なしでも使われる。(4) 信頼が無いと、project の subagent の frontmatter の hooks と inline の `mcpServers`、`@skills-dir` の plugin、`extraKnownMarketplaces` は使えない。
+- 手本にする外部の例: github/gh-aw。許可を CLI の側だけで閉じる形(`--permission-mode dontAsk`、明示した `--allowed-tools`、未許可のツールを並べた `--disallowed-tools`、`--strict-mcp-config`)で、導入先の設定のファイルには頼らない。`.claude/`、CLAUDE.md、AGENTS.md は、変更を検知する対象にしている(`pkg/workflow/claude_engine.go`、`claude_permissions.go`)。`anthropics/claude-code-action` からは、PR を起点にする実行で、起動前に base ブランチから `.claude/`、`.mcp.json`、`CLAUDE.md` などを復元する考え方を取り入れる(PR の head を信頼しない。この spec の、skill と MCP をデフォルトブランチから読む方針と同じ)。ただし同じ文書は、導入先の `settings.json` の権限や `--settings` には触れていない。
+- 実機で確認する(実装の最初): (1) 信頼の付与をやめた後、CI の stderr に `Ignoring N permissions.allow entries` が出ること。(2) 導入先の skill の `allowed-tools` が、信頼なしでも効くこと(管理設定ありでは無視されること)。(3) 管理設定を置いたとき、`--allowedTools` が実際に無視されること。(4) `dontAsk` と `--allowedTools` の組み合わせで、maker が必要なコマンドを実行できること。
 
 **スキルは、対話と自動実行の動きを分けて書く(同日追記。ユーザー承認済み):**
 
