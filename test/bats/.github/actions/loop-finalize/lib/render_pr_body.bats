@@ -26,6 +26,7 @@
 # - render_pr_body renders one collapsed loop meta block carrying engine/model/tokens
 # - render_pr_body omits the meta block when level, target, engine and usage are empty
 # - linkify_agent_text links changed paths and known commit SHAs written as code spans
+# - linkify_agent_text links a bare SHA only when it prefixes a detected commit
 # - linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone
 # - render_pr_body links changed paths and SHAs in the agent summary
 
@@ -337,4 +338,16 @@ setup() {
     [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
     [[ $output == *"Added suite for \`scripts/x.sh\`."* ]]
     [[ $output == *"| \`bats test/bats/foo.bats\` | skip |"* ]]
+}
+
+@test "linkify_agent_text links a bare SHA only when it prefixes a detected commit" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/changelog'
+    export CHANGED_FILES_JSON='[]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| abcdef0 | feat | pin (deadbeef) https://x/commit/abcdef0 |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"(deadbeef)"* ]]
+    [[ $output == *"https://x/commit/abcdef0"* ]]
+    [[ $output != *"commit/[abcdef0]"* ]]
 }
