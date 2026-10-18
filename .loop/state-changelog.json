@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-17T00:17:02Z",
-      "outcome": "merged",
+      "last_run": "2026-10-18T23:05:12Z",
+      "outcome": "pr_created",
       "consecutive_failures": 0,
       "last_sha": "fc3d958f21f460bb07690376055e60dbfe7dd202",
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only additive diff; all 203 detect commits linked, 15 release sections match detect releases[] partition exactly, tags/dates/footer SHAs verified against git, no duplicates or deletions"
+      "last_reject_reason": "CHANGELOG.md-only diff maps all 34 detect commits to linked bullets with v1.8.123 promoted; the three omitted releases are verifiably unreachable tags whose commit_shas duplicate v1.8.123's set",
+      "pending": {
+        "sha": "7c54cb07e2cb8430e6c33d1a9b64f0d76b760eff",
+        "pr": 1023,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/1023",
+        "loop_name": "changelog",
+        "created_at": "2026-10-18T23:05:12Z"
+      }
     }
   }
 }
