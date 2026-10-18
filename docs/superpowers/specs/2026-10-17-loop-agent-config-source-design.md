@@ -67,6 +67,13 @@ PR を対象にするターゲット(pr-revise、ci-sweeper の PR ターゲッ�
 
 **挙動の変化(意図した変更):** skill や設定を書き換える PR に対して pr-revise や ci-sweeper が動くとき、PR の版ではなく、デフォルトブランチの版の skill と MCP の設定を使う。PR を対象にしない loop(作業ツリーがデフォルトブランチから作られる loop)では、skill と MCP の読み元の内容は現在と同じである。ただし、claude の権限の設定を読まない変更は、PR を対象にするかどうかに関わらず、全ての loop に効く(権限、deny、hooks が変わる)。
 
+**他のエージェント workflow の調べ方(2026-10-18、調査。公式ドキュメントとソースの要約に基づく。`claude-code-action` の `src/` と、gh-aw が codex と copilot に渡すフラグは未確認):**
+
+- gh-aw(github/gh-aw): agent ジョブは read-only の権限で動き、成果物(`agent_output.json`、`aw.patch`)だけを出す。書き込みは、権限を絞った別のジョブが行う。claude の起動には常に `--print --strict-mcp-config` を付け、`--permission-mode` の既定は `dontAsk`。`--bare` は `engine.bare` を選んだときだけ付き、`--setting-sources` は付けない。つまり導入先の設定は、既定では読む可能性が高い(コードからの推測)。`--allowed-tools` は事前承認であり、OS の分離ではないと公式文書が明記し、境界は権限とネットワークの sandbox に置く。`engine.args` に書かれた `--permission-mode` は除去する。
+- `anthropics/claude-code-action`: PR の実行では、起動前に base ブランチから `.claude/`、`.mcp.json`、`CLAUDE.md` などを復元する。ただし、base の hook が PR 管理下のスクリプトを呼ぶ経路は残ると、自ら認めている。
+- `openai/codex-action`: `config.toml` は、信頼できる workflow 側に置く。権限を変える上書きの引数は拒否する。導入先の `.codex/config.toml` や `AGENTS.md` の扱いは記載なし。
+- この spec への含意: (1) 書き込みを権限で止める方針(認証情報の分離)は、gh-aw と同じである。許可リストは強制ではないので、補助の層とする。(2) 導入先の設定を読まない範囲は、他の2つより厳しい。手段の候補の `--strict-mcp-config`、`--bare` は、gh-aw が使っているものと同じである。(3) caller の入力から権限のモードを上書きできないようにする(gh-aw と codex-action が同様の防御をしている)。
+
 ## ビルダーに任せること(切り出し時点の案)
 
 - 第10節の読み元の切り替え方。条件は、エージェントの差分に持ち込んだファイルが入らないこと、4つのエンジン(claude、codex、copilot、cursor)のどれでも、作業ツリーの skill と MCP の設定が使われないことである。候補は次のとおり。
