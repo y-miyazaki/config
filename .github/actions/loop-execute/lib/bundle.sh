@@ -25,6 +25,8 @@
 #   - A denylist-blocked attempt never bundles, even if it produced commits:
 #     an ordinary checker REJECT may still deliver for human inspection, but a
 #     denylist hit (secrets/credentials paths) must never reach the remote.
+#   - LOOP_HAS_CHANGES=true with no commits outside origin/<base> fails with
+#     stage bundle: git refuses an empty bundle, and failing closed is intended
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline

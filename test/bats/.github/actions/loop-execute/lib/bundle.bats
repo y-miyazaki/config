@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/loop-execute/lib/bundle.sh
 
 # Use cases:
@@ -9,6 +11,7 @@
 # - main skips the bundle and warns when LOOP_DENYLIST_BLOCKED is true
 # - main bundles only commits not on origin/base
 # - main records a bundle failure
+# - main records a bundle failure when the branch has no commits beyond origin/base
 # - main does not read GITHUB_TOKEN
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -58,6 +61,7 @@ function make_repo {
     run main
     [ "$status" -eq 1 ]
     [[ $output == *"Invalid branch name"* ]]
+    [ ! -e "${BUNDLE_FILE}" ]
 }
 
 @test "main writes has_changes=false when loop produced no commits" {
@@ -67,6 +71,7 @@ function make_repo {
     run main
     [ "$status" -eq 0 ]
     grep -q '^has_changes=false$' "${GITHUB_OUTPUT}"
+    [ ! -e "${BUNDLE_FILE}" ]
 }
 
 @test "main skips the bundle and warns when LOOP_DENYLIST_BLOCKED is true" {
@@ -120,10 +125,27 @@ function make_repo {
     export STATUS_DIR
     BASE_BRANCH='missing-base'
     LOOP_HAS_CHANGES='true'
-    run main
+    run --separate-stderr main
     [ "$status" -eq 1 ]
     [ -f "${status_dir}/failure.json" ]
     [ "$(jq -r '.failure_stage' "${status_dir}/failure.json")" = "bundle" ]
+    [ "$(grep -c '^has_changes=' "${GITHUB_OUTPUT}" || true)" = "0" ]
+    [[ $stderr == *"missing-base"* ]]
+}
+
+@test "main records a bundle failure when the branch has no commits beyond origin/base" {
+    local status_dir="${BATS_TEST_TMPDIR}/status"
+    make_repo
+    git -C "${WORKTREE_PATH}" reset -q --hard origin/main
+    mkdir -p "${status_dir}"
+    STATUS_DIR="${status_dir}"
+    export STATUS_DIR
+    LOOP_HAS_CHANGES='true'
+    run --separate-stderr main
+    [ "$status" -eq 1 ]
+    [ "$(jq -r '.failure_stage' "${status_dir}/failure.json")" = "bundle" ]
+    [ "$(grep -c '^has_changes=' "${GITHUB_OUTPUT}" || true)" = "0" ]
+    [[ $stderr == *"empty bundle"* ]]
 }
 
 @test "main does not read GITHUB_TOKEN" {

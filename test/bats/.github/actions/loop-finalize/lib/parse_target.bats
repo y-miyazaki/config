@@ -11,6 +11,7 @@
 # - issue_comment accepts an issue entity and pr_review accepts a pr entity
 # - pr_push with an integration target fails (delivery/target guard)
 # - an empty STATE_BRANCH fails before any PR or push step runs
+# - a pull_request target without base.branch writes an empty base_branch
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -118,4 +119,12 @@ setup() {
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 0 ]
     grep -qx 'base_branch=release' "${GITHUB_OUTPUT}"
+}
+
+@test "writes an empty base_branch for a pull_request target without base.branch" {
+    run env DELIVERY=pr_push TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","to":{"branch":"feature/x","pr_number":7}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 0 ]
+    run cat "${GITHUB_OUTPUT}"
+    [ "${output}" = $'base_branch=\ntarget_key=pull_request:7\npr_base_branch=feature/x\nto_branch=feature/x' ]
 }

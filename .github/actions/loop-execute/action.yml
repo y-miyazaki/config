@@ -77,7 +77,7 @@ inputs:
     required: false
   base_branch:
     default: "main"
-    description: "Base branch for verify diff"
+    description: "Base branch for verify diff; also sets the bundle range (commits not on origin/<base_branch>)"
     required: false
   branch:
     description: "Worktree branch name"
