@@ -9,6 +9,7 @@
 # - parse_arguments rejects an unknown option
 # - parse_arguments rejects an unexpected positional argument
 # - parse_arguments requires a value for -t/--db-type
+# - parse_arguments requires a value for --install-dir
 # - validate_parameters rejects an invalid database type
 # - validate_parameters accepts every documented database type
 # - validate_parameters creates the install directory when it is missing
@@ -51,6 +52,12 @@ INSTALL_SCHEMASPY="$(bats_workspace_root)/scripts/db/install_schemaspy.sh"
     run bash -c "source '${INSTALL_SCHEMASPY}'; parse_arguments -t"
     [ "$status" -ne 0 ]
     [[ $output == *"Option -t requires a value"* ]]
+}
+
+@test "parse_arguments requires a value for --install-dir" {
+    run bash -c "source '${INSTALL_SCHEMASPY}'; parse_arguments --install-dir"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Option --install-dir requires a value"* ]]
 }
 
 @test "validate_parameters accepts every documented database type" {
