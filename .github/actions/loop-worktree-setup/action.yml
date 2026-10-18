@@ -22,7 +22,7 @@ inputs:
     description: "Ref to check out in the worktree (target_json.from.ref). Empty = origin/from_branch."
     required: false
   github_token:
-    description: "GitHub token for push"
+    description: "Read-only GitHub token for fetch"
     required: true
 outputs:
   branch:

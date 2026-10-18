@@ -6,6 +6,7 @@
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
 # - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
+# - agent jobs hold only read GitHub permissions and no App or GH_TOKEN secret; agent-l2 hands the branch to finalize-l2 as a bundle artifact
 # - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the loop-finalize outcome and failure stage
 # - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
 # - target_json is required at every level
@@ -202,6 +203,39 @@ dogfood_value() {
     done
 }
 
+@test "agent jobs hold no write credentials" {
+    local job block perms expected tokens count
+    for job in agent-l1 agent-l2; do
+        block="$(job_block "${AGENT}" "${job}")"
+        [[ -n ${block} ]]
+        if grep -nF -e loop-resolve-push-token -e secrets.BOT_APP_ -e secrets.GH_TOKEN -e resolve_github_token <<< "${block}"; then
+            echo "${job} still resolves or references a write credential" >&2
+            return 1
+        fi
+        perms="$(awk '/^    permissions:/ {f=1; next} f && /^    [a-z]/ {exit} f' <<< "${block}" | grep -E '^      [a-z-]+: ')"
+        expected="$(printf '%s\n' \
+            '      contents: read' \
+            '      copilot-requests: write # zizmor: ignore[excessive-permissions]' \
+            '      issues: read' \
+            '      pull-requests: read')"
+        [[ ${job} == agent-l2 ]] && expected="$(printf '%s\n%s' '      actions: read' "${expected}")"
+        [ "${perms}" = "${expected}" ]
+        tokens="$(grep -E '^ +github_token:' <<< "${block}")"
+        # Literal GitHub Actions expression; do not expand.
+        # shellcheck disable=SC2016
+        if grep -vxF '          github_token: ${{ github.token }}' <<< "${tokens}"; then
+            echo "${job} passes a github_token other than github.token" >&2
+            return 1
+        fi
+        count="$(grep -c . <<< "${tokens}")"
+        if [[ ${job} == agent-l1 ]]; then
+            [ "${count}" -eq 1 ]
+        else
+            [ "${count}" -eq 2 ]
+        fi
+    done
+}
+
 @test "agent-l1 has no issues write and exposes message_json without comment inputs" {
     local block
     block="$(job_block "${AGENT}" agent-l1)"
@@ -231,11 +265,11 @@ dogfood_value() {
     [[ -n ${script} ]]
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"integration:main","mode":"integration","from":{"branch":"main","ref":"abc123"},"to":{"branch":"main"}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main from_branch=main from_ref=abc123 key=integration:main)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main bundle_artifact_name=loop-agent-bundle-1-138c728d71ab409c from_branch=main from_ref=abc123 key=integration:main)" ]
 }
 
 @test "agent-l2 parse target fails when target_json is empty, invalid, or lacks a key" {
@@ -245,7 +279,7 @@ dogfood_value() {
     out="${BATS_TEST_TMPDIR}/github_output"
     for target_json in '' 'not-json' '{"from":{"branch":"main","ref":"abc"},"to":{"branch":"main"}}'; do
         : > "${out}"
-        run env GITHUB_OUTPUT="${out}" TARGET_JSON="${target_json}" bash -c "${script}"
+        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON="${target_json}" bash -c "${script}"
         [ "$status" -ne 0 ]
         [ ! -s "${out}" ]
     done
@@ -265,11 +299,33 @@ dogfood_value() {
     script="$(job_block "${AGENT}" agent-l2 | step_block 'Parse Target' | run_script)"
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main from_branch=feat from_ref=def456 key=pull_request:7)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' base_branch=main bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_branch=feat from_ref=def456 key=pull_request:7)" ]
+}
+
+@test "agent-l2 uploads the bundle without overwrite" {
+    local step expected
+    # Drop the blank and comment lines that step_block carries over from the next step.
+    step="$(job_block "${AGENT}" agent-l2 | step_block 'Upload Agent Bundle' | grep -vE '^ *(#|$)')"
+    [[ -n ${step} ]]
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    expected="$(printf '%s\n' \
+        '      - name: Upload Agent Bundle' \
+        "        if: steps.execute.outputs.has_changes == 'true'" \
+        '        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2' \
+        '        with:' \
+        '          if-no-files-found: error' \
+        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          path: ${{ steps.execute.outputs.bundle_file }}' \
+        '          retention-days: 1')"
+    [ "${step}" = "${expected}" ]
+    if grep -n 'overwrite' <<< "${step}"; then
+        return 1
+    fi
 }
 
 @test "both callers pass delivery and pr_auto_merge from detect outputs unchanged" {
@@ -313,6 +369,21 @@ dogfood_value() {
     [[ ${branch} == "${entity}" ]]
     [[ -n ${branch} ]]
     [[ ${branch} == *"ci-loop-agent.yaml"* ]]
+}
+
+@test "both parse target steps name the bundle artifact the same way" {
+    local job script out
+    for job in agent-l2 finalize-l2; do
+        script="$(job_block "${AGENT}" "${job}" | step_block 'Parse Target' | run_script)"
+        [[ -n ${script} ]]
+        out="${BATS_TEST_TMPDIR}/github_output_${job}"
+        : > "${out}"
+        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
+            TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
+            bash -c "${script}"
+        [ "$status" -eq 0 ]
+        grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
+    done
 }
 
 @test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {
@@ -767,6 +838,44 @@ dogfood_value() {
     grep -qF '::warning' <<< "${step}"
 }
 
+@test "finalize-l2 downloads the bundle and passes the push inputs" {
+    local block step expected line
+    block="$(job_block "${AGENT}" finalize-l2)"
+    # Drop the blank and comment lines that step_block carries over from the next step.
+    step="$(step_block 'Download Agent Bundle' <<< "${block}" | grep -vE '^ *(#|$)')"
+    [[ -n ${step} ]]
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    expected="$(printf '%s\n' \
+        '      - name: Download Agent Bundle' \
+        '        continue-on-error: true' \
+        "        if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'" \
+        '        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2' \
+        '        with:' \
+        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          path: ${{ runner.temp }}/loop-agent-bundle')"
+    [ "${step}" = "${expected}" ]
+    # The bundle is fetched after the token is resolved and before Finalize runs.
+    awk '/^      - name: Resolve GitHub Token$/ {r=NR} /^      - name: Download Agent Bundle$/ {d=NR} /^      - name: Finalize$/ {f=NR} END {exit !(r && d && f && r < d && d < f)}' <<< "${block}"
+    step="$(step_block 'Finalize' <<< "${block}")"
+    # shellcheck disable=SC2016
+    for line in \
+        '          agent_branch_prefix: ${{ inputs.agent_branch_prefix }}' \
+        '          agent_bundle_dir: ${{ runner.temp }}/loop-agent-bundle' \
+        '          agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}' \
+        '          agent_edit_denylist: ${{ inputs.agent_edit_denylist }}' \
+        '          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}'; do
+        grep -qxF "${line}" <<< "${step}"
+    done
+    if grep -n 'execute_branch' "${AGENT}"; then
+        return 1
+    fi
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    if grep -nE 'agent_(branch_prefix|bundle_dir|edit_allowlist|edit_denylist|maker_skill_name):' <<< "${step}"; then
+        return 1
+    fi
+}
+
 @test "finalize-l2 has issues write" {
     local block step
     block="$(job_block "${AGENT}" finalize-l2)"
@@ -792,11 +901,16 @@ dogfood_value() {
     [[ -n ${script} ]]
     out="${BATS_TEST_TMPDIR}/github_output"
     : > "${out}"
-    run env GITHUB_OUTPUT="${out}" \
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 \
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref=def456 key=pull_request:7 pr_number=7)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_ref=def456 key=pull_request:7 pr_number=7)" ]
+    # An empty target_json names no bundle, so Download Agent Bundle cannot match one.
+    : > "${out}"
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON='' bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name= from_ref= key= pr_number=)" ]
 }
 
 @test "finalize-l2 runs loop-finalize with no step if" {
@@ -1022,7 +1136,7 @@ triage_block() {
     run triage_block "${wf}" finalize_label_allowlist
     [ "${status}" -eq 0 ]
     [ "${output}" = "$(printf '%s\n' needs-triage bug feature question documentation triage:needs-info triage:ready triage:failed)" ]
-    ! grep -q autofix <<<"${output}"
+    ! grep -q autofix <<< "${output}"
 }
 
 @test "triage caller grants no write gh commands to the agent" {
@@ -1030,29 +1144,29 @@ triage_block() {
     block="$(triage_block "${wf}" agent_tool_allowlist)"
     [ -n "${block}" ]
     for pat in 'gh issue edit' 'gh label create' 'gh issue comment' 'Bash(gh api:*)'; do
-        if grep -qF "${pat}" <<<"${block}"; then
+        if grep -qF "${pat}" <<< "${block}"; then
             echo "agent_tool_allowlist grants ${pat}" >&2
             return 1
         fi
     done
-    grep -qxF 'Bash(gh api -X GET:*)' <<<"${block}"
-    grep -qxF 'Bash(gh issue view:*)' <<<"${block}"
-    grep -qxF 'Bash(gh label list:*)' <<<"${block}"
+    grep -qxF 'Bash(gh api -X GET:*)' <<< "${block}"
+    grep -qxF 'Bash(gh issue view:*)' <<< "${block}"
+    grep -qxF 'Bash(gh label list:*)' <<< "${block}"
 }
 
 @test "triage caller intake admits needs-triage and triage:needs-info labels only" {
     local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" gate
     gate="$(awk '/^    if: >-$/ {f=1; next} f && /^    uses:/ {exit} f {print}' "${wf}")"
     [ -n "${gate}" ]
-    grep -qF "fromJSON('[\"needs-triage\",\"triage:needs-info\"]')" <<<"${gate}"
+    grep -qF "fromJSON('[\"needs-triage\",\"triage:needs-info\"]')" <<< "${gate}"
     [[ ${gate} != *'triage:ready'* ]]
 }
 
 @test "triage maker instructions point at the message directory" {
     local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
     block="$(triage_block "${wf}" agent_maker_instructions)"
-    grep -qF 'message.md' <<<"${block}"
-    grep -qF 'message_labels.json' <<<"${block}"
+    grep -qF 'message.md' <<< "${block}"
+    grep -qF 'message_labels.json' <<< "${block}"
     [[ ${block} != *'platform hook'* ]]
-    ! grep -qF 'Your final message IS the comment' <<<"${block}"
+    ! grep -qF 'Your final message IS the comment' <<< "${block}"
 }
