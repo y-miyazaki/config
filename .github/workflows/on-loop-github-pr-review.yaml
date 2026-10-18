@@ -2,15 +2,16 @@
 # Design: docs/superpowers/specs/2026-10-17-loop-pr-review-design.md
 # Requires repository secret: AGENT_TOKEN (engine API key).
 #
-# Delivery: `delivery: pr_review`. render_review.sh (finalize_script) validates
-# the report and writes review.json to LOOP_MESSAGE_DIR; loop-finalize's
-# Deliver Message then posts one COMMENT review, once, with Meta and footer.
-# Neither the agent nor render_review.sh posts.
+# Delivery: `delivery: pr_review`. The agent writes the report
+# (.loop-review/pr-<n>.json) on the agent branch, which loop-execute pushes.
+# In finalize, render_review.sh (finalize_script) reads the report from
+# origin/<branch>, validates it, and writes review.json to LOOP_MESSAGE_DIR;
+# loop-finalize's Deliver Message then posts one COMMENT review with Meta and
+# footer. Neither the agent nor render_review.sh posts. finalize never merges
+# the agent branch into the base and deletes it after finalize.
 # ROLLOUT: the ci-loop-* `uses:` lines must be pinned to a release whose
 # loop-finalize has Deliver Message and accepts `delivery: pr_review` and
-# `finalize_script` (do not downgrade the pins). It also never pushes or
-# merges the agent branch (.loop-review/pr-<n>.json) for pr_review and
-# deletes it after finalize.
+# `finalize_script` (do not downgrade the pins).
 # - Run workflow_dispatch from the default branch only: the base checkout,
 #   rules, and render_review.sh come from the ref the run starts on.
 name: on-loop-github-pr-review
