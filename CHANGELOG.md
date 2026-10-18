@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
 - (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
 
+## [1.8.127] - 2026-10-18
+
+### Added
+
+- (loop) link code-span paths and SHAs in agent report sections ([2bc150a](https://github.com/y-miyazaki/config/commit/2bc150a0086851da3c517b5af4fbd0d5fd03f746))
+
+### Changed
+
+- align pins to v1.8.127 (9432e0a) ([2462354](https://github.com/y-miyazaki/config/commit/2462354351b4e349f3c19f4cf706ea3561c19838))
+- finalize all pins v1.8.127 (2f15654) ([9432e0a](https://github.com/y-miyazaki/config/commit/9432e0ab25af6cc43a9a709d8f4f10e0eff33c79))
+- pin all to release v1.8.127 (a1684c6) ([2f15654](https://github.com/y-miyazaki/config/commit/2f15654c8edcca0cdc5a97c1f2fed2e8f5cbd859))
+- pin all to v1.8.127 (2bc150a) ([a1684c6](https://github.com/y-miyazaki/config/commit/a1684c64dc3587f7b39ab76de1bd70fd3cb641b5))
+
 ## [1.8.123] - 2026-10-17
 
 ### Fixed
@@ -2510,6 +2523,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.127]: https://github.com/y-miyazaki/config/compare/v1.8.123...2462354351b4e349f3c19f4cf706ea3561c19838
 [1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
