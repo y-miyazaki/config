@@ -59,7 +59,7 @@ function loop_failure_export_outputs {
         echo "failure_stage=${stage}"
         delim="FAILURE_MESSAGE_$(openssl rand -hex 8)"
         echo "failure_message<<${delim}"
-        printf '%s' "${message}"
+        printf '%s\n' "${message}"
         echo "${delim}"
     } >> "${GITHUB_OUTPUT}"
 }

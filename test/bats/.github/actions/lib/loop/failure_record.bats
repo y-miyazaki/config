@@ -8,6 +8,7 @@
 # - loop_failure_record redacts sensitive text before persistence
 # - loop_failure_record truncates long messages to 500 codepoints
 # - loop_failure_export_outputs writes multiline GITHUB_OUTPUT when set
+# - loop_failure_export_outputs ends the message before a delimiter line (GitHub matches the whole line)
 # - loop_failure_recorded is true only for a file with a non-empty failure_stage
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -54,6 +55,19 @@ teardown() {
     long_message="$(printf 'a%.0s' {1..600})"
     loop_failure_record "push" "${long_message}" "${failure_file}"
     [ "$(jq -r '.failure_message | length' "${failure_file}")" -eq 500 ]
+}
+
+@test "loop_failure_export_outputs puts the delimiter on its own line" {
+    local failure_file="${FAILURE_TMP}/failure.json"
+    local delim
+
+    loop_failure_record "push" $'line one\nline two' "${failure_file}"
+    loop_failure_export_outputs "${failure_file}"
+
+    delim="$(sed -n 's/^failure_message<<//p' "${GITHUB_OUTPUT}")"
+    [ -n "${delim}" ]
+    [ "$(grep -cxF "${delim}" "${GITHUB_OUTPUT}")" = "1" ]
+    [ "$(grep -xF -B1 "${delim}" "${GITHUB_OUTPUT}" | head -n1)" = "line two" ]
 }
 
 @test "loop_failure_export_outputs writes multiline GITHUB_OUTPUT when set" {
