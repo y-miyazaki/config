@@ -10,17 +10,17 @@
     },
     "integration:dogfood/loop-delivery": {
       "pending": {
-        "sha": "fa4fb6fbafa2425cba8623e8a8f8efc39aca864a",
-        "pr": 1000,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/1000",
+        "sha": "ac80c55e4299a0ef04c764ed70649816b10a5136",
+        "pr": 1002,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/1002",
         "loop_name": "changelog",
-        "created_at": "2026-10-17T23:46:42Z"
+        "created_at": "2026-10-18T00:58:27Z"
       },
-      "last_run": "2026-10-17T23:46:42Z",
+      "last_run": "2026-10-18T00:58:27Z",
       "outcome": "pr_created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only diff promotes detect release 1.8.125 with all 8 commits, correct links, footer entry, and no released-section loss; report matches apply-mode contract"
+      "last_reject_reason": "Both prior rejections resolved: no invented 1.8.126 section, five commits under Unreleased with correct links and compare_url, and report now follows the apply-mode Overview/Summary/Verification contract"
     }
   }
 }
