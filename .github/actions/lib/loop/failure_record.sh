@@ -6,6 +6,7 @@
 # Usage:
 #   source failure_record.sh
 #   loop_failure_record STAGE MESSAGE FILE
+#   loop_failure_recorded FILE
 #   loop_failure_export_outputs FILE
 #
 # Output:
@@ -47,15 +48,12 @@ function loop_failure_export_outputs {
     if [[ -z ${GITHUB_OUTPUT:-} ]]; then
         return 0
     fi
-    if [[ ! -f ${failure_file} ]]; then
+    if ! loop_failure_recorded "${failure_file}"; then
         return 0
     fi
 
     stage="$(jq -r '.failure_stage // empty' "${failure_file}" 2> /dev/null || true)"
     message="$(jq -r '.failure_message // empty' "${failure_file}" 2> /dev/null || true)"
-    if [[ -z ${stage} ]]; then
-        return 0
-    fi
 
     {
         echo "failure_stage=${stage}"
@@ -97,4 +95,32 @@ function loop_failure_record {
         --arg failure_message "${truncated}" \
         '{failure_stage: $failure_stage, failure_message: $failure_message}' \
         > "${failure_file}"
+}
+
+#######################################
+# loop_failure_recorded: Test whether a failure record with a stage exists
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Failure JSON file path
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the file exists and failure_stage is non-empty
+#   1 otherwise (missing file, malformed JSON, or empty failure_stage)
+#
+#######################################
+function loop_failure_recorded {
+    local failure_file="${1:?failure_file required}"
+    local stage
+
+    if [[ ! -f ${failure_file} ]]; then
+        return 1
+    fi
+    stage="$(jq -r '.failure_stage // empty' "${failure_file}" 2> /dev/null || true)"
+    [[ -n ${stage} ]]
 }
