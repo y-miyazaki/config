@@ -225,9 +225,6 @@ ${marker}
 | ----- | ----- |
 | Bot fix PR | ${bot_fix_pr} |
 | Reason | ${reason_display} |
-| Actor | \`${actor}\` |
-| Commit | ${commit_display} |
-| Branch | ${branch_display} |
 | Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
 EOF
 
@@ -298,6 +295,9 @@ EOF
 
     # Same Meta block and footer as every other loop surface (footer is part of the block)
     loop_meta_reset
+    loop_meta_row "Actor" "\`${actor}\`"
+    loop_meta_row "Branch" "${branch_display}"
+    loop_meta_row "Commit" "${commit_display}"
     loop_meta_row "Attempt" "${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—}"
     printf '\n%s\n' "$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
 }

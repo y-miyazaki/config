@@ -78,12 +78,12 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Field           | Source                                                                                |
 | --------------- | ------------------------------------------------------------------------------------- |
 | Loop name       | `loop_name` input                                                                     |
-| Actor           | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
+| Actor (Meta `actor` row) | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
 | Outcome         | finalize outcome enum                                                                 |
 | Verdict         | `APPROVE` / `REJECT` / empty                                                          |
 | Reason          | execute `reason` (checker reject reason or unchanged reason); `—` when empty          |
 | Bot fix PR      | URL/number from finalize when `pr_create` succeeded                                   |
-| Branch          | `target_json.to.branch` (PR head)                                                     |
+| Branch (Meta `branch` row) | `target_json.to.branch` (PR head)                                                     |
 | Human PR number | `target_json.to.pr_number`                                                            |
 | Failed workflow | `target_json.workflow_run_id` + URL from detect `result` or event env                 |
 | Failing job     | detect `failures[].job_name` when present                                             |
@@ -126,8 +126,6 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 | ---------- | -------------------------------------- |
 | Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
 | Reason     | `{reason}` or —                        |
-| Actor      | `{actor_login}`                        |
-| Branch     | `{to.branch}`                          |
 | Failed run | [{workflow_name} #{run_id}]({run_url}) |
 
 ### Overview
