@@ -6,7 +6,7 @@
 #   AGENT_TOKEN=... AGENT_ENGINE=... PROMPT=... bash lib/run.sh
 #
 # Output:
-#   Agent stdout; usage_json on GITHUB_OUTPUT when set
+#   Agent stdout; usage_json and message_json on GITHUB_OUTPUT when set
 #
 # Design Rules:
 #   - Delegates CLI execution to loop-execute/lib/agent.sh
@@ -19,15 +19,16 @@
 #
 # Dependencies:
 #   - bash, jq, openssl, npx
+#   - lib/loop/loop_message.sh (loop_message_to_json)
 #   - loop-execute lib (agent.sh, usage.sh) via _init.sh
 #
 # Optional environment:
 #   AGENT_ENGINE, AGENT_MAKER_EFFORT, AGENT_MAKER_MAX_TURNS, AGENT_MAKER_MODEL,
 #   AGENT_TOKEN, AGENT_TOOL_ALLOWLIST, GITHUB_TOKEN, OUTPUT_FILE, PROMPT,
 #   WORKING_DIRECTORY, GITHUB_OUTPUT
-#   COMMENT_HANDOFF_KEY, COMMENT_MARKER, REPOSITORY, RUN_URL: when the handoff
-#   key names an Issue (entity:issue:<n>), the captured agent text (OUTPUT_FILE) is posted as one Issue
-#   comment with Meta and the footer, right after the usage is measured
+#   LOOP_MESSAGE_DIR: directory the agent writes message.md / message_labels.json
+#   into (claude only); it is collected into the message_json output and delivered
+#   later by loop-finalize. This action never posts to GitHub.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -42,6 +43,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Load initialization library
 # shellcheck source=./_init.sh disable=SC1091
 source "${SCRIPT_DIR}/_init.sh"
+# shellcheck source=../../lib/loop/loop_message.sh disable=SC1091
+source "${LIB_DIR}/../../lib/loop/loop_message.sh"
 
 #######################################
 # Global variables
@@ -50,9 +53,47 @@ source "${SCRIPT_DIR}/_init.sh"
 AGENT_ENGINE="${AGENT_ENGINE-}"
 AGENT_TOKEN="${AGENT_TOKEN-}"
 GITHUB_TOKEN="${GITHUB_TOKEN-}"
+LOOP_MESSAGE_DIR="${LOOP_MESSAGE_DIR:-}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
 PROMPT="${PROMPT-}"
 WORKING_DIRECTORY="${WORKING_DIRECTORY:-.}"
+
+#######################################
+# emit_message_json_output: Write the agent's message files to GITHUB_OUTPUT as message_json
+#
+# Globals:
+#   GITHUB_OUTPUT - GitHub Actions output file
+#   LOOP_MESSAGE_DIR - Directory holding message.md / message_labels.json
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   message_json key on GITHUB_OUTPUT (empty when nothing is deliverable)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function emit_message_json_output {
+    local message_json delim
+
+    [[ -n ${GITHUB_OUTPUT:-} ]] || return 0
+    message_json=""
+    if [[ -n ${LOOP_MESSAGE_DIR:-} ]]; then
+        message_json="$(loop_message_to_json "${LOOP_MESSAGE_DIR}")"
+    fi
+    if [[ -n ${message_json} ]]; then
+        delim="MESSAGE_JSON_$(openssl rand -hex 8)"
+        {
+            echo "message_json<<${delim}"
+            echo "${message_json}"
+            echo "${delim}"
+        } >> "${GITHUB_OUTPUT}"
+    else
+        echo "message_json=" >> "${GITHUB_OUTPUT}"
+    fi
+}
 
 #######################################
 # emit_usage_json_output: Write measured usage to GITHUB_OUTPUT
@@ -89,62 +130,31 @@ function emit_usage_json_output {
 }
 
 #######################################
-# post_loop_comment: Post the captured agent text as one Issue comment with Meta and footer
-#
-# Description:
-#   The agent ends its run with the comment text instead of posting it. Usage is
-#   measured here, in the same stage, so the comment goes out once, complete.
+# prepare_loop_message_dir: Create the message directory and point the prompt at it
 #
 # Globals:
-#   COMMENT_HANDOFF_KEY - Entity handoff key naming the Issue to comment on (empty = do nothing)
-#   COMMENT_MARKER - Skill marker placed first in the comment
-#   OUTPUT_FILE - File holding the agent's stdout
-#   AGENT_ENGINE, REPOSITORY, RUN_URL, GITHUB_TOKEN (read)
+#   LOOP_MESSAGE_DIR - Directory the agent writes its message files into (read)
+#   PROMPT - Prompt text (write)
 #
 # Arguments:
-#   $1 - Engine CLI exit code (0 = unchanged, else error)
+#   None
 #
 # Outputs:
-#   Notice or warning annotation on stdout
+#   None
 #
 # Returns:
-#   0 always (the comment is best-effort)
+#   0 on success
 #
 #######################################
-function post_loop_comment {
-    local rc="${1:-0}"
-    local outcome="unchanged"
-    local issue_number comment_file
-
-    if [[ -z ${COMMENT_HANDOFF_KEY:-} || -z ${OUTPUT_FILE:-} ]]; then
-        return 0
-    fi
-    [[ ${rc} -ne 0 ]] && outcome="error"
-
-    # shellcheck source=../../lib/loop/created_by.sh disable=SC1091
-    source "${LIB_DIR}/../../lib/loop/created_by.sh"
-    # shellcheck source=../../lib/loop/loop_meta.sh disable=SC1091
-    source "${LIB_DIR}/../../lib/loop/loop_meta.sh"
-    # shellcheck source=../../lib/loop/entity_meta.sh disable=SC1091
-    source "${LIB_DIR}/../../lib/loop/entity_meta.sh"
-
-    issue_number="$(entity_issue_number "${COMMENT_HANDOFF_KEY}")"
-    if [[ -z ${issue_number} ]]; then
-        return 0
-    fi
-
-    # run_agent_capture prefixes the agent's text with the platform's own
-    # "Agent summary:" / "Agent usage:" lines (usage.sh); they are not the agent's words.
-    comment_file="$(mktemp)"
-    grep -vE '^Agent (summary|usage): ' "${OUTPUT_FILE}" > "${comment_file}" || true
-
-    GH_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}" post_entity_comment "${issue_number}" "${COMMENT_MARKER:-}" \
-        "${comment_file}" "${outcome}" "${AGENT_ENGINE:-}" "$(build_usage_json)" "${RUN_URL:-}"
-    rm -f "${comment_file}"
+function prepare_loop_message_dir {
+    [[ -n ${LOOP_MESSAGE_DIR:-} ]] || return 0
+    mkdir -p "${LOOP_MESSAGE_DIR}"
+    PROMPT="${PROMPT}"$'\n\n'"Loop message directory: ${LOOP_MESSAGE_DIR}"
+    export PROMPT
 }
 
 #######################################
-# run_loop_agent_once: Run one engine CLI session and emit usage_json
+# run_loop_agent_once: Run one engine CLI session and emit usage_json and message_json
 #
 # Description:
 #   Maps the caller's maker settings onto the role variables run_agent reads
@@ -152,8 +162,9 @@ function post_loop_comment {
 #   silently fall back to the engine CLI defaults.
 #
 # Globals:
-#   AGENT_ENGINE, AGENT_TOKEN, GITHUB_TOKEN, OUTPUT_FILE, PROMPT,
+#   AGENT_ENGINE, AGENT_TOKEN, GITHUB_TOKEN, LOOP_MESSAGE_DIR, OUTPUT_FILE,
 #   WORKING_DIRECTORY, GITHUB_OUTPUT (read)
+#   PROMPT (read, write: the message directory is appended)
 #   AGENT_MAKER_EFFORT, AGENT_MAKER_MAX_TURNS, AGENT_MAKER_MODEL (read)
 #   EFFORT, MAX_TURNS, MODEL (write)
 #
@@ -161,7 +172,7 @@ function post_loop_comment {
 #   None
 #
 # Outputs:
-#   Agent stdout (summarized for Cursor stream-json); usage_json on GITHUB_OUTPUT
+#   Agent stdout (summarized for Cursor stream-json); usage_json and message_json on GITHUB_OUTPUT
 #
 # Returns:
 #   Engine CLI exit code
@@ -175,6 +186,7 @@ function run_loop_agent_once {
     MODEL="${AGENT_MAKER_MODEL:-}"
     export EFFORT MAX_TURNS MODEL
 
+    prepare_loop_message_dir
     reset_usage_totals
     if [[ -n ${OUTPUT_FILE} ]]; then
         run_agent_capture "${OUTPUT_FILE}" "true" || rc=$?
@@ -182,7 +194,7 @@ function run_loop_agent_once {
         run_agent "true" || rc=$?
     fi
     emit_usage_json_output
-    post_loop_comment "${rc}"
+    emit_message_json_output
     return "${rc}"
 }
 

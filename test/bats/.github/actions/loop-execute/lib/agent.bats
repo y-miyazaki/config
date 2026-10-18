@@ -279,6 +279,26 @@ STUB
     grep -q -- "--add-dir ${BATS_TEST_TMPDIR}/status" "${args_file}"
 }
 
+@test "run_agent claude adds LOOP_MESSAGE_DIR with --add-dir" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-message-dir-args.txt"
+    _stub_claude_engine "${args_file}"
+    LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/loop-message"
+    run_agent "true" > /dev/null
+    grep -q -- "--add-dir ${BATS_TEST_TMPDIR}/loop-message" "${args_file}"
+}
+
+@test "run_agent claude omits the message add-dir when LOOP_MESSAGE_DIR is empty" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-no-message-dir-args.txt"
+    _stub_claude_engine "${args_file}"
+    LOOP_MESSAGE_DIR=""
+    run_agent "true" > /dev/null
+    run ! grep -q -- "--add-dir" "${args_file}"
+}
+
 @test "run_agent claude omits add-dir when no detect JSON was materialized" {
     local args_file
 

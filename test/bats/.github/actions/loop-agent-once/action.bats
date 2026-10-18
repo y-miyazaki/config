@@ -8,7 +8,8 @@
 #   agent_tool_allowlist, agent_maker_effort, agent_maker_max_turns,
 #   agent_maker_model) in alphabetical order
 # - Install CLI passes AGENT_CLI_VERSION / AGENT_ENGINE
-# - Run CLI Agent passes AGENT_MAKER_* (run.sh maps them onto the role vars) and
+# - action exposes message_json from the run step
+# - Run CLI Agent passes LOOP_MESSAGE_DIR and AGENT_MAKER_* (run.sh maps them onto the role vars) and
 #   never sets the role vars EFFORT / MAX_TURNS / MODEL directly
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -26,8 +27,8 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-agent-once/action.yml"
     local expected
     expected="$(printf '%s\n' \
         agent_cli_version agent_engine agent_maker_effort agent_maker_max_turns \
-        agent_maker_model agent_token agent_tool_allowlist comment_handoff_key \
-        comment_marker github_token node_version output_file prompt_text uv_version working_directory)"
+        agent_maker_model agent_token agent_tool_allowlist \
+        github_token node_version output_file prompt_text uv_version working_directory)"
     run action_yml_input_names "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [ "${output}" = "${expected}" ]
@@ -51,14 +52,17 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-agent-once/action.yml"
         'AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}' \
         'AGENT_TOKEN: ${{ inputs.agent_token }}' \
         'AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}' \
-        'COMMENT_HANDOFF_KEY: ${{ inputs.comment_handoff_key }}' \
-        'COMMENT_MARKER: ${{ inputs.comment_marker }}' \
         'GITHUB_TOKEN: ${{ inputs.github_token }}' \
+        'LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message' \
         'OUTPUT_FILE: ${{ inputs.output_file }}' \
         'PROMPT: ${{ inputs.prompt_text }}' \
-        'REPOSITORY: ${{ github.repository }}' \
-        'RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
         'WORKING_DIRECTORY: ${{ inputs.working_directory }}')"
     run action_yml_step_env "${ACTION_YML}" "Run CLI Agent"
     [ "${output}" = "${expected}" ]
+}
+
+@test "action exposes message_json from the run step" {
+    run grep -A2 '^  message_json:' "${ACTION_YML}"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *'value: ${{ steps.run.outputs.message_json }}'* ]]
 }

@@ -12,9 +12,11 @@
 #   run_agent and run_agent_capture (asserted on the stubbed claude CLI args);
 #   the legacy MODEL / EFFORT / MAX_TURNS env values do not reach the agent
 # - run_loop_agent_once reads AGENT_ENGINE, not the legacy ENGINE name
-# - post_loop_comment posts the captured agent text with Meta and the footer as one Issue comment
-# - post_loop_comment drops the platform's own Agent summary / Agent usage lines from the captured text
-# - post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key
+# - run_loop_agent_once appends the message directory to the prompt and creates it
+# - run_loop_agent_once emits message_json from message.md and message_labels.json
+# - run_loop_agent_once emits an empty message_json when message.md is missing or labels are malformed
+# - run_loop_agent_once keeps a multi-line body intact through GITHUB_OUTPUT
+# - run_loop_agent_once never calls gh (delivery moved to loop-finalize)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -47,7 +49,7 @@ STUB
     chmod +x "${bindir}/claude"
     PATH="${bindir}:${PATH}"
     HOME="${BATS_TEST_TMPDIR}/home"
-    unset GITHUB_WORKSPACE CLAUDE_CONFIG_DIR AGENT_TOOL_ALLOWLIST DETECT_JSON_FILE
+    unset GITHUB_WORKSPACE CLAUDE_CONFIG_DIR AGENT_TOOL_ALLOWLIST DETECT_JSON_FILE LOOP_MESSAGE_DIR
     AGENT_ENGINE="claude"
     AGENT_TOKEN="dummy-token"
     PROMPT="hello"
@@ -152,63 +154,86 @@ EOF
     [ "$(cat "${CLAUDE_ARGS_FILE}")" = "${CLAUDE_BASE_ARGS}" ]
 }
 
-# _stub_gh_comment: gh stub recording args and --body-file content
-_stub_gh_comment() {
+# _stub_claude_writing_message: claude stub that records args and writes message files
+#
+# Arguments:
+#   $1 - message.md content (printf format)
+#   $2 - message_labels.json content (empty = no file)
+_stub_claude_writing_message() {
+    _stub_claude_cli
+    printf '%s' "$1" > "${BATS_TEST_TMPDIR}/stub-message.md"
+    printf '%s' "${2:-}" > "${BATS_TEST_TMPDIR}/stub-labels.json"
+    cat > "${BATS_TEST_TMPDIR}/bin-claude/claude" << STUB
+#!/bin/bash
+printf '%s\n' "\$*" > "${CLAUDE_ARGS_FILE}"
+cp "${BATS_TEST_TMPDIR}/stub-message.md" "\${LOOP_MESSAGE_DIR}/message.md"
+[[ -s "${BATS_TEST_TMPDIR}/stub-labels.json" ]] && cp "${BATS_TEST_TMPDIR}/stub-labels.json" "\${LOOP_MESSAGE_DIR}/message_labels.json"
+exit 0
+STUB
+    export LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/loop-message"
+    OUTPUT_FILE=""
+}
+
+@test "run_loop_agent_once appends the message directory to the prompt and creates it" {
+    _stub_claude_cli
+    LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/loop-message"
+    OUTPUT_FILE=""
+    run run_loop_agent_once
+    [ "$status" -eq 0 ]
+    [ -d "${LOOP_MESSAGE_DIR}" ]
+    grep -qF -- "Loop message directory: ${LOOP_MESSAGE_DIR} --output-format" "${CLAUDE_ARGS_FILE}"
+    grep -qxF -- "-p hello" "${CLAUDE_ARGS_FILE}"
+}
+
+@test "run_loop_agent_once emits an empty message_json when message.md is missing or labels are malformed" {
+    _stub_claude_cli
+    LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/loop-message"
+    OUTPUT_FILE=""
+    run run_loop_agent_once
+    [ "$status" -eq 0 ]
+    grep -q '^message_json=$' "${GITHUB_OUTPUT}"
+
+    : > "${GITHUB_OUTPUT}"
+    _stub_claude_writing_message $'body\n' '{"add": "not-an-array"}'
+    run run_loop_agent_once
+    [ "$status" -eq 0 ]
+    grep -q '^message_json=$' "${GITHUB_OUTPUT}"
+}
+
+@test "run_loop_agent_once emits message_json from message.md and message_labels.json" {
+    local delim value
+    _stub_claude_writing_message $'Triage: docs.\n' '{"add":["documentation"]}'
+    run run_loop_agent_once
+    [ "$status" -eq 0 ]
+    delim="$(sed -n 's/^message_json<<//p' "${GITHUB_OUTPUT}")"
+    [[ ${delim} == MESSAGE_JSON_* ]]
+    value="$(awk -v d="${delim}" '$0==d{f=0} f{print} $0=="message_json<<" d{f=1}' "${GITHUB_OUTPUT}")"
+    [ "$(jq -r '.body' <<< "${value}")" = "Triage: docs." ]
+    [ "$(jq -c '.labels' <<< "${value}")" = '{"add":["documentation"]}' ]
+}
+
+@test "run_loop_agent_once keeps a multi-line body intact through GITHUB_OUTPUT" {
+    local delim value body
+    body=$'line one\n\n```\ncode "quoted" \\ back\n```\nMESSAGE_JSON_ not a delimiter\n'
+    _stub_claude_writing_message "${body}" ''
+    run run_loop_agent_once
+    [ "$status" -eq 0 ]
+    delim="$(sed -n 's/^message_json<<//p' "${GITHUB_OUTPUT}")"
+    # JSON encoding keeps the value on one line, so exactly one delimiter pair exists
+    [ "$(grep -c "^${delim}$" "${GITHUB_OUTPUT}")" -eq 1 ]
+    value="$(awk -v d="${delim}" '$0==d{f=0} f{print} $0=="message_json<<" d{f=1}' "${GITHUB_OUTPUT}")"
+    [ "$(jq -j '.body' <<< "${value}")" = "${body%$'\n'}" ] || [ "$(jq -j '.body' <<< "${value}"; echo x)" = "${body}x" ]
+}
+
+@test "run_loop_agent_once never calls gh" {
     local bindir="${BATS_TEST_TMPDIR}/bin-gh"
     mkdir -p "${bindir}"
-    cat > "${bindir}/gh" << 'STUB'
-#!/bin/bash
-printf '%s\n' "$*" >> "${BATS_TEST_TMPDIR}/gh.log"
-while [[ $# -gt 0 ]]; do
-    [[ $1 == --body-file ]] && cat "$2" >> "${BATS_TEST_TMPDIR}/gh.body"
-    shift
-done
-STUB
+    printf '#!/bin/bash\necho called >> "%s/gh.log"\n' "${BATS_TEST_TMPDIR}" > "${bindir}/gh"
     chmod +x "${bindir}/gh"
+    _stub_claude_writing_message $'text\n' ''
     PATH="${bindir}:${PATH}"
-}
-
-@test "post_loop_comment posts the captured agent text with Meta and the footer as one Issue comment" {
-    _stub_gh_comment
-    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
-    printf 'Triage: documentation.\n' > "${OUTPUT_FILE}"
-    COMMENT_HANDOFF_KEY=entity:issue:1014 COMMENT_MARKER="<!-- t:v1 -->" RUN_URL="https://x/run/1" REPOSITORY=o/r AGENT_ENGINE=claude
-    run post_loop_comment 0
-    [ "$status" -eq 0 ]
-    [ "$(wc -l < "${BATS_TEST_TMPDIR}/gh.log")" -eq 1 ]
-    [[ "$(cat "${BATS_TEST_TMPDIR}/gh.log")" == "issue comment 1014 --repo o/r --body-file "* ]]
-    body="$(cat "${BATS_TEST_TMPDIR}/gh.body")"
-    [[ ${body} == "<!-- t:v1 -->"$'\n'"Triage: documentation."* ]]
-    [[ ${body} == *"| outcome | unchanged |"* ]]
-    [[ ${body} == *"Written by Loop Engineering (LE)"* ]]
-}
-
-@test "post_loop_comment drops the platform's own Agent summary and Agent usage lines" {
-    _stub_gh_comment
-    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
-    printf '%s\n' \
-        'Agent summary: role=agent model=claude-sonnet-5 tools=13 turns=15 duration_ms=36360' \
-        'Agent usage: input=20 output=2823 cache_read=412973 cache_write=50663 cost_usd=0.237522' \
-        '' 'Triage: documentation.' 'Agent usage is shown in Meta.' > "${OUTPUT_FILE}"
-    COMMENT_HANDOFF_KEY=entity:issue:1014 COMMENT_MARKER="<!-- t:v1 -->" RUN_URL="https://x/run/1" REPOSITORY=o/r AGENT_ENGINE=claude
-    run post_loop_comment 0
-    [ "$status" -eq 0 ]
-    body="$(cat "${BATS_TEST_TMPDIR}/gh.body")"
-    [[ ${body} == "<!-- t:v1 -->"$'\n'"Triage: documentation."* ]]
-    [[ ${body} != *"Agent summary:"* ]]
-    [[ ${body} != *"Agent usage: input="* ]]
-    [[ ${body} == *"Agent usage is shown in Meta."* ]]
-}
-
-@test "post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key" {
-    _stub_gh_comment
-    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
-    printf 'text\n' > "${OUTPUT_FILE}"
-    COMMENT_HANDOFF_KEY=""
-    run post_loop_comment 0
-    [ "$status" -eq 0 ]
-    COMMENT_HANDOFF_KEY="entity:pr:7"
-    run post_loop_comment 0
+    AGENT_ENGINE=claude
+    run run_loop_agent_once
     [ "$status" -eq 0 ]
     [ ! -e "${BATS_TEST_TMPDIR}/gh.log" ]
 }
