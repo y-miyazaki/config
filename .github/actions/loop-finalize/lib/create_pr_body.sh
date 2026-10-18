@@ -16,7 +16,7 @@
 # Design Rules:
 #   - Default empty JSON with quoted "{}" — never ${VAR:-{}} (bash closes early)
 #   - Invalid JSON falls back to {}
-#   - Detect JSON is slimmed to failures[] before render (commits[] may be 100s of KB)
+#   - Detect JSON is slimmed to failures[] and commit_shas[] before render (commits[] may be 100s of KB)
 #   - Delegates composition to render_pr_body.sh
 #
 # Output:
@@ -155,7 +155,7 @@ function read_json_payload {
 }
 
 #######################################
-# slim_detect_json_for_pr_body: Keep only failures[] for PR rendering
+# slim_detect_json_for_pr_body: Keep failures[] and commit SHAs for PR rendering
 #
 # Globals:
 #   None
@@ -164,7 +164,7 @@ function read_json_payload {
 #   $1 - Detect result JSON object string
 #
 # Outputs:
-#   Small JSON with failures array to stdout
+#   Small JSON with failures[] and commit_shas[] to stdout
 #
 # Returns:
 #   0 on success
@@ -177,7 +177,13 @@ function slim_detect_json_for_pr_body {
         printf '%s' '{}'
         return 0
     fi
-    jq -c '{failures: (.failures // [])}' <<< "${detect_json}"
+    # commit_shas keeps only full 40-hex SHAs (a few KB) so linkify_agent_text can link
+    # SHAs the agent cites without carrying commits[] bulk into the render.
+    jq -c '{
+        failures: (.failures // []),
+        commit_shas: ([(.commits // [])[]?.sha, (.releases // [])[]?.tag_sha, (.releases // [])[]?.commit_shas[]?]
+            | map(select(type == "string" and test("^[0-9a-f]{40}$"))) | unique)
+    }' <<< "${detect_json}"
 }
 
 #######################################
