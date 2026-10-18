@@ -28,6 +28,14 @@ inputs:
     default: ""
     description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
     required: false
+  comment_handoff_key:
+    default: ""
+    description: "Entity handoff key (entity:issue:<n>) to comment on. When it names an Issue, the agent's stdout (output_file) is posted as one Issue comment with Meta and the footer. Empty = post nothing"
+    required: false
+  comment_marker:
+    default: ""
+    description: "Marker placed first in the Issue comment (for example <!-- github-issue-triage:v1 -->)"
+    required: false
   github_token:
     description: "Resolved GitHub token for gh CLI and GitHub API side effects"
     required: true
@@ -88,9 +96,13 @@ runs:
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
         AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        COMMENT_HANDOFF_KEY: ${{ inputs.comment_handoff_key }}
+        COMMENT_MARKER: ${{ inputs.comment_marker }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         OUTPUT_FILE: ${{ inputs.output_file }}
         PROMPT: ${{ inputs.prompt_text }}
+        REPOSITORY: ${{ github.repository }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         WORKING_DIRECTORY: ${{ inputs.working_directory }}
       working-directory: ${{ inputs.working_directory }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

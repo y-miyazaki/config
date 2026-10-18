@@ -115,7 +115,9 @@ jobs:
       agent_maker_effort: medium
       agent_maker_instructions: |
         Triage the Issue per the github-issue-triage skill.
-        Apply allowlisted labels and post analysis/questions as Issue comments.
+        Apply allowlisted labels. The workflow posts the Issue comment itself (with its Meta block
+        and footer): do NOT post one. End your session with the comment markdown — analysis and any
+        questions — as your only output.
         Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
@@ -127,7 +129,6 @@ jobs:
         Bash(gh api:*)
         Bash(gh issue view:*)
         Bash(gh issue edit:*)
-        Bash(gh issue comment:*)
         Bash(gh label list:*)
         Bash(gh label create:*)
       budget_max_runs_per_day: 20

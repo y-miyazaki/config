@@ -55,7 +55,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 3. Load allowlist from `scripts/labels.json`. Ensure missing allowlisted labels exist before apply (`gh label create` only for catalog entries).
 4. Classify when confident; if low confidence → keep/apply `needs-triage` only and ask clarifying questions on the Issue (**no question self-censorship** — see [category-prompt-rules.md](references/category-prompt-rules.md)).
 5. Apply FSM transitions via `gh issue edit` / `gh api` using [category-fsm.md](references/category-fsm.md) events (`opened`, `mark_needs_info`, `mark_ready`, `human_retriage`).
-6. Post Issue comments via `scripts/issue_comment.sh` per [category-prompt-rules.md](references/category-prompt-rules.md): `create` on each FSM transition or re-triage; `correct` only for minor edits to the latest marked bot comment.
+6. Post Issue comments via `scripts/issue_comment.sh` per [category-prompt-rules.md](references/category-prompt-rules.md): `create` on each FSM transition or re-triage; `correct` only for minor edits to the latest marked bot comment. When the caller says it posts the comment itself, post nothing: end the session with the comment markdown as your only output (one comment per run).
 7. When marking `triage:ready`, comment that a human may add `autofix` (or future assign-command) to request a draft PR — do not invoke autofix.
 8. Emit session report; do not modify repository files when `agent_edit_allowed: false`.
 

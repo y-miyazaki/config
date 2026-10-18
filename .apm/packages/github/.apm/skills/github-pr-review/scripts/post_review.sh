@@ -41,6 +41,7 @@
 #   TARGET_JSON           Loop target JSON; PR number from .entity.handoff_key // .key (entity:pr:<n>)
 #   GITHUB_REPOSITORY     owner/repo
 #   GH_TOKEN / GITHUB_TOKEN Token for gh calls
+#   LOOP_META_BLOCK       Optional markdown the caller wants at the end of the review body (posted in the same review)
 #   REPORT_FILE           Report path to read instead of git fetch + git show (test seam)
 #   PR_DIFF_FILE          Unified diff to read instead of gh pr diff (test seam)
 #   PR_BASE_SHA / PR_HEAD_SHA Trusted PR SHAs instead of gh pr view (test seam; both required)
@@ -387,11 +388,12 @@ function evidence_anchor {
 }
 
 #######################################
-# post_payload: POST a review payload with gh api
+# post_payload: POST a review payload with gh api (LOOP_META_BLOCK appended to the body when set)
 #
 # Globals:
 #   GITHUB_REPOSITORY
 #   GH_TOKEN / GITHUB_TOKEN
+#   LOOP_META_BLOCK - Optional markdown appended to the review body
 #
 # Arguments:
 #   $1 - PR number
@@ -409,8 +411,17 @@ function evidence_anchor {
 #
 #######################################
 function post_payload {
+    local payload="$2" with_meta
+    if [[ -n ${LOOP_META_BLOCK:-} ]]; then
+        with_meta="$(mktemp)"
+        jq --arg meta "${LOOP_META_BLOCK}" '.body += "\n\n" + $meta' "${payload}" > "${with_meta}"
+        payload="${with_meta}"
+    fi
     GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --method POST "repos/${GITHUB_REPOSITORY}/pulls/$1/reviews" \
-        --input "$2" > /dev/null 2> "$3"
+        --input "${payload}" > /dev/null 2> "$3"
+    local rc=$?
+    [[ -n ${with_meta:-} ]] && rm -f "${with_meta}"
+    return "${rc}"
 }
 
 #######################################

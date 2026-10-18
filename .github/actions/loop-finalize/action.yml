@@ -188,17 +188,29 @@ runs:
       if: inputs.finalize_hook_script != ''
       shell: bash
       env:
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
         EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
         FINALIZE_HOOK_SCRIPT: ${{ inputs.finalize_hook_script }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         STATE_FILE: ${{ steps.state_path.outputs.state_file }}
         TARGET_JSON: ${{ inputs.target_json }}
+        USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
+        # The hook posts the loop's message itself; hand it the Meta block and footer so
+        # they go out in that one message instead of a second edit afterwards.
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/created_by.sh"
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/loop_meta.sh"
+        loop_meta_reset
+        LOOP_META_BLOCK="$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${RUN_URL}")"
+        export LOOP_META_BLOCK
         bash "${FINALIZE_HOOK_SCRIPT}"
 
     - name: Push to Target Branch

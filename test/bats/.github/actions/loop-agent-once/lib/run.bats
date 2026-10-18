@@ -12,6 +12,8 @@
 #   run_agent and run_agent_capture (asserted on the stubbed claude CLI args);
 #   the legacy MODEL / EFFORT / MAX_TURNS env values do not reach the agent
 # - run_loop_agent_once reads AGENT_ENGINE, not the legacy ENGINE name
+# - post_loop_comment posts the captured agent text with Meta and the footer as one Issue comment
+# - post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -147,4 +149,48 @@ EOF
     run run_loop_agent_once
     [ "$status" -eq 0 ]
     [ "$(cat "${CLAUDE_ARGS_FILE}")" = "${CLAUDE_BASE_ARGS}" ]
+}
+
+# _stub_gh_comment: gh stub recording args and --body-file content
+_stub_gh_comment() {
+    local bindir="${BATS_TEST_TMPDIR}/bin-gh"
+    mkdir -p "${bindir}"
+    cat > "${bindir}/gh" << 'STUB'
+#!/bin/bash
+printf '%s\n' "$*" >> "${BATS_TEST_TMPDIR}/gh.log"
+while [[ $# -gt 0 ]]; do
+    [[ $1 == --body-file ]] && cat "$2" >> "${BATS_TEST_TMPDIR}/gh.body"
+    shift
+done
+STUB
+    chmod +x "${bindir}/gh"
+    PATH="${bindir}:${PATH}"
+}
+
+@test "post_loop_comment posts the captured agent text with Meta and the footer as one Issue comment" {
+    _stub_gh_comment
+    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
+    printf 'Triage: documentation.\n' > "${OUTPUT_FILE}"
+    COMMENT_HANDOFF_KEY=entity:issue:1014 COMMENT_MARKER="<!-- t:v1 -->" RUN_URL="https://x/run/1" REPOSITORY=o/r AGENT_ENGINE=claude
+    run post_loop_comment 0
+    [ "$status" -eq 0 ]
+    [ "$(wc -l < "${BATS_TEST_TMPDIR}/gh.log")" -eq 1 ]
+    [[ "$(cat "${BATS_TEST_TMPDIR}/gh.log")" == "issue comment 1014 --repo o/r --body-file "* ]]
+    body="$(cat "${BATS_TEST_TMPDIR}/gh.body")"
+    [[ ${body} == "<!-- t:v1 -->"$'\n'"Triage: documentation."* ]]
+    [[ ${body} == *"| outcome | unchanged |"* ]]
+    [[ ${body} == *"Written by Loop Engineering (LE)"* ]]
+}
+
+@test "post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key" {
+    _stub_gh_comment
+    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
+    printf 'text\n' > "${OUTPUT_FILE}"
+    COMMENT_HANDOFF_KEY=""
+    run post_loop_comment 0
+    [ "$status" -eq 0 ]
+    COMMENT_HANDOFF_KEY="entity:pr:7"
+    run post_loop_comment 0
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/gh.log" ]
 }

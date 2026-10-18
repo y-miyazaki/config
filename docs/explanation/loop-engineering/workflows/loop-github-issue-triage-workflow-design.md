@@ -18,6 +18,8 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 
 On Issue / issue_comment events, classify the Issue when confident, apply allowlisted triage labels, and post analysis or clarifying questions as comments (L1). Does not open PRs.
 
+The agent applies labels and ends its run with the comment text; it does not post. `loop-agent-once` measures the usage in that same stage and posts the text once as one Issue comment with the Meta block and footer (`comment_handoff_key`, `comment_marker`). No later step edits the posted comment.
+
 ### Supported use cases
 
 - `issues` opened/reopened/labeled → entity detect + L1 agent (label removal does not re-trigger triage)

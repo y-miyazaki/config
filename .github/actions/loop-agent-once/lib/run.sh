@@ -25,6 +25,9 @@
 #   AGENT_ENGINE, AGENT_MAKER_EFFORT, AGENT_MAKER_MAX_TURNS, AGENT_MAKER_MODEL,
 #   AGENT_TOKEN, AGENT_TOOL_ALLOWLIST, GITHUB_TOKEN, OUTPUT_FILE, PROMPT,
 #   WORKING_DIRECTORY, GITHUB_OUTPUT
+#   COMMENT_HANDOFF_KEY, COMMENT_MARKER, REPOSITORY, RUN_URL: when the handoff
+#   key names an Issue (entity:issue:<n>), the captured agent text (OUTPUT_FILE) is posted as one Issue
+#   comment with Meta and the footer, right after the usage is measured
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -86,6 +89,55 @@ function emit_usage_json_output {
 }
 
 #######################################
+# post_loop_comment: Post the captured agent text as one Issue comment with Meta and footer
+#
+# Description:
+#   The agent ends its run with the comment text instead of posting it. Usage is
+#   measured here, in the same stage, so the comment goes out once, complete.
+#
+# Globals:
+#   COMMENT_HANDOFF_KEY - Entity handoff key naming the Issue to comment on (empty = do nothing)
+#   COMMENT_MARKER - Skill marker placed first in the comment
+#   OUTPUT_FILE - File holding the agent's stdout
+#   AGENT_ENGINE, REPOSITORY, RUN_URL, GITHUB_TOKEN (read)
+#
+# Arguments:
+#   $1 - Engine CLI exit code (0 = unchanged, else error)
+#
+# Outputs:
+#   Notice or warning annotation on stdout
+#
+# Returns:
+#   0 always (the comment is best-effort)
+#
+#######################################
+function post_loop_comment {
+    local rc="${1:-0}"
+    local outcome="unchanged"
+    local issue_number
+
+    if [[ -z ${COMMENT_HANDOFF_KEY:-} || -z ${OUTPUT_FILE:-} ]]; then
+        return 0
+    fi
+    [[ ${rc} -ne 0 ]] && outcome="error"
+
+    # shellcheck source=../../lib/loop/created_by.sh disable=SC1091
+    source "${LIB_DIR}/../../lib/loop/created_by.sh"
+    # shellcheck source=../../lib/loop/loop_meta.sh disable=SC1091
+    source "${LIB_DIR}/../../lib/loop/loop_meta.sh"
+    # shellcheck source=../../lib/loop/entity_meta.sh disable=SC1091
+    source "${LIB_DIR}/../../lib/loop/entity_meta.sh"
+
+    issue_number="$(entity_issue_number "${COMMENT_HANDOFF_KEY}")"
+    if [[ -z ${issue_number} ]]; then
+        return 0
+    fi
+
+    GH_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}" post_entity_comment "${issue_number}" "${COMMENT_MARKER:-}" \
+        "${OUTPUT_FILE}" "${outcome}" "${AGENT_ENGINE:-}" "$(build_usage_json)" "${RUN_URL:-}"
+}
+
+#######################################
 # run_loop_agent_once: Run one engine CLI session and emit usage_json
 #
 # Description:
@@ -124,6 +176,7 @@ function run_loop_agent_once {
         run_agent "true" || rc=$?
     fi
     emit_usage_json_output
+    post_loop_comment "${rc}"
     return "${rc}"
 }
 

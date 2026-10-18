@@ -5,6 +5,8 @@
 # Use cases:
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
+# - agent-l1 gives Run Agent Once the entity handoff key and output file so the comment is posted once, with Meta and the footer
+# - No workflow step edits a message a loop already posted (no Append Loop Meta step)
 # - Callers pass the detect outputs delivery and pr_auto_merge straight through (no auto_merge or finalize_enabled expression)
 # - ci-loop-agent derives the handoff key, checkout ref and base from target_json and fails closed when it is empty
 # - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression
@@ -194,6 +196,20 @@ dogfood_value() {
                 ;;
         esac
     done
+}
+
+@test "agent-l1 gives Run Agent Once the entity handoff key and output file" {
+    local block
+    block="$(job_block "${AGENT}" agent-l1)"
+    grep -q 'comment_handoff_key: ${{ fromJSON(inputs.target_json || ' <<< "${block}"
+    grep -q 'comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->' <<< "${block}"
+    grep -q 'output_file: ${{ runner.temp }}/' <<< "${block}"
+}
+
+@test "no workflow step edits a message a loop already posted" {
+    if grep -n 'Append Loop Meta\|append_entity_meta\|append_pr_review_meta' "${AGENT}" "${ROOT}"/.github/workflows/*.yaml; then
+        return 1
+    fi
 }
 
 @test "agent-l1 exposes usage_json and finalize-l1 passes it to run-log" {
@@ -473,7 +489,7 @@ dogfood_value() {
     if grep -q 'no-changes' "${AGENT}"; then
         return 1
     fi
-    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 3 ]
+    [ "$(grep -c "'unchanged'" "${AGENT}")" -eq 2 ]
 }
 
 @test "ci-loop-agent requires loop_name and does not guard run-log on emptiness" {
@@ -664,20 +680,6 @@ dogfood_value() {
         bash -c "${script}"
     [ "$status" -eq 0 ]
     [ "$(cat "${out}")" = "$(printf '%s\n' from_ref=def456 key=pull_request:7 pr_number=7)" ]
-}
-
-@test "finalize-l2 pr review meta step guards the handoff key before sourcing libs" {
-    # The step sources workspace-relative libs that a consumer checkout may not
-    # have; non-PR loops must exit before any source, and a failure must not
-    # fail finalize-l2.
-    local block guard_line source_line
-    block="$(awk '/- name: Append Loop Meta To Pull Request Review/{f=1} f&&/- name: Notify Pull Request/{exit} f' "${AGENT}")"
-    [[ -n ${block} ]]
-    grep -q 'continue-on-error: true' <<< "${block}"
-    guard_line="$(grep -n '\^entity:pr:' <<< "${block}" | head -1 | cut -d: -f1)"
-    source_line="$(grep -n 'source ' <<< "${block}" | head -1 | cut -d: -f1)"
-    [[ -n ${guard_line} && -n ${source_line} ]]
-    ((guard_line < source_line))
 }
 
 @test "finalize-l2 runs loop-finalize with no step if" {

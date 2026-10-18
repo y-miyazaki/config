@@ -297,7 +297,12 @@ jobs:
           agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+          # The agent ends its run with the comment text; this stage measures the usage
+          # and posts it once, with Meta and the footer (entity handoff keys only).
+          comment_handoff_key: ${{ fromJSON(inputs.target_json || '{}').key }}
+          comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          output_file: ${{ runner.temp }}/loop-agent-output.md
           prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
@@ -310,9 +315,6 @@ jobs:
     environment: ${{ inputs.environment }}
     permissions:
       contents: write
-      # issues: write lets finalize append the loop meta block to the Issue
-      # comment an entity (L1) agent posted.
-      issues: write
       pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -345,38 +347,6 @@ jobs:
           skip_reason: ${{ inputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}
           usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
-
-      # L1 agents post their own Issue comment through gh issue comment, so no
-      # platform footer reaches it. Finalize is the only stage that knows the
-      # usage totals, so it appends them here — collapsed, and last, so the
-      # agent's analysis stays the lead.
-      - name: Append Loop Meta To Entity Comment
-        env:
-          AGENT_ENGINE: ${{ inputs.agent_engine }}
-          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
-          LOOP_NAME: ${{ inputs.loop_name }}
-          OUTCOME: ${{ needs.agent-l1.result == 'success' && 'unchanged' || 'error' }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_STARTED_AT: ${{ inputs.run_started_at }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TARGET_JSON: ${{ inputs.target_json }}
-          USAGE_JSON: ${{ needs.agent-l1.outputs.usage_json || '' }}
-        run: |
-          set -euo pipefail
-          # A direct L1 invocation may omit target_json; then there is no entity to annotate.
-          handoff_key="$(jq -r '.key // empty' <<< "${TARGET_JSON}")"
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/created_by.sh
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/loop_meta.sh
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/entity_meta.sh
-          issue_number="$(entity_issue_number "${handoff_key}")"
-          if [[ -z ${issue_number} ]]; then
-            exit 0
-          fi
-          append_entity_meta "${issue_number}" "<!-- ${LOOP_NAME}:v1 -->" \
-            "${OUTCOME}" "${AGENT_ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
 
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
@@ -646,50 +616,6 @@ jobs:
           state_branch: ${{ inputs.state_branch }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
-
-      # L2 review agents submit their own marker-tagged pull request review
-      # through gh, so no platform footer reaches it. Finalize knows the usage
-      # totals, so it appends them here — collapsed, and last.
-      # continue-on-error: meta is cosmetic and must never fail finalize-l2.
-      # Only entity:pr:* handoff keys act, checked before any source: the libs
-      # are read from the caller checkout (no action path exists in a workflow
-      # run step), so a consumer without them must not reach the source lines.
-      - name: Append Loop Meta To Pull Request Review
-        if: always() && steps.target.outputs.key != ''
-        continue-on-error: true
-        env:
-          AGENT_ENGINE: ${{ inputs.agent_engine }}
-          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
-          HANDOFF_KEY: ${{ steps.target.outputs.key }}
-          LOOP_NAME: ${{ inputs.loop_name }}
-          OUTCOME: ${{ steps.finalize.outputs.outcome || 'error' }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          USAGE_JSON: ${{ needs.agent-l2.outputs.usage_json || '' }}
-        run: |
-          set -euo pipefail
-          if ! [[ "${HANDOFF_KEY}" =~ ^entity:pr:[1-9][0-9]*$ ]]; then
-            exit 0
-          fi
-          lib_dir=".github/actions/lib/loop"
-          for lib in created_by.sh loop_meta.sh entity_meta.sh; do
-            if [[ ! -f "${lib_dir}/${lib}" ]]; then
-              echo "::notice title=loop-meta::${lib_dir}/${lib} not in checkout; meta not appended"
-              exit 0
-            fi
-          done
-          # shellcheck disable=SC1091
-          source "${lib_dir}/created_by.sh"
-          # shellcheck disable=SC1091
-          source "${lib_dir}/loop_meta.sh"
-          # shellcheck disable=SC1091
-          source "${lib_dir}/entity_meta.sh"
-          pr_number="$(entity_pr_number "${HANDOFF_KEY}")"
-          if [[ -z ${pr_number} ]]; then
-            exit 0
-          fi
-          append_pr_review_meta "${pr_number}" "<!-- ${LOOP_NAME}:v1 -->" \
-            "${OUTCOME}" "${AGENT_ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
 
       - name: Notify Pull Request
         continue-on-error: true

@@ -147,7 +147,7 @@ The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
 At L2, `loop-finalize` always runs and decides from `delivery: none`. It never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr_created` after APPROVE. The report is persisted only through `finalize_hook_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
 
-After posting, finalize appends the standard loop Meta (run URL, usage) to the posted marker review via `entity_meta.sh`. Only a Bot-authored review counts as the marker review, here and in detect, so a human who pastes the marker can neither suppress the review nor receive the Meta. The append is a no-op when the marker review is absent and is idempotent when the Meta is already present.
+`loop-finalize` builds the standard loop Meta and footer (`LOOP_META_BLOCK`: run URL, usage) and passes it to `finalize_hook_script` in the same environment. The hook appends it to the review body before posting, so the review goes out once, complete — nothing edits it afterwards.
 
 ## Related changes
 
