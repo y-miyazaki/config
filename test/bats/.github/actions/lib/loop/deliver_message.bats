@@ -1,11 +1,12 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+# shellcheck disable=SC2016,SC2030,SC2031,SC2034,SC2154
 
 # Tests for .github/actions/lib/loop/deliver_message.sh
 #
 # Use cases:
 # - deliver_loop_message does nothing (outcome unchanged) without a message or with a blank one
 # - deliver_loop_message posts one Issue comment with the marker first and Meta/footer once
+# - deliver_loop_message links tracked repository paths in the Issue comment and the review body
 # - deliver_loop_message posts a COMMENT review and retries once on HTTP 422 with fallback_body
 # - deliver_loop_message reads the number from target_json and checks its kind against delivery
 # - deliver_loop_message applies allowlisted labels before posting (one POST, encoded DELETEs)
@@ -23,6 +24,7 @@ setup() {
     bats_source_rel ".github/actions/lib/loop/created_by.sh"
     bats_source_rel ".github/actions/lib/loop/loop_meta.sh"
     bats_source_rel ".github/actions/lib/loop/failure_record.sh"
+    bats_source_rel ".github/actions/lib/loop/linkify.sh"
     bats_source_rel ".github/actions/lib/loop/deliver_message.sh"
     export DELIVERY="issue_comment"
     export LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/msg"
@@ -283,6 +285,21 @@ count_of() {
     [[ "$(gh_log)" == "issue comment 12 "* ]]
 }
 
+@test "links tracked repository paths in the Issue comment text" {
+    local repo="${BATS_TEST_TMPDIR}/linkrepo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/docs"
+    : > "${repo}/docs/spec.md"
+    bats_git_commit "${repo}" "add spec"
+    printf 'See docs/spec.md and `docs/missing.md`.\n' > "${LOOP_MESSAGE_DIR}/message.md"
+    cd "${repo}"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    body="$(cat "${BATS_TEST_TMPDIR}/gh.body.1")"
+    [[ ${body} == *"[docs/spec.md](https://github.com/o/r/blob/"*"/docs/spec.md)"* ]]
+    [[ ${body} == *'`docs/missing.md`'* ]]
+}
+
 @test "posts a COMMENT review with marker and Meta in body" {
     use_pr_review
     write_review "$(review_fixture)"
@@ -359,7 +376,7 @@ count_of() {
 }
 
 @test "redacts tokens in the recorded failure message" {
-    local token="ghp_abcdefghijklmnopqrstuvwxyz0123456789"
+    local token="ghp_abcdefghijklmnopqrstuvwxyz0123456789" # pragma: allowlist secret
     printf 'text\n' > "${LOOP_MESSAGE_DIR}/message.md"
     export GH_MOCK_COMMENT_RC="1"
     export GH_MOCK_COMMENT_ERR="gh: Bad credentials ${token} (HTTP 401)"

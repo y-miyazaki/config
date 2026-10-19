@@ -10,6 +10,7 @@
 #   source created_by.sh
 #   source loop_meta.sh
 #   source failure_record.sh
+#   source linkify.sh
 #   source deliver_message.sh
 #   deliver_loop_message
 #
@@ -142,6 +143,44 @@ function build_loop_message_body {
 }
 
 #######################################
+# loop_message_link_ref: Commit to read and link repository paths at
+#
+# Description:
+#   A PR review links at the reviewed commit (commit_id in review.json) when that
+#   commit is available locally; everything else links at the checked-out HEAD.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - LOOP_MESSAGE_DIR
+#
+# Outputs:
+#   Full commit SHA on stdout; empty when none can be resolved
+#
+# Returns:
+#   0 always
+#
+#######################################
+function loop_message_link_ref {
+    local dir="${1:-}"
+    local commit_id=""
+
+    if [[ -f "${dir}/review.json" ]]; then
+        commit_id="$(jq -r '.commit_id // empty | strings' "${dir}/review.json" 2> /dev/null || true)"
+    fi
+    if [[ ${commit_id} =~ ^[0-9a-f]{40}$ ]]; then
+        git cat-file -e "${commit_id}^{commit}" 2> /dev/null \
+            || git fetch --no-tags --quiet --depth=1 origin "${commit_id}" > /dev/null 2>&1 || true
+    fi
+    if [[ ${commit_id} =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "${commit_id}^{commit}" 2> /dev/null; then
+        printf '%s' "${commit_id}"
+        return 0
+    fi
+    git rev-parse HEAD 2> /dev/null || true
+}
+
+#######################################
 # deliver_loop_message: Deliver message.md or review.json, with labels, as one GitHub write
 #
 # Globals:
@@ -178,7 +217,7 @@ function deliver_loop_message {
     local dir="${LOOP_MESSAGE_DIR:-}"
     local marker="<!-- ${LOOP_NAME:-}:v1 -->"
     local labels_file="${dir}/message_labels.json"
-    local text="" fallback="" number meta_block out_file rc
+    local text="" fallback="" number meta_block out_file rc link_ref
 
     case "${delivery}" in
         issue_comment)
@@ -212,6 +251,12 @@ function deliver_loop_message {
     text="${text%"${text##*[![:space:]]}"}"
     fallback="${fallback#"${fallback%%[![:space:]]*}"}"
     fallback="${fallback%"${fallback##*[![:space:]]}"}"
+
+    if [[ -n ${text} ]] && declare -F linkify_repo_text > /dev/null 2>&1; then
+        link_ref="$(loop_message_link_ref "${dir}")"
+        text="$(linkify_repo_text "${text}" "${link_ref}")"
+        fallback="$(linkify_repo_text "${fallback}" "${link_ref}")"
+    fi
 
     if [[ -n ${text} && -f ${labels_file} ]] && ! jq -e '
         type == "object"
