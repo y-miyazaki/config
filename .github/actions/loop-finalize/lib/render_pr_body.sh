@@ -286,71 +286,17 @@ function github_repo_web_base {
 #######################################
 function linkify_agent_text {
     local text="${1:-}"
-    local base
+    local base paths shas
 
     if [[ -z ${text} || -z ${BLOB_REF} ]] || ! base="$(github_repo_web_base)"; then
         printf '%s' "${text}"
         return 0
     fi
 
-    BASE="${base}" REF="${BLOB_REF}" PATHS_JSON="${CHANGED_FILES_JSON}" DETECT_JSON="${DETECT_RESULT_JSON}" \
-        python3 -I - "${text}" << 'PY'
-import json
-import os
-import re
-import sys
-from urllib.parse import quote
-
-text = sys.argv[1]
-base = os.environ["BASE"]
-ref = os.environ["REF"]
-try:
-    paths = {p for p in json.loads(os.environ.get("PATHS_JSON") or "[]") if isinstance(p, str)}
-except ValueError:
-    paths = set()
-shas = sorted(set(re.findall(r"\b[0-9a-f]{40}\b", os.environ.get("DETECT_JSON") or "")))
-
-
-def link_token(token):
-    norm = token[2:] if token.startswith("./") else token
-    if norm in paths:
-        return "[%s](%s/blob/%s/%s)" % (token, base, ref, quote(norm, safe="/"))
-    return link_sha(token)
-
-
-def link_sha(token):
-    if re.fullmatch(r"[0-9a-f]{7,40}", token):
-        for sha in shas:
-            if sha.startswith(token):
-                return "[%s](%s/commit/%s)" % (token, base, sha)
-    return None
-
-
-def link(match):
-    if match.group(1):
-        return match.group(0)
-    if match.group(2):
-        return link_token(match.group(2)) or match.group(0)
-    return link_sha(match.group(3)) or match.group(0)
-
-
-# Alternatives, in priority order: an existing link, a code span, a bare SHA.
-pattern = re.compile(
-    r"(\[[^\]\n]*\]\([^)\n]*\))|`([^`\n]+)`|(?<![\w/#=.-])([0-9a-f]{7,40})(?![\w/-])"
-)
-
-out = []
-fenced = False
-for line in text.split("\n"):
-    if line.lstrip().startswith("```"):
-        fenced = not fenced
-        out.append(line)
-    elif fenced:
-        out.append(line)
-    else:
-        out.append(pattern.sub(link, line))
-sys.stdout.write("\n".join(out))
-PY
+    paths="$(jq -r '.[]? | strings' <<< "${CHANGED_FILES_JSON:-[]}" 2> /dev/null || true)"
+    shas="$(grep -oE '\b[0-9a-f]{40}\b' <<< "${DETECT_RESULT_JSON:-}" | sort -u || true)"
+    BASE="${base}" REF="${BLOB_REF}" PATHS="${paths}" SHAS="${shas}" \
+        python3 -I "${_LOOP_CREATED_BY_LIB}/linkify.py" <<< "${text}" 2> /dev/null || printf '%s' "${text}"
 }
 
 #######################################

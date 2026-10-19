@@ -37,7 +37,7 @@ linkify() {
 @test "linkify_repo_text links tracked paths in code spans and plain text" {
     run linkify 'See `docs/specs/design.md` and docs/specs/design.md.' "${REF}"
     [ "$status" -eq 0 ]
-    [[ $output == *'[`docs/specs/design.md`](https://github.com/o/r/blob/'"${REF}"'/docs/specs/design.md)'* ]]
+    [[ $output == *'[docs/specs/design.md](https://github.com/o/r/blob/'"${REF}"'/docs/specs/design.md) and'* ]]
     [[ $output == *'[docs/specs/design.md](https://github.com/o/r/blob/'"${REF}"'/docs/specs/design.md).'* ]]
 }
 
