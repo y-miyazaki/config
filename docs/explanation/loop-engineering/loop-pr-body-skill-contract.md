@@ -54,12 +54,12 @@ Per-skill required elements and examples live in each skill's `references/common
 
 ### What the platform owns
 
-| Section               | Source                                                                                                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
-| `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
-| `<details>Meta`       | Collapsed key/value table: outcome, level, target, skip_reason, engine, model, tokens                                                                                                                                  |
-| Loop footer           | `LOOP_META_FOOTER` — the one fixed `<sub>Written by Loop Engineering (LE)…</sub>` line that closes every loop surface (PR body, PR comment, trigger reply, Issue comment, review), always present, always the same text; Meta is likewise unconditional on every surface and author type |
+| Section              | Source                                                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `## Failure context` | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                                                                                                                                                  |
+| `## Changes`         | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known                                                                                                                        |
+| `<details>Meta`      | Collapsed key/value table: outcome, level, target, skip_reason, engine, model, tokens (with cache counts), rounds (maker, checker, rejected)                                                                                                                                             |
+| Loop footer          | `LOOP_META_FOOTER` — the one fixed `<sub>Written by Loop Engineering (LE)…</sub>` line that closes every loop surface (PR body, PR comment, trigger reply, Issue comment, review), always present, always the same text; Meta is likewise unconditional on every surface and author type |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 

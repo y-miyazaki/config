@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+# shellcheck disable=SC2016,SC2030,SC2031,SC2034,SC2154
 
 # Tests for .github/actions/loop-finalize/lib/render_pr_body.sh
 
@@ -153,6 +153,13 @@ setup() {
     [[ $output != *"ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"* ]] # pragma: allowlist secret
 }
 
+@test "render_run_metadata counts rejections from the final verdict" {
+    local usage='{"total_input_tokens":10,"total_output_tokens":10,"sessions":[{"role":"maker"},{"role":"checker"},{"role":"maker"},{"role":"checker"}]}'
+    VERDICT=APPROVE run render_run_metadata L2 'integration:main' '' 'claude' "${usage}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"| rounds | maker 2, checker 2, rejected 1 |"* ]]
+}
+
 @test "render_run_metadata escapes pipe in skip reason" {
     run render_run_metadata L2 'integration:main' 'foo|bar' '' ''
     [ "$status" -eq 0 ]
@@ -300,18 +307,18 @@ setup() {
 @test "linkify_agent_text links changed paths and known commit SHAs written as code spans" {
     export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
     export CHANGED_FILES_JSON='["test/bats/foo.bats","docs/a b.md"]'
-    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}' # pragma: allowlist secret
     run linkify_agent_text '| `test/bats/foo.bats` (new) | `abcdef0` | `./docs/a b.md` |'
     [ "$status" -eq 0 ]
     [[ $output == *"[test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) (new)"* ]]
-    [[ $output == *"[abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01)"* ]]
+    [[ $output == *"[abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01)"* ]] # pragma: allowlist secret
     [[ $output == *"[./docs/a b.md](https://github.com/org/repo/blob/loop/test-gap/docs/a%20b.md)"* ]]
 }
 
 @test "linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone" {
     export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
     export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
-    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}' # pragma: allowlist secret
     local text
     text=$'`scripts/other.sh` `deadbeef` [`test/bats/foo.bats`](https://x/y)\n```\n`test/bats/foo.bats`\n```'
     run linkify_agent_text "${text}"
@@ -335,11 +342,11 @@ setup() {
     export AGENT_REPORT_SUMMARY=$'### Changes\n| Target | Gap |\n| --- | --- |\n| `test/bats/foo.bats` | none |\n| `abcdef0` | pin |'
     export AGENT_REPORT_VERIFICATION='| `bats test/bats/foo.bats` | skip |'
     export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
-    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}' # pragma: allowlist secret
     run render_pr_body
     [ "$status" -eq 0 ]
     [[ $output == *"| [test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) |"* ]]
-    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]] # pragma: allowlist secret
     [[ $output == *"Added suite for \`scripts/x.sh\`."* ]]
     [[ $output == *"| \`bats test/bats/foo.bats\` | skip |"* ]]
 }
@@ -347,10 +354,10 @@ setup() {
 @test "linkify_agent_text links a bare SHA only when it prefixes a detected commit" {
     export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/changelog'
     export CHANGED_FILES_JSON='[]'
-    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}' # pragma: allowlist secret
     run linkify_agent_text '| abcdef0 | feat | pin (deadbeef) https://x/commit/abcdef0 |'
     [ "$status" -eq 0 ]
-    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]] # pragma: allowlist secret
     [[ $output == *"(deadbeef)"* ]]
     [[ $output == *"https://x/commit/abcdef0"* ]]
     [[ $output != *"commit/[abcdef0]"* ]]

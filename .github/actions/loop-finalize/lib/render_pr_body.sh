@@ -616,7 +616,8 @@ function escape_markdown_table_cell {
 #   field is set.
 #
 # Globals:
-#   None
+#   OUTCOME - Finalize outcome for the Meta table (optional)
+#   VERDICT - Final checker verdict, so rounds counts rejections correctly (optional)
 #
 # Arguments:
 #   $1 - Level (e.g. L2)
@@ -645,7 +646,7 @@ function render_run_metadata {
     [[ -n ${target_key} ]] && loop_meta_row "Target" "$(escape_markdown_table_cell "${target_key}")"
     [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
 
-    block="$(build_loop_meta_block "${OUTCOME:-}" "" "" "${engine}" "${usage_json}" "")"
+    block="$(build_loop_meta_block "${OUTCOME:-}" "${VERDICT:-}" "" "${engine}" "${usage_json}" "")"
     printf '%s\n\n' "${block}"
 }
 
