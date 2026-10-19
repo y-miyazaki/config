@@ -345,6 +345,7 @@ runs:
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
         USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge

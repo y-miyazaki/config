@@ -625,11 +625,11 @@ dogfood_value() {
 }
 
 @test "committed loop state JSON matches loop_name or allowlisted sidecars" {
-    local f base name expected extra
-    extra='state-ci-sweeper-run-ledger.json'
+    local f base name expected
+    local -a extras=('state-ci-sweeper-run-ledger.json' 'state-test-gap-ledger.json')
     for f in "${ROOT}"/.loop/state-*.json; do
         base="$(basename "${f}")"
-        [[ ${base} == "${extra}" ]] && continue
+        printf '%s\n' "${extras[@]}" | grep -qx "${base}" && continue
         name="${base#state-}"
         name="${name%.json}"
         expected="${ROOT}/.github/workflows/on-loop-${name}.yaml"
@@ -930,6 +930,7 @@ dogfood_value() {
     [ "$(dogfood_value "${wf}" detect_pr_enabled)" = true ]
     # detect_pr_number is a number input: the expression must go through fromJSON, or a
     # workflow_dispatch run fails at startup with no jobs ("workflow file issue").
+    # shellcheck disable=SC2016 # literal GitHub Actions expression; must stay single-quoted
     [[ "$(dogfood_value "${wf}" detect_pr_number)" == '${{ fromJSON('*'inputs.pr_number || 0) }}' ]]
     [ "$(dogfood_value "${wf}" detect_pr_denylist)" = 'fork,label:no-loop' ]
     # pr_push rejects detect_branch_match (spec 7-3).
@@ -1139,7 +1140,7 @@ triage_block() {
     run triage_block "${wf}" finalize_label_allowlist
     [ "${status}" -eq 0 ]
     [ "${output}" = "$(printf '%s\n' needs-triage bug feature question documentation triage:needs-info triage:ready triage:failed)" ]
-    ! grep -q autofix <<< "${output}"
+    run ! grep -q autofix <<< "${output}"
 }
 
 @test "triage caller grants no write gh commands to the agent" {
@@ -1303,7 +1304,7 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
 
 @test "triage caller comment no longer says host project settings apply" {
     local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" comment
-    ! grep -qF 'still apply via --setting-sources project' "${wf}"
+    run ! grep -qF 'still apply via --setting-sources project' "${wf}"
     comment="$(awk '/^      agent_maker_skill_name:/ {f=1; next} f && /^      #/ {print; next} f {exit}' "${wf}")"
     [ -n "${comment}" ]
     grep -qw 'no' <<< "${comment}"
@@ -1324,7 +1325,7 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
     grep -qF 'message.md' <<< "${block}"
     grep -qF 'message_labels.json' <<< "${block}"
     [[ ${block} != *'platform hook'* ]]
-    ! grep -qF 'Your final message IS the comment' <<< "${block}"
+    run ! grep -qF 'Your final message IS the comment' <<< "${block}"
 }
 
 @test "reusable agent_tool_allowlist descriptions state host allow rules are not applied" {

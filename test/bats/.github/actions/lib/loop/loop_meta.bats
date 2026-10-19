@@ -5,6 +5,8 @@
 #
 # Use cases:
 # - build_loop_meta_block carries engine model and tokens
+# - build_loop_meta_block reports prompt-cache counts beside In/Out when measured
+# - build_loop_meta_block reports maker/checker rounds and rejections
 # - build_loop_meta_block renders caller rows above the engine rows
 # - build_loop_meta_block ends with the one shared footer after the Meta details
 # - build_loop_meta_block still renders Meta and the footer when nothing is known
@@ -47,6 +49,7 @@ usage_fixture() {
     [[ $output == *"| engine | claude |"* ]]
     [[ $output == *"| model | maker=claude-sonnet-5 checker=claude-opus-5 |"* ]]
     [[ $output == *"| tokens | In/Out 58/15K |"* ]]
+    [[ $output == *"| rounds | maker 1, checker 1, rejected 0 |"* ]]
     [[ $output == *"| run | [View run](https://x/run/1) |"* ]]
     [[ $output != *"Loop details"* ]]
 }
@@ -102,4 +105,31 @@ usage_fixture() {
     [ "$status" -eq 0 ]
     [[ $output != *"| level |"* ]]
     [[ $output != *"|  |"* ]]
+}
+
+@test "build_loop_meta_block reports prompt-cache counts beside In/Out when measured" {
+    local usage='{"total_input_tokens":44,"total_output_tokens":7000,"cache_read_tokens":250000,"cache_write_tokens":30000}'
+    run build_loop_meta_block "pr_reviewed" "APPROVE" "" "claude" "${usage}" ""
+    [ "$status" -eq 0 ]
+    [[ $output == *"| tokens | In/Out 44/7K (cache read 250K, write 30K) |"* ]]
+}
+
+@test "build_loop_meta_block omits the cache note when no cache traffic was measured" {
+    local usage='{"total_input_tokens":44,"total_output_tokens":7000,"cache_read_tokens":0,"cache_write_tokens":0}'
+    run build_loop_meta_block "pr_reviewed" "APPROVE" "" "claude" "${usage}" ""
+    [[ $output == *"| tokens | In/Out 44/7K |"* ]]
+    [[ $output != *"cache"* ]]
+}
+
+@test "build_loop_meta_block reports maker/checker rounds and rejections" {
+    local usage='{"total_input_tokens":10,"total_output_tokens":10,"sessions":[{"role":"maker","attempt":1},{"role":"checker","attempt":1},{"role":"maker","attempt":2},{"role":"checker","attempt":2},{"role":"maker","attempt":3},{"role":"checker","attempt":3}]}'
+    run build_loop_meta_block "pr_created" "APPROVE" "" "claude" "${usage}" ""
+    [[ $output == *"| rounds | maker 3, checker 3, rejected 2 |"* ]]
+    run build_loop_meta_block "rejected" "REJECT" "" "claude" "${usage}" ""
+    [[ $output == *"| rounds | maker 3, checker 3, rejected 3 |"* ]]
+}
+
+@test "build_loop_meta_block omits rounds when no session was recorded" {
+    run build_loop_meta_block "push" "" "" "claude" "" ""
+    [[ $output != *"| rounds |"* ]]
 }
