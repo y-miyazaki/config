@@ -24,7 +24,6 @@ setup() {
     bats_source_rel ".github/actions/lib/loop/created_by.sh"
     bats_source_rel ".github/actions/lib/loop/loop_meta.sh"
     bats_source_rel ".github/actions/lib/loop/failure_record.sh"
-    bats_source_rel ".github/actions/lib/loop/linkify.sh"
     bats_source_rel ".github/actions/lib/loop/deliver_message.sh"
     export DELIVERY="issue_comment"
     export LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/msg"

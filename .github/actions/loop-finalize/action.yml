@@ -304,8 +304,6 @@ runs:
         # shellcheck disable=SC1091
         source "${loop_action_lib}/failure_record.sh"
         # shellcheck disable=SC1091
-        source "${loop_action_lib}/linkify.sh"
-        # shellcheck disable=SC1091
         source "${loop_action_lib}/deliver_message.sh"
         deliver_loop_message
 

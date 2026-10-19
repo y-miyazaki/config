@@ -6,13 +6,18 @@ does not make clickable. This reads the text on stdin and writes it with the lin
 tokens turned into markdown links. Only tokens that name something known are linked,
 so example paths and unknown tokens stay as written.
 
+Usage:
+  linkify.py --ref REF --tracked          link every file tracked at REF (git ls-tree),
+                                          in code spans and plain text; a bare file name
+                                          is linked when exactly one tracked file has it
+  linkify.py --ref REF                    link the files in CHANGED_FILES_JSON and the
+                                          commits in DETECT_RESULT_JSON, in code spans only
+
 Environment:
-  BASE   Web base URL of the repository (https://github.com/owner/repo)
-  REF    Commit or branch that blob links point at
-  PATHS  Newline-separated repository paths that may be linked
-  SHAS   Newline-separated full 40-hex commit SHAs that may be linked (optional)
-  PLAIN  1 to also link paths written as plain text (default: code spans only)
-  BARE   1 to also link a bare file name when exactly one known path has it
+  GITHUB_REPOSITORY    owner/repo (required; without it the text is printed unchanged)
+  GITHUB_SERVER_URL    GitHub host (default https://github.com)
+  CHANGED_FILES_JSON   JSON string array of changed paths (without --tracked)
+  DETECT_RESULT_JSON   JSON whose 40-hex SHAs may be linked (without --tracked)
 
 Design rules:
   - Existing markdown links, bare URLs, HTML comments, and fenced code blocks are left alone
@@ -22,21 +27,22 @@ Design rules:
   - Any error leaves the original text untouched (the caller prints it as is)
 """
 
+import argparse
+import json
 import os
 import re
+import subprocess
 import sys
 from urllib.parse import quote
 
-BASE = os.environ["BASE"].rstrip("/")
-REF = os.environ["REF"]
-PATHS = {p for p in os.environ.get("PATHS", "").split("\n") if p}
-SHAS = sorted({s for s in os.environ.get("SHAS", "").split("\n") if re.fullmatch(r"[0-9a-f]{40}", s)})
-PLAIN = os.environ.get("PLAIN") == "1"
-BARE = os.environ.get("BARE") == "1"
+BASE = ""
+REF = ""
+PATHS = set()
+SHAS = []
+PLAIN = False
+BARE = False
 
 NAMES = {}
-for _p in PATHS:
-    NAMES.setdefault(_p.rsplit("/", 1)[-1], []).append(_p)
 
 EXT = r"(?:sh|bats|ya?ml|md|json|toml|py|go|tf|tfvars|js|ts|bash)"
 SUFFIX = re.compile(r"(?:#L(\d+)(?:-L(\d+))?|:(\d+)(?:-(\d+))?)$")
@@ -150,8 +156,53 @@ def convert_line(line):
     return outside_links(line, convert_segment)
 
 
+def load_tracked(ref):
+    out = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", ref], capture_output=True, text=True, check=True
+    ).stdout
+    return {p for p in out.split("\n") if p}
+
+
+def load_changed():
+    try:
+        paths = json.loads(os.environ.get("CHANGED_FILES_JSON") or "[]")
+    except ValueError:
+        paths = []
+    return {p for p in paths if isinstance(p, str)}
+
+
+def configure(args):
+    global BASE, REF, PATHS, SHAS, PLAIN, BARE
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    if not repo or not args.ref:
+        return False
+    BASE = "%s/%s" % (os.environ.get("GITHUB_SERVER_URL") or "https://github.com", repo)
+    BASE = BASE.rstrip("/")
+    REF = args.ref
+    if args.tracked:
+        PATHS = load_tracked(REF)
+        PLAIN = BARE = True
+    else:
+        PATHS = load_changed()
+        SHAS = sorted(set(re.findall(r"\b[0-9a-f]{40}\b", os.environ.get("DETECT_RESULT_JSON") or "")))
+    for p in PATHS:
+        NAMES.setdefault(p.rsplit("/", 1)[-1], []).append(p)
+    return bool(PATHS or SHAS)
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--ref", default="")
+    parser.add_argument("--tracked", action="store_true")
+    args = parser.parse_args()
     text = sys.stdin.read()
+    try:
+        ready = configure(args)
+    except (OSError, subprocess.CalledProcessError):
+        ready = False
+    if not ready:
+        sys.stdout.write(text)
+        return
     lines = []
     fenced = False
     for line in text.split("\n"):

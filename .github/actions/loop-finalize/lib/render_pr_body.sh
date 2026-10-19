@@ -286,17 +286,13 @@ function github_repo_web_base {
 #######################################
 function linkify_agent_text {
     local text="${1:-}"
-    local base paths shas
 
-    if [[ -z ${text} || -z ${BLOB_REF} ]] || ! base="$(github_repo_web_base)"; then
+    if [[ -z ${text} || -z ${BLOB_REF} ]] || ! github_repo_web_base > /dev/null; then
         printf '%s' "${text}"
         return 0
     fi
 
-    paths="$(jq -r '.[]? | strings' <<< "${CHANGED_FILES_JSON:-[]}" 2> /dev/null || true)"
-    shas="$(grep -oE '\b[0-9a-f]{40}\b' <<< "${DETECT_RESULT_JSON:-}" | sort -u || true)"
-    BASE="${base}" REF="${BLOB_REF}" PATHS="${paths}" SHAS="${shas}" \
-        python3 -I "${_LOOP_CREATED_BY_LIB}/linkify.py" <<< "${text}" 2> /dev/null || printf '%s' "${text}"
+    python3 -I "${_LOOP_CREATED_BY_LIB}/linkify.py" --ref "${BLOB_REF}" <<< "${text}" 2> /dev/null || printf '%s' "${text}"
 }
 
 #######################################
