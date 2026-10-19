@@ -55,6 +55,13 @@
       "consecutive_failures": 1,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "entity:pr:1028": {
+      "last_run": "2026-10-19T00:37:01Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
