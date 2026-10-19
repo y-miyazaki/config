@@ -10,7 +10,6 @@
 #   source created_by.sh
 #   source loop_meta.sh
 #   source failure_record.sh
-#   source linkify.sh
 #   source deliver_message.sh
 #   deliver_loop_message
 #
@@ -29,6 +28,8 @@
 #   - gh stderr is only passed to loop_failure_record (which redacts it), never printed
 #   - Every failure records failure_stage deliver_message and returns 1
 #######################################
+
+_DELIVER_MESSAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 #######################################
 # apply_loop_message_labels: Add and remove the allowlisted labels on an Issue or PR
@@ -252,10 +253,12 @@ function deliver_loop_message {
     fallback="${fallback#"${fallback%%[![:space:]]*}"}"
     fallback="${fallback%"${fallback##*[![:space:]]}"}"
 
-    if [[ -n ${text} ]] && declare -F linkify_repo_text > /dev/null 2>&1; then
+    if [[ -n ${text} ]]; then
         link_ref="$(loop_message_link_ref "${dir}")"
-        text="$(linkify_repo_text "${text}" "${link_ref}")"
-        fallback="$(linkify_repo_text "${fallback}" "${link_ref}")"
+        text="$(python3 -I "${_DELIVER_MESSAGE_DIR}/linkify.py" --tracked --ref "${link_ref}" <<< "${text}" 2> /dev/null || printf '%s' "${text}")"
+        if [[ -n ${fallback} ]]; then
+            fallback="$(python3 -I "${_DELIVER_MESSAGE_DIR}/linkify.py" --tracked --ref "${link_ref}" <<< "${fallback}" 2> /dev/null || printf '%s' "${fallback}")"
+        fi
     fi
 
     if [[ -n ${text} && -f ${labels_file} ]] && ! jq -e '
