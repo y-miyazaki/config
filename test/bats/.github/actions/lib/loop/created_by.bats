@@ -11,6 +11,8 @@
 # - render_created_by_line uses model and tokens from usage_json alone
 # - render_created_by_line labels each role when maker and checker models differ
 # - render_created_by_line falls back to the models array when sessions are absent
+# - usage_cache_label reports cache read and write counts and stays empty without cache traffic
+# - usage_rounds_label counts maker and checker sessions and rejections from the final verdict
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -91,4 +93,34 @@ setup() {
     run render_created_by_line '' '{"total_input_tokens":100,"total_output_tokens":50}'
     [ "$status" -eq 0 ]
     [ "$output" = "Created By In/Out: 100/50" ]
+}
+
+@test "usage_cache_label reports cache read and write counts" {
+    run usage_cache_label '{"cache_read_tokens":250000,"cache_write_tokens":30000}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "read 250K, write 30K" ]
+}
+
+@test "usage_cache_label stays empty without cache traffic or valid json" {
+    run usage_cache_label '{"cache_read_tokens":0,"cache_write_tokens":0}'
+    [ -z "$output" ]
+    run usage_cache_label 'not json'
+    [ -z "$output" ]
+    run usage_cache_label ''
+    [ -z "$output" ]
+}
+
+@test "usage_rounds_label counts rejections from the final verdict" {
+    local usage='{"sessions":[{"role":"maker"},{"role":"checker"},{"role":"maker"},{"role":"checker"}]}'
+    run usage_rounds_label "${usage}" "APPROVE"
+    [ "$output" = "maker 2, checker 2, rejected 1" ]
+    run usage_rounds_label "${usage}" "REJECT"
+    [ "$output" = "maker 2, checker 2, rejected 2" ]
+}
+
+@test "usage_rounds_label stays empty without maker or checker sessions" {
+    run usage_rounds_label '{"sessions":[]}' "APPROVE"
+    [ -z "$output" ]
+    run usage_rounds_label '' "APPROVE"
+    [ -z "$output" ]
 }

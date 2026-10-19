@@ -91,6 +91,46 @@ function render_created_by_line {
 }
 
 #######################################
+# usage_cache_label: Resolve the prompt-cache label for a run
+#
+# Description:
+#   In/Out totals exclude cache traffic, so a cached run shows a tiny In figure.
+#   This label reports the cache counts next to it instead of folding them in.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#
+# Outputs:
+#   "read {n}, write {n}" on stdout; empty when no cache traffic was measured
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   cache="$(usage_cache_label "${USAGE_JSON}")"
+#
+#######################################
+function usage_cache_label {
+    local usage_json="${1:-}"
+    local read="" write=""
+
+    if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        return 0
+    fi
+    read="$(jq -r '.cache_read_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
+    write="$(jq -r '.cache_write_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
+    [[ ${read} =~ ^[0-9]+$ ]] || read=0
+    [[ ${write} =~ ^[0-9]+$ ]] || write=0
+    if ((read == 0 && write == 0)); then
+        return 0
+    fi
+    printf 'read %s, write %s' "$(format_compact_tokens "${read}")" "$(format_compact_tokens "${write}")"
+}
+
+#######################################
 # usage_model_label: Resolve a display label for the models a run used
 #
 # Globals:
@@ -138,92 +178,6 @@ function usage_model_label {
 }
 
 #######################################
-# usage_tokens_label: Resolve the In/Out token label for a run
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - usage_json string (optional)
-#
-# Outputs:
-#   Compacted "{in}/{out}" label on stdout; empty when neither side is known
-#
-# Returns:
-#   0 on success
-#
-# Usage:
-#   tokens="$(usage_tokens_label "${USAGE_JSON}")"
-#
-#######################################
-function usage_tokens_label {
-    local usage_json="${1:-}"
-    local input="" output="" in_fmt="" out_fmt=""
-
-    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
-        input="$(jq -r '.total_input_tokens // .input_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
-        output="$(jq -r '.total_output_tokens // .output_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
-    fi
-
-    if [[ ! ${input} =~ ^[0-9]+$ ]] && [[ ! ${output} =~ ^[0-9]+$ ]]; then
-        return 0
-    fi
-
-    if [[ ${input} =~ ^[0-9]+$ ]]; then
-        in_fmt="$(format_compact_tokens "${input}")"
-    else
-        in_fmt="—"
-    fi
-    if [[ ${output} =~ ^[0-9]+$ ]]; then
-        out_fmt="$(format_compact_tokens "${output}")"
-    else
-        out_fmt="—"
-    fi
-
-    printf '%s/%s' "${in_fmt}" "${out_fmt}"
-}
-
-#######################################
-# usage_cache_label: Resolve the prompt-cache label for a run
-#
-# Description:
-#   In/Out totals exclude cache traffic, so a cached run shows a tiny In figure.
-#   This label reports the cache counts next to it instead of folding them in.
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - usage_json string (optional)
-#
-# Outputs:
-#   "read {n}, write {n}" on stdout; empty when no cache traffic was measured
-#
-# Returns:
-#   0 on success
-#
-# Usage:
-#   cache="$(usage_cache_label "${USAGE_JSON}")"
-#
-#######################################
-function usage_cache_label {
-    local usage_json="${1:-}"
-    local read="" write=""
-
-    if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
-        return 0
-    fi
-    read="$(jq -r '.cache_read_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
-    write="$(jq -r '.cache_write_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
-    [[ ${read} =~ ^[0-9]+$ ]] || read=0
-    [[ ${write} =~ ^[0-9]+$ ]] || write=0
-    if ((read == 0 && write == 0)); then
-        return 0
-    fi
-    printf 'read %s, write %s' "$(format_compact_tokens "${read}")" "$(format_compact_tokens "${write}")"
-}
-
-#######################################
 # usage_rounds_label: Resolve the maker/checker round counts for a run
 #
 # Description:
@@ -267,4 +221,50 @@ function usage_rounds_label {
         rejected=$((checkers - 1))
     fi
     printf 'maker %s, checker %s, rejected %s' "${makers}" "${checkers}" "${rejected}"
+}
+
+#######################################
+# usage_tokens_label: Resolve the In/Out token label for a run
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#
+# Outputs:
+#   Compacted "{in}/{out}" label on stdout; empty when neither side is known
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   tokens="$(usage_tokens_label "${USAGE_JSON}")"
+#
+#######################################
+function usage_tokens_label {
+    local usage_json="${1:-}"
+    local input="" output="" in_fmt="" out_fmt=""
+
+    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        input="$(jq -r '.total_input_tokens // .input_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
+        output="$(jq -r '.total_output_tokens // .output_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
+    fi
+
+    if [[ ! ${input} =~ ^[0-9]+$ ]] && [[ ! ${output} =~ ^[0-9]+$ ]]; then
+        return 0
+    fi
+
+    if [[ ${input} =~ ^[0-9]+$ ]]; then
+        in_fmt="$(format_compact_tokens "${input}")"
+    else
+        in_fmt="—"
+    fi
+    if [[ ${output} =~ ^[0-9]+$ ]]; then
+        out_fmt="$(format_compact_tokens "${output}")"
+    else
+        out_fmt="—"
+    fi
+
+    printf '%s/%s' "${in_fmt}" "${out_fmt}"
 }
