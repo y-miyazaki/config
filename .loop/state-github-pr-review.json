@@ -48,6 +48,13 @@
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Report-only diff; all 3 findings have valid base-read rule quotes or a reproducible bug, in_diff anchors land in added lines, premises records PR intent, and no other file changed."
+    },
+    "entity:pr:1027": {
+      "last_run": "2026-10-19T00:27:42Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
