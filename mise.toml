@@ -86,7 +86,7 @@ claude = { version = "2.1.296", lazy = true, lazy_bins = ["claude"] }           
 "go:golang.org/x/tools/gopls" = { version = "v0.23.0", lazy = true, lazy_bins = ["gopls"] }                        # Go language server
 "go:golang.org/x/vuln/cmd/govulncheck" = { version = "1.3.0", lazy = true, lazy_bins = ["govulncheck"] }           # vulnerability scanner
 "aqua:ko-build/ko" = { version = "0.19.1", lazy = true, lazy_bins = ["ko"] }                                       # container builder
-"aqua:vektra/mockery" = { version = "3.8.0", lazy = true, lazy_bins = ["mockery"] }                                # mock code generator for interfaces
+"aqua:vektra/mockery" = { version = "3.8.1", lazy = true, lazy_bins = ["mockery"] }                                # mock code generator for interfaces
 "go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen" = { version = "v2.8.0", lazy = true, lazy_bins = ["oapi-codegen"] } # OpenAPI code generator
 "aqua:protocolbuffers/protobuf/protoc" = { version = "36.2", lazy = true, lazy_bins = ["protoc"] }                 # protobuf compiler
 "aqua:protocolbuffers/protobuf-go/protoc-gen-go" = { version = "1.36.12", lazy = true, lazy_bins = ["protoc-gen-go"] } # protobuf code generator
