@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-19T00:27:27Z",
-      "outcome": "pr_merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-10-19T10:14:12Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Additive Bats-only diff adds a genuinely missing paired suite for scripts/go/clean_binaries.sh with behavior-bound assertions; suite not executed (bats run was permission-denied), so CI is first proof",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "78007b74251002ed5e75af76c9ddc89b53917a39"
     }
   }
