@@ -58,7 +58,7 @@ claude = { version = "2.1.296", lazy = true, lazy_bins = ["claude"] }           
 "github:microsoft/waza" = { version = "v0.38.10", lazy = true, lazy_bins = ["waza"] }                              # agent skill evaluator
 
 # AWS related tools
-"aqua:aws/aws-cli" = { version = "2.37.12", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
+"aqua:aws/aws-cli" = { version = "2.38.0", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
 "aqua:aws/aws-sam-cli" = { version = "1.168.0", lazy = true, lazy_bins = ["sam"] }                                 # SAM CLI tool
 "npm:awsp" = { version = "0.2.0", depends = [
   "node",
