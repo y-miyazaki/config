@@ -134,7 +134,7 @@ claude = { version = "2.1.299", lazy = true, lazy_bins = ["claude"] }           
 "aqua:BurntSushi/ripgrep" = { version = "15.2.0", lazy = true, lazy_bins = ["rg"] }                                # grep alternative (rg)
 "aqua:tamasfe/taplo" = { version = "0.10.0", lazy = true, lazy_bins = ["taplo"] }                                  # TOML formatter / LSP
 "aqua:jdx/usage" = { version = "6.12.1", lazy = true, lazy_bins = ["usage"] }                                      # usage CLI tool for command help and completions
-"aqua:astral-sh/uv" = "0.13.0"                                                                                    # uv/uvx
+"aqua:astral-sh/uv" = "0.13.1"                                                                                    # uv/uvx
 
 [tasks.mise-install]
 description = "Install tools defined in mise.toml"
