@@ -124,7 +124,7 @@ claude = { version = "2.1.299", lazy = true, lazy_bins = ["claude"] }           
 
 # Terraform related tools
 "aqua:getsops/sops" = { version = "3.13.3", lazy = true, lazy_bins = ["sops"] }                                    # encryption tool
-"aqua:hashicorp/terraform" = { version = "1.16.5", lazy = true, lazy_bins = ["terraform"] }                        # infrastructure as code
+"aqua:hashicorp/terraform" = { version = "1.16.6", lazy = true, lazy_bins = ["terraform"] }                        # infrastructure as code
 "aqua:terraform-docs/terraform-docs" = { version = "0.24.0", lazy = true, lazy_bins = ["terraform-docs"] }         # documentation generator
 "aqua:terraform-linters/tflint" = { version = "0.64.0", lazy = true, lazy_bins = ["tflint"] }                      # linter
 
