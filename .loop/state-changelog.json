@@ -1,12 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-18T23:14:52Z",
-      "outcome": "pr_merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-10-23T10:05:43Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "last_sha": "7c54cb07e2cb8430e6c33d1a9b64f0d76b760eff",
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only diff maps all 34 detect commits to linked bullets with v1.8.123 promoted; the three omitted releases are verifiably unreachable tags whose commit_shas duplicate v1.8.123's set"
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
