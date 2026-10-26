@@ -119,3 +119,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-19T10:14:14Z","loop_name":"test-gap","duration_s":43,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39235892624","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-23T10:05:44Z","loop_name":"changelog","duration_s":44,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39936521500","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-25T10:12:39Z","loop_name":"refactor","duration_s":13,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"40183805233"}
+{"run_id":"2026-10-26T08:38:32Z","loop_name":"tech-debt","duration_s":896,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40291933085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
