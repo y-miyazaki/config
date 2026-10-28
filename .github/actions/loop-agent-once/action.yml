@@ -32,7 +32,7 @@ inputs:
     description: "Read-only GitHub token for gh CLI and GitHub API reads (the agent job passes github.token; the agent job holds no write credential)"
     required: true
   node_version:
-    default: "24.21.0"
+    default: "24.22.1"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   output_file:
