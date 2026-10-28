@@ -2300,7 +2300,7 @@ version = "4.7.0"
 backend = "pipx:pre-commit"
 
 [[tools."pipx:semgrep"]]
-version = "1.180.0"
+version = "1.182.0"
 backend = "pipx:semgrep"
 
 [[tools."pipx:yamllint"]]
