@@ -2130,7 +2130,7 @@ version = "2.8.0"
 backend = "go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"
 
 [[tools."go:golang.org/x/tools/gopls"]]
-version = "0.23.0"
+version = "0.24.0"
 backend = "go:golang.org/x/tools/gopls"
 
 [[tools."go:golang.org/x/vuln/cmd/govulncheck"]]
