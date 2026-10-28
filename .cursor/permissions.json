@@ -46,6 +46,7 @@
     "git stash list",
     "git stash show",
     "git status",
+    "git worktree list",
     "go build *",
     "go doc",
     "go env",
@@ -80,6 +81,7 @@
     "stat",
     "strings",
     "tail",
+    "terraform version",
     "test",
     "touch *",
     "tr",
@@ -101,7 +103,10 @@
       "Do not read or write .env files, credentials, secrets/, private keys, or cloud credential paths.",
       "Do not dump environment variables (env, printenv); they carry tokens.",
       "Do not write to dotfiles or dot-directories under the home directory (e.g. ~/.ssh, ~/.aws).",
-      "Do not call the codebase-memory-mcp delete_project tool."
+      "Do not call the codebase-memory-mcp delete_project tool.",
+      "Do not run terraform apply, destroy, import, state mv, state rm, or force-unlock.",
+      "Do not run aws CLI delete-* or put-* subcommands.",
+      "Do not read .terraform/, node_modules/, apm_modules/, lambda/outputs/, site/, or *.lock files."
     ]
   }
 }
