@@ -133,7 +133,7 @@ claude = { version = "2.1.305", lazy = true, lazy_bins = ["claude"] }           
 "pipx:mkdocs" = { version = "1.6.1", depends = ["python"], postinstall = "uv pip install --python $MISE_TOOL_INSTALL_PATH/mkdocs/bin/python mkdocs-material mdx-truly-sane-lists", lazy = true, lazy_bins = ["mkdocs"] } # MkDocs with Material theme
 "aqua:BurntSushi/ripgrep" = { version = "15.2.0", lazy = true, lazy_bins = ["rg"] }                                # grep alternative (rg)
 "aqua:tamasfe/taplo" = { version = "0.10.0", lazy = true, lazy_bins = ["taplo"] }                                  # TOML formatter / LSP
-"aqua:jdx/usage" = { version = "6.12.1", lazy = true, lazy_bins = ["usage"] }                                      # usage CLI tool for command help and completions
+"aqua:jdx/usage" = { version = "7.1.0", lazy = true, lazy_bins = ["usage"] }                                      # usage CLI tool for command help and completions
 "aqua:astral-sh/uv" = "0.13.4"                                                                                    # uv/uvx
 
 [tasks.mise-install]
