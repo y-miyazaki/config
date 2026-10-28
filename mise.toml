@@ -41,7 +41,7 @@ uvx = true # Install uv/uvx via pipx for better isolation and performance.
 # A Runtime tools
 aqua = "v2.64.0"
 node = "24.22.1"
-pnpm = { version = "11.28.5", depends = ["node"] }
+pnpm = { version = "11.28.6", depends = ["node"] }
 python = "3.14.6"
 
 # AI agent tools
