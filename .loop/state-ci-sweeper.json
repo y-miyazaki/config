@@ -154,6 +154,13 @@
       "consecutive_failures": 2,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "pull_request:1076": {
+      "last_run": "2026-10-28T02:30:23Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
