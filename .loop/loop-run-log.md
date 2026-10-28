@@ -122,3 +122,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-26T08:38:32Z","loop_name":"tech-debt","duration_s":896,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40291933085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-26T09:11:04Z","loop_name":"docs-updater","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40297552015"}
 {"run_id":"2026-10-26T10:17:18Z","loop_name":"test-gap","duration_s":55,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40306090172","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
+{"run_id":"2026-10-28T02:30:24Z","loop_name":"ci-sweeper","duration_s":50,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621232566","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
