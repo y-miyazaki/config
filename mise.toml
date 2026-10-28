@@ -116,7 +116,7 @@ claude = { version = "2.1.305", lazy = true, lazy_bins = ["claude"] }           
 
 # Security related tools
 "aqua:gitleaks/gitleaks" = { version = "8.30.1", lazy = true, lazy_bins = ["gitleaks"] }                           # secret scanner
-"pipx:pre-commit" = { version = "4.6.2", depends = [
+"pipx:pre-commit" = { version = "4.7.0", depends = [
   "python",
 ], lazy = true, lazy_bins = ["pre-commit"] } # pre-commit framework
 "pipx:semgrep" = { version = "1.180.0", depends = ["python"], lazy = true, lazy_bins = ["semgrep", "pysemgrep"] } # SAST scanner (uvx-backed pipx)
