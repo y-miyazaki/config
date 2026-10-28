@@ -1,0 +1,52 @@
+# CI workflow: GitHub Actions workflow lint on push/PR
+name: on-ci-push-github-actions-workflow
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".github/workflows/**/*.yml"
+      - ".github/workflows/**/*.yaml"
+      - ".github/actions/**/*.yml"
+      - ".github/actions/**/*.yaml"
+      - "scripts/ci/**"
+      - "**/action.yml"
+      - "**/action.yaml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".github/workflows/**/*.yml"
+      - ".github/workflows/**/*.yaml"
+      - ".github/actions/**/*.yml"
+      - ".github/actions/**/*.yaml"
+      - "scripts/ci/**"
+      - "**/action.yml"
+      - "**/action.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  github-actions-workflow-ci:
+    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+    permissions:
+      contents: read

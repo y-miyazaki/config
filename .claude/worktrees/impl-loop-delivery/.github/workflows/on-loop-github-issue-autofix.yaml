@@ -1,0 +1,92 @@
+# Loop workflow: Issue autofix (L2)
+# Intake: labeled(autofix) | repository_dispatch(loop-github-issue-autofix) | workflow_dispatch
+# → branch caller (ci-loop-caller). Detect skips when open/draft Fixes #N PR exists.
+name: on-loop-github-issue-autofix
+
+run-name: "${{ github.workflow }} #${{ github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number }}"
+
+on:
+  issues:
+    types: [labeled]
+  repository_dispatch:
+    types: [loop-github-issue-autofix]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to autofix
+        required: true
+        type: number
+      pr_draft:
+        description: Create PR as draft when true (default open)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+  contents: write
+  copilot-requests: write # zizmor: ignore[excessive-permissions]
+  issues: write
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: false
+  group: loop-github-issue-autofix-${{ github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || github.run_id }}
+  queue: max
+
+jobs:
+  loop:
+    if: github.event_name != 'issues' || github.event.label.name == 'autofix'
+    uses: ./.github/workflows/ci-loop-caller.yaml
+    with:
+      agent_checker_effort: medium
+      agent_checker_instructions: |
+        ## Criteria for APPROVE
+
+        ALL of the following must be true:
+        1. When detect skip is false, a fix was implemented for the Issue (or explicitly deferred with justification)
+        2. PR path includes Fixes #<N> (or equivalent closing keyword) for the source Issue
+        3. Agent did not call repository_dispatch
+        4. Edits stay within allowlist when set
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - repository_dispatch attempted by the Agent
+        - Missing Fixes #<N> / closing keyword for the source Issue when changes exist
+        - Unrelated drive-by refactors
+      agent_checker_max_turns: 100
+      agent_checker_model: claude-opus-5
+      agent_edit_allowlist: "**"
+      agent_edit_target: fix
+      agent_engine: claude
+      agent_loop_max_attempts: 3
+      agent_maker_effort: medium
+      agent_maker_instructions: |
+        Implement a minimal fix for the Issue from detect JSON.
+        Synthesize PR body with Fixes #<N>. Do not call repository_dispatch.
+      agent_maker_max_turns: 100
+      agent_maker_model: claude-sonnet-5
+      agent_maker_skill_name: github-issue-autofix
+      # Autofix reads the Issue and checks for an existing PR that closes it; the
+      # branch push and PR creation are done by the workflow, not by the agent.
+      agent_tool_allowlist: |
+        Bash(gh api:*)
+        Bash(gh issue view:*)
+        Bash(gh pr list:*)
+        Bash(gh pr view:*)
+      agent_unchanged_verdict: REJECT
+      budget_max_runs_per_day: 10
+      budget_max_tokens_per_day: 1000000
+      delivery: pr_create
+      detect_branch_match: main
+      detect_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
+      detect_script: .agents/skills/github-issue-autofix/scripts/detect_autofix.sh
+      level: L2
+      loop_name: github-issue-autofix
+      pr_draft: ${{ inputs.pr_draft || false }}
+      state_branch: main
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

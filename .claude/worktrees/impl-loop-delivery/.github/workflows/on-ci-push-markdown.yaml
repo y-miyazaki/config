@@ -1,0 +1,47 @@
+# CI workflow: Markdown lint on push/PR
+name: on-ci-push-markdown
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "**/*.md"
+      - "docs/**/*.md"
+      - ".markdown-link-check.json"
+      - ".markdownlint-cli2.yaml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "**/*.md"
+      - "docs/**/*.md"
+      - ".markdown-link-check.json"
+      - ".markdownlint-cli2.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  markdown-ci:
+    uses: ./.github/workflows/ci-markdown.yaml
+    permissions:
+      contents: read
+      pull-requests: write

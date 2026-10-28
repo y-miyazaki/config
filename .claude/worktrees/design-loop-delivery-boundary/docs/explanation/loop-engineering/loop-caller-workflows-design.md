@@ -1,0 +1,241 @@
+# Loop Caller Workflows Design
+
+Shared GitHub Actions layout for `on-loop-*.yaml` caller workflows.
+
+**Scope:** job graph, `target_matrix` handoff, triggers, concurrency, matrix fan-out, persistence job structure.  
+**Out of scope:** domain detect logic — see [workflow designs](multi-branch-loops-design.md#workflow-design-documents). Platform target model — [Multi-Branch Loops Design](multi-branch-loops-design.md).
+
+> **Refactor complete:** Job graph lives in `ci-loop-caller.yaml`; each `on-loop-*.yaml` is a thin caller (`with:` only, no `env:`). See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
+
+## Files
+
+| Type     | Path                                                  | Role                                           |
+| -------- | ----------------------------------------------------- | ---------------------------------------------- |
+| Caller   | `.github/workflows/on-loop-<name>.yaml`               | Triggers, concurrency; loop config via `with:` |
+| Reusable | `.github/workflows/ci-loop-caller.yaml`               | Shared detect → execute → record-skip          |
+| Reusable | `.github/workflows/ci-loop-agent.yaml`                | L1/L2/L3 execute (`loop-execute`)              |
+| Actions  | `y-miyazaki/config` `loop-detect`, `loop-finalize`, … | Generic phases                                 |
+
+## Job Graph
+
+Canonical diagram: [Loop Engineering Design — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram). Job names and optional `ack-trigger`: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md#jobs).
+
+Handoff-only (not in that diagram):
+
+- `loop-detect` uploads **loop-handoff**; slim `target_matrix` cells carry `target_json`, `prompt`, `handoff_key`.
+- Execute downloads the artifact and resolves `result` / `verifier_context` by `handoff_key`.
+- `record-skip` runs `loop-run-log` when `should_run=false` and `skip_reason` is `budget` or `circuit_breaker`. Not used for `target_budget` (execute still runs; deferral is informational).
+
+## Detect Job
+
+### Required outputs
+
+| Output                  | Source                                                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                  |
+| `skip_reason`           | `loop-detect`                                                                                                           |
+| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                      |
+| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact)) |
+| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                             |
+
+Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `result` and `verifier_context` live in the **loop-handoff** artifact (`payloads/<sanitized-key>.json`).
+
+### Anti-pattern: double detect
+
+**Forbidden:** invoking the detect script again in a caller `run:` step after `loop-detect`. Resolved in dogfood — detect facts and `verifier_context` are emitted once per `loop-detect` invocation.
+
+### Target selection (inside `loop-detect`)
+
+1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`branch_match`, `pr_enabled`, `level`, …).
+2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
+3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
+4. Cap at `max_targets_per_schedule`; excess → `target_budget` on next cron.
+
+## Execute Job (matrix)
+
+Reusable workflow matrix cells cannot pair `needs.execute.outputs.*` with a separate finalize matrix job — GitHub Actions collapses reusable-workflow outputs across cells. **Finalize runs inside `ci-loop-agent.yaml`** (`finalize-l1` after `agent-l1`, `finalize-l2` after `agent-l2`). `finalize_enabled` only gates the `loop-finalize` git-landing step on `finalize-l2`.
+
+```yaml
+execute:
+  needs: detect
+  if: needs.detect.outputs.should_run == 'true'
+  strategy:
+    matrix:
+      target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+  uses: ./.github/workflows/ci-loop-agent.yaml
+  with:
+    base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
+    current_sha: ${{ matrix.target.target_json.from.ref }}
+    detect_result_json: "{}"
+    finalize_enabled: true
+    handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
+    handoff_key: ${{ matrix.target.handoff_key }}
+    prompt_text: ${{ matrix.target.prompt }}
+    target_json: ${{ toJson(matrix.target.target_json) }}
+    # … passthrough from detect + finalize config
+```
+
+`target_json` is required. `verifier_context` and `result` are resolved at runtime from the loop-handoff artifact (or inline `detect_result_json` when non-empty).
+
+**`DEFAULT_LEVEL` vs finalize:**
+
+```yaml
+auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr' }}
+```
+
+## Finalize (inside ci-loop-agent)
+
+`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. Callers set `finalize_enabled` from `delivery == 'open_pr' || (delivery == 'none' && level != 'L1')`: an L2/L3 `delivery: none` loop still runs `loop-finalize` with strategy `none` (domain persistence, state, agent branch cleanup; no git landing or PR). `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
+
+When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
+
+### Persistence layer
+
+All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate caller `git push` steps.
+
+| Input                       | Example                                                 |
+| --------------------------- | ------------------------------------------------------- |
+| `target_json`               | Matrix cell                                             |
+| `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
+| `state_push_branch`         | `branch_state` input or default branch                  |
+
+Push branch: `branch_state`, **not** `target.to.branch`.
+
+**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge (direct push preferred; auto-merge state PR when push is blocked). L3 `push` / `push_head` advances `last_sha` in the same finalize run.
+
+**Invariant:** Finalize does not edit application/doc **source under repair**.
+
+## Triggers
+
+Document applicable triggers in every caller. Prefer one primary poll/event path plus `workflow_dispatch`.
+
+Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog, docs-updater, and tech-debt callers keep `schedule` + `workflow_dispatch`.
+
+```yaml
+# Example: event-driven CI sweeper (dogfood)
+on:
+  workflow_dispatch: {}
+  workflow_run: # zizmor: ignore[dangerous-triggers] after ops checklist
+    types: [completed]
+    workflows:
+      - on-ci-push-markdown
+      # ... repair targets only (not on-loop-* / ci-loop-*)
+```
+
+```yaml
+# Example: schedule polling (docs-updater — dogfood cron)
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Monday 09:00 UTC
+  workflow_dispatch: {}
+```
+
+```yaml
+# Example: weekly tech-debt scan (on-loop-tech-debt.yaml)
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Monday 08:00 UTC
+  workflow_dispatch: {}
+```
+
+| Trigger             | Typical use                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| `schedule`          | Integration branch polling (changelog, docs-updater, tech-debt, test-gap) |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)                        |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID                 |
+
+## Concurrency
+
+`concurrency.group` **cannot use `env`**. Embed the group name in caller workflow YAML.
+
+### Shared state branch (callers)
+
+Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `branch_state` (currently `loop-state-main`):
+
+```yaml
+concurrency:
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
+```
+
+Queued runs wait for the active run to finish (detect → execute → finalize) before starting detect, so handoff JSON is never stale relative to peer loop activity. `queue: max` allows up to 100 pending runs in FIFO order (default `queue: single` would cancel an existing pending run when a third enters the group).
+
+`ci-loop-caller` does **not** set job-level concurrency on `execute`; matrix cells within one run may still fan out in parallel.
+
+### Per-entity group (entity-event callers)
+
+`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, `on-loop-github-pr-revise`, and `on-loop-github-pr-review` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
+
+## Matrix Fan-Out
+
+```yaml
+detect:
+  outputs:
+    target_matrix: ${{ steps.detect.outputs.target_matrix }}
+
+execute:
+  needs: detect
+  strategy:
+    matrix:
+      target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+  uses: ./.github/workflows/ci-loop-agent.yaml
+  with:
+    finalize_enabled: true
+```
+
+Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-detect`.
+
+## Permissions (least privilege pattern)
+
+| Job         | Typical permissions                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| detect      | `contents: read`, `actions: write` (upload artifact); profile may add `actions: read`, `pull-requests: read`                   |
+| execute     | `actions: read` (download artifact), `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
+| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)                                          |
+| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                                                         |
+
+`on-loop-state-promote` needs `contents: write` and a token with `pull-requests: write` when `loop-state-promote` opens a state PR fallback (dogfood: maintenance bot app token).
+
+`ci-loop-agent` `agent-l2` needs `pull-requests: write` when `loop-run-log` or `loop-finalize` state-write PR fallback opens on protected branches.
+
+## Caller input conventions
+
+- Keys **alphabetically ordered** (repository workflow convention).
+- Shared caller keys: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
+- Branch/finalize caps: [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical) (maps `LOOP_*` env names to `ci-loop-caller` inputs).
+
+## Adding a New Loop Caller
+
+Copy a thin `on-loop-*.yaml` (triggers + `with:` only). See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
+
+1. Copy `on-loop-changelog.yaml`, `on-loop-docs-updater.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
+2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
+3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
+4. Register in `mkdocs.yml` under **Explanation → Loop Engineering → Loop Workflows**.
+5. Package: `.apm/packages/<domain>/<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
+
+## Phase 0 Debt (resolved)
+
+Historical debt from early caller implementations. **All items below are resolved** in current `on-loop-*.yaml`; retained for audit trail only.
+
+| Debt                                             | Was                                          | Resolution (current)                                               |
+| ------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
+| Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell           |
+| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
+| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `delivery == 'open_pr' && level == L3 && finalize == 'open_pr'`    |
+| Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
+| `docs-updater` detect path                       | `on-loop-docs-updater`                       | `docs-updater/scripts/detect_changes.sh`                           |
+
+Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
+
+## References
+
+- [Multi-Branch Loops Design](multi-branch-loops-design.md)
+- [Loop Engineering Design](loop-engineering-design.md)
+- [Specification](../../reference/specification.md)
+- [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
+- [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
+- [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)
+- [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)
+- [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md)

@@ -1,0 +1,346 @@
+#!/bin/bash
+#######################################
+# Description:
+#   Start ACK (reaction) and done-thread reply for comment-triggered loops
+#   (github-pr-revise). Branches on issue_comment vs pull_request_review_comment.
+#
+# Usage:
+#   source trigger_thread.sh
+#   ack_trigger_comment
+#   ack_gathered_comments
+#   reply_trigger_comment "$(build_done_reply_body ...)"
+#
+# Design Rules:
+#   - Failures warn only; never fail the caller job
+#   - No reaction/reply for dispatch events or missing comment id
+#   - Auto-resolve of review threads stays out of scope
+#   - Environment variables mirror loop-notify-pr / caller wiring
+#
+# Output:
+#   None (library file)
+#
+# Dependencies:
+#   - bash, gh (when posting), jq (optional for body helpers)
+#######################################
+
+#######################################
+# ack_trigger_comment: Add eyes reaction on the triggering comment
+#
+# Globals:
+#   GITHUB_EVENT_NAME - Webhook event name
+#   REPOSITORY - owner/name
+#   TRIGGER_COMMENT_ID - Numeric comment id
+#   GITHUB_TOKEN / GH_TOKEN - Token for gh
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning annotations on failure
+#
+# Returns:
+#   0 always (warnings only)
+#
+#######################################
+function ack_trigger_comment {
+    local event_name="${GITHUB_EVENT_NAME:-}"
+    local comment_id="${TRIGGER_COMMENT_ID:-}"
+    local repository="${REPOSITORY:-}"
+    local endpoint
+
+    if [[ -z ${comment_id} || -z ${repository} ]]; then
+        return 0
+    fi
+    if ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::gh CLI is required for trigger ACK"
+        return 0
+    fi
+
+    case "${event_name}" in
+        issue_comment)
+            endpoint="repos/${repository}/issues/comments/${comment_id}/reactions"
+            ;;
+        pull_request_review_comment)
+            endpoint="repos/${repository}/pulls/comments/${comment_id}/reactions"
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    if ! gh api --method POST "${endpoint}" -f content='eyes' > /dev/null 2>&1; then
+        echo "::warning::Failed to ACK trigger comment ${comment_id} (${event_name})"
+        return 0
+    fi
+    echo "::notice title=trigger-ack::Added eyes reaction on comment ${comment_id}"
+    return 0
+}
+
+#######################################
+# ack_gathered_comments: Add eyes reactions for each gathered comment
+#
+# Globals:
+#   ACK_COMMENTS_JSON - JSON array of {comment_id, source}
+#   REPOSITORY - owner/name
+#   GITHUB_TOKEN / GH_TOKEN - Token for gh
+#   GITHUB_EVENT_NAME - Fallback source when entry omits source
+#   TRIGGER_COMMENT_ID - Fallback when ACK_COMMENTS_JSON is empty
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning annotations on failure
+#
+# Returns:
+#   0 always (warnings only)
+#
+# Usage:
+#   ACK_COMMENTS_JSON='[{"comment_id":1,"source":"issue_comment"}]' ack_gathered_comments
+#
+#######################################
+function ack_gathered_comments {
+    local repository="${REPOSITORY:-}"
+    local specs="${ACK_COMMENTS_JSON:-}"
+    local item comment_id source endpoint
+    local -a ids=()
+
+    if [[ -z ${repository} ]]; then
+        return 0
+    fi
+    if ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::gh CLI is required for trigger ACK"
+        return 0
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "::warning::jq is required for gathered comment ACK"
+        return 0
+    fi
+
+    if [[ -z ${specs} || ${specs} == "[]" ]]; then
+        ack_trigger_comment
+        return 0
+    fi
+
+    if ! jq -e 'type == "array"' > /dev/null 2>&1 <<< "${specs}"; then
+        echo "::warning::ACK_COMMENTS_JSON must be a JSON array"
+        ack_trigger_comment
+        return 0
+    fi
+
+    while IFS= read -r item; do
+        [[ -z ${item} || ${item} == "null" ]] && continue
+        comment_id="$(jq -r 'if .comment_id then (.comment_id | tostring) else empty end' <<< "${item}")"
+        source="$(jq -r '.source // empty' <<< "${item}")"
+        if [[ -z ${comment_id} ]]; then
+            continue
+        fi
+        if [[ -z ${source} ]]; then
+            source="${GITHUB_EVENT_NAME:-}"
+        fi
+        case "${source}" in
+            issue_comment)
+                endpoint="repos/${repository}/issues/comments/${comment_id}/reactions"
+                ;;
+            pull_request_review_comment)
+                endpoint="repos/${repository}/pulls/comments/${comment_id}/reactions"
+                ;;
+            *)
+                echo "::warning::Skipping ACK for comment ${comment_id} (unknown source: ${source})"
+                continue
+                ;;
+        esac
+        if gh api --method POST "${endpoint}" -f content='eyes' > /dev/null 2>&1; then
+            echo "::notice title=trigger-ack::Added eyes reaction on comment ${comment_id}"
+            ids+=("${comment_id}")
+        else
+            echo "::warning::Failed to ACK comment ${comment_id} (${source})"
+        fi
+    done < <(jq -c '.[]?' <<< "${specs}")
+
+    if [[ ${#ids[@]} -eq 0 ]]; then
+        ack_trigger_comment
+    fi
+    return 0
+}
+
+#######################################
+# build_done_reply_body: Render done-reply markdown for a trigger thread
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Outcome enum (or empty)
+#   $2 - Verdict (APPROVE/REJECT/empty)
+#   $3 - Reason text (optional)
+#   $4 - Commit SHA (optional)
+#   $5 - Commit URL (optional)
+#   $6 - Loop run URL (optional)
+#   $7 - Agent report overview (optional; truncated externally)
+#   $8 - Changed files, comma separated (optional)
+#   $9 - Diff stat line (optional)
+#
+# Outputs:
+#   Reply body markdown on stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function build_done_reply_body {
+    local outcome="${1:-}"
+    local verdict="${2:-}"
+    local reason="${3:-}"
+    local commit_sha="${4:-}"
+    local commit_url="${5:-}"
+    local loop_run_url="${6:-}"
+    local summary="${7:-}"
+    local changed_files="${8:-}"
+    local diff_stat="${9:-}"
+    local engine="${10:-}"
+    local usage_json="${11:-}"
+    local short_sha lead detail_reason file_entry
+    local -a files=()
+    local file_count shown_count hidden_count
+    local max_files=10
+
+    # Lead with what changed. The agent report is the answer to "what did you
+    # do"; fall back to the checker reason when no report exists (a REJECT with
+    # no diff), so the comment never opens with metadata.
+    detail_reason="${reason}"
+    if [[ -n ${summary} ]]; then
+        lead="${summary}"
+    elif [[ -n ${reason} ]]; then
+        lead="${reason}"
+        detail_reason=""
+    else
+        lead="The loop finished without producing an agent report."
+    fi
+
+    loop_meta_reset
+    if [[ -n ${commit_sha} ]]; then
+        short_sha="${commit_sha:0:7}"
+        if [[ -n ${commit_url} && ${commit_url} != "#" ]]; then
+            loop_meta_row "Commit" "[${short_sha}](${commit_url})"
+        else
+            loop_meta_row "Commit" "${short_sha}"
+        fi
+    fi
+
+    if [[ -n ${changed_files} ]]; then
+        IFS=',' read -r -a files <<< "${changed_files}"
+    fi
+
+    {
+        echo "${lead}"
+        echo ""
+
+        if [[ ${#files[@]} -gt 0 ]]; then
+            echo "**Files changed**"
+            echo ""
+            file_count="${#files[@]}"
+            shown_count="${file_count}"
+            if [[ ${shown_count} -gt ${max_files} ]]; then
+                shown_count="${max_files}"
+            fi
+            for ((i = 0; i < shown_count; i++)); do
+                file_entry="${files[i]}"
+                [[ -z ${file_entry} ]] && continue
+                if [[ -n ${commit_sha} && ${commit_url} == */commit/* ]]; then
+                    echo "- [${file_entry}](${commit_url%/commit/*}/blob/${commit_sha}/${file_entry})"
+                else
+                    echo "- \`${file_entry}\`"
+                fi
+            done
+            if [[ ${file_count} -gt ${shown_count} ]]; then
+                hidden_count=$((file_count - shown_count))
+                echo "- …and ${hidden_count} more"
+            fi
+            echo ""
+        fi
+
+        if [[ -n ${diff_stat} ]]; then
+            echo "\`${diff_stat}\`"
+            echo ""
+        fi
+
+        # Everything below is about the loop run itself, not about the change.
+        # Shape comes from build_loop_meta_block so PR bodies, PR comments,
+        # trigger replies, and entity Issue comments all read the same.
+        build_loop_meta_block "${outcome}" "${verdict}" "${detail_reason}" \
+            "${engine}" "${usage_json}" "${loop_run_url}"
+    }
+}
+
+#######################################
+# reply_trigger_comment: Post done reply on the triggering comment thread
+#
+# Globals:
+#   GITHUB_EVENT_NAME - Webhook event name
+#   PR_NUMBER - Pull request number
+#   REPOSITORY - owner/name
+#   TRIGGER_COMMENT_ID - Numeric comment id
+#   GITHUB_TOKEN / GH_TOKEN - Token for gh
+#
+# Arguments:
+#   $1 - Reply body markdown
+#
+# Outputs:
+#   Warning annotations on failure
+#
+# Returns:
+#   0 always (warnings only)
+#
+#######################################
+function reply_trigger_comment {
+    local body="${1:-}"
+    local event_name="${GITHUB_EVENT_NAME:-}"
+    local comment_id="${TRIGGER_COMMENT_ID:-}"
+    local repository="${REPOSITORY:-}"
+    local pr_number="${PR_NUMBER:-}"
+    local body_file payload
+
+    if [[ -z ${body} || -z ${comment_id} || -z ${repository} || -z ${pr_number} ]]; then
+        return 0
+    fi
+    if ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::gh CLI is required for trigger done-reply"
+        return 0
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "::warning::jq is required for trigger done-reply"
+        return 0
+    fi
+
+    body_file="$(mktemp)"
+    printf '%s\n' "${body}" > "${body_file}"
+    payload="$(jq -nc --rawfile body "${body_file}" '{body: $body}')"
+    rm -f "${body_file}"
+
+    case "${event_name}" in
+        pull_request_review_comment)
+            if ! printf '%s' "${payload}" | gh api --method POST \
+                "repos/${repository}/pulls/${pr_number}/comments/${comment_id}/replies" \
+                --input - > /dev/null 2>&1; then
+                echo "::warning::Failed to reply on review comment ${comment_id}"
+                return 0
+            fi
+            ;;
+        issue_comment)
+            # Conversation comments are not REST-threaded; post a follow-up on the PR.
+            if ! printf '%s' "${payload}" | gh api --method POST \
+                "repos/${repository}/issues/${pr_number}/comments" \
+                --input - > /dev/null 2>&1; then
+                echo "::warning::Failed to post done reply for issue comment ${comment_id}"
+                return 0
+            fi
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    echo "::notice title=trigger-reply::Posted done reply for comment ${comment_id}"
+    return 0
+}

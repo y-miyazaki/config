@@ -1,0 +1,116 @@
+---
+applyTo: "**/skills/**/SKILL.md,**/skills/**/references/*.md"
+description: "Agent Skills Development Instructions"
+---
+
+# Agent Skills Instructions
+
+## Scope
+
+- Scope covers designing and updating agent skill documents (`SKILL.md`) and bundled reference files.
+- This file defines SKILL authoring standards and is treated as an exception to the common instruction template (Required Sections ordering for skills overrides the default Standards layout).
+- Structural, quality, and pattern rules (S-_, Q-_, P-_, BP-_) live in Guidelines (synced from `agent-skills-review`).
+
+## Standards
+
+### Naming Conventions
+
+| Component      | Rule       | Example             |
+| -------------- | ---------- | ------------------- |
+| Skill name     | kebab-case | go-review           |
+| Reference file | kebab-case | common-checklist.md |
+| Script file    | snake_case | validate.sh         |
+
+### Agent Root Canonical List
+
+| Kind        | Values                                                                          |
+| ----------- | ------------------------------------------------------------------------------- |
+| Agent roots | `.github`, `.agents`, `.claude`, `.codex`, `.cursor`, `cursor`, `.kiro`, `kiro` |
+| Not a root  | `.vscode` (editor-local configuration)                                          |
+
+Preferred path forms in markdown examples:
+
+| Kind        | Form                                          |
+| ----------- | --------------------------------------------- |
+| Cross-skill | `<agent-root>/skills/<skill-name>/...`        |
+| In-skill    | `scripts/...`, `references/...`, `assets/...` |
+
+### Reference Files Matrix
+
+| File Name                       | Required | Purpose                                                                                | Load Trigger              |
+| ------------------------------- | -------- | -------------------------------------------------------------------------------------- | ------------------------- |
+| `common-checklist.md`           | Yes      | Canonical checklist (ItemIDs when gates/findings are cited; see Checklist item layout) | `(always read)`           |
+| `common-output-format.md`       | Yes      | Canonical output contract                                                              | `(always read)`           |
+| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure                                                | `(read on failure)`       |
+| `common-individual-commands.md` | No       | Debug-only command catalog                                                             | `(read on debugging)`     |
+| `category-*.md`                 | No       | Domain-specific review criteria                                                        | `(read when <condition>)` |
+
+Allowlisted Reference Files Guide triggers:
+
+- `(always read)`
+- `(read on failure)`
+- `(read on debugging)`
+- `(read on automation path)`
+- `(read on interactive path)`
+- `(read when <condition>)` — `<condition>` is a single concrete predicate
+
+### Checklist item layout
+
+When `common-checklist.md` uses ItemIDs (`PREFIX-nn`), use **exactly one** layout per file (BP-05). Recipe checklists without ItemIDs may keep plain procedural H2s.
+
+| Layout    | H2                               | Items                                                                        | Typical family                              |
+| --------- | -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------- |
+| **Index** | `## Title (PREFIX)`              | `- PREFIX-nn (LEVEL): title` (Check/Why/Fix in `category-*.md` when present) | `*-review`, `*-validation`, step checklists |
+| **Gate**  | `## Title` (no `(PREFIX)` on H2) | `### PREFIX-nn: Title` (+ optional checkbox / **PASS**)                      | docs-\*, utility gates                      |
+
+Plain H2 sections **without** ItemIDs (for example `## Execution Order`, `## Pass Criteria`) may sit beside index or gate sections in the same file. Do not mix index H2 short-names with gate H3 ItemID headings. Do not require ItemIDs on every skill (loop recipe checklists may stay ID-less).
+
+## Guidelines
+
+### Best Practice Checks (BP)
+- BP-01 (SHOULD): Description states what the skill does and when to use it
+- BP-02 (SHOULD): Reference Files Guide states when each reference is read
+- BP-03 (SHOULD): SKILL.md avoids redundant prose already in references
+- BP-04 (SHOULD): Do not over-compress below sibling skill depth
+- BP-05 (SHOULD): Checklist ItemID layout is one style per file
+
+### Pattern Checks (P)
+- P-01 (SHOULD): Workflow matches the skill family pattern (not ad-hoc steps)
+- P-02 (SHOULD): Output matches common-output-format contract
+- P-03 (SHOULD): Gather required context before emitting the final report
+
+### Quality Checks (Q)
+- Q-01 (SHOULD): Output format is implementable (schema or Markdown sections)
+- Q-02 (SHOULD): Execution Scope splits Does vs Out of Scope
+- Q-03 (SHOULD): Execution path is single/canonical or branches are explicit
+- Q-04 (SHOULD): Inputs/outputs name concrete shapes with examples
+- Q-05 (SHOULD): Constraints list only non-obvious project rules
+- Q-06 (MUST): Instructions are imperative; no "appropriately"/"as needed"
+- Q-07 (SHOULD): SKILL.md depth aligns with package siblings
+- Q-08 (SHOULD): References/ includes common-checklist and common-output-format
+- Q-09 (SHOULD): Record waza token evidence; over-budget is advisory
+- Q-10 (SHOULD): Workflow defines failure severity and actions
+- Q-11 (SHOULD): Required params have no silent defaults; defaults are optional
+- Q-12 (SHOULD): Input/Output/Workflow/References do not contradict each other
+
+### Structural Checks (S)
+- S-01 (MUST): SKILL.md has the five required ## sections
+- S-02 (MUST): Frontmatter has name, description, license (+ version metadata)
+- S-03 (MUST): References/ start with H1 and use consistent heading hierarchy
+- S-04 (MUST): Links stay in-skill or https:// (no ../docs escapes)
+- S-05 (MUST): Use <agent-root> for install paths; do not hardcode .github/skills
+
+### Code Modification Guidelines
+
+- Automate deterministic checks (existence, quantitative, file presence) in skill `scripts/`; keep judgment-based checks in the review skill workflow.
+
+
+## Testing and Validation
+
+On-demand validation: see agent-skills-review skill SKILL.md.
+
+## Security Guidelines
+
+- Do not include raw secret values, credentials, or internal-only URLs in SKILL.md, references, or eval fixtures; use obvious placeholders and document redaction where relevant.
+- Validate inputs in `scripts/` code and prevent arbitrary path operations.
+- Sanitize arguments when invoking external tools to prevent command injection.

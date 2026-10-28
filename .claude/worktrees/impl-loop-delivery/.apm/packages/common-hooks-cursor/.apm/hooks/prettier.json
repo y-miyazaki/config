@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "./scripts/prettier.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

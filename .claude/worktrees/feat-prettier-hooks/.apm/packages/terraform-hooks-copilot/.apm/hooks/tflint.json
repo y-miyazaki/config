@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/tflint.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

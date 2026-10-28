@@ -1,0 +1,454 @@
+# Reusable workflow: Shell script lint and validation
+# Uses shellcheck, shfmt, bash syntax checks, shebang verification, and Bats/ShellSpec discovery when present.
+name: ci-shell-script
+
+on:
+  workflow_call:
+    inputs:
+      fail_level:
+        default: "warning"
+        description: "Otherwise, exit code 1 for reviewdog if it finds at least 1 issue with severity greater than or equal to the given level. Possible values: [none,any,info,warning,error]"
+        required: false
+        type: string
+      fail_on_warnings:
+        default: false
+        description: "When true, treat warnings as failures for selected steps (boolean)."
+        required: false
+        type: boolean
+      script_path:
+        default: ""
+        description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh and **/*.bats are checked"
+        required: false
+        type: string
+      shell_test_exclude_globs:
+        default: ""
+        description: "Optional comma-separated directory names to exclude while discovering Bats/ShellSpec tests (matched as path segments). Leave empty to discover all checked-out paths."
+        required: false
+        type: string
+      shell_test_exclude_top_level_paths:
+        default: ""
+        description: "Comma-separated repository-root paths excluded from discovery (for example .apm). Does not prune nested directories with the same final segment name."
+        required: false
+        type: string
+      shellspec_checksum:
+        default: "350d3de04ba61505c54eda31a3c2ee912700f1758b1a80a284bc08fd8b6c5992" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/shellspec/shellspec/releases/download/0.28.1/shellspec-dist.tar.gz" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for shellspec-dist.tar.gz"
+        required: false
+        type: string
+      shellspec_version:
+        default: "0.28.1"
+        description: "ShellSpec release tag to install when .shellspec tests are discovered"
+        required: false
+        type: string
+      shfmt_checksum:
+        default: "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for shfmt linux amd64 binary"
+        required: false
+        type: string
+      shfmt_flags:
+        default: "-l -s -i 4 -ci -bn -sr"
+        description: "Flags passed to shfmt when formatting script_path files (reviewdog/action-suggester reports the diff)."
+        required: false
+        type: string
+      shfmt_version:
+        default: "3.10.0"
+        description: "shfmt release version to install when formatting script_path files"
+        required: false
+        type: string
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+env:
+  FAIL_LEVEL: ${{ inputs.fail_level }}
+  FAIL_ON_WARNINGS: ${{ inputs.fail_on_warnings }}
+  SCRIPT_PATH: ${{ inputs.script_path }}
+  SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
+  SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
+  SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
+  SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
+  SHFMT_CHECKSUM: ${{ inputs.shfmt_checksum }}
+  SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
+  SHFMT_VERSION: ${{ inputs.shfmt_version }}
+
+jobs:
+  shell-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Discover shell test targets
+        id: discover
+        shell: bash
+        run: |
+          set -euo pipefail
+          prune_expr=()
+          IFS=',' read -ra top_excludes <<< "${SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS}"
+          for top in "${top_excludes[@]}"; do
+            top="${top#"${top%%[![:space:]]*}"}"
+            top="${top%"${top##*[![:space:]]}"}"
+            [[ -z "${top}" ]] && continue
+            top="${top#./}"
+            prune_expr+=(-path "./${top}" -o -path "./${top}/*" -o)
+          done
+          IFS=',' read -ra excludes <<< "${SHELL_TEST_EXCLUDE_GLOBS}"
+          for name in "${excludes[@]}"; do
+            name="${name#"${name%%[![:space:]]*}"}"
+            name="${name%"${name##*[![:space:]]}"}"
+            [[ -z "${name}" ]] && continue
+            prune_expr+=(-name "${name}" -o)
+          done
+          if [[ ${#prune_expr[@]} -gt 0 ]]; then
+            unset 'prune_expr[${#prune_expr[@]}-1]'
+            find_prune=(\( "${prune_expr[@]}" \) -prune -o)
+          else
+            find_prune=()
+          fi
+
+          mapfile -d '' bats_files < <(
+            find . "${find_prune[@]}" -type f -name '*.bats' -print0 2>/dev/null | sort -z
+          )
+
+          shellspec_roots=()
+          while IFS= read -r marker; do
+            [[ -z "${marker}" ]] && continue
+            shellspec_roots+=("$(dirname "${marker#./}")")
+          done < <(find . "${find_prune[@]}" -type f -name '.shellspec' -print 2>/dev/null | sort -u)
+
+          echo "bats_count=${#bats_files[@]}" >> "${GITHUB_OUTPUT}"
+          echo "shellspec_count=${#shellspec_roots[@]}" >> "${GITHUB_OUTPUT}"
+
+          if [[ ${#bats_files[@]} -gt 0 ]]; then
+            printf '%s\n' "${bats_files[@]}" > /tmp/bats_files.txt
+            echo "has_bats=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_bats=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          if [[ ${#shellspec_roots[@]} -gt 0 ]]; then
+            printf '%s\n' "${shellspec_roots[@]}" > /tmp/shellspec_roots.txt
+            echo "has_shellspec=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_shellspec=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          if [[ ${#bats_files[@]} -eq 0 && ${#shellspec_roots[@]} -eq 0 ]]; then
+            echo "No Bats or ShellSpec tests discovered; skipping shell test execution."
+          fi
+
+      - name: Setup Bats
+        if: steps.discover.outputs.has_bats == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v bats >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
+          fi
+          bats --version
+
+      - name: Setup actionlint
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          binary: actionlint
+          checksum: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 # pragma: allowlist secret
+          repo: rhysd/actionlint
+          version: "1.7.12"
+
+      - name: Setup ghalint
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          binary: ghalint
+          checksum: 98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c # pragma: allowlist secret
+          repo: suzuki-shunsuke/ghalint
+          version: "1.5.6"
+
+      - name: Setup zizmor
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          asset_pattern: zizmor-x86_64-unknown-linux-gnu.tar.gz
+          binary: zizmor
+          checksum: dd96df044a6e8538d5f423790f453bdd03d49e5b2bcc38214acc41a2f1297839 # pragma: allowlist secret
+          repo: zizmorcore/zizmor
+          version: "1.29.0"
+
+      - name: Exec Bats tests
+        if: steps.discover.outputs.has_bats == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t bats_files < /tmp/bats_files.txt
+          bats "${bats_files[@]}"
+
+      - name: Setup ShellSpec
+        if: steps.discover.outputs.has_shellspec == 'true'
+        shell: bash
+        env:
+          SHELLSPEC_CHECKSUM: ${{ env.SHELLSPEC_CHECKSUM }}
+          SHELLSPEC_VERSION: ${{ env.SHELLSPEC_VERSION }}
+        run: |
+          set -euo pipefail
+          if command -v shellspec >/dev/null 2>&1; then
+            shellspec --version
+            exit 0
+          fi
+          asset="shellspec-dist.tar.gz"
+          url="https://github.com/shellspec/shellspec/releases/download/${SHELLSPEC_VERSION}/${asset}"
+          curl -sSLo "/tmp/${asset}" "${url}"
+          echo "${SHELLSPEC_CHECKSUM}  /tmp/${asset}" | sha256sum -c -
+          mkdir -p "${HOME}/.local/lib" "${HOME}/.local/bin"
+          tar -xzf "/tmp/${asset}" -C "${HOME}/.local/lib"
+          ln -sfn "${HOME}/.local/lib/shellspec/shellspec" "${HOME}/.local/bin/shellspec"
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          export PATH="${HOME}/.local/bin:${PATH}"
+          shellspec --version
+
+      - name: Exec ShellSpec tests
+        if: steps.discover.outputs.has_shellspec == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r root; do
+            [[ -z "${root}" ]] && continue
+            echo "Running shellspec in ${root}"
+            (
+              cd "${root}"
+              shellspec
+            )
+          done < /tmp/shellspec_roots.txt
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          artifacts: |
+            (none)
+          params: |
+            bats_count: ${{ steps.discover.outputs.bats_count }}
+            shellspec_count: ${{ steps.discover.outputs.shellspec_count }}
+          status: "${{ job.status }}"
+          title: "Shell Script Tests"
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git auth
+        if: github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          github_token: ${{ github.token }}
+          operation: configure
+
+      - name: Setup Expand file list
+        id: file-list
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086,SC2046
+          # If script_path is empty, check all shell scripts in the repo
+          raw_input="${SCRIPT_PATH}"
+          if [ -z "$raw_input" ]; then
+            raw_input='**/*.sh,**/*.bats'
+          fi
+          IFS=',' read -ra patterns <<< "$raw_input"
+          files=()
+          shopt -s globstar nullglob
+          for p in "${patterns[@]}"; do
+            for f in $p; do
+              files+=("$f")
+            done
+          done
+          shopt -u globstar nullglob
+          if [ ${#files[@]} -eq 0 ]; then
+            {
+              echo "no_files=true"
+              echo "files_list="
+            } >> "$GITHUB_OUTPUT"
+          else
+            printf "%s\n" "${files[@]}" > /tmp/scripts_to_check.txt
+            # Join files with a comma (no trailing comma) for reviewdog 'path' input
+            files_csv=$(IFS=,; echo "${files[*]}")
+            {
+              echo "no_files=false"
+              echo "files_list=$files_csv"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install shfmt
+        if: steps.file-list.outputs.no_files == 'false'
+        uses: y-miyazaki/config/.github/actions/install-github-release@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          asset_pattern: "shfmt_v{version}_linux_amd64"
+          binary: shfmt
+          checksum: ${{ env.SHFMT_CHECKSUM }}
+          repo: mvdan/sh
+          version: ${{ env.SHFMT_VERSION }}
+
+      - name: Apply shfmt to script_path files
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          while IFS= read -r f; do
+            [[ -z "${f}" ]] && continue
+            shfmt ${SHFMT_FLAGS} -w "${f}"
+          done < /tmp/scripts_to_check.txt
+
+      - name: Exec shfmt + reviewdog (PR comments)
+        if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
+        uses: reviewdog/action-suggester@8219e3d2e54a63ddecf1318659aa541bd1fa7202 # v1.26.2
+        with:
+          fail_level: ${{ env.FAIL_LEVEL }}
+          filter_mode: file
+          github_token: ${{ github.token }}
+          level: error
+          reviewdog_flags: "-reporter=github-pr-review"
+          tool_name: shfmt
+
+      - name: Exec shfmt + reviewdog (push/check)
+        if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
+        uses: reviewdog/action-suggester@8219e3d2e54a63ddecf1318659aa541bd1fa7202 # v1.26.2
+        with:
+          fail_level: ${{ env.FAIL_LEVEL }}
+          filter_mode: file
+          github_token: ${{ github.token }}
+          level: error
+          reviewdog_flags: "-reporter=github-check"
+          tool_name: shfmt
+
+      - name: Exec ShellCheck + reviewdog (PR comments)
+        if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
+        uses: reviewdog/action-shellcheck@d0b8d5fd7fad6afdb6e1b6ce1778892be4d1f427 # v1.34.1
+        with:
+          fail_level: ${{ env.FAIL_LEVEL }}
+          filter_mode: file
+          github_token: ${{ github.token }}
+          level: error
+          path: ${{ steps.file-list.outputs.files_list }}
+          reporter: github-pr-review
+          shellcheck_flags: "-x"
+
+      - name: Exec ShellCheck + reviewdog (push/check)
+        if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
+        uses: reviewdog/action-shellcheck@d0b8d5fd7fad6afdb6e1b6ce1778892be4d1f427 # v1.34.1
+        with:
+          fail_level: ${{ env.FAIL_LEVEL }}
+          filter_mode: file
+          github_token: ${{ github.token }}
+          level: error
+          path: ${{ steps.file-list.outputs.files_list }}
+          reporter: github-check
+          shellcheck_flags: "-x"
+
+      - name: Exec Bash syntax check (bash -n)
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          set -euo pipefail
+          while IFS= read -r f; do
+            if [[ "$f" == *.bats ]]; then
+              echo "Skipping bash syntax check for Bats file: $f"
+              continue
+            fi
+            echo "Checking syntax: $f"
+            bash -n "$f"
+          done < /tmp/scripts_to_check.txt
+
+      - name: Exec Shebang check (shell or bats)
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          set -euo pipefail
+          while IFS= read -r f; do
+            first_line=$(head -n1 "$f" || true)
+            if [[ ! "$first_line" =~ ^#!/.*sh ]] && [[ ! "$first_line" =~ ^#!/.*bats ]]; then
+              echo "Invalid shebang in $f: $first_line" >&2
+              exit 2
+            fi
+          done < /tmp/scripts_to_check.txt
+
+      - name: Exec Permissions check
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          set -euo pipefail
+          rc=0
+          while IFS= read -r f; do
+            if [[ "$f" == *.bats ]]; then
+              continue
+            fi
+            if [[ ! -x "$f" ]]; then
+              # Emit GitHub workflow warning annotation for visibility
+              echo "::warning file=$f::Script is not executable"
+              rc=1
+            fi
+          done < /tmp/scripts_to_check.txt
+
+          if [[ $rc -ne 0 ]]; then
+            if [[ "${FAIL_ON_WARNINGS:-false}" == "true" ]]; then
+              echo "Failing due to non-executable scripts and fail_on_warnings=true" >&2
+              exit 1
+            else
+              echo "One or more scripts are not executable; continue because fail_on_warnings=false"
+            fi
+          fi
+
+      - name: Clear git auth
+        if: always() && github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          github_token: ${{ github.token }}
+          operation: clear
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            files_list: ${{ steps.file-list.outputs.files_list }}
+          params: |
+            script_path: ${{ env.SCRIPT_PATH }}
+            fail_level: ${{ env.FAIL_LEVEL }}
+          status: "${{ job.status }}"
+          title: "Shell Script Lint"

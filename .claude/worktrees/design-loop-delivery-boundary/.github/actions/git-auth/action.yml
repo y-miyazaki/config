@@ -1,0 +1,50 @@
+name: git-auth
+description: "Configure and clear ephemeral git authentication using http.extraheader (same pattern as actions/checkout)."
+author: "GitHub Copilot"
+inputs:
+  github_token:
+    description: "Authentication token to use (pass github.token from workflow)"
+    required: true
+  operation:
+    default: "configure"
+    description: "Operation to perform: configure or clear"
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Validate git repo
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! git rev-parse --git-dir > /dev/null 2>&1; then
+          echo "::error::Not inside a git repository. Run actions/checkout first."
+          exit 1
+        fi
+
+    - name: Validate operation
+      shell: bash
+      env:
+        OPERATION: ${{ inputs.operation }}
+      run: |
+        set -euo pipefail
+        if [[ "${OPERATION}" != "configure" && "${OPERATION}" != "clear" ]]; then
+          echo "::error::Invalid operation: '${OPERATION}'. Expected 'configure' or 'clear'."
+          exit 1
+        fi
+
+    - name: Configure git auth (http.extraheader)
+      if: inputs.operation == 'configure'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        set -euo pipefail
+        BASIC_CRED=$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)
+        git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${BASIC_CRED}"
+
+    - name: Clear git auth (http.extraheader)
+      if: inputs.operation == 'clear'
+      shell: bash
+      run: |
+        set -euo pipefail
+        git config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true

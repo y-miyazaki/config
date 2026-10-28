@@ -1,0 +1,273 @@
+name: loop-execute
+description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
+
+inputs:
+  agent_checker_effort:
+    default: ""
+    description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
+  agent_checker_instructions:
+    default: ""
+    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
+    required: false
+  agent_checker_max_turns:
+    default: "3"
+    description: "Maximum checker agent turns"
+    required: false
+  agent_checker_model:
+    default: ""
+    description: "Checker model override"
+    required: false
+  agent_checker_path_pattern:
+    default: ""
+    description: "Optional extended-regex to infer file paths from checker text when JSON files is missing"
+    required: false
+  agent_checker_skill_name:
+    default: ""
+    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
+    required: false
+  agent_cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  agent_commit_message:
+    default: "chore: loop-automated update"
+    description: "Commit message prefix for loop attempts"
+    required: false
+  agent_edit_allowlist:
+    default: ""
+    description: "Comma-separated glob allowlist (** = unrestricted); changes outside these paths trigger REJECT"
+    required: false
+  agent_edit_denylist:
+    default: ""
+    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
+    required: false
+  agent_engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+  agent_loop_max_attempts:
+    default: "3"
+    description: "Maximum Agent→Verify loop attempts"
+    required: false
+  agent_maker_effort:
+    default: ""
+    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
+  agent_maker_max_turns:
+    default: "5"
+    description: "Maximum maker agent turns per loop attempt"
+    required: false
+  agent_maker_model:
+    default: ""
+    description: "Maker model override"
+    required: false
+  agent_maker_skill_name:
+    description: "Maker skill name (context only for the checker)"
+    required: true
+  agent_token:
+    description: "Authentication token for the selected engine"
+    required: true
+  agent_tool_allowlist:
+    default: ""
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    required: false
+  agent_unchanged_verdict:
+    default: ""
+    description: "Verdict when the maker produces no file changes (APPROVE or REJECT). Required at L2/L3 (validated at detect); empty is an error, there is no default"
+    required: false
+  base_branch:
+    default: "main"
+    description: "Base branch for verify diff"
+    required: false
+  branch:
+    description: "Worktree branch name"
+    required: true
+  github_token:
+    description: "Resolved GitHub token for gh CLI, push, and API calls"
+    required: true
+  handoff_dir:
+    default: ""
+    description: "Downloaded loop-handoff artifact directory; detect JSON for the maker prompt and notify context is resolved from it by handoff_key"
+    required: false
+  handoff_key:
+    default: ""
+    description: "Target handoff key for artifact payload lookup"
+    required: false
+  node_version:
+    default: "24.21.0"
+    description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
+    required: false
+  prompt_implementer_feedback:
+    default: ""
+    description: "Maker retry prompt template. Placeholders: {{base_prompt}}, {{feedback}}"
+    required: false
+  prompt_text:
+    description: "Maker prompt text"
+    required: true
+  prompt_verifier_default_criteria:
+    default: ""
+    description: "Default checker APPROVE/REJECT criteria when agent_checker_instructions is empty"
+    required: false
+  prompt_verifier_initial:
+    default: ""
+    description: "Checker INITIAL mode intro. Placeholder: {{attempt}}"
+    required: false
+  prompt_verifier_output_contract:
+    default: ""
+    description: "Checker JSON output contract appended to the checker prompt"
+    required: false
+  prompt_verifier_regression:
+    default: ""
+    description: "Checker REGRESSION mode body. Placeholders: {{attempt}}, {{open_rejections}}, {{attempt_delta}}"
+    required: false
+  prompt_verifier_task:
+    default: ""
+    description: "Checker task section inserted before criteria"
+    required: false
+  uv_version:
+    default: "0.13.0"
+    description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
+    required: false
+  verifier_context:
+    default: ""
+    description: "Additional markdown context appended to the checker prompt (e.g. CI logs, lint output)"
+    required: false
+  worktree_path:
+    description: "Absolute path to the worktree"
+    required: true
+
+outputs:
+  attempts:
+    description: "Number of Agent→Verify attempts executed"
+    value: ${{ steps.loop.outputs.attempts }}
+  denylist_blocked:
+    description: "true when the final attempt's diff still matched the denylist (push is skipped)"
+    value: ${{ steps.loop.outputs.denylist_blocked }}
+  failure_message:
+    description: "Truncated failure message for run log diagnostics"
+    value: ${{ steps.failure_diag.outputs.failure_message }}
+  failure_stage:
+    description: "Failure stage when execute push/notify fails (empty on success)"
+    value: ${{ steps.failure_diag.outputs.failure_stage }}
+  finalize_outcome_override:
+    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
+    value: ${{ steps.loop.outputs.finalize_outcome_override }}
+  has_changes:
+    description: "Whether HEAD differs from base (product files) or this run committed files"
+    value: ${{ steps.push.outputs.has_changes }}
+  notify_context_json:
+    description: "Machine context for loop-notify-pr"
+    value: ${{ steps.notify_context.outputs.notify_context_json }}
+  open_rejections:
+    description: "JSON array of unresolved structured rejections"
+    value: ${{ steps.loop.outputs.open_rejections }}
+  reason:
+    description: "Final checker reason"
+    value: ${{ steps.loop.outputs.reason }}
+  usage_json:
+    description: "Measured token usage JSON (empty when CLI usage is unavailable)"
+    value: ${{ steps.loop.outputs.usage_json }}
+  verdict:
+    description: "Final verdict (APPROVE or REJECT)"
+    value: ${{ steps.loop.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      with:
+        enable-cache: true
+        prune-cache: true
+        version: ${{ inputs.uv_version }}
+
+    - name: Install CLI
+      shell: bash
+      env:
+        AGENT_CLI_VERSION: ${{ inputs.agent_cli_version }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+      run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
+
+    - name: Run Bounded Loop
+      id: loop
+      shell: bash
+      working-directory: ${{ inputs.worktree_path }}
+      env:
+        AGENT_CHECKER_EFFORT: ${{ inputs.agent_checker_effort }}
+        AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
+        AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
+        AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
+        AGENT_CHECKER_PATH_PATTERN: ${{ inputs.agent_checker_path_pattern }}
+        AGENT_CHECKER_SKILL_NAME: ${{ inputs.agent_checker_skill_name }}
+        AGENT_COMMIT_MESSAGE: ${{ inputs.agent_commit_message }}
+        AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
+        AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+        AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
+        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
+        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_TOKEN: ${{ inputs.agent_token }}
+        AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        BRANCH: ${{ inputs.branch }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        HANDOFF_KEY: ${{ inputs.handoff_key }}
+        LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
+        PROMPT_IMPLEMENTER_FEEDBACK: ${{ inputs.prompt_implementer_feedback }}
+        PROMPT_TEXT: ${{ inputs.prompt_text }}
+        PROMPT_VERIFIER_DEFAULT_CRITERIA: ${{ inputs.prompt_verifier_default_criteria }}
+        PROMPT_VERIFIER_INITIAL: ${{ inputs.prompt_verifier_initial }}
+        PROMPT_VERIFIER_OUTPUT_CONTRACT: ${{ inputs.prompt_verifier_output_contract }}
+        PROMPT_VERIFIER_REGRESSION: ${{ inputs.prompt_verifier_regression }}
+        PROMPT_VERIFIER_TASK: ${{ inputs.prompt_verifier_task }}
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+        VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
+        WORKTREE_PATH: ${{ inputs.worktree_path }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
+
+    - name: Push Branch
+      id: push
+      shell: bash
+      env:
+        BRANCH: ${{ inputs.branch }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        LOOP_DENYLIST_BLOCKED: ${{ steps.loop.outputs.denylist_blocked }}
+        LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+        WORKTREE_PATH: ${{ inputs.worktree_path }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/push.sh"
+
+    - name: Build Notify Context
+      id: notify_context
+      shell: bash
+      env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        HANDOFF_KEY: ${{ inputs.handoff_key }}
+        HAS_CHANGES: ${{ steps.push.outputs.has_changes }}
+        LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+        WORKTREE_PATH: ${{ inputs.worktree_path }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/notify_context.sh"
+
+    - name: Cleanup Worktree
+      if: always()
+      shell: bash
+      env:
+        WORKTREE_PATH: ${{ inputs.worktree_path }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/cleanup.sh"
+
+    - name: Export Failure Diagnostics
+      if: always()
+      id: failure_diag
+      shell: bash
+      env:
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+      run: bash "${GITHUB_ACTION_PATH}/../lib/loop/export_failure_diag.sh"

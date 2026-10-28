@@ -1,0 +1,95 @@
+name: loop-run-log
+description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the base branch."
+
+inputs:
+  agent_result:
+    default: ""
+    description: "agent-l2 job result (success | failure | cancelled | skipped)"
+    required: false
+  attempts:
+    default: ""
+    description: "Number of Agent→Verify attempts (empty when execute did not run)"
+    required: false
+  base_branch:
+    default: "main"
+    description: "Base branch the run log commit is pushed to"
+    required: false
+  duration_s:
+    default: ""
+    description: "Run duration in seconds (computed from run_started_at when empty)"
+    required: false
+  failure_message:
+    default: ""
+    description: "Truncated platform failure message for diagnostics"
+    required: false
+  failure_stage:
+    default: ""
+    description: "Platform failure stage (push | notify_context | finalize_pr | agent_execute | …)"
+    required: false
+  github_token:
+    description: "GitHub token for commit and push"
+    required: true
+  has_changes:
+    default: ""
+    description: "Whether agent produced changes (true/false, empty when execute did not run)"
+    required: false
+  loop_name:
+    description: "Loop name recorded as loop_name in run log JSON (e.g. docs-updater)"
+    required: true
+  loop_run_id:
+    default: ${{ github.run_id }}
+    description: "GitHub Actions workflow run ID"
+    required: false
+  outcome:
+    description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"
+    required: true
+  run_log_file:
+    default: ".loop/loop-run-log.md"
+    description: "Path to JSONL run log markdown file"
+    required: false
+  run_started_at:
+    default: ""
+    description: "Workflow run start timestamp (ISO 8601) for duration calculation"
+    required: false
+  skip_reason:
+    default: "none"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
+    required: false
+  usage_json:
+    default: ""
+    description: "Measured token usage JSON from loop-execute (empty when unavailable)"
+    required: false
+  verdict:
+    default: ""
+    description: "Checker verdict (APPROVE or REJECT, empty when execute did not run)"
+    required: false
+
+outputs:
+  entry_json:
+    description: "Appended JSON log entry"
+    value: ${{ steps.append.outputs.entry_json }}
+
+runs:
+  using: composite
+  steps:
+    - name: Append Run Log Entry
+      id: append
+      shell: bash
+      env:
+        AGENT_RESULT: ${{ inputs.agent_result }}
+        ATTEMPTS: ${{ inputs.attempts }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        DURATION_S_INPUT: ${{ inputs.duration_s }}
+        FAILURE_MESSAGE: ${{ inputs.failure_message }}
+        FAILURE_STAGE: ${{ inputs.failure_stage }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_RUN_ID: ${{ inputs.loop_run_id }}
+        OUTCOME: ${{ inputs.outcome }}
+        RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        RUN_STARTED_AT: ${{ inputs.run_started_at }}
+        SKIP_REASON: ${{ inputs.skip_reason }}
+        USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

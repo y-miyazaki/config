@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "entity:pr:990": {
+      "last_run": "2026-10-17T07:31:44Z",
+      "outcome": "reported",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Single report-file change; finding has a base-verified verbatim CLAUDE.md rule quote, correct in_diff on a new-file hunk, and premises record the PR intent."
+    }
+  }
+}

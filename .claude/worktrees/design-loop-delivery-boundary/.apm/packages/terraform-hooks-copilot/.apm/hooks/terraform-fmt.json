@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/terraform_fmt.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

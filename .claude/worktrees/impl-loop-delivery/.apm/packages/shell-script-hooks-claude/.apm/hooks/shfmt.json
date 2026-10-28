@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/shfmt.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

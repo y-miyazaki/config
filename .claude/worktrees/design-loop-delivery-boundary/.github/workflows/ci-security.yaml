@@ -1,0 +1,182 @@
+# Reusable workflow: repository security (Trivy + SBOM + dependency review)
+# Runs Trivy filesystem scanning, CycloneDX SBOM generation, and PR dependency review.
+name: ci-security
+
+on:
+  workflow_call:
+    inputs:
+      artifact_prefix:
+        default: repo
+        description: "Prefix for SBOM artifact name (sbom-{prefix})"
+        required: false
+        type: string
+      dependency_review_fail_on_severity:
+        default: high
+        description: "dependency-review fail-on-severity (low, moderate, high, critical)"
+        required: false
+        type: string
+      scan_ref:
+        default: .
+        description: "Trivy scan-ref (repository root or monorepo subdirectory)"
+        required: false
+        type: string
+      trivy_config:
+        default: trivy.yaml
+        description: "Trivy config file path"
+        required: false
+        type: string
+      trivy_version:
+        default: v0.75.0
+        description: "Trivy version to use"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  ARTIFACT_PREFIX: ${{ inputs.artifact_prefix }}
+  DEPENDENCY_REVIEW_FAIL_ON_SEVERITY: ${{ inputs.dependency_review_fail_on_severity }}
+  SCAN_REF: ${{ inputs.scan_ref }}
+  TRIVY_CONFIG: ${{ inputs.trivy_config }}
+  TRIVY_VERSION: ${{ inputs.trivy_version }}
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Detect Dependency Review Support
+        id: detect
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          status="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.security_and_analysis.dependency_graph.status // empty' 2>/dev/null || true)"
+          if [ "${status}" = "enabled" ]; then
+            echo "supported=true" >> "${GITHUB_OUTPUT}"
+            echo "Dependency graph is enabled; dependency review will run."
+          else
+            echo "supported=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice title=Dependency review skipped::Dependency graph is not enabled on ${GITHUB_REPOSITORY}. Enable it under Settings > Code security and analysis (public repos: free; private repos require GitHub Advanced Security)."
+          fi
+
+      - name: Checkout Code
+        if: steps.detect.outputs.supported == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Exec Dependency Review
+        if: steps.detect.outputs.supported == 'true'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          comment-summary-in-pr: always
+          fail-on-severity: ${{ env.DEPENDENCY_REVIEW_FAIL_ON_SEVERITY }}
+
+  trivy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    steps:
+      - name: Detect SARIF Upload Support
+        id: detect
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare security output directory
+        run: mkdir -p security
+
+      - name: Setup Trivy
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          cache: true
+          version: ${{ env.TRIVY_VERSION }} # zizmor: ignore[unpinned-tools] pinned via input default v0.72.0
+
+      - name: Exec Trivy scans
+        run: |
+          set -euo pipefail
+          trivy fs \
+            --config "${TRIVY_CONFIG}" \
+            --exit-code 0 \
+            --format sarif \
+            --output security/trivy-fs.sarif \
+            --scanners "license,misconfig,secret,vuln" \
+            --severity "HIGH,CRITICAL" \
+            "${SCAN_REF}"
+          trivy fs \
+            --config "${TRIVY_CONFIG}" \
+            --exit-code 1 \
+            --format table \
+            --scanners "license,misconfig,secret,vuln" \
+            --severity "HIGH,CRITICAL" \
+            "${SCAN_REF}"
+          trivy fs \
+            --config "${TRIVY_CONFIG}" \
+            --exit-code 0 \
+            --format cyclonedx \
+            --output "security/sbom-${ARTIFACT_PREFIX}.json" \
+            "${SCAN_REF}"
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always() && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: trivy-fs
+          sarif_file: security/trivy-fs.sarif
+
+      - name: Upload SBOM Artifact
+        if: hashFiles(format('security/sbom-{0}.json', env.ARTIFACT_PREFIX)) != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ env.ARTIFACT_PREFIX }}
+          path: security/sbom-${{ env.ARTIFACT_PREFIX }}.json
+          retention-days: 30
+
+      - name: Post PR failure comment
+        if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `❌ Security CI failed (Trivy scan).\n\n`+
+              `Scan target: \`${process.env.SCAN_REF}\`\n\n`+
+              `Run page (SBOM artifact when generated): ${runUrl}\n\n`+
+              `Artifacts:\n- sbom-${process.env.ARTIFACT_PREFIX}\n\n`+
+              `Re-run guidance:\n- Review Trivy findings in the job log or Security tab\n- Commit fixes and push to trigger CI again.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          artifacts: |
+            sbom-${{ env.ARTIFACT_PREFIX }}
+          outputs: |
+            (none)
+          params: |
+            artifact_prefix: ${{ env.ARTIFACT_PREFIX }}
+            scan_ref: ${{ env.SCAN_REF }}
+            task: security
+          status: "${{ job.status }}"
+          title: "${{ format('Security CI: {0} (scan_ref={1})', env.ARTIFACT_PREFIX, env.SCAN_REF) }}"

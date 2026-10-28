@@ -1,0 +1,357 @@
+#!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+
+# Tests for .github/actions/loop-finalize/lib/render_pr_body.sh
+
+# Use cases:
+# - redact_sensitive_text redacts github tokens
+# - render_agent_summary_section omitted when empty
+# - render_agent_summary_section wraps heading
+# - render_changes_section lists files
+# - render_changes_section omitted when empty
+# - render_changes_section preserves notify overflow note
+# - render_failure_context caps at five with overflow
+# - render_failure_context empty when no failures
+# - render_failure_context lists one failure
+# - render_failure_context lists three failures fully
+# - render_failure_context redacts secret-like reason
+# - render_agent_overview_section omitted when empty
+# - render_agent_overview_section wraps heading
+# - render_pr_body empty prefix shows mechanical sections
+# - render_pr_body skips mechanical Changes when summary has ### Changes
+# - render_pr_body orders overview failure summary verification changes metadata
+# - render_agent_verification_section wraps heading
+# - render_changes_section links files when repository and ref are set
+# - render_failure_context renders markdown links when metadata present
+# - render_pr_body renders one collapsed loop meta block carrying engine/model/tokens
+# - render_pr_body omits the meta block when level, target, engine and usage are empty
+# - linkify_agent_text links changed paths and known commit SHAs written as code spans
+# - linkify_agent_text links a bare SHA only when it prefixes a detected commit
+# - linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone
+# - render_pr_body links changed paths and SHAs in the agent summary
+
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+setup() {
+    bats_source_rel ".github/actions/loop-finalize/lib/render_pr_body.sh"
+}
+
+@test "redact_sensitive_text redacts github tokens" {
+    # Dummy token shape only — not a real credential (ghp_ + 36 alnum).
+    run redact_sensitive_text 'token ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000' # pragma: allowlist secret
+    [ "$status" -eq 0 ]
+    [[ $output == *"[REDACTED]"* ]]
+    [[ $output != *"ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"* ]] # pragma: allowlist secret
+}
+
+@test "render_agent_overview_section omitted when empty" {
+    run render_agent_overview_section ''
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "render_agent_overview_section wraps heading" {
+    run render_agent_overview_section 'CI failed on MD001; fixed heading in docs/foo.md.'
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Overview"* ]]
+    [[ $output == *"MD001"* ]]
+}
+
+@test "render_agent_summary_section omitted when empty" {
+    run render_agent_summary_section ''
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "render_agent_summary_section wraps heading" {
+    run render_agent_summary_section $'- **Outcome:** fixed\n'
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Summary"* ]]
+    [[ $output == *"Outcome"* ]]
+}
+
+@test "render_changes_section lists files" {
+    run render_changes_section '["docs/a.md","scripts/b.sh"]'
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Changes"* ]]
+    [[ $output == *"$(docs/a.md)"* ]]
+    [[ $output == *"$(scripts/b.sh)"* ]]
+}
+
+@test "render_changes_section omitted when empty" {
+    run render_changes_section '[]'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "render_changes_section preserves notify overflow note" {
+    local files_json
+    files_json="$(jq -nc --arg note "… (+5 more)" '
+      [range(1;21) | "file-\(.).txt"] + [$note]
+    ')"
+    run render_changes_section "${files_json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Changes"* ]]
+    [[ $output == *"$(file-1.txt)"* ]]
+    [[ $output == *"$(file-20.txt)"* ]]
+    [[ $output == *"(+5 more)"* ]]
+    [[ $output != *"(+1 more)"* ]]
+}
+
+@test "render_failure_context caps at five with overflow" {
+    local json
+    json="$(jq -nc '{failures:[range(1;8)|{workflow_name:("wf-\(.)"),run_url:("u\(.)"),job_name:("j\(.)"),failure_type:"regression",reason:("r\(.)")}]}')"
+    FAILURES_MAX=5 run render_failure_context "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"wf-1"* ]]
+    [[ $output == *"wf-5"* ]]
+    [[ $output != *"wf-6"* ]]
+    [[ $output == *"… and 2 more"* ]]
+}
+
+@test "render_failure_context empty when no failures" {
+    run render_failure_context '{"failures":[]}'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "render_failure_context lists one failure" {
+    local json='{"failures":[{"workflow_name":"on-ci-push-markdown","run_url":"https://example/runs/1","job_name":"lint","failure_type":"regression","reason":"MD001"}]}'
+    run render_failure_context "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Failure context"* ]]
+    [[ $output == *"on-ci-push-markdown"* ]]
+    [[ $output == *"https://example/runs/1"* ]]
+    [[ $output == *"MD001"* ]]
+}
+
+@test "render_failure_context lists three failures fully" {
+    local json
+    json="$(jq -nc '{failures:[
+      {workflow_name:"wf-a",run_url:"u1",job_name:"j1",failure_type:"regression",reason:"r1"},
+      {workflow_name:"wf-b",run_url:"u2",job_name:"j2",failure_type:"regression",reason:"r2"},
+      {workflow_name:"wf-c",run_url:"u3",job_name:"j3",failure_type:"flake",reason:"r3"}
+    ]}')"
+    run render_failure_context "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"wf-a"* ]]
+    [[ $output == *"wf-b"* ]]
+    [[ $output == *"wf-c"* ]]
+    [[ $output != *"… and"* ]]
+}
+
+@test "render_failure_context redacts secret-like reason" {
+    local json='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"token ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"}]}' # pragma: allowlist secret
+    run render_failure_context "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"[REDACTED]"* ]]
+    [[ $output != *"ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"* ]] # pragma: allowlist secret
+}
+
+@test "render_run_metadata escapes pipe in skip reason" {
+    run render_run_metadata L2 'integration:main' 'foo|bar' '' ''
+    [ "$status" -eq 0 ]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"foo\\|bar"* ]]
+    [[ $output != *"| foo | bar |"* ]]
+}
+
+@test "render_pr_body renders one collapsed loop meta block carrying engine model tokens" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW=''
+    export DETECT_RESULT_JSON='{}'
+    export CHANGED_FILES_JSON='[]'
+    export AGENT_REPORT_SUMMARY=''
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    export AGENT_ENGINE=cursor
+    export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"| model | Composer-2.5 |"* ]]
+    [[ $output == *"| tokens | In/Out 100K/6K |"* ]]
+    [[ $output == *"<details>"* ]]
+    # One meta block only: no stray Created By line beside the collapsed table.
+    [[ $output != *"Created By"* ]]
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}"* ]]
+    [[ $output != *"created by a loop automation"* ]]
+}
+
+@test "render_pr_body empty prefix shows mechanical sections" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW=''
+    export DETECT_RESULT_JSON='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"boom"}]}'
+    export CHANGED_FILES_JSON='[]'
+    export AGENT_REPORT_SUMMARY=''
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Failure context"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| level | L2 |"* ]]
+    [[ $output != *"## Summary"* ]]
+    [[ $output != *"- Level:"* ]]
+}
+
+@test "render_pr_body keeps the shared footer when the meta block is empty" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW=''
+    export DETECT_RESULT_JSON='{}'
+    export CHANGED_FILES_JSON='[]'
+    export AGENT_REPORT_SUMMARY=''
+    export LEVEL=''
+    export TARGET_KEY=''
+    export SKIP_REASON=''
+    export AGENT_ENGINE=''
+    export USAGE_JSON=''
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"${LOOP_META_FOOTER}"* ]]
+    [[ $output != *"Created By"* ]]
+}
+
+@test "render_agent_verification_section wraps heading" {
+    run render_agent_verification_section '| shellcheck | pass |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Verification"* ]]
+    [[ $output == *"shellcheck"* ]]
+}
+
+@test "render_failure_context renders markdown links when metadata present" {
+    GITHUB_REPOSITORY='org/repo' \
+        GITHUB_SERVER_URL='https://github.com' \
+        run render_failure_context '{"failures":[{"workflow_name":"on-ci","workflow_run_id":"99","workflow_path":".github/workflows/on-ci.yaml","run_url":"https://github.com/org/repo/actions/runs/99","job_name":"lint","job_url":"https://github.com/org/repo/actions/runs/99/job/123","failure_type":"regression","reason":"fail"}]}'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[on-ci](https://github.com/org/repo/actions/workflows/on-ci.yaml)"* ]]
+    [[ $output == *"[#99](https://github.com/org/repo/actions/runs/99)"* ]]
+    [[ $output == *"[lint](https://github.com/org/repo/actions/runs/99/job/123)"* ]]
+}
+
+@test "render_changes_section links files when repository and ref are set" {
+    GITHUB_REPOSITORY='org/repo' \
+        GITHUB_SERVER_URL='https://github.com' \
+        BLOB_REF='loop/ci-sweeper' \
+        run render_changes_section '["docs/a.md"]'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[docs/a.md](https://github.com/org/repo/blob/loop/ci-sweeper/docs/a.md)"* ]]
+}
+
+@test "agent_summary_has_detailed_changes detects Changes subsection" {
+    run agent_summary_has_detailed_changes $'### Changes\n| a | b |'
+    [ "$status" -eq 0 ]
+    run agent_summary_has_detailed_changes 'no changes here'
+    [ "$status" -eq 1 ]
+}
+
+@test "render_pr_body skips mechanical Changes when summary has ### Changes" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW='Updated one doc.'
+    export DETECT_RESULT_JSON='{}'
+    export CHANGED_FILES_JSON='["docs/x.md"]'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| docs/x.md | stale | fixed |\n'
+    export AGENT_REPORT_VERIFICATION='| markdownlint | pass |'
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Verification"* ]]
+    [[ $output != *$'\n## Changes\n'* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+}
+
+@test "render_pr_body orders prefix overview failure summary verification changes metadata" {
+    export PR_BODY_PREFIX=$'Prefix only.\n'
+    export AGENT_REPORT_OVERVIEW='Docs drift scan found stale nav entries.'
+    export DETECT_RESULT_JSON='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"boom"}]}'
+    export CHANGED_FILES_JSON='["docs/x.md"]'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| docs/x.md | stale | fixed |\n'
+    export AGENT_REPORT_VERIFICATION='| markdownlint | pass |'
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    local prefix_i overview_i fail_i sum_i ver_i meta_i
+    prefix_i="$(printf '%s\n' "${output}" | grep -n 'Prefix only' | head -1 | cut -d: -f1)"
+    overview_i="$(printf '%s\n' "${output}" | grep -n '## Overview' | head -1 | cut -d: -f1)"
+    fail_i="$(printf '%s\n' "${output}" | grep -n '## Failure context' | head -1 | cut -d: -f1)"
+    sum_i="$(printf '%s\n' "${output}" | grep -n '### Changes' | head -1 | cut -d: -f1)"
+    ver_i="$(printf '%s\n' "${output}" | grep -n '## Verification' | head -1 | cut -d: -f1)"
+    meta_i="$(printf '%s\n' "${output}" | grep -n '<summary>Meta</summary>' | head -1 | cut -d: -f1)"
+    [ "${prefix_i}" -lt "${overview_i}" ]
+    [ "${overview_i}" -lt "${fail_i}" ]
+    [ "${fail_i}" -lt "${sum_i}" ]
+    [ "${sum_i}" -lt "${ver_i}" ]
+    [ "${ver_i}" -lt "${meta_i}" ]
+    [[ $output != *$'\n## Changes\n'* ]]
+}
+
+@test "linkify_agent_text links changed paths and known commit SHAs written as code spans" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats","docs/a b.md"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| `test/bats/foo.bats` (new) | `abcdef0` | `./docs/a b.md` |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) (new)"* ]]
+    [[ $output == *"[abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01)"* ]]
+    [[ $output == *"[./docs/a b.md](https://github.com/org/repo/blob/loop/test-gap/docs/a%20b.md)"* ]]
+}
+
+@test "linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    local text
+    text=$'`scripts/other.sh` `deadbeef` [`test/bats/foo.bats`](https://x/y)\n```\n`test/bats/foo.bats`\n```'
+    run linkify_agent_text "${text}"
+    [ "$status" -eq 0 ]
+    [ "${output}" = "${text}" ]
+}
+
+@test "linkify_agent_text is a no-op without repository or ref" {
+    export GITHUB_REPOSITORY='' BLOB_REF=''
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{}'
+    run linkify_agent_text 'edited `test/bats/foo.bats`'
+    [ "$status" -eq 0 ]
+    [ "${output}" = 'edited `test/bats/foo.bats`' ]
+}
+
+@test "render_pr_body links changed paths and SHAs in the agent summary" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW='Added suite for `scripts/x.sh`.'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| Target | Gap |\n| --- | --- |\n| `test/bats/foo.bats` | none |\n| `abcdef0` | pin |'
+    export AGENT_REPORT_VERIFICATION='| `bats test/bats/foo.bats` | skip |'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) |"* ]]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"Added suite for \`scripts/x.sh\`."* ]]
+    [[ $output == *"| \`bats test/bats/foo.bats\` | skip |"* ]]
+}
+
+@test "linkify_agent_text links a bare SHA only when it prefixes a detected commit" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/changelog'
+    export CHANGED_FILES_JSON='[]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| abcdef0 | feat | pin (deadbeef) https://x/commit/abcdef0 |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"(deadbeef)"* ]]
+    [[ $output == *"https://x/commit/abcdef0"* ]]
+    [[ $output != *"commit/[abcdef0]"* ]]
+}

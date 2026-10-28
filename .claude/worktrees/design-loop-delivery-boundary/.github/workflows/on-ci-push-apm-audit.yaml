@@ -1,0 +1,56 @@
+# CI workflow: APM install and audit on push/PR
+name: on-ci-push-apm-audit
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".apm/**"
+      - ".agents/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".cursor/**"
+      - ".kiro/**"
+      - "apm.lock.yaml"
+      - "apm.yml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".apm/**"
+      - ".agents/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".cursor/**"
+      - ".kiro/**"
+      - "apm.lock.yaml"
+      - "apm.yml"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+
+jobs:
+  apm-audit:
+    uses: ./.github/workflows/ci-apm-audit.yaml
+    with:
+      # Default false: this repo adds hooks/skills outside strict APM drift parity.
+      check_drift: false
+    permissions:
+      contents: read

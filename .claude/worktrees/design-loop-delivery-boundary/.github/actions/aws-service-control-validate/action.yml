@@ -1,0 +1,46 @@
+name: aws-service-control-validate
+description: "Validate AWS service control action and resolve target resource JSON from discovery or manual input."
+
+inputs:
+  action:
+    description: "Action to perform (start or stop)"
+    required: true
+  auto_discover:
+    description: "Whether auto-discovery is enabled"
+    required: true
+  discovered_b64:
+    default: ""
+    description: "Base64-encoded discovered targets JSON from discover job"
+    required: false
+  input_field_name:
+    description: "Input field name for JSON validation errors (e.g. instances, job_queues)"
+    required: true
+  manual_targets_json:
+    description: "Manually specified targets JSON when auto_discover is false"
+    required: true
+  resource_label:
+    description: "Human-readable resource label for log messages (e.g. EC2 instances)"
+    required: true
+
+outputs:
+  action:
+    description: "Validated action value"
+    value: ${{ steps.validate-inputs.outputs.action }}
+  targets:
+    description: "Sanitized compact JSON array of targets"
+    value: ${{ steps.validate-inputs.outputs.targets }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      id: validate-inputs
+      shell: bash
+      env:
+        ACTION: ${{ inputs.action }}
+        AUTO_DISCOVER: ${{ inputs.auto_discover }}
+        DISCOVERED_B64: ${{ inputs.discovered_b64 }}
+        INPUT_FIELD_NAME: ${{ inputs.input_field_name }}
+        MANUAL_TARGETS_JSON: ${{ inputs.manual_targets_json }}
+        RESOURCE_LABEL: ${{ inputs.resource_label }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/validate.sh"

@@ -1,0 +1,40 @@
+# CD workflow: Build and deploy MkDocs to GitHub Pages
+name: on-cd-mkdocs
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+jobs:
+  build:
+    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+    with:
+      artifact_name: mkdocs-site
+      config_file: mkdocs.yml
+      pip_packages: mkdocs-material mdx-truly-sane-lists
+    permissions:
+      contents: read
+
+  deploy:
+    needs: build
+    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+    with:
+      artifact_name: mkdocs-site
+    permissions:
+      contents: read
+      id-token: write
+      pages: write

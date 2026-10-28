@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/golangci_lint.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

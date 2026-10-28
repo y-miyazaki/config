@@ -1,0 +1,49 @@
+# CI workflow: Shell script lint on push/PR
+name: on-ci-push-shell-script
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "**/*.sh"
+      - "**/*.bats"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "**/*.sh"
+      - "**/*.bats"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  shell-script-ci:
+    uses: ./.github/workflows/ci-shell-script.yaml
+    with:
+      script_path: "**/*.sh,**/*.bats"
+      shell_test_exclude_globs: ".agents,.claude,.codex,.cursor,.kiro"
+      shell_test_exclude_top_level_paths: ".apm"
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write

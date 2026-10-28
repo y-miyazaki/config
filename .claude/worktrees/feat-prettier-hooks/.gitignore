@@ -1,0 +1,81 @@
+# === AI tool configs ===
+# Personal settings (never commit)
+.claude/memory/
+.claude/settings.local.json
+.claude/tmp/
+
+# AI tools with no project-specific configs (directories fully excluded)
+**/.headroom*
+.serena
+apm_modules/
+
+# === Go ===
+.serverless
+bin
+cover.out
+coverage
+coverage.html
+dist
+output
+vendor
+
+# === MkDocs ===
+site
+
+# === Modern Frontend / Meta-Frameworks ===
+.astro
+.next
+.nuxt
+.svelte-kit
+.yarn
+
+# === Node ===
+node_modules
+outputs
+!lambda/outputs
+
+# === OS / Temp ===
+.DS_Store
+tmp
+
+# === Python ===
+.Python
+.venv
+__pycache__
+
+# === Secrets / Credentials ===
+.env
+env/common/tmp/**
+
+# === Terraform ===
+*.tfbackend
+!terraform.audit.tfbackend
+!terraform.dev.tfbackend
+!terraform.example.tfbackend
+!terraform.prd.tfbackend
+!terraform.qa.tfbackend
+!terraform.root.tfbackend
+!terraform.stg.tfbackend
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.audit.tfvars
+!terraform.dev.tfvars
+!terraform.example.tfvars
+!terraform.prd.tfvars
+!terraform.qa.tfvars
+!terraform.root.tfvars
+!terraform.stg.tfvars
+**/.terraform/*
+**/.terraform.d/*
+builds
+modules/**/.terraform.lock.hcl
+
+# === Root (project-specific) ===
+.devcontainer/devcontainer.json
+.vscode/**
+!.vscode/cspell.json
+!.vscode/cspell-project.txt
+!.vscode/mcp.json
+!.vscode/settings-example.json
+.worktrees/

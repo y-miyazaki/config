@@ -1,0 +1,108 @@
+name: loop-agent-once
+description: "Run a single AI agent session (claude/copilot/codex/cursor). For non-loop one-shot use."
+
+inputs:
+  agent_cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  agent_engine:
+    description: "AI engine (claude or copilot or codex or cursor)"
+    required: true
+  agent_maker_effort:
+    default: ""
+    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
+  agent_maker_max_turns:
+    default: "5"
+    description: "Maximum maker agent conversation turns"
+    required: false
+  agent_maker_model:
+    default: ""
+    description: "Maker model override"
+    required: false
+  agent_token:
+    description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
+    required: true
+  agent_tool_allowlist:
+    default: ""
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    required: false
+  comment_handoff_key:
+    default: ""
+    description: "Entity handoff key (entity:issue:<n>) to comment on. When it names an Issue, the agent's stdout (output_file) is posted as one Issue comment with Meta and the footer. Empty = post nothing"
+    required: false
+  comment_marker:
+    default: ""
+    description: "Marker placed first in the Issue comment (for example <!-- github-issue-triage:v1 -->)"
+    required: false
+  github_token:
+    description: "Resolved GitHub token for gh CLI and GitHub API side effects"
+    required: true
+  node_version:
+    default: "24.21.0"
+    description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
+    required: false
+  output_file:
+    default: ""
+    description: "Optional path to write agent stdout"
+    required: false
+  prompt_text:
+    description: "Prompt text to pass to the agent"
+    required: true
+  uv_version:
+    default: "0.13.0"
+    description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
+    required: false
+  working_directory:
+    default: "."
+    description: "Working directory for agent execution"
+    required: false
+
+outputs:
+  usage_json:
+    description: "Measured token usage JSON (empty when CLI usage is unavailable)"
+    value: ${{ steps.run.outputs.usage_json }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      with:
+        enable-cache: true
+        prune-cache: true
+        version: ${{ inputs.uv_version }}
+
+    - name: Install CLI
+      shell: bash
+      env:
+        AGENT_CLI_VERSION: ${{ inputs.agent_cli_version }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+      run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
+
+    - name: Run CLI Agent
+      id: run
+      shell: bash
+      env:
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
+        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
+        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
+        AGENT_TOKEN: ${{ inputs.agent_token }}
+        AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        COMMENT_HANDOFF_KEY: ${{ inputs.comment_handoff_key }}
+        COMMENT_MARKER: ${{ inputs.comment_marker }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+        PROMPT: ${{ inputs.prompt_text }}
+        REPOSITORY: ${{ github.repository }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        WORKING_DIRECTORY: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directory }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

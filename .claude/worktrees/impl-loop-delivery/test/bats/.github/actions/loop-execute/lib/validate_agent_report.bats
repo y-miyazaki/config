@@ -1,0 +1,628 @@
+#!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+
+bats_require_minimum_version 1.5.0
+
+# Tests for .github/actions/loop-execute/lib/validate_agent_report.sh
+
+# Use cases:
+# - agent_report_skill_requires_format_check matches fix skills only
+# - validate_agent_report accepts canonical apply output with matching git diff
+# - validate_agent_report accepts survey output with Candidates and Watch
+# - validate_agent_report accepts survey no-op without Candidates
+# - validate_agent_report accepts watch-only survey without Candidates
+# - reconcile_agent_report_with_branch_diff appends missing branch-diff rows after table body
+# - reconcile_agent_report_with_branch_diff skips commit-based changelog Changes tables
+# - validate_agent_report accepts changelog apply output without path rows in Changes
+# - validate_agent_report accepts a changed path whose basename starts with a header word
+# - validate_agent_report ignores multi-word header cells such as Commit range
+
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+setup() {
+    bats_source_rel ".github/actions/loop-execute/lib/validate_agent_report.sh"
+    TEST_TMP="${BATS_TEST_TMPDIR}/validate_agent_report"
+    mkdir -p "${TEST_TMP}"
+}
+
+@test "agent_report_skill_requires_format_check matches fix skills only" {
+    for skill in changelog ci-sweeper docs-updater refactor tech-debt test-gap; do
+        run agent_report_skill_requires_format_check "${skill}"
+        [ "$status" -eq 0 ]
+    done
+    run agent_report_skill_requires_format_check "unknown-skill"
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_agent_report accepts canonical output with matching git diff" {
+    local out="${TEST_TMP}/good.txt"
+    cat > "${out}" << 'EOF'
+# Refactor Result
+
+## Overview
+
+Refactor scan found duplicated diff logic; this run deduplicated one call.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| `scripts/self/ai/sync_skill_lib.sh` | diff ran twice | capture once |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| shellcheck | pass |
+EOF
+    run validate_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "refactor"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report accepts survey no-op without Candidates" {
+    local out="${TEST_TMP}/survey-noop.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+No actionable CI failures after triage; no edits applied.
+
+## Summary
+
+EOF
+    run validate_agent_report "${out}" "" "ci-sweeper"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report accepts survey output without Verification" {
+    local out="${TEST_TMP}/survey.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Debt scan over abc..def found broken links in docs/guide; no edits applied.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| docs/guide/overview.md | broken link | update href | high |
+
+### Watch
+
+| Target | Evidence | Why not now |
+| ------ | -------- | ----------- |
+| scripts/foo.sh | TODO marker | low urgency |
+EOF
+    run validate_agent_report "${out}" "" "tech-debt"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report accepts watch-only survey without Candidates" {
+    local out="${TEST_TMP}/survey-watch-only.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Infra flake on workflow lint; logged as Watch; no edits applied.
+
+## Summary
+
+### Watch
+
+| Target | Evidence | Why not now |
+| ------ | -------- | ----------- |
+| ci/lint | runner timeout | infra flake |
+EOF
+    run validate_agent_report "${out}" "" "ci-sweeper"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report rejects Deferred path still in branch diff" {
+    local out="${TEST_TMP}/deferred-mismatch.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Docs drift found stale inventory; updated specification only.
+
+## Summary
+
+### Changes
+
+| File | What was wrong | What changed |
+| ---- | -------------- | ------------ |
+| docs/reference/specification.md | missing rows | added rows |
+
+### Deferred
+
+| File | Why deferred |
+| ---- | ------------ |
+| docs/index.md | no inventory table |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    run validate_agent_report "${out}" $'docs/reference/specification.md\ndocs/index.md\n' "docs-updater"
+    [ "$status" -eq 1 ]
+    [[ $output == *"docs/index.md"* ]]
+}
+
+@test "validate_agent_report rejects apply output with Candidates subsection" {
+    local out="${TEST_TMP}/apply-candidates.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed docs/foo.md heading style.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| docs/foo.md | MD001 | fix heading | high |
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| docs/foo.md | MD001 | fixed heading |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| lint | pass |
+EOF
+    run validate_agent_report "${out}" $'docs/foo.md\n' "ci-sweeper"
+    [ "$status" -eq 1 ]
+    [[ $output == *"must not include ### Candidates"* ]]
+}
+
+@test "validate_agent_report rejects apply output with Watch subsection" {
+    local out="${TEST_TMP}/apply-watch.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed docs/foo.md heading style.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| docs/foo.md | MD001 | fixed heading |
+
+### Watch
+
+| Target | Evidence | Why not now |
+| ------ | -------- | ----------- |
+| docs/bar.md | stale | later |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| lint | pass |
+EOF
+    run validate_agent_report "${out}" $'docs/foo.md\n' "docs-updater"
+    [ "$status" -eq 1 ]
+    [[ $output == *"must not include ### Watch"* ]]
+}
+
+@test "validate_agent_report rejects branch diff path missing from Changes table" {
+    local out="${TEST_TMP}/missing-change.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Updated one doc file.
+
+## Summary
+
+### Changes
+
+| File | What was wrong | What changed |
+| ---- | -------------- | ------------ |
+| docs/a.md | stale | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    [ "$status" -eq 1 ]
+    [[ $output == *"docs/b.md"* ]]
+}
+
+@test "validate_agent_report accepts a changed path whose basename starts with a header word" {
+    # Regression guard: extract_subsection_table_col1 used to prefix-match
+    # header words (File/Target/Root/Check/...), so a real path like
+    # Rootfs/entry.sh or Checker.sh was mistaken for a table header and
+    # dropped — causing a false "missing from Changes table" rejection.
+    local out="${TEST_TMP}/header-prefix-path.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Refactored the rootfs entrypoint and checker script.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| `Rootfs/entry.sh` | duplicated setup | deduplicated |
+| `Checker.sh` | unused var | removed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| shellcheck | pass |
+EOF
+    run validate_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "refactor"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report ignores multi-word header cells in the Changes table" {
+    local out="${TEST_TMP}/multiword-header.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed a script.
+
+## Summary
+
+### Changes
+
+| Files modified | What was wrong | What changed |
+| -------------- | -------------- | ------------ |
+| `a.sh` | bug | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| shellcheck | pass |
+EOF
+    run validate_agent_report "${out}" $'a.sh\n' "refactor"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "reconcile_agent_report_with_branch_diff tolerates indented separator rows" {
+    local out="${TEST_TMP}/reconcile-indented-sep.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed mkdocs strict link failure.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+ | ------ | -------------- | ------------ |
+| `on-cd-mkdocs` / `build / build` | Strict MkDocs aborted | Pointed link at GitHub URL |
+
+### Deferred
+
+| Target | Why deferred |
+| ------ | ------------ |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| mkdocs build --strict | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
+    run validate_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
+    [ "$status" -eq 0 ]
+    # Placeholder row must follow existing data rows, not sit between header and separator.
+    python3 - "${out}" << 'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+match = re.search(r"### Changes\n(.*?)\n### Deferred", text, re.S)
+if not match:
+    raise SystemExit("missing ### Changes section")
+lines = match.group(1).splitlines()
+header = sep = workflow = missing = None
+for index, line in enumerate(lines):
+    if "| Target | What was wrong |" in line:
+        header = index
+    elif header is not None and re.match(r"^\s*\|[-: ]+\|", line):
+        sep = index
+    elif "on-cd-mkdocs" in line:
+        workflow = index
+    elif "apm-package-design.md" in line:
+        missing = index
+if None in (header, sep, workflow, missing):
+    raise SystemExit("expected header, separator, workflow row, and missing path row")
+if not (header < sep < workflow < missing):
+    raise SystemExit("Changes table row order is invalid")
+PY
+}
+
+@test "reconcile_agent_report_with_branch_diff appends missing branch-diff rows" {
+    local out="${TEST_TMP}/reconcile.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Updated one doc file.
+
+## Summary
+
+### Changes
+
+| File | What was wrong | What changed |
+| ---- | -------------- | ------------ |
+| docs/a.md | stale | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    [ "$status" -eq 0 ]
+    grep -q 'docs/b.md' "${out}"
+    # Placeholder row must follow existing data rows, not sit between header and separator.
+    awk '
+        /\| File \| What was wrong \| What changed \|/ { after_header = 1; next }
+        after_header && /^\|[-: ]+\|/ { after_sep = 1; next }
+        after_sep && /docs\/b\.md/ { found = 1 }
+        END { exit !found }
+    ' "${out}"
+}
+
+@test "reconcile_agent_report_with_branch_diff recognizes markdown link paths" {
+    local out="${TEST_TMP}/reconcile-linked.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Updated evaluation report.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| [docs/report/agent-skills/2026-07-26-evaluation.md](https://github.com/example/config/blob/loop/docs-updater/docs/report/agent-skills/2026-07-26-evaluation.md) | stale counts | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
+    [ "$status" -eq 0 ]
+    run ! grep -q 'Updated in an earlier loop attempt' "${out}"
+}
+
+@test "normalize_report_path strips markdown link syntax" {
+    run normalize_report_path '[docs/a.md](https://github.com/org/repo/blob/main/docs/a.md)'
+    [ "$status" -eq 0 ]
+    [ "$output" = "docs/a.md" ]
+}
+
+@test "reconcile_agent_report_with_branch_diff skips changelog commit-based Changes table" {
+    local out="${TEST_TMP}/reconcile-changelog.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Added changelog entries.
+
+## Summary
+
+### Changes
+
+| Commit | Type | Entry |
+| ------ | ---- | ----- |
+| ee4621c | chore | Unreleased / Changed — example |
+
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| CHANGELOG.md structure | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'CHANGELOG.md\n' "changelog"
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    [ "$status" -eq 0 ]
+    run grep -q 'Updated in an earlier loop attempt' "${out}"
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_agent_report accepts changelog apply output with commit rows only" {
+    local out="${TEST_TMP}/changelog-apply.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Processed commits since abc..def; added Unreleased bullets and promoted releases.
+
+## Summary
+
+### Changes
+
+| Commit | Type | Entry |
+| ------ | ---- | ----- |
+| ee4621c | chore | Unreleased / Changed — example |
+| (230 SHAs) | chore/feat | Promoted into 1.8.43–1.8.58 |
+
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| CHANGELOG.md structure | pass |
+EOF
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report rejects legacy Fixes Applied and Outcome sections" {
+    local out="${TEST_TMP}/legacy.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Loop done.
+
+## Summary
+
+### Fixes Applied
+
+| File | Reason | Change |
+| ---- | ------ | ------ |
+| docs/a.md | stale | fix |
+
+**Outcome:** fixed 1
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| lint | pass |
+EOF
+    run validate_agent_report "${out}" $'docs/a.md\n' "docs-updater"
+    [ "$status" -eq 1 ]
+    [[ $output == *"Fixes Applied"* ]]
+    [[ $output == *"Outcome"* ]]
+}
+
+@test "validate_agent_report rejects survey output with Deferred subsection" {
+    local out="${TEST_TMP}/survey-deferred.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Survey only.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| docs/a.md | stale | fix | high |
+
+### Deferred
+
+| Target | Why deferred |
+| ------ | ------------ |
+| docs/b.md | later |
+EOF
+    run validate_agent_report "${out}" "" "tech-debt"
+    [ "$status" -eq 1 ]
+    [[ $output == *"use ### Watch"* ]]
+}
+
+@test "validate_agent_report rejects survey output with Skipped subsection" {
+    local out="${TEST_TMP}/survey-skipped.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Survey only.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| abc1234 | feat: add widget | add bullet | high |
+
+### Skipped
+
+| Target | Why skipped |
+| ------ | ----------- |
+| def5678 | chore only |
+EOF
+    run validate_agent_report "${out}" "" "changelog"
+    [ "$status" -eq 1 ]
+    [[ $output == *"must not include ### Skipped"* ]]
+}
+
+@test "validate_agent_report rejects survey output with Verification section" {
+    local out="${TEST_TMP}/survey-verif.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Survey only.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| docs/a.md | stale | fix | high |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| lint | pass |
+EOF
+    run validate_agent_report "${out}" "" "tech-debt"
+    [ "$status" -eq 1 ]
+    [[ $output == *"must not include ## Verification"* ]]
+}
+
+@test "validate_agent_report rejects survey output with branch diff" {
+    local out="${TEST_TMP}/survey-diff.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Survey only.
+
+## Summary
+
+### Candidates
+
+| Target | Evidence | Suggested approach | Priority |
+| ------ | -------- | ------------------ | -------- |
+| docs/a.md | stale | fix | high |
+EOF
+    run validate_agent_report "${out}" $'docs/a.md\n' "tech-debt"
+    [ "$status" -eq 1 ]
+    [[ $output == *"Apply output must not include ### Candidates"* ]]
+    [[ $output == *"Missing ### Changes under ## Summary while branch has file changes"* ]]
+}

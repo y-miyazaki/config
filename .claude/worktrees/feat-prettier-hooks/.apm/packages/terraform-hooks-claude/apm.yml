@@ -1,0 +1,11 @@
+name: terraform-hooks-claude
+version: 1.0.0
+description: Terraform hooks for Claude Code (tflint, terraform fmt)
+author: y-miyazaki
+license: Apache-2.0
+target: claude
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

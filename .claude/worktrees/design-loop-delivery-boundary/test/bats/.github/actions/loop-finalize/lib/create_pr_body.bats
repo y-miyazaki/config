@@ -1,0 +1,123 @@
+#!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+
+# Tests for .github/actions/loop-finalize/lib/create_pr_body.sh
+#
+# Use cases:
+# - create_pr_body renders prefix and footer from inline JSON
+# - create_pr_body reads large detect JSON from file and ignores commits[] bulk
+# - create_pr_body prefers AGENT_BRANCH over target integration branch for blob links
+# - create_pr_body carries engine, model and tokens in the loop meta block
+# - create_pr_body carries outcome into the loop meta summary icon
+
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+setup() {
+    bats_source_rel ".github/actions/loop-finalize/lib/create_pr_body.sh"
+    PR_BODY_TMP="${BATS_TEST_TMPDIR}/create-pr-body"
+    mkdir -p "${PR_BODY_TMP}"
+}
+
+@test "create_pr_body carries engine model and tokens in the loop meta block" {
+    PR_BODY=""
+    NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_overview":"","agent_report_summary":""}'
+    DETECT_RESULT_JSON='{"failures":[]}'
+    TARGET_JSON='{"key":"integration:main"}'
+    LEVEL="L2"
+    SKIP_REASON="none"
+    ENGINE="cursor"
+    USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":100000,"model":"Composer-2.5"}'
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| Engine | \`cursor\` |"* ]]
+    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
+    [[ $output == *"| Tokens | In/Out 100K/100K |"* ]]
+}
+
+@test "create_pr_body carries outcome into the loop meta summary icon" {
+    PR_BODY=""
+    NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_overview":"","agent_report_summary":""}'
+    DETECT_RESULT_JSON='{"failures":[]}'
+    TARGET_JSON='{"key":"integration:main"}'
+    LEVEL="L2"
+    SKIP_REASON="none"
+    OUTCOME="pr-created"
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"<summary>✅ <code>pr-created</code> · Loop details</summary>"* ]]
+    [[ $output != *"<code>unknown</code>"* ]]
+}
+
+@test "create_pr_body renders prefix and footer from inline JSON" {
+    PR_BODY="## Summary"
+    NOTIFY_CONTEXT_JSON='{"changed_files":["CHANGELOG.md"],"agent_report_overview":"Updated changelog from 4 commits.","agent_report_summary":"done"}'
+    DETECT_RESULT_JSON='{"failures":[{"workflow_name":"ci","job_name":"test","failure_type":"test","reason":"boom"}]}'
+    TARGET_JSON='{"key":"integration:main"}'
+    LEVEL="L2"
+    SKIP_REASON="none"
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Overview"* ]]
+    [[ $output == *"Updated changelog"* ]]
+    [[ $output == *"CHANGELOG.md"* ]]
+    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"integration:main"* ]]
+    [[ $output == *"## Failure context"* ]]
+}
+
+@test "create_pr_body reads large detect JSON from file and ignores commits bulk" {
+    local detect_file notify_file target_file padding i
+
+    detect_file="$(mktemp "${PR_BODY_TMP}/tmp.XXXXXX")"
+    notify_file="$(mktemp "${PR_BODY_TMP}/tmp.XXXXXX")"
+    target_file="$(mktemp "${PR_BODY_TMP}/tmp.XXXXXX")"
+    padding="$(printf 'x%.0s' {1..120})"
+    {
+        printf '{"commits":['
+        for i in $(seq 1 2000); do
+            [[ ${i} -gt 1 ]] && printf ','
+            printf '{"sha":"sha%d","subject":"%s","type":"chore"}' "${i}" "${padding}"
+        done
+        printf '],"failures":[]}'
+    } > "${detect_file}"
+    jq -nc '{changed_files:[],agent_report_summary:""}' > "${notify_file}"
+    jq -nc '{key:"integration:main"}' > "${target_file}"
+    [ "$(wc -c < "${detect_file}")" -gt 131072 ]
+
+    PR_BODY="Automated update"
+    SKIP_REASON="none"
+    export PR_BODY SKIP_REASON
+
+    run bash "$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr_body.sh" \
+        --detect-json-file "${detect_file}" \
+        --notify-json-file "${notify_file}" \
+        --target-json-file "${target_file}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Automated update"* ]]
+    [[ $output != *"## Failure context"* ]]
+}
+
+@test "create_pr_body prefers AGENT_BRANCH over target integration branch for blob links" {
+    AGENT_BRANCH='loop/ci-sweeper-fix'
+    GITHUB_REPOSITORY='org/repo'
+    GITHUB_SERVER_URL='https://github.com'
+    NOTIFY_CONTEXT_JSON='{"changed_files":["docs/a.md"],"agent_report_overview":"","agent_report_summary":""}'
+    DETECT_RESULT_JSON='{"failures":[]}'
+    TARGET_JSON='{"key":"integration:main","from":{"branch":"main"},"to":{"branch":"main"}}'
+    LEVEL="L2"
+    SKIP_REASON="none"
+    PR_BODY=""
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"[docs/a.md](https://github.com/org/repo/blob/loop/ci-sweeper-fix/docs/a.md)"* ]]
+    [[ $output != *"/blob/main/docs/a.md"* ]]
+}

@@ -1,0 +1,32 @@
+id: changelog-create-001
+name: changelog creates template when changelog missing
+description: Validate changelog_exists false triggers Keep a Changelog template creation.
+tags:
+  - quality
+  - edge-case
+inputs:
+  prompt: >-
+    Use changelog with may_edit true. changelog_exists is false. Create the Keep a Changelog
+    template at changelog_file, then add the injected fix commit under ## [Unreleased]. Emit
+    apply shape noting file creation in ### Changes and ## Overview. Include ##
+    Verification. Include ## Summary per common-output-format.md. Note file created in
+    Overview and ### Changes.
+  context:
+    changelog_file: CHANGELOG.md
+    changelog_exists: false
+    commit_range: eval0001..eval0002
+    skip: false
+    commits:
+      - sha: eval0002
+        type: fix
+        scope: ""
+        breaking: false
+        subject: correct changelog scope formatting
+    releases: []
+expected:
+  output_contains:
+    - created
+    - Changes
+    - Overview
+  outcomes:
+    - type: task_completed

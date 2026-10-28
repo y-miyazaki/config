@@ -1,0 +1,42 @@
+name: schemaspy-ssm-port-forward
+description: "Start SSM port forwarding session from bastion to the database host."
+
+inputs:
+  bastion_id:
+    description: "EC2 bastion instance ID for SSM session target"
+    required: true
+  bastion_local_port:
+    default: ""
+    description: "Local port override"
+    required: false
+  db_host:
+    description: "Database host"
+    required: true
+  db_port:
+    description: "Database port"
+    required: true
+  db_type:
+    description: "Database type for default local port selection"
+    required: true
+
+outputs:
+  local_port:
+    description: "Local forwarded port"
+    value: ${{ steps.forward.outputs.local_port }}
+  ssm_pid:
+    description: "Background SSM session PID"
+    value: ${{ steps.forward.outputs.ssm_pid }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup SSM Port Forwarding
+      id: forward
+      shell: bash
+      env:
+        BASTION_ID: ${{ inputs.bastion_id }}
+        BASTION_LOCAL_PORT: ${{ inputs.bastion_local_port }}
+        DB_HOST: ${{ inputs.db_host }}
+        DB_PORT: ${{ inputs.db_port }}
+        DB_TYPE: ${{ inputs.db_type }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/port-forward.sh"

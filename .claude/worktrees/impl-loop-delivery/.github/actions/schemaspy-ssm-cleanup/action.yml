@@ -1,0 +1,17 @@
+name: schemaspy-ssm-cleanup
+description: "Terminate background SSM port forwarding session when bastion mode is enabled."
+
+inputs:
+  ssm_pid:
+    default: ""
+    description: "Background SSM session PID from schemaspy-ssm-port-forward"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Cleanup SSM Port Forwarding
+      shell: bash
+      env:
+        SSM_PID: ${{ inputs.ssm_pid }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/cleanup.sh"

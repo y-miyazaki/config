@@ -1,0 +1,212 @@
+#!/bin/bash
+#######################################
+# Description: Deploy Terraform configuration with validation and approval
+#
+# Usage: ./deploy.sh [directory]
+#   arguments:
+#     directory       Target directory (optional, defaults to current)
+#
+# Required environment variables:
+#   TF_PLUGIN_CACHE_DIR     - Terraform plugin cache directory
+#   ENV                     - Environment (e.g., dev, staging, prod)
+#
+# Examples:
+#   ENV=dev ./deploy.sh ./terraform/base
+#   ENV=prod ./deploy.sh ./terraform/application
+#
+# Design Rules:
+#   - Validates required environment variables before execution
+#   - Uses terraform_workflow from common library for consistency
+#   - Automatically approves deployment (use with caution)
+#######################################
+
+# Error handling: exit on error, unset variable, or failed pipeline
+set -euo pipefail
+
+# Secure defaults
+umask 027
+export LC_ALL=C.UTF-8
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load all-in-one library
+# shellcheck source=../lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../lib/all.sh"
+
+#######################################
+# Global variables
+#######################################
+
+#######################################
+# show_usage: Display script usage information
+#
+# Description:
+#   Displays usage information for the script, including required environment variables and examples
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Writes help to stdout
+#
+# Returns:
+#   Exits with status 1
+#
+# Usage:
+#   show_usage
+#
+#######################################
+function show_usage {
+    cat << EOF
+Usage: $(basename "$0") [directory]
+
+Description: Deploy Terraform configuration
+
+Arguments:
+  directory       Target directory (optional, defaults to current)
+
+Required environment variables:
+  TF_PLUGIN_CACHE_DIR     - Terraform plugin cache directory
+  ENV                     - Environment (e.g., dev, staging, prod)
+
+Examples:
+  ENV=dev $0 ./terraform/base
+  ENV=prod $0 ./terraform/application
+EOF
+    exit 0
+}
+
+#######################################
+# parse_arguments: Parse command line arguments
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Command line arguments
+#
+# Outputs:
+#   Writes help to stdout when -h or --help is given
+#
+# Returns:
+#   0 on success; exits 0 after showing help
+#######################################
+function parse_arguments {
+    case "${1:-}" in
+        -h | --help)
+            show_usage
+            ;;
+        -*)
+            error_exit "Unknown option: $1"
+            ;;
+    esac
+}
+
+#######################################
+# run_terraform_deployment: Run terraform deployment
+#
+# Description:
+#   Runs the complete Terraform workflow for deployment with auto-approval
+#
+# Globals:
+#   ENV - Environment for deployment
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+# Usage:
+#   run_terraform_deployment
+#
+#######################################
+function run_terraform_deployment {
+    # Run complete Terraform workflow
+    terraform_workflow "$ENV" "apply" "auto-approve"
+}
+
+#######################################
+# validate_and_prepare: Validate environment and prepare
+#
+# Description:
+#   Validates required environment variables and dependencies, then changes to target directory
+#
+# Globals:
+#   ENV - Environment variable
+#   TF_PLUGIN_CACHE_DIR - Terraform plugin cache directory
+#
+# Arguments:
+#   $1 - Target directory path
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Exits with error if validation fails or directory change fails
+#
+# Usage:
+#   validate_and_prepare "$dir"
+#
+#######################################
+function validate_and_prepare {
+    local dir="$1"
+
+    # Validate environment variables and dependencies
+    validate_env_vars "ENV" "TF_PLUGIN_CACHE_DIR"
+    require_dependencies "terraform"
+
+    # Change to target directory
+    if ! cd "$dir"; then
+        error_exit "Failed to change to directory: $dir"
+    fi
+
+    log "INFO" "Starting Terraform deployment in directory: $(pwd)"
+}
+
+#######################################
+# main: Main process
+#
+# Description:
+#   Main function to execute the script logic for Terraform deployment
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Exits with status 0 on success, non-zero on failure
+#
+# Usage:
+#   main "$@"
+#
+#######################################
+function main {
+    parse_arguments "$@"
+
+    # Set target directory
+    local dir=${1:-./}
+
+    # Validate environment and prepare
+    validate_and_prepare "$dir"
+
+    # Run terraform deployment
+    run_terraform_deployment
+}
+
+# Only call main function if script is executed directly, not sourced
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi

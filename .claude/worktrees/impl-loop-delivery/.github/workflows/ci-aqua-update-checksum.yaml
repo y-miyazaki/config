@@ -1,0 +1,121 @@
+# Reusable workflow: Aqua checksum update
+# Updates aqua-checksums.json and auto-commits via GitHub App.
+# Requires: BOT_APP_PRIVATE_KEY and BOT_APP_CLIENT_ID secrets.
+name: ci-aqua-update-checksum
+
+on:
+  workflow_call:
+    inputs:
+      aqua_version:
+        default: "v2.58.1"
+        description: "aqua version to use"
+        required: false
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        type: string
+    secrets:
+      BOT_APP_CLIENT_ID:
+        description: "GitHub App Client for auto commit"
+        required: true
+      BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key for auto commit"
+        required: true
+
+permissions: {}
+
+jobs:
+  update-checksum:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: aqua-update-checksum-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Install aqua
+        uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
+        with:
+          aqua_version: ${{ inputs.aqua_version }}
+
+      - name: Fix aqua-checksums.json
+        shell: bash
+        run: aqua upc -prune
+
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - name: Configure git auth
+        uses: y-miyazaki/config/.github/actions/git-auth@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          operation: configure
+
+      - name: Commit changes
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "repo-maintenance-bot[app]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [[ -z "$(git status --porcelain aqua-checksums.json)" ]]; then
+            echo "No aqua-checksums.json changes to commit."
+            exit 0
+          fi
+
+          git add aqua-checksums.json
+          git commit -m "chore(ci): update aqua checksums"
+
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${BRANCH}"; then
+              echo "aqua-checksums.json pushed to ${BRANCH} on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push attempt ${attempt} failed; retrying after rebase onto ${BRANCH}."
+            git fetch origin "${BRANCH}"
+            git rebase "origin/${BRANCH}"
+          done
+
+          echo "::error::Failed to push aqua-checksums.json to ${BRANCH} after 3 attempts."
+          exit 1
+
+      - name: Clear git auth
+        if: always()
+        uses: y-miyazaki/config/.github/actions/git-auth@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          operation: clear
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+        with:
+          params: |
+            aqua_version: ${{ inputs.aqua_version }}
+            environment: ${{ inputs.environment }}
+          status: "${{ job.status }}"
+          title: "Aqua Update Checksum"

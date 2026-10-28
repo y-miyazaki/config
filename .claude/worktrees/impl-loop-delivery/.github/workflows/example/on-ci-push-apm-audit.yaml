@@ -1,0 +1,51 @@
+# CI workflow: APM install and audit on push/PR
+name: on-ci-push-apm-audit
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".apm/**"
+      - ".agents/**"
+      - ".github/**"
+      - "apm.lock.yaml"
+      - "apm.yml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".apm/**"
+      - ".agents/**"
+      - ".github/**"
+      - "apm.lock.yaml"
+      - "apm.yml"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+
+jobs:
+  apm-audit:
+    uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@f6e3dbb4d4df314754d4803421127f8c8c692f69 # v1.9.0
+
+    with:
+      # Set true only when installed trees must match APM sources exactly.
+      check_drift: false
+    permissions:
+      contents: read

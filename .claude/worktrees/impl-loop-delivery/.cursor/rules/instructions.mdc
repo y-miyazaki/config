@@ -1,0 +1,98 @@
+---
+description: Writing Instruction Files Instructions
+globs: **/instructions/*.instructions.md, **/.cursor/rules/*.mdc, **/.kiro/steering/*.md, **/.claude/rules/*.md
+---
+
+# Instruction Files Instructions
+
+## Scope
+
+- Scope covers creating and updating instruction and rule files for agent consumption.
+
+## Standards
+
+Document **non-obvious, project- or distribution-specific** rules only. Omit language or ecosystem defaults, generic style guides, and other practices models already know.
+
+### Naming Conventions
+
+| Component               | Rule                                              | Example                                      |
+| ----------------------- | ------------------------------------------------- | -------------------------------------------- |
+| Package source file     | `<stem>.instructions.md`                          | `go.instructions.md`, `bats.instructions.md` |
+| Cursor (distributed)    | `.cursor/rules/<stem>.mdc`                        | `go.mdc`, `bats.mdc`                         |
+| Claude (distributed)    | `.claude/rules/<stem>.md`                         | `go.md`, `bats.md`                           |
+| Kiro (distributed)      | `.kiro/steering/<stem>.md`                        | `go.md`                                      |
+| Title                   | `# <target> Instructions`                         | `# Go Instructions`                          |
+| Agent-facing cross-link | Companion wording with stem — not source filename | companion Bats rules (stem `bats`)           |
+
+## Guidelines
+
+### General (G)
+- G-01 (MUST): Front Matter
+- G-02 (MUST): Title
+- G-03 (MUST): applyTo Target Precision
+- G-04 (MUST): Portable Cross-References
+- G-05 (MUST): Companion applyTo Coverage
+
+### Structure (STRUCT)
+- STRUCT-01 (MUST): Five Required Chapters Exist
+- STRUCT-02 (MUST): Chapter Order Unified
+- STRUCT-03 (MUST): Heading Levels Appropriate
+- STRUCT-04 (SHOULD): Standards Chapter Subsections
+- STRUCT-05 (MUST): Guidelines Chapter Subsections
+- STRUCT-06 (MUST): H3 Heading Format
+- STRUCT-07 (MUST): Concise Testing and Validation Chapter
+- STRUCT-08 (SHOULD): Critical MUST in Scope
+
+### Guidelines Chapter (GUIDE)
+- GUIDE-01 (SHOULD): Code Modification Guidelines
+- GUIDE-02 (SHOULD): Tool Usage
+- GUIDE-03 (SHOULD): Anti-Patterns
+- GUIDE-04 (SHOULD): No ID-less Bullet Rules in Guidelines
+
+### Content Quality (QUAL)
+- QUAL-01 (SHOULD): Practical Examples
+- QUAL-02 (SHOULD): No Redundancy
+- QUAL-03 (SHOULD): Token Efficiency
+
+### Consistency (CONS)
+- CONS-01 (SHOULD): Section Names
+- CONS-02 (SHOULD): Format
+- CONS-03 (SHOULD): Internal Consistency
+
+### Completeness (COMP)
+- COMP-01 (SHOULD): Validation Ownership Clear
+- COMP-02 (SHOULD): Real Pointers
+
+### Security Guidelines Chapter (SEC)
+- SEC-01 (MUST): Tool-Undetectable Risks Documented
+- SEC-02 (MUST): Secrets Management
+- SEC-03 (MUST): Scope Limited to Document Safety
+- SEC-04 (SHOULD): Examples
+
+### Standards Chapter (STD)
+- STD-01 (MUST): Standards Chapter Non-Obvious Content
+- STD-02 (SHOULD): Tool Standards
+- STD-03 (MUST): Consistency
+- STD-04 (MUST): Distribution Naming Documented
+- STD-05 (MUST): No Guidelines Checklist Duplication in Standards
+
+### Testing and Validation Chapter (TEST)
+- TEST-01 (MUST): No Always-Run Lint Mandates
+- TEST-02 (SHOULD): On-Demand Skill Pointer
+- TEST-03 (SHOULD): Domain-Only Operational Notes
+
+### Code Modification Guidelines
+
+- Keep applyTo precise to distributed rule paths; use stem-based companion cross-links (G-03, G-04, G-05).
+- Do not embed always-run lint/validate recipes or "hooks handle it" skip explanations in always-on instructions.
+- When instruction files are updated, re-evaluate instruction quality against this file's STRUCT/TEST rules.
+
+
+## Testing and Validation
+
+On-demand validation: see instructions-review skill SKILL.md.
+
+## Security Guidelines
+
+- Do not include real secrets (tokens, keys, credentials) in instruction files.
+- Do not make destructive operations the default in command examples; add explicit warnings when needed.

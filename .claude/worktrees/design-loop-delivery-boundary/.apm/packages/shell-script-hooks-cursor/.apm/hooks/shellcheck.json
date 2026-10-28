@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "./scripts/shellcheck.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

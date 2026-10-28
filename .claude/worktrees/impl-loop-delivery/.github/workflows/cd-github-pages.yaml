@@ -1,0 +1,122 @@
+# Reusable workflow: Deploy an artifact to GitHub Pages
+# Downloads a previously uploaded artifact and deploys it to GitHub Pages.
+# Callers build and upload the artifact; this workflow handles deployment only.
+name: cd-github-pages
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: "Name of the artifact to deploy (uploaded by caller via actions/upload-artifact)"
+        required: true
+        type: string
+      path:
+        default: "."
+        description: "Subdirectory within the artifact to deploy (default: root)"
+        required: false
+        type: string
+    outputs:
+      page_url:
+        description: "Deployed GitHub Pages URL"
+        value: ${{ jobs.deploy-to-github-pages.outputs.page_url }}
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+concurrency:
+  group: github-pages-deploy
+  cancel-in-progress: false
+
+env:
+  ARTIFACT_NAME: ${{ inputs.artifact_name }}
+  ARTIFACT_PATH: ${{ inputs.path }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  WORKFLOW: ${{ github.workflow }}
+
+jobs:
+  deploy-to-github-pages:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: _site
+
+      - name: Select deploy directory
+        id: select-dir
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEPLOY_PATH="_site/${ARTIFACT_PATH}"
+          if [ ! -d "${DEPLOY_PATH}" ]; then
+            echo "❌ Error: Deploy path does not exist: ${DEPLOY_PATH}"
+            ls -la _site/
+            exit 1
+          fi
+          echo "deploy_path=${DEPLOY_PATH}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create buildinfo
+        env:
+          DEPLOY_PATH: ${{ steps.select-dir.outputs.deploy_path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "Workflow: ${WORKFLOW}"
+            echo "Run: ${RUN_URL}"
+            echo "Artifact: ${ARTIFACT_NAME}"
+            echo "Path: ${ARTIFACT_PATH}"
+          } > "${DEPLOY_PATH}/.buildinfo"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ steps.select-dir.outputs.deploy_path }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Summary
+        if: always()
+        env:
+          DEPLOY_STATUS: ${{ job.status }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## 📄 GitHub Pages Deployment"
+            echo ""
+            if [ "${DEPLOY_STATUS}" = "success" ]; then
+              echo "✅ **Status:** Success"
+              echo ""
+              echo "🔗 **URL:** ${PAGE_URL}"
+            else
+              echo "❌ **Status:** ${DEPLOY_STATUS}"
+            fi
+            echo ""
+            echo "| Parameter | Value |"
+            echo "|-----------|-------|"
+            echo "| Artifact | \`${ARTIFACT_NAME}\` |"
+            echo "| Path | \`${ARTIFACT_PATH}\` |"
+            echo "| Run | [#${{ github.run_number }}](${RUN_URL}) |"
+          } >> "${GITHUB_STEP_SUMMARY}"

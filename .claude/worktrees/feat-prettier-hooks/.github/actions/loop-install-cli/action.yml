@@ -1,0 +1,50 @@
+name: loop-install-cli
+description: "Install an AI agent CLI (claude/copilot/codex/cursor) once for subsequent loop actions."
+
+inputs:
+  cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+  node_version:
+    default: "24.21.0"
+    description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
+    required: false
+  uv_version:
+    default: "0.13.0"
+    description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
+    required: false
+
+outputs:
+  package:
+    description: "Resolved npm package name (empty for cursor)"
+    value: ${{ steps.install.outputs.package }}
+  version:
+    description: "Resolved CLI version"
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      with:
+        enable-cache: true
+        prune-cache: true
+        version: ${{ inputs.uv_version }}
+
+    - name: Install CLI
+      id: install
+      shell: bash
+      env:
+        CLI_VERSION: ${{ inputs.cli_version }}
+        ENGINE: ${{ inputs.engine }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/install.sh"

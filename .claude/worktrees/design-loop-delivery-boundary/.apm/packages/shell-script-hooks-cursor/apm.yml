@@ -1,0 +1,11 @@
+name: shell-script-hooks-cursor
+version: 1.0.0
+description: Shell script hooks for Cursor (shellcheck, shfmt)
+author: y-miyazaki
+license: Apache-2.0
+target: cursor
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

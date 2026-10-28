@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "dockerFile": "../env/common/Dockerfile",
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "CONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "BASH_ENV": "/home/vscode/.config/lean-ctx/env.sh"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "extensions.verifySignature": false
+      },
+      "extensions": [
+        "3w36zj6.textlint",
+        "davidanson.vscode-markdownlint",
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
+        "fabiospampinato.vscode-diff",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "ibm.output-colorizer",
+        "qufiwefefwoyn.inline-sql-syntax",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "tamasfe.even-better-toml",
+        "usernamehw.errorlens",
+        "vscode-icons-team.vscode-icons",
+        "yzhang.markdown-all-in-one",
+        // for AI
+        "anthropic.claude-code",
+        // "automatalabs.copilot-mcp",
+        // "github.copilot",
+        // "github.copilot-chat",
+        // for Shell Script environment
+        "foxundermoon.shell-format",
+        "timonwong.shellcheck",
+        "mads-hartmann.bash-ide-vscode",
+        "rogalmic.bash-debug",
+        // for Go environment
+        "golang.go",
+        "windmilleng.vscode-go-autotest",
+        "timvaneker.serverless-snippets",
+        "bufbuild.vscode-buf",
+        // for Jsonnet environment
+        "grafana.vscode-jsonnet",
+        // for terraform extensions
+        "hashicorp.terraform"
+        // for Python environment
+        // "charliermarsh.ruff",
+        // "ms-python.mypy-type-checker",
+        // "ms-python.python"
+      ]
+    }
+  },
+  "mounts": [
+    "source=devcontainer-home-vscode-local,target=/home/vscode/.local,type=volume"
+  ],
+  "runArgs": [
+    "--add-host=host.docker.internal:host-gateway",
+    "-v",
+    "${localWorkspaceFolder}:/workspace",
+    "-v",
+    "${localWorkspaceFolder}/env/common/.bashrc:/home/vscode/.bashrc",
+    "-v",
+    "${localWorkspaceFolder}/env/common/tmp/.gitconfig:/home/vscode/.gitconfig",
+    "-v",
+    "${localWorkspaceFolder}/env/common/tmp/gh:/home/vscode/.config/gh",
+    "-v",
+    "${localWorkspaceFolder}/env/common/tmp/.aws:/home/vscode/.aws"
+  ],
+  "postCreateCommand": "/bin/bash env/common/scripts/init.sh",
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/share/mise/shims:${containerEnv:PATH}"
+  },
+  "workspaceMount": "",
+  "workspaceFolder": "/workspace",
+  "overrideCommand": false,
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": false,
+      "dockerDashComposeVersion": "v2"
+    }
+  }
+}

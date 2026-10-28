@@ -1,0 +1,45 @@
+name: loop-resolve-push-token
+description: "Resolve GitHub API token: App bot → github_token input → GITHUB_TOKEN (fail closed if App configured but mint fails)."
+
+inputs:
+  bot_app_client_id:
+    description: "GitHub App client ID for ruleset-bypass pushes"
+    required: false
+  bot_app_private_key:
+    description: "GitHub App private key for ruleset-bypass pushes"
+    required: false
+  github_token:
+    default: ""
+    description: "Optional explicit GitHub token (PAT or override); defaults to GITHUB_TOKEN when empty"
+    required: false
+
+outputs:
+  github_token:
+    description: "Resolved GitHub token (App → github_token → GITHUB_TOKEN)"
+    value: ${{ steps.resolve_github_token.outputs.github_token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate App Bot Token
+      continue-on-error: true
+      if: inputs.bot_app_client_id != '' && inputs.bot_app_private_key != ''
+      id: app_token
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      with:
+        client-id: ${{ inputs.bot_app_client_id }}
+        permission-contents: write
+        permission-issues: write
+        permission-pull-requests: write
+        permission-workflows: write
+        private-key: ${{ inputs.bot_app_private_key }}
+
+    - name: Resolve GitHub Token
+      id: resolve_github_token
+      shell: bash
+      env:
+        APP_TOKEN: ${{ steps.app_token.outputs.token }}
+        BOT_APP_CONFIGURED: ${{ inputs.bot_app_client_id != '' && inputs.bot_app_private_key != '' && 'true' || 'false' }}
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/resolve.sh"

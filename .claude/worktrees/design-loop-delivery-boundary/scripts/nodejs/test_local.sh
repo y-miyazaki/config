@@ -1,0 +1,227 @@
+#!/bin/bash
+#######################################
+# Description: Local testing script for Node.js Lambda modules
+#
+# Usage: ./test_local.sh [module_name]
+#   options:
+#     -h, --help      Display this help message
+#   arguments:
+#     module_name     Name of the module to test (default: kinesis_data_firehose_cloudwatch_logs_processor)
+#
+# Design Rules:
+#   - Tests run inside a Docker container built from the module; no local Node.js is required.
+#   - Exits with the test container exit code so failures are never masked.
+#######################################
+
+# Error handling: exit on error, unset variable, or failed pipeline
+set -euo pipefail
+
+# Secure defaults
+umask 027
+export LC_ALL=C.UTF-8
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load all-in-one library
+# shellcheck source=../lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../lib/all.sh"
+
+#######################################
+# Global variables
+#######################################
+REPO_ROOT="$(git rev-parse --show-toplevel 2> /dev/null || echo "${SCRIPT_DIR}/../..")"
+
+#######################################
+# show_usage: Display script usage information
+#
+# Description:
+#   Displays usage information for the script, including options and examples
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None (outputs to stdout and exits)
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   show_usage
+#
+#######################################
+function show_usage {
+    cat << EOF
+Usage: $(basename "$0") [module_name]
+
+Description: Local testing script for Node.js Lambda modules.
+             This script builds and runs tests for Node.js Lambda modules in Docker containers.
+
+Arguments:
+  module_name     Name of the module to test (default: kinesis_data_firehose_cloudwatch_logs_processor)
+
+Available modules:
+  - kinesis_data_firehose_cloudwatch_logs_processor (default)
+  - s3_notification_s3_object_created_for_athena
+
+Examples:
+  $0
+  $0 kinesis_data_firehose_cloudwatch_logs_processor
+  $0 s3_notification_s3_object_created_for_athena
+EOF
+    exit 0
+}
+
+#######################################
+# build_docker_image: Build docker image
+#
+# Description:
+#   Builds a Docker image for the specified Node.js module
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Module name
+#   $2 - Docker image name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (exits on build failure)
+#
+#######################################
+function build_docker_image {
+    local module_name="$1"
+    local image_name="$2"
+
+    log "INFO" "Building Docker image '${image_name}'..."
+    if ! execute_command docker build -t "${image_name}" --build-arg "MODULE_NAME=${module_name}" .; then
+        error_exit "Failed to build Docker image"
+    fi
+}
+
+#######################################
+# run_tests: Run tests in docker
+#
+# Description:
+#   Runs tests for the Node.js module inside a Docker container
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Docker image name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Test exit code (0 on success, non-zero on failure)
+#
+#######################################
+function run_tests {
+    local image_name="$1"
+
+    log "INFO" "Running tests..."
+    local test_exit_code=0
+    execute_command docker run --rm "${image_name}" || test_exit_code=$?
+    if ((test_exit_code != 0)); then
+        log "ERROR" "Tests failed (exit code: $test_exit_code)"
+        return $test_exit_code
+    fi
+
+    log "INFO" "Tests completed successfully"
+    return 0
+}
+
+#######################################
+# validate_module: Validate module exists
+#
+# Description:
+#   Checks that the specified Node.js module directory exists
+#
+# Globals:
+#   REPO_ROOT - Repository root directory
+#
+# Arguments:
+#   $1 - Module name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (exits on validation failure)
+#
+#######################################
+function validate_module {
+    local module_name="$1"
+
+    if [ ! -d "${REPO_ROOT}/nodejs/${module_name}" ]; then
+        error_exit "Module '${module_name}' not found. Use -h for available modules."
+    fi
+}
+
+#######################################
+# main: Main process
+#
+# Description:
+#   Main entry point that orchestrates the testing process for Node.js modules
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Module name (optional, defaults to kinesis_data_firehose_cloudwatch_logs_processor)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (exits with test result code)
+#
+# Usage:
+#   main "module_name"
+#
+#######################################
+function main {
+    local module_name="${1:-kinesis_data_firehose_cloudwatch_logs_processor}"
+
+    # Show help if requested
+    if [ "$module_name" == "-h" ] || [ "$module_name" == "--help" ]; then
+        show_usage
+    fi
+
+    # Validate dependencies
+    require_dependencies "docker"
+
+    # Validate module exists
+    validate_module "$module_name"
+
+    log "INFO" "Running tests for module '${module_name}'..."
+
+    # Change to nodejs directory
+    if ! cd "${REPO_ROOT}/nodejs"; then
+        error_exit "Failed to change to nodejs directory"
+    fi
+
+    # Set image name based on module name
+    local image_name="${module_name}-test"
+
+    # Build docker image
+    build_docker_image "$module_name" "$image_name"
+
+    # Run tests and exit with the same code
+    run_tests "$image_name"
+    exit $?
+}
+
+# Only call main function if script is executed directly, not sourced
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi

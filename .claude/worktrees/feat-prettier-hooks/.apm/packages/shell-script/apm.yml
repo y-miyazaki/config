@@ -1,0 +1,11 @@
+name: config-shell-script
+version: 1.0.0
+description: AI assistant instructions and skills for Shell Script development
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

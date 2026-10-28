@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "./scripts/golangci_lint.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

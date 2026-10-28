@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/shfmt.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}
