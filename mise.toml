@@ -78,7 +78,7 @@ claude = { version = "2.1.305", lazy = true, lazy_bins = ["claude"] }           
 
 # Go related tools
 "aqua:air-verse/air" = { version = "1.67.4", lazy = true, lazy_bins = ["air"] }                                    # live reload
-"aqua:bufbuild/buf" = { version = "1.73.0", lazy = true, lazy_bins = ["buf", "protoc-gen-buf-breaking", "protoc-gen-buf-lint"] } # protobuf linter and formatter
+"aqua:bufbuild/buf" = { version = "1.74.0", lazy = true, lazy_bins = ["buf", "protoc-gen-buf-breaking", "protoc-gen-buf-lint"] } # protobuf linter and formatter
 "go:github.com/go-delve/delve/cmd/dlv" = { version = "v1.27.2", lazy = true, lazy_bins = ["dlv"] }                 # debugger
 "aqua:mvdan/gofumpt" = { version = "0.12.0", lazy = true, lazy_bins = ["gofumpt"] }                                # code formatter
 "aqua:golangci/golangci-lint" = { version = "2.15.0", lazy = true, lazy_bins = ["golangci-lint"] }                 # linter
