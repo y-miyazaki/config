@@ -323,6 +323,31 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.5.pkg"
 checksum = "sha256:4cb957d1f79c7264ef5a0f3a509ce477bbfd23c91eee888493a9dfff445a8d7c"
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.5.pkg"
 
+[[tools."aqua:aws/aws-cli"]]
+version = "2.38.5"
+backend = "aqua:aws/aws-cli"
+
+[tools."aqua:aws/aws-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.38.5.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.38.5.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.38.5.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.38.5.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-arm64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.5.pkg"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-x64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.5.pkg"
+
 [[tools."aqua:aws/aws-sam-cli"]]
 version = "1.169.0"
 backend = "aqua:aws/aws-sam-cli"
