@@ -6,8 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-09-28T08:25:20Z","loop_name":"tech-debt","duration_s":13,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"36397226912"}
-{"run_id":"2026-09-28T09:10:35Z","loop_name":"docs-updater","duration_s":13,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"36401721716"}
 {"run_id":"2026-10-02T10:05:36Z","loop_name":"changelog","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"36993504738"}
 {"run_id":"2026-10-05T08:27:55Z","loop_name":"tech-debt","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37283754360"}
 {"run_id":"2026-10-05T09:11:48Z","loop_name":"docs-updater","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37288398311"}
@@ -147,3 +145,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-28T21:41:44Z","loop_name":"ci-sweeper","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774017986"}
 {"run_id":"2026-10-28T21:43:58Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774311555"}
 {"run_id":"2026-10-28T21:44:52Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774424007"}
+{"run_id":"2026-10-29T06:40:06Z","loop_name":"ci-sweeper","duration_s":53,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40830491617","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
