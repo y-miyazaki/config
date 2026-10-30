@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/markdown_link_check.sh",
-        "timeoutSec": 240
+        "timeout": 240
       }
     ]
   },

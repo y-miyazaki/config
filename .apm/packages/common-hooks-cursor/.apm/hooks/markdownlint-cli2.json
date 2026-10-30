@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/markdownlint_cli2.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },

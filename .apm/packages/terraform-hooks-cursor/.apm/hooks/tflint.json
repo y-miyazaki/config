@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/tflint.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },

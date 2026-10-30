@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/gitleaks.sh",
-        "timeoutSec": 60
+        "timeout": 60
       }
     ]
   },

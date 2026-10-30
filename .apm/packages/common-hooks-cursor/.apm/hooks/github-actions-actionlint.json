@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/actionlint.sh",
-        "timeoutSec": 60
+        "timeout": 60
       }
     ]
   },

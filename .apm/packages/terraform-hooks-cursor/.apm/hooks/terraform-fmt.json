@@ -3,7 +3,7 @@
     "postToolUse": [
       {
         "command": "./scripts/terraform_fmt.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },

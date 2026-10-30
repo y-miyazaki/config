@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/ghalint.sh",
-        "timeoutSec": 60
+        "timeout": 60
       }
     ]
   },

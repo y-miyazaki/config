@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/golangci_lint.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },

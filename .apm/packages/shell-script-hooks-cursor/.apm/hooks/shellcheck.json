@@ -3,7 +3,7 @@
     "stop": [
       {
         "command": "./scripts/shellcheck.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },

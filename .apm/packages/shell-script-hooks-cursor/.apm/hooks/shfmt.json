@@ -3,7 +3,7 @@
     "afterFileEdit": [
       {
         "command": "./scripts/shfmt.sh",
-        "timeoutSec": 120
+        "timeout": 120
       }
     ]
   },
