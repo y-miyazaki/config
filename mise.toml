@@ -126,7 +126,7 @@ claude = { version = "2.1.306", lazy = true, lazy_bins = ["claude"] }           
 "aqua:getsops/sops" = { version = "3.13.3", lazy = true, lazy_bins = ["sops"] }                                    # encryption tool
 "aqua:hashicorp/terraform" = { version = "1.16.6", lazy = true, lazy_bins = ["terraform"] }                        # infrastructure as code
 "aqua:terraform-docs/terraform-docs" = { version = "0.24.0", lazy = true, lazy_bins = ["terraform-docs"] }         # documentation generator
-"aqua:terraform-linters/tflint" = { version = "0.64.0", lazy = true, lazy_bins = ["tflint"] }                      # linter
+"aqua:terraform-linters/tflint" = { version = "0.65.0", lazy = true, lazy_bins = ["tflint"] }                      # linter
 
 # Utility tools
 "aqua:google/go-jsonnet" = { version = "0.22.0", lazy = true, lazy_bins = ["jsonnet", "jsonnet-deps", "jsonnetfmt", "jsonnet-lint"] } # Jsonnet command-line tool
