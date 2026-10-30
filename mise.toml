@@ -59,7 +59,7 @@ claude = { version = "2.1.306", lazy = true, lazy_bins = ["claude"] }           
 
 # AWS related tools
 "aqua:aws/aws-cli" = { version = "2.38.5", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
-"aqua:aws/aws-sam-cli" = { version = "1.169.0", lazy = true, lazy_bins = ["sam"] }                                 # SAM CLI tool
+"aqua:aws/aws-sam-cli" = { version = "1.170.0", lazy = true, lazy_bins = ["sam"] }                                 # SAM CLI tool
 "npm:awsp" = { version = "0.2.0", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
