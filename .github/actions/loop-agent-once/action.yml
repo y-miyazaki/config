@@ -43,7 +43,7 @@ inputs:
     description: "Prompt text to pass to the agent. When a message directory (LOOP_MESSAGE_DIR) is named in the prompt, the --add-dir write access for it is wired for the claude engine only"
     required: true
   uv_version:
-    default: "0.13.4"
+    default: "0.13.5"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
   working_directory:
