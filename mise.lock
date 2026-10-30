@@ -209,6 +209,48 @@ url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.7
 url_api = "https://api.github.com/repos/aquasecurity/trivy/releases/assets/662254788"
 provenance = "cosign"
 
+[[tools."aqua:aquasecurity/trivy"]]
+version = "0.76.1"
+backend = "aqua:aquasecurity/trivy"
+
+[tools."aqua:aquasecurity/trivy".options]
+"vars.lazy" = "true"
+
+[tools."aqua:aquasecurity/trivy"."platforms.linux-arm64"]
+checksum = "sha256:e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-ARM64.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.linux-arm64-musl"]
+checksum = "sha256:e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-ARM64.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.linux-x64"]
+checksum = "sha256:c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.linux-x64-musl"]
+checksum = "sha256:c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_Linux-64bit.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.macos-arm64"]
+checksum = "sha256:11a9b6cd2752011b54f01ea4bd0dbfa9f0c41dc6538d5a3f9d23955f471bf4e5"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_macOS-ARM64.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.macos-x64"]
+checksum = "sha256:7aa762eacd582052d053b62dcf972a1ab058abe39a57ccae234ed8894945b6b7"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_macOS-64bit.tar.gz"
+provenance = "cosign"
+
+[tools."aqua:aquasecurity/trivy"."platforms.windows-x64"]
+checksum = "sha256:1051f49cb22d5284f43425f72aad9cda63ca12ceb92e7caa06903490c82dc9bf"
+url = "https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_windows-64bit.zip"
+provenance = "cosign"
+
 [[tools."aqua:astral-sh/uv"]]
 version = "0.13.4"
 backend = "aqua:astral-sh/uv"
