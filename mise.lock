@@ -684,45 +684,73 @@ backend = "aqua:github/copilot-cli"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-arm64"]
 checksum = "sha256:728a91dffb9a02817bd98c5b01bf2f9cb08c4fdac3c0ca8c48d7f1ccbfe282a1"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399733"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-arm64-musl"]
 checksum = "sha256:728a91dffb9a02817bd98c5b01bf2f9cb08c4fdac3c0ca8c48d7f1ccbfe282a1"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399733"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-x64"]
 checksum = "sha256:9aeb4430e9ac9523546db07b227c7aba179a4710a55f9ac29ad143b0f9e1b325"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399952"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-x64-musl"]
 checksum = "sha256:9aeb4430e9ac9523546db07b227c7aba179a4710a55f9ac29ad143b0f9e1b325"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399952"
 
 [tools."aqua:github/copilot-cli"."platforms.macos-arm64"]
 checksum = "sha256:33e6553b23d1e15946685df297cac12e0b3efe98102009d5e7093453ecc6e60b"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399728"
 
 [tools."aqua:github/copilot-cli"."platforms.macos-x64"]
 checksum = "sha256:dffbc934dd277186e17c49130aefc54d7e9215bbde8a478a26d5d80bb356f05c"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-darwin-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399729"
 
 [tools."aqua:github/copilot-cli"."platforms.windows-x64"]
 checksum = "sha256:e63b81a1a9e2bfd3d6fbf69b6c58cc51725df30bb38654ded018f5d8a6e80a5f"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-win32-x64.zip"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/666399732"
+
+[[tools."aqua:github/copilot-cli"]]
+version = "1.0.103"
+backend = "aqua:github/copilot-cli"
+
+[tools."aqua:github/copilot-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64"]
+checksum = "sha256:728a91dffb9a02817bd98c5b01bf2f9cb08c4fdac3c0ca8c48d7f1ccbfe282a1"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64-musl"]
+checksum = "sha256:728a91dffb9a02817bd98c5b01bf2f9cb08c4fdac3c0ca8c48d7f1ccbfe282a1"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64"]
+checksum = "sha256:9aeb4430e9ac9523546db07b227c7aba179a4710a55f9ac29ad143b0f9e1b325"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64-musl"]
+checksum = "sha256:9aeb4430e9ac9523546db07b227c7aba179a4710a55f9ac29ad143b0f9e1b325"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-arm64"]
+checksum = "sha256:33e6553b23d1e15946685df297cac12e0b3efe98102009d5e7093453ecc6e60b"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-darwin-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-x64"]
+checksum = "sha256:dffbc934dd277186e17c49130aefc54d7e9215bbde8a478a26d5d80bb356f05c"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-darwin-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.windows-x64"]
+checksum = "sha256:e63b81a1a9e2bfd3d6fbf69b6c58cc51725df30bb38654ded018f5d8a6e80a5f"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.103/copilot-win32-x64.zip"
 
 [[tools."aqua:gitleaks/gitleaks"]]
 version = "8.30.1"
@@ -1761,6 +1789,48 @@ provenance = "github-attestations"
 checksum = "sha256:d679bfd3ecb489f3d4242e54016f57181948980bf0ca7b98c6003c8d256c27f2"
 url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_windows_amd64.zip"
 url_api = "https://api.github.com/repos/suzuki-shunsuke/pinact/releases/assets/664460186"
+provenance = "github-attestations"
+
+[[tools."aqua:suzuki-shunsuke/pinact"]]
+version = "5.0.1"
+backend = "aqua:suzuki-shunsuke/pinact"
+
+[tools."aqua:suzuki-shunsuke/pinact".options]
+"vars.lazy" = "true"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.linux-arm64"]
+checksum = "sha256:fc1432004f378ae51d549a356195b4d2e3ee05935dbd20e3bbca66db1cdf6590"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_linux_arm64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.linux-arm64-musl"]
+checksum = "sha256:fc1432004f378ae51d549a356195b4d2e3ee05935dbd20e3bbca66db1cdf6590"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_linux_arm64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.linux-x64"]
+checksum = "sha256:12500c0fff5db94a0155e2e76ed959d1dc0e899056ee168d8fb7b4840e7c04f0"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_linux_amd64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.linux-x64-musl"]
+checksum = "sha256:12500c0fff5db94a0155e2e76ed959d1dc0e899056ee168d8fb7b4840e7c04f0"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_linux_amd64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.macos-arm64"]
+checksum = "sha256:58390ac843b7a14414df79762e2f64051158d00549762b1c49ded3d2f1746007"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_darwin_arm64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.macos-x64"]
+checksum = "sha256:a8eb8dd4daecb7eefa660e1920ff65302714173be9c2f335a0ae77f053fd975a"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_darwin_amd64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:suzuki-shunsuke/pinact"."platforms.windows-x64"]
+checksum = "sha256:d679bfd3ecb489f3d4242e54016f57181948980bf0ca7b98c6003c8d256c27f2"
+url = "https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.1/pinact_windows_amd64.zip"
 provenance = "github-attestations"
 
 [[tools."aqua:swaggo/swag"]]
