@@ -40,7 +40,7 @@ inputs:
     description: "Resolved GitHub token for gh CLI and GitHub API side effects"
     required: true
   node_version:
-    default: "24.21.0"
+    default: "24.22.1"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   output_file:
