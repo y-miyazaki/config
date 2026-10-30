@@ -101,7 +101,7 @@ claude = { version = "2.1.309", lazy = true, lazy_bins = ["claude"] }           
 "npm:markdown-link-check" = { version = "3.15.0", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["markdown-link-check"] } # Markdown link checker
-"npm:markdownlint-cli2" = { version = "0.23.3", depends = [
+"npm:markdownlint-cli2" = { version = "0.24.0", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["markdownlint-cli2"] } # Markdown linter
 "npm:prettier" = { version = "3.9.10", depends = [
