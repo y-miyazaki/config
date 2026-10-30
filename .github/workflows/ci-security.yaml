@@ -26,7 +26,7 @@ on:
         required: false
         type: string
       trivy_version:
-        default: v0.76.0
+        default: v0.76.1
         description: "Trivy version to use"
         required: false
         type: string
