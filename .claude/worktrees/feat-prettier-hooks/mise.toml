@@ -104,7 +104,7 @@ claude = { version = "2.1.296", lazy = true, lazy_bins = ["claude"] }           
 "npm:markdownlint-cli2" = { version = "0.23.3", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["markdownlint-cli2"] } # Markdown linter
-"npm:prettier" = { version = "3.9.9", depends = [
+"npm:prettier" = { version = "3.9.10", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["prettier"] } # Code formatter
 
