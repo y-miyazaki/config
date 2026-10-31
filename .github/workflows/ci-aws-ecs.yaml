@@ -68,7 +68,7 @@ env:
 
 jobs:
   scan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -156,7 +156,7 @@ jobs:
   lint:
     needs: scan
     name: Jsonnet Format Check (${{ matrix.name }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -226,7 +226,7 @@ jobs:
   verify-ecs-service:
     needs: scan
     name: ecspresso Verify (${{ matrix.name }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     environment:
       name: ${{ inputs.environment }}
@@ -299,7 +299,7 @@ jobs:
     needs: scan
     name: Scheduled Task Verify (${{ matrix.name }})
     if: needs.scan.outputs.has_scheduled_tasks == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     strategy:
       fail-fast: false

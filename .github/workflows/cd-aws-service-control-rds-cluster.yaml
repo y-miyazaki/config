@@ -55,7 +55,7 @@ env:
 
 jobs:
   discover-clusters:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: ${{ inputs.environment }}
@@ -155,7 +155,7 @@ jobs:
   validate:
     needs: [discover-clusters]
     if: ${{ always() && github.actor != 'dependabot[bot]' && (needs.discover-clusters.result == 'success' || needs.discover-clusters.result == 'skipped') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -178,7 +178,7 @@ jobs:
   control-clusters:
     needs: validate
     if: ${{ github.actor != 'dependabot[bot]' && needs.validate.result == 'success' && needs.validate.outputs.target_clusters != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     concurrency:
       group: rds-control-${{ inputs.environment }}-${{ matrix.cluster }}-${{ inputs.action }}

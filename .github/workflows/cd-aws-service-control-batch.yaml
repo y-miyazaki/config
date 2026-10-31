@@ -55,7 +55,7 @@ env:
 
 jobs:
   discover-job-queues:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: ${{ inputs.environment }}
@@ -147,7 +147,7 @@ jobs:
   validate:
     needs: [discover-job-queues]
     if: ${{ always() && github.actor != 'dependabot[bot]' && (needs.discover-job-queues.result == 'success' || needs.discover-job-queues.result == 'skipped') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -170,7 +170,7 @@ jobs:
   control-job-queues:
     needs: validate
     if: ${{ github.actor != 'dependabot[bot]' && needs.validate.result == 'success' && needs.validate.outputs.target_queues != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     concurrency:
       group: batch-control-${{ inputs.environment }}-${{ matrix.queue }}-${{ inputs.action }}

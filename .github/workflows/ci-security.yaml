@@ -45,7 +45,7 @@ env:
 jobs:
   dependency-review:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -81,7 +81,7 @@ jobs:
           fail-on-severity: ${{ env.DEPENDENCY_REVIEW_FAIL_ON_SEVERITY }}
 
   trivy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
