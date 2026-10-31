@@ -47,7 +47,7 @@ env:
 
 jobs:
   precheck:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -108,7 +108,7 @@ jobs:
 
   test:
     needs: precheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -211,7 +211,7 @@ jobs:
 
   lint:
     needs: precheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -339,7 +339,7 @@ jobs:
 
   security:
     needs: precheck
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read

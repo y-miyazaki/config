@@ -55,7 +55,7 @@ env:
 
 jobs:
   discover-instances:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: ${{ inputs.environment }}
@@ -160,7 +160,7 @@ jobs:
   validate:
     needs: [discover-instances]
     if: ${{ always() && github.actor != 'dependabot[bot]' && (needs.discover-instances.result == 'success' || needs.discover-instances.result == 'skipped') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -183,7 +183,7 @@ jobs:
   control-instances:
     needs: validate
     if: ${{ github.actor != 'dependabot[bot]' && needs.validate.result == 'success' && needs.validate.outputs.target_instances != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     concurrency:
       group: ec2-control-${{ inputs.environment }}-${{ matrix.instance }}-${{ inputs.action }}

@@ -45,7 +45,7 @@ env:
 jobs:
   codeql:
     if: ${{ inputs.codeql_languages != '[]' && inputs.codeql_languages != '' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
       actions: read
@@ -84,7 +84,7 @@ jobs:
           category: codeql-${{ matrix.language }}
 
   semgrep:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
