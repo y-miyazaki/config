@@ -73,7 +73,7 @@ env:
 
 jobs:
   discover-services:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: ${{ inputs.environment }}
@@ -254,7 +254,7 @@ jobs:
   validate:
     needs: [discover-services]
     if: ${{ always() && github.actor != 'dependabot[bot]' && (needs.discover-services.result == 'success' || needs.discover-services.result == 'skipped') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -277,7 +277,7 @@ jobs:
   control-services:
     needs: validate
     if: ${{ github.actor != 'dependabot[bot]' && needs.validate.result == 'success' && needs.validate.outputs.target_services != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     concurrency:
       group: ecs-control-${{ inputs.environment }}-${{ matrix.service.cluster }}-${{ matrix.service.service }}-${{ inputs.action }}

@@ -51,7 +51,7 @@ env:
 
 jobs:
   discover:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -159,7 +159,7 @@ jobs:
   precheck:
     needs: discover
     if: needs.discover.outputs.has_workspaces == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -305,7 +305,7 @@ jobs:
       - discover
       - precheck
     if: needs.discover.outputs.has_workspaces == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -446,7 +446,7 @@ jobs:
       - discover
       - precheck
     if: needs.discover.outputs.has_workspaces == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     env:
       COMPONENT: ${{ matrix.component }}

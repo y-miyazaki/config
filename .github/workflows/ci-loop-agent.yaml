@@ -268,7 +268,7 @@ jobs:
   agent-l1:
     if: inputs.level == 'L1'
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     outputs:
       message_json: ${{ steps.agent.outputs.message_json }}
@@ -311,7 +311,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -379,7 +379,7 @@ jobs:
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     outputs:
       attempts: ${{ steps.execute.outputs.attempts }}
@@ -507,7 +507,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - name: Checkout

@@ -77,7 +77,7 @@ env:
 
 jobs:
   shell-tests:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -247,7 +247,7 @@ jobs:
           title: "Shell Script Tests"
 
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       checks: write
