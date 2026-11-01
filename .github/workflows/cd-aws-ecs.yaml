@@ -72,7 +72,7 @@ env:
 
 jobs:
   scan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -163,7 +163,7 @@ jobs:
 
   deploy-ecs-service:
     needs: scan
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -262,7 +262,7 @@ jobs:
     needs: scan
     if: needs.scan.outputs.has_scheduled_tasks == 'true'
     name: Deploy Scheduled Task (${{ matrix.name }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     strategy:
       fail-fast: false

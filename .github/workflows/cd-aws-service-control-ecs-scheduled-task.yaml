@@ -55,7 +55,7 @@ env:
 
 jobs:
   discover-scheduled-tasks:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: ${{ inputs.environment }}
@@ -198,7 +198,7 @@ jobs:
   validate:
     needs: [discover-scheduled-tasks]
     if: ${{ always() && github.actor != 'dependabot[bot]' && (needs.discover-scheduled-tasks.result == 'success' || needs.discover-scheduled-tasks.result == 'skipped') }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -221,7 +221,7 @@ jobs:
   control-schedules:
     needs: validate
     if: ${{ github.actor != 'dependabot[bot]' && needs.validate.result == 'success' && needs.validate.outputs.target_tasks != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     concurrency:
       group: ecs-scheduled-task-control-${{ inputs.environment }}-${{ matrix.task.cluster }}-${{ matrix.task.task_definition }}-${{ inputs.action }}
