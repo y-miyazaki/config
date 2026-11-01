@@ -343,3 +343,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-01T10:08:15Z","loop_name":"refactor","duration_s":17,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"41296100302"}
 {"run_id":"2026-11-01T10:43:11Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"41298680699"}
 {"run_id":"2026-11-01T10:45:19Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"41298824307"}
+{"run_id":"2026-11-01T10:46:20Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"41298904871"}
