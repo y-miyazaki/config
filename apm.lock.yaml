@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-10-28T22:31:50.223497+00:00'
-apm_version: 0.32.0
+generated_at: '2026-11-02T12:21:31.714708+00:00'
+apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
   name: config-common
@@ -325,11 +325,12 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
     .cursor/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
-    .cursor/rules/agent-skills.mdc: sha256:aafb607db4e03bfbfc609e3836be3cf81cc67d80b4fa20836cc8b7309d27ca55
-    .cursor/rules/instructions.mdc: sha256:5a189c964fab5c53593cbb83a7bd63f9e06f7794e680747ed452f6a270767d9a
-    .cursor/rules/markdown.mdc: sha256:e77c6b8ca2523de09eb9ada60ea18e8fbbeaae6a92f70f9b6f887a4f73387fa7
+    .cursor/rules/agent-skills.mdc: sha256:56fd2e38618afbf0118051ceae5eb8992a19c4b756d338750a553b2064d5c823
+    .cursor/rules/instructions.mdc: sha256:1e1080bb01e9172c6bba3c14e65599b7d77eff6bdf562d59585f5e470a0e4866
+    .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
+  content_hash: sha256:4c418558627bdfcadebb9e0502a4a657f357c6bfdab4aec75010dcf97f0fa7bd
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -353,6 +354,7 @@ dependencies:
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
   source: local
   local_path: ./.apm/packages/common-hooks-claude
+  content_hash: sha256:aec6ab8ee58a0711f5dcd392cf16ecb4767cc61211cb837e47e5d5168df6bb3e
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
   name: common-hooks-cursor
@@ -376,6 +378,7 @@ dependencies:
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
+  content_hash: sha256:d1996304e6e635f0be07fb184fc896b9c0afe2d0bfb03ee2d2b86e66dfa4d0ec
   declared_license: Apache-2.0
 - repo_url: _local/github
   name: config-github
@@ -907,6 +910,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
+  content_hash: sha256:a1a35caad2818c13a2a2558963e2c436893989d4a0905b528cd30539ef05dd81
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -1081,9 +1085,10 @@ dependencies:
     .claude/skills/github-actions-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/github-actions-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/github-actions-validation/scripts/validate.sh: sha256:95a9b6a15968a74f9a4093183d104c971af0420181846745f2e5d2c25d2596e8
-    .cursor/rules/github-actions-workflow.mdc: sha256:1e8aa24cfc1558fac2c385b4a2f5e36205280bd32f338c55f80dafc471dba6f2
+    .cursor/rules/github-actions-workflow.mdc: sha256:9b7008db1503a9f24629bbb514ed6b8547850cd646a6c5866d3cc919b5239e82
   source: local
   local_path: ./.apm/packages/github-actions
+  content_hash: sha256:9849f79eb37933a0d7e0b5c253e0c3120ce05be6e9dea1b73239a382187fc675
   declared_license: Apache-2.0
 - repo_url: _local/go
   name: config-go
@@ -1285,10 +1290,11 @@ dependencies:
     .claude/skills/go-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/go-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/go-validation/scripts/validate.sh: sha256:958cdfb65c2f58130cce87793a833c2ee037e8a9799ad9b7ee585d1c99d1ee07
-    .cursor/rules/go-test.mdc: sha256:6872f2f609669804498db13cb85f335f0105aadc35e0817fb5b2f47275aa4a0c
-    .cursor/rules/go.mdc: sha256:1033e017dc393ed0cc9c9c971ffaeffe1efb23fec6389b3cc2b98b4426213ac7
+    .cursor/rules/go-test.mdc: sha256:00834bb53cac1326ed55057849755816f2dbeb8f44a7f2ab1f5305fa19fe4aae
+    .cursor/rules/go.mdc: sha256:afee3908f7834659b2c7efc728c8cec7da9e7dd0734e62c1ebfe3f75569d724f
   source: local
   local_path: ./.apm/packages/go
+  content_hash: sha256:806d34bf8b47869ac061dff61179640455a88b4c2891ecf7b946dfb8756b5b1b
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-claude
   name: go-hooks-claude
@@ -1300,6 +1306,7 @@ dependencies:
     .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
   source: local
   local_path: ./.apm/packages/go-hooks-claude
+  content_hash: sha256:ae44f04ad4099afc7cb0c5a6827c422cbec102f59e00c1a0b39585838c01acb1
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-cursor
   name: go-hooks-cursor
@@ -1311,6 +1318,7 @@ dependencies:
     .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
   source: local
   local_path: ./.apm/packages/go-hooks-cursor
+  content_hash: sha256:ca1b04b00f98503388e8594ed538861aef59bc02bc9164d2d0cea74bbbb22fb9
   declared_license: Apache-2.0
 - repo_url: _local/loop
   name: config-loop
@@ -1346,6 +1354,7 @@ dependencies:
     .claude/skills/loop-verifier/references/common-output-format.md: sha256:45b68f4cec501c43e7516b20b6fdd777cba7892cc9621748ec98ea1318b01f80
   source: local
   local_path: ./.apm/packages/loop
+  content_hash: sha256:28b997659d9bcdf886a1b65d0ffbafbaf0acd40778ed93154c0afdac25b02594
   declared_license: Apache-2.0
 - repo_url: _local/repo-maintenance
   name: config-repo-maintenance
@@ -2255,6 +2264,7 @@ dependencies:
     .claude/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:ae2a12d1a38b67b24e71b507f4df15d22460afd6cbf721f1efdb7132a557ff45
   source: local
   local_path: ./.apm/packages/repo-maintenance
+  content_hash: sha256:1871884fd6989d2e60ef17bf0310d9e32c58002f5cbabd6fca927295faeb736b
   declared_license: Apache-2.0
 - repo_url: _local/shell-script
   name: config-shell-script
@@ -2460,10 +2470,11 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:c8996fc182f607a11be33eac6d8a62e494461c1d0c45316bf224a2f216964b32
-    .cursor/rules/bats.mdc: sha256:9e10de6308b02f26ccf1a58051977a46b1622ab3feb04458ec6d0bb21f2694d6
-    .cursor/rules/shell-script.mdc: sha256:b03f45b6302df3015d165e718a3b60f58f73d83bb81f37c8618a904f76f11eb9
+    .cursor/rules/bats.mdc: sha256:46fa97003bbdfbe2a49c4e269c605ca920d2f652238be0f44f822d25a1f39b27
+    .cursor/rules/shell-script.mdc: sha256:5a3d9d3a3e0f52b4f68267e3c5ae78afc439f264a80563444c1879dc17bb2855
   source: local
   local_path: ./.apm/packages/shell-script
+  content_hash: sha256:b7f937aa7bf35ebcfecf50076c9a6ceba759de524d919dd28f41fb69a4d73aba
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
   name: shell-script-hooks-claude
@@ -2477,6 +2488,7 @@ dependencies:
     .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:e57ba2d9229d5e47e1cecacb3451884fb17380c44c85e01c6a7d421ef8c80e6c
   source: local
   local_path: ./.apm/packages/shell-script-hooks-claude
+  content_hash: sha256:7ad3b58b29c8a6f6c783d5cb3c834282e93949bcb57239a5c9b57d5cce77d603
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-cursor
   name: shell-script-hooks-cursor
@@ -2490,6 +2502,7 @@ dependencies:
     .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:1ee58b42a134c92845a1b9ea81a91e6c4218e0c446dda35ed261a2a0bfd8e74f
   source: local
   local_path: ./.apm/packages/shell-script-hooks-cursor
+  content_hash: sha256:9858461d56e30ff5366883be017f4f1a173ed6672cf11f4157c61ad7f2afdbd8
   declared_license: Apache-2.0
 deployments:
 - kind: project-relative
@@ -13300,7 +13313,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:aafb607db4e03bfbfc609e3836be3cf81cc67d80b4fa20836cc8b7309d27ca55
+  content_hash: sha256:56fd2e38618afbf0118051ceae5eb8992a19c4b756d338750a553b2064d5c823
 - kind: project-relative
   target: cursor
   value: .cursor/rules/bats.mdc
@@ -13309,7 +13322,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:9e10de6308b02f26ccf1a58051977a46b1622ab3feb04458ec6d0bb21f2694d6
+  content_hash: sha256:46fa97003bbdfbe2a49c4e269c605ca920d2f652238be0f44f822d25a1f39b27
 - kind: project-relative
   target: cursor
   value: .cursor/rules/github-actions-workflow.mdc
@@ -13318,7 +13331,7 @@ deployments:
   owners:
   - ./.apm/packages/github-actions
   active_owner: ./.apm/packages/github-actions
-  content_hash: sha256:1e8aa24cfc1558fac2c385b4a2f5e36205280bd32f338c55f80dafc471dba6f2
+  content_hash: sha256:9b7008db1503a9f24629bbb514ed6b8547850cd646a6c5866d3cc919b5239e82
 - kind: project-relative
   target: cursor
   value: .cursor/rules/go-test.mdc
@@ -13327,7 +13340,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:6872f2f609669804498db13cb85f335f0105aadc35e0817fb5b2f47275aa4a0c
+  content_hash: sha256:00834bb53cac1326ed55057849755816f2dbeb8f44a7f2ab1f5305fa19fe4aae
 - kind: project-relative
   target: cursor
   value: .cursor/rules/go.mdc
@@ -13336,7 +13349,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:1033e017dc393ed0cc9c9c971ffaeffe1efb23fec6389b3cc2b98b4426213ac7
+  content_hash: sha256:afee3908f7834659b2c7efc728c8cec7da9e7dd0734e62c1ebfe3f75569d724f
 - kind: project-relative
   target: cursor
   value: .cursor/rules/instructions.mdc
@@ -13345,7 +13358,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:5a189c964fab5c53593cbb83a7bd63f9e06f7794e680747ed452f6a270767d9a
+  content_hash: sha256:1e1080bb01e9172c6bba3c14e65599b7d77eff6bdf562d59585f5e470a0e4866
 - kind: project-relative
   target: cursor
   value: .cursor/rules/markdown.mdc
@@ -13354,7 +13367,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e77c6b8ca2523de09eb9ada60ea18e8fbbeaae6a92f70f9b6f887a4f73387fa7
+  content_hash: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
 - kind: project-relative
   target: cursor
   value: .cursor/rules/shell-script.mdc
@@ -13363,7 +13376,16 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:b03f45b6302df3015d165e718a3b60f58f73d83bb81f37c8618a904f76f11eb9
+  content_hash: sha256:5a3d9d3a3e0f52b4f68267e3c5ae78afc439f264a80563444c1879dc17bb2855
+- kind: uri
+  target: mcp
+  value: codebase-memory-mcp
+  runtime: claude
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:bc69a4668d08a2bea2981c4ab0c13087654d9c7710ff3e5234fa82d193dd1d20
 - kind: uri
   target: mcp
   value: context7
@@ -13372,7 +13394,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:828cc04f4f935aaada15702ddbbf02d900fa4acf3edc564cdcb07a46a9f140e2
 - kind: uri
   target: mcp
   value: fetch
@@ -13381,7 +13403,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:fd3e22e597230f729fd04b082ed886a4cc3bd91b8e43ebbdf094aa4342c1147d
 - kind: uri
   target: mcp
   value: github
@@ -13390,7 +13412,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:1c2a55f7249aa57a77de8debe921a5e7ec9593a18333b724a8c883a733c9e302
 - kind: uri
   target: mcp
   value: codebase-memory-mcp
@@ -13453,7 +13475,7 @@ mcp_configs:
     args:
     - --with
     - mcp>=1.28,<2
-    - mcp-server-fetch==2026.10.19
+    - mcp-server-fetch==2026.10.24
     registry: false
     command: uvx
   github:
@@ -13461,12 +13483,13 @@ mcp_configs:
     transport: stdio
     args:
     - -lc
-    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.38.0 -- https://api.githubcopilot.com/mcp/
+    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.38.2 -- https://api.githubcopilot.com/mcp/
       -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers
     registry: false
     command: bash
 mcp_target_servers:
   claude:
+  - codebase-memory-mcp
   - context7
   - fetch
   - github

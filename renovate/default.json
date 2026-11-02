@@ -159,7 +159,6 @@
       "commitMessagePrefix": "renovate(terraform):",
       "matchManagers": ["terraform", "terraform-version"],
       "addLabels": ["terraform"],
-      "postUpdateOptions": ["terraformLockFileMaintenance"],
       "automerge": false,
       "platformAutomerge": false
     },
@@ -172,8 +171,7 @@
       "matchDepTypes": ["provider", "required_provider"],
       "matchFileNames": ["**/*.tf", "**/*.tfvars", "**/.terraform.lock.hcl"],
       "matchManagers": ["terraform"],
-      "platformAutomerge": false,
-      "postUpdateOptions": ["terraformLockFileMaintenance"]
+      "platformAutomerge": false
     },
     {
       "description": "Rules: Update Terraform modules / providers grouping",
