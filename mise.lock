@@ -1740,64 +1740,50 @@ url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.7/ghali
 provenance = "slsa"
 
 [[tools."aqua:suzuki-shunsuke/ghatm"]]
-version = "1.0.0"
+version = "1.0.1"
 backend = "aqua:suzuki-shunsuke/ghatm"
-
-[[tools."aqua:suzuki-shunsuke/ghatm"]]
-version = "1.0.0"
-backend = "aqua:suzuki-shunsuke/ghatm"
-
-[tools."aqua:suzuki-shunsuke/ghatm".options]
-"vars.lazy" = "true"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-arm64"]
-checksum = "sha256:92368685124a3a7db0e59c2c56e9ab1af3eaf636a8f891c86684f5b6010ed5e5"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_linux_arm64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-arm64".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:243a9b9e4f1c3133370843e0591ba243545eb0e71d4316b32c737d37ba02a000"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900956"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-arm64-musl"]
-checksum = "sha256:92368685124a3a7db0e59c2c56e9ab1af3eaf636a8f891c86684f5b6010ed5e5"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_linux_arm64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-arm64-musl".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:243a9b9e4f1c3133370843e0591ba243545eb0e71d4316b32c737d37ba02a000"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900956"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-x64"]
-checksum = "sha256:22195c41bc439958e3983ad1cf6f7b2d3ed8a0685df4b15bff5b2bbfb38118ed"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_linux_amd64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-x64".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:4d9b755527a8e3ccb437f2a3b2226ee81602c0498e3410c61b00af60645f11fa"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900951"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-x64-musl"]
-checksum = "sha256:22195c41bc439958e3983ad1cf6f7b2d3ed8a0685df4b15bff5b2bbfb38118ed"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_linux_amd64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.linux-x64-musl".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:4d9b755527a8e3ccb437f2a3b2226ee81602c0498e3410c61b00af60645f11fa"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900951"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.macos-arm64"]
-checksum = "sha256:63204eb557d71e8cf5af739a82444cf231581f067e36903aece3e172544d16a8"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_darwin_arm64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.macos-arm64".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:eb4fe6f153b06391deebdd69eee0e046109f8e87f554d8d870c9f11a2907cfb0"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900933"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.macos-x64"]
-checksum = "sha256:1d9eef823cbc2a7e8789c0a1511896292a831d477670b9b4180a9a9db817ebad"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_darwin_amd64.tar.gz"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.macos-x64".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:cc8c4ba813c2cb98bc9bf1d648a18e70955889713bdb78b754ed9353cdb57545"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900929"
+provenance = "cosign"
 
 [tools."aqua:suzuki-shunsuke/ghatm"."platforms.windows-x64"]
-checksum = "sha256:b195c25ab335729eaf63fe9c40185091e9e87bf709c7a487e7b258096be2b63a"
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/ghatm_windows_amd64.zip"
-
-[tools."aqua:suzuki-shunsuke/ghatm"."platforms.windows-x64".provenance.slsa]
-url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.0/multiple.intoto.jsonl"
+checksum = "sha256:f3483d039159815ff2c2ee246d86e58cd7c623f08a94ae1527117744fd343e9e"
+url = "https://github.com/suzuki-shunsuke/ghatm/releases/download/v1.0.1/ghatm_windows_amd64.zip"
+url_api = "https://api.github.com/repos/suzuki-shunsuke/ghatm/releases/assets/676900977"
+provenance = "cosign"
 
 [[tools."aqua:suzuki-shunsuke/pinact"]]
 version = "5.0.2"
