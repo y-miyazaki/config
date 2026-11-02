@@ -19,7 +19,7 @@
 - grep の gate: 作業の後、`git grep -inE "detect_hook|on_detect_dispatch|dispatch_requested|dispatch_event_type|dispatch_client_payload|should_request_dispatch" -- . ':!.loop' ':!CHANGELOG.md' ':!docs/superpowers'` の出力は、`test/bats/github-actions/loop-caller-parity.bats` の `old_names` の1行だけ。**テストにもこの名前を書かない**(大文字小文字を区別しない。`DETECT_HOOK_SCRIPT` も当たる)。不在の検査は、入力の一覧の完全一致と `startswith("dispatch_")` で書く。
 - 配布する skill は `.apm/packages/github/.apm/skills/github-issue-triage/` だけを編集し、`bash scripts/self/apm/sync_apm_artifacts.sh` で `.agents/skills/github-issue-triage/` と `.claude/skills/github-issue-triage/` に同期する(`apm_modules/` は追跡していない)。パッケージの文言は portable にする(Loop の platform の名前、caller や action の名前を書かない。`.apm/CLAUDE.md`)。SKILL.md の version は 0.1.5 のまま(このブランチで main の 0.1.4 から上げ済みで、未リリース)。
 - シェルの変更には bats を対にする(`.claude/rules/bats.md`)。`shfmt` と `prettier` は PostToolUse フック、`shellcheck`・`actionlint`・`markdownlint` などは Stop フックが実行する。**実装者は直接実行しない**(結果はフックの出力で見る)。
-- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`.claude/worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は対象のディレクトリを指定したときだけ使い、リポジトリ全体には使わない。`apm.lock.yaml` は Task 2 の手順の patch でだけ stage する。
+- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は対象のディレクトリを指定したときだけ使い、リポジトリ全体には使わない。`apm.lock.yaml` は Task 2 の手順の patch でだけ stage する。
 - 一時ファイルは `tmp/` に置き、使い終えたら消す。
 - `ci-*` から `./.github/...` を参照しない。pin は変えない。リリースと pin の更新、GitHub Actions のワークフローの実行(dogfood)は、この plan に含めない。push しない。
 
@@ -216,7 +216,7 @@
 - [ ] **Step 1: gate。** `git grep -inE "detect_hook|on_detect_dispatch|dispatch_requested|dispatch_event_type|dispatch_client_payload|should_request_dispatch" -- . ':!.loop' ':!CHANGELOG.md' ':!docs/superpowers'`。Expected: `test/bats/github-actions/loop-caller-parity.bats:934:        DETECT_DOMAIN_ENV_JSON ENGINE finalize_hook_script FINALIZE_HOOK_SCRIPT detect_hook_script DETECT_HOOK_SCRIPT` の1行だけ。
 - [ ] **Step 2: spec の bats と topology。** `bats test/bats/.apm/packages/github/github-issue-triage/detect_issue.bats test/bats/github-actions/loop-entity-detect.bats test/bats/.github/actions/loop-entity-detect/lib/entity_target.bats test/bats/scripts/self/ci/loop_input_topology.bats test/bats/github-actions/loop-caller-parity.bats`。Expected: PASS。`python3 -I scripts/self/ci/loop_input_topology.py . > /dev/null; echo $?`。Expected: `0`。
 - [ ] **Step 3: 全部の bats。** `bats -r test/bats > tmp/bats-detect-hook-removal.txt 2>&1; echo $?`。Expected: `0`。確認の後 `rm -f tmp/bats-detect-hook-removal.txt`。
-- [ ] **Step 4: 同期の残り。** `bash scripts/self/apm/sync_apm_artifacts.sh` の後、`git status --porcelain`。Expected: 作業の前からある `.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`.claude/worktrees/` だけ。`git diff apm.lock.yaml` は `generated_at` と `mcp_configs` の hunk だけ。
+- [ ] **Step 4: 同期の残り。** `bash scripts/self/apm/sync_apm_artifacts.sh` の後、`git status --porcelain`。Expected: 作業の前からある `.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`worktrees/` だけ。`git diff apm.lock.yaml` は `generated_at` と `mcp_configs` の hunk だけ。
 - [ ] **Step 5: lint。** actionlint、ghalint、zizmor、shellcheck、markdownlint は Stop フックの結果を見る。直接は実行しない。
 
 ---

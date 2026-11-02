@@ -22,7 +22,7 @@
 - `.github/workflows/` の変更は、`.github/` で始まる allowlist のパターンに当たるときだけ許す。`**` や空の allowlist では許さない。`.loop/` は除外しない。差分は `git diff --name-only --no-renames`。
 - 権限の4ファイル(`.claude/settings.json` ほか。CLAUDE.md の Permission parity)は変えない(spec「残るもの」)。`on-ci-push-mise-update-lock.yaml` の `branches: [main]` も範囲外(spec が別の修正とする)。
 - シェルの変更には bats を対にする(`.claude/rules/bats.md`)。テストを先に書く。`shfmt`・`prettier` は PostToolUse フック、`shellcheck`・`actionlint`・`ghalint`・`zizmor`・`markdownlint-cli2`・`markdown-link-check`・`gitleaks` は Stop フックが実行する。**実装者は直接実行しない**(結果はフックの出力で見る)。
-- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`.claude/worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は使わない。skill は変えないので APM の同期は要らない(Stop フックの同期で差分が出ても stage しない)。
+- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は使わない。skill は変えないので APM の同期は要らない(Stop フックの同期で差分が出ても stage しない)。
 - 一時ファイルは `tmp/` に置き、使い終えたら消す。
 - `ci-*` から `./.github/...` を参照しない。pin は変えない。リリースと pin の更新、GitHub Actions のワークフローの実行(dogfood)は、この plan に含めない。push しない。
 

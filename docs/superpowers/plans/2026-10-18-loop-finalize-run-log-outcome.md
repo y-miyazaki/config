@@ -18,7 +18,7 @@
 - workflow に残すのは空のときの既定値だけ: `outcome: ${{ steps.finalize.outputs.outcome || 'error' }}`、`failure_stage: ${{ steps.finalize.outputs.failure_stage || (steps.finalize.outputs.outcome == '' && 'finalize' || '') }}`、`failure_message: ${{ steps.finalize.outputs.failure_message }}`。`loop-notify-pr` の `outcome:`(`ci-loop-agent.yaml:671`)は既にこの形なので変えない。
 - 意図した違い(spec): L1 でエージェントの失敗を `agent_execute` として記録する、notify が後のステップの失敗で `error` を表示する、`loop-finalize` がスキップされたときは `error` / `finalize`(エージェントの段階は記録されない)、キャンセルは `error`。
 - シェルの変更には bats を対にする(`.claude/rules/bats.md`)。`shfmt`・`prettier` は PostToolUse フック、`shellcheck`・`actionlint`・`markdownlint` などは Stop フックが実行する。**実装者は直接実行しない**(結果はフックの出力で見る)。
-- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`.claude/worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は使わない。この plan は skill を変えないので APM の同期は要らない(Stop フックの同期で差分が出ても stage しない)。
+- 作業ツリーに無関係の変更がある(`.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`worktrees/`)。コミットは**明示したパスだけ**を stage する。`git add -A` は使わない。この plan は skill を変えないので APM の同期は要らない(Stop フックの同期で差分が出ても stage しない)。
 - 一時ファイルは `tmp/` に置き、使い終えたら消す。
 - `ci-*` から `./.github/...` を参照しない。pin は変えない。リリースと pin の更新、GitHub Actions のワークフローの実行(dogfood)は、この plan に含めない。push しない(「リリースと dogfood(手動)」)。
 - credential-isolation の spec(`2026-10-18-loop-agent-credential-isolation-design.md`)は実装しない。ただし、その Push Agent Branch の失敗をステップの失敗にするステップは「Delete Agent Branch の後、Resolve Run Outcome の前」に入る。Resolve Run Outcome は Export Failure Diagnostics の**直前**に置き、Delete Agent Branch との間に何も置かない(後でその spec が1ステップを挟む)。その spec の Push Agent Branch は失敗を段階 `push` で同じ `LOOP_FAILURE_FILE` に記録して 0 で終えるので、Resolve Run Outcome は記録を上書きせず、outcome も記録だけで `error` になる(fail のステップより前でも)。その spec が足すステップの並びは、Task 5 の `steps run in spec order` の期待値を、その spec の実装で直す。
@@ -293,7 +293,7 @@ finalize-l2 のコメント(`:555-559` を置き換える):
 - [ ] **Step 1: spec の bats。** `bats test/bats/.github/actions/lib/loop/failure_record.bats test/bats/.github/actions/lib/loop/export_failure_diag.bats test/bats/.github/actions/loop-finalize/ test/bats/github-actions/loop-caller-parity.bats`。Expected: PASS。
 - [ ] **Step 2: 全部の bats。** `mkdir -p tmp && bats -r test/bats > tmp/bats-run-log-outcome.txt 2>&1; echo $?`。Expected: `0`。確認の後 `rm -f tmp/bats-run-log-outcome.txt`。
 - [ ] **Step 3: topology。** `python3 -I scripts/self/ci/loop_input_topology.py . > /dev/null; echo $?`。Expected: `0`(reusable の入力は変えていない)。
-- [ ] **Step 4: 作業ツリー。** `git status --porcelain`。Expected: 作業の前からある `.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`.claude/worktrees/` だけ。
+- [ ] **Step 4: 作業ツリー。** `git status --porcelain`。Expected: 作業の前からある `.claude/settings.json`、`.cursor/mcp.json`、`.mcp.json`、`apm.lock.yaml`、`worktrees/` だけ。
 - [ ] **Step 5: lint。** actionlint、ghalint、zizmor、shellcheck、markdownlint は Stop フックの結果を見る。直接は実行しない。
 
 ---
