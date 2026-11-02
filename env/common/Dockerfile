@@ -50,7 +50,7 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list && \
 #--------------------------------------------------------------
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    make openssl git tar curl zip jq groff gcc bison python3 python3-dev python3-pip fish shellcheck shfmt bats yamllint
+    make openssl git tar curl zip jq groff gcc bison python3 python3-dev python3-pip fish
 
 # Install mise to a system-wide path so remoteUser=vscode can always resolve it
 RUN curl -fsSL https://mise.run | MISE_VERSION=${MISE_VERSION} MISE_INSTALL_PATH=/usr/local/bin/mise sh && \
