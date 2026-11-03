@@ -31,7 +31,7 @@
   "packageRules": [
     {
       "description": "Rules: Add aqua label for all aqua package updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": ["regex"],
+      "matchManagers": ["custom.regex"],
       "matchFileNames": ["aqua.yaml"],
       "commitMessagePrefix": "renovate(aqua):",
       "addLabels": ["aqua"],
@@ -40,7 +40,7 @@
     },
     {
       "description": "Rules: Automerge patch updates for aqua packages",
-      "matchManagers": ["regex"],
+      "matchManagers": ["custom.regex"],
       "matchFileNames": ["aqua.yaml"],
       "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(aqua):",
@@ -84,7 +84,7 @@
     {
       "description": "Rules: Update GitHub Actions official actions only patch automerge (optional)",
       "matchManagers": ["github-actions"],
-      "matchPackagePrefixes": ["actions/"],
+      "matchPackageNames": ["actions/**"],
       "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(github-actions-official):",
       "addLabels": ["automerge"],
@@ -103,7 +103,7 @@
     {
       "description": "Rules: Automerge patch updates for Go modules (excluding Go toolchain)",
       "matchManagers": ["gomod"],
-      "excludePackageNames": ["go"],
+      "matchPackageNames": ["!go"],
       "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(go):",
       "addLabels": ["automerge"],
@@ -303,7 +303,7 @@
       "description": "Rules: Group terraform CLI updates across GitHub Actions workflow inputs and mise (exclude Terraform provider)",
       "addLabels": ["terraform"],
       "commitMessagePrefix": "renovate(terraform):",
-      "excludeDatasources": ["terraform-provider"],
+      "matchDatasources": ["!terraform-provider"],
       "groupName": "terraform",
       "matchPackageNames": ["hashicorp/terraform", "aqua:hashicorp/terraform"]
     },

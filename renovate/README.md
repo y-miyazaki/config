@@ -146,7 +146,7 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 - Provider updates (`terraform-provider` datasource): scoped to `**/*.tf`, `**/*.tfvars`, and `**/.terraform.lock.hcl`
 - Lock file maintenance (`lockFileMaintenance`): weekly refresh of provider hashes in `.terraform.lock.hcl` (via `:maintainLockFilesWeekly` preset)
 - Group Terraform module/provider updates into one PR with group name `terraform dependencies`
-- Terraform CLI (`hashicorp/terraform` via GitHub Actions / mise) is grouped separately from the Terraform provider (`excludeDatasources: terraform-provider`)
+- Terraform CLI (`hashicorp/terraform` via GitHub Actions / mise) is grouped separately from the Terraform provider (`matchDatasources: ["!terraform-provider"]`)
 
 ### tflint Plugins (`terraform-linters/tflint-ruleset-aws`)
 
@@ -268,7 +268,7 @@ mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the p
 ### Scope
 
 - Uses `custom.regex` managers
-- Targets `.pre-commit-config.yaml`
+- Targets `.pre-commit-config.yaml` and its variants `.pre-commit-config-*.yaml` (for example `-go`, `-terraform`)
 - Detects `rev:` values for each remote repository hook
 
 ### Labels and Automerge
@@ -291,6 +291,7 @@ mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the p
 - `sqlfluff/sqlfluff`
 - `antonbabenko/pre-commit-terraform`
 - `terraform-docs/terraform-docs`
+- `renovatebot/pre-commit-hooks` (`renovate-config-validator`; `rev` has no `v` prefix)
 
 ## Maintenance Notes
 
