@@ -256,9 +256,8 @@ version = "0.13.6"
 backend = "aqua:astral-sh/uv"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64"]
-checksum = "sha256:229e194255c7958d86d56e8790d969a6f74736592133f0dfd0076f754c642c1d"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.6/uv-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/679980412"
+checksum = "sha256:819692e404d23e5aae6bc44c0e260f1f5492fd1910ab4693b2c650f926dbe800"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.6/uv-aarch64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64-musl"]
@@ -268,9 +267,8 @@ url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/679980430"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64"]
-checksum = "sha256:f29c3e94ffabd7e6f3ba521dba169a9b7ec12100bf3257087f0f24f6123f3645"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.6/uv-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/679980644"
+checksum = "sha256:5d61f26b6c7213779eda90edc6971ea6b0b796bfb8d49a574c8ad69b59838548"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.6/uv-x86_64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64-musl"]
@@ -323,6 +321,31 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.6.pkg"
 
 [tools."aqua:aws/aws-cli"."platforms.macos-x64"]
 checksum = "sha256:0c67ccc431fac778898283fda62a9b0d6fa7fa4184a0e990cb6a7b7ec2cde333"
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.6.pkg"
+
+[[tools."aqua:aws/aws-cli"]]
+version = "2.38.6"
+backend = "aqua:aws/aws-cli"
+
+[tools."aqua:aws/aws-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.38.6.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.38.6.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.38.6.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.38.6.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-arm64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.6.pkg"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-x64"]
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.38.6.pkg"
 
 [[tools."aqua:aws/aws-sam-cli"]]
@@ -2544,6 +2567,8 @@ url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/679944763"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-arm64-musl"]
+checksum = "sha256:2da5106f94a6b34b8ed59c8a9b8223c0f32621f4494b4d7644b672b8aac1ba4f"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.9/pnpm-linux-arm64.tar.gz"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64"]
