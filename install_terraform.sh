@@ -150,7 +150,10 @@ parse_arguments() {
 install_file() {
     local src="$1"
     local dest="$2"
-    local url="${REPO_RAW_BASE}/${src}"
+    # Cache-busting query: raw.githubusercontent.com is CDN-cached (max-age=300),
+    # so a fresh push to main could otherwise serve stale content for ~5 minutes.
+    local url
+    url="${REPO_RAW_BASE}/${src}?cb=$(date +%s)"
 
     if [[ -f ${dest} ]] && [[ ${FORCE} == "false" ]]; then
         echo "  [skip] $(basename "${dest}") (already exists)" >&2
