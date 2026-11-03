@@ -1611,6 +1611,47 @@ url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/r
 url_api = "https://api.github.com/repos/suzuki-shunsuke/disable-checkout-persist-credentials/releases/assets/681326682"
 provenance = "cosign"
 
+[[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"]]
+version = "1.0.2"
+backend = "aqua:suzuki-shunsuke/disable-checkout-persist-credentials"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials".options]
+"vars.lazy" = "true"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.linux-arm64"]
+checksum = "sha256:c9087a69ef117f669e8278b1701eca38030e4979dea58dff8edaec451682b88a"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_linux_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.linux-arm64-musl"]
+checksum = "sha256:c9087a69ef117f669e8278b1701eca38030e4979dea58dff8edaec451682b88a"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_linux_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.linux-x64"]
+checksum = "sha256:824538a28dc27549ce9deb459fe0f4cd68ea0942363d3cab00fa90d5fe712245"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_linux_amd64.tar.gz"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.linux-x64-musl"]
+checksum = "sha256:824538a28dc27549ce9deb459fe0f4cd68ea0942363d3cab00fa90d5fe712245"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_linux_amd64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.macos-arm64"]
+checksum = "sha256:43505fe8fcdb2f8d6ec28a82f8f752c7da8cfeb6813d4f47a16e0e4ef8136727"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_darwin_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.macos-x64"]
+checksum = "sha256:8108054ba9f653a2591dfa4b6dca230e94ac7a95732711c58c5df1c09828618b"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_darwin_amd64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"."platforms.windows-x64"]
+checksum = "sha256:b3aab0341ee162e0e6cf953ab4b2ca4bf838799963f1c06163bbc5e86f15423a"
+url = "https://github.com/suzuki-shunsuke/disable-checkout-persist-credentials/releases/download/v1.0.2/disable-checkout-persist-credentials_windows_amd64.zip"
+provenance = "slsa"
+
 [[tools."aqua:suzuki-shunsuke/ghalint"]]
 version = "1.5.7"
 backend = "aqua:suzuki-shunsuke/ghalint"
