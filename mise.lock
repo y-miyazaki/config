@@ -1049,6 +1049,13 @@ provenance = "github-attestations"
 version = "1.85.0"
 backend = "aqua:grpc/grpc-go/protoc-gen-go-grpc"
 
+[[tools."aqua:grpc/grpc-go/protoc-gen-go-grpc"]]
+version = "1.85.0"
+backend = "aqua:grpc/grpc-go/protoc-gen-go-grpc"
+
+[tools."aqua:grpc/grpc-go/protoc-gen-go-grpc".options]
+"vars.lazy" = "true"
+
 [[tools."aqua:hashicorp/terraform"]]
 version = "1.17.0"
 backend = "aqua:hashicorp/terraform"
