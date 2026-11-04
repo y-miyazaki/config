@@ -6,7 +6,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/pre-commit/pre-commit-hooks\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/pre-commit/pre-commit-hooks\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "pre-commit/pre-commit-hooks",
       "datasourceTemplate": "github-releases"
@@ -16,7 +16,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/Yelp/detect-secrets\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/Yelp/detect-secrets\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "Yelp/detect-secrets",
       "datasourceTemplate": "github-releases"
@@ -26,7 +26,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/gitleaks/gitleaks\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/gitleaks/gitleaks\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "gitleaks/gitleaks",
       "datasourceTemplate": "github-releases"
@@ -36,7 +36,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/semgrep/pre-commit\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/semgrep/pre-commit\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "semgrep/pre-commit",
       "datasourceTemplate": "github-releases"
@@ -46,7 +46,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/zizmorcore/zizmor-pre-commit\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/zizmorcore/zizmor-pre-commit\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "zizmorcore/zizmor-pre-commit",
       "datasourceTemplate": "github-releases"
@@ -56,7 +56,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/DavidAnson/markdownlint-cli2\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/DavidAnson/markdownlint-cli2\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "DavidAnson/markdownlint-cli2",
       "datasourceTemplate": "github-releases"
@@ -66,7 +66,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/tcort/markdown-link-check\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/tcort/markdown-link-check\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "tcort/markdown-link-check",
       "datasourceTemplate": "github-releases"
@@ -76,7 +76,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/google/go-jsonnet\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/google/go-jsonnet\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "google/go-jsonnet",
       "datasourceTemplate": "github-releases"
@@ -86,7 +86,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/sqlfluff/sqlfluff\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/sqlfluff/sqlfluff\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "sqlfluff/sqlfluff",
       "datasourceTemplate": "github-releases"
@@ -96,7 +96,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/antonbabenko/pre-commit-terraform\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/antonbabenko/pre-commit-terraform\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "antonbabenko/pre-commit-terraform",
       "datasourceTemplate": "github-releases"
@@ -106,7 +106,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/terraform-docs/terraform-docs\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/terraform-docs/terraform-docs\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "terraform-docs/terraform-docs",
       "datasourceTemplate": "github-releases"
@@ -116,7 +116,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.pre-commit-config(-[^/]+)?\\.yaml$/"],
       "matchStrings": [
-        "repo:\\s*https://github\\.com/renovatebot/pre-commit-hooks\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+        "repo:\\s*https://github\\.com/renovatebot/pre-commit-hooks\\s*\\n(?:\\s*#)?\\s*rev:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "renovatebot/pre-commit-hooks",
       "datasourceTemplate": "github-releases"
