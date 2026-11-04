@@ -4,7 +4,7 @@
 # which breaks when the newest node release is a pre-release (e.g. "x.0.0-alpha").
 default_language_version:
   node: system
-  repos:
+repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
