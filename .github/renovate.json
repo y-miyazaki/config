@@ -31,6 +31,7 @@
         "aqua:terraform-linters/tflint",
         "aqua:zizmorcore/zizmor",
         "aquasecurity/trivy",
+        "astral-sh/setup-uv",
         "astral-sh/uv",
         "github:microsoft/apm",
         "gitleaks/gitleaks",
