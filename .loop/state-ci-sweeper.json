@@ -15,7 +15,10 @@
       "open_rejections": [
         {
           "attempt": 1,
-          "files": ["env/common/scripts/init.sh", "mise.lock"],
+          "files": [
+            "env/common/scripts/init.sh",
+            "mise.lock"
+          ],
           "issue": "Changed files are outside the allowlist",
           "fix": "Limit changes to allowlisted paths or update the allowlist in the caller workflow"
         },
@@ -196,6 +199,13 @@
     },
     "pull_request:1089": {
       "last_run": "2026-10-30T02:15:32Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
+    },
+    "pull_request:1171": {
+      "last_run": "2026-11-05T23:55:58Z",
       "outcome": "rejected",
       "consecutive_failures": 1,
       "open_rejections": [],
