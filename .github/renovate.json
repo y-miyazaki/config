@@ -43,12 +43,23 @@
         "microsoft/apm",
         "pipx:semgrep",
         "semgrep",
-        "semgrep/pre-commit",
         "tcort/markdown-link-check",
         "terraform-linters/tflint",
-        "zizmorcore/zizmor",
-        "zizmorcore/zizmor-pre-commit"
+        "zizmorcore/zizmor"
       ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "7 days",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Rules: Automerge minor/patch updates for pre-commit hook versions (repo-local override of the base preset, which does not automerge)",
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "matchFileNames": [
+        ".pre-commit-config.yaml",
+        ".pre-commit-config-*.yaml"
+      ],
+      "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["minor", "patch"],
       "minimumReleaseAge": "7 days",
       "platformAutomerge": true

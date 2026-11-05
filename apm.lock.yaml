@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-02T12:21:31.714708+00:00'
+generated_at: '2026-11-04T23:58:52.611863+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -330,7 +330,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:4c418558627bdfcadebb9e0502a4a657f357c6bfdab4aec75010dcf97f0fa7bd
+  content_hash: sha256:2ec2f05815e2a3816bf32a8d9e8123161e80f8ca0f46a72716ca4b751f1984b9
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -13403,7 +13403,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:fd3e22e597230f729fd04b082ed886a4cc3bd91b8e43ebbdf094aa4342c1147d
+  content_hash: sha256:2c79b7953ebbc2c8669faacbc4ff9431c8d62f33f39b0382b107123fa2497bf6
 - kind: uri
   target: mcp
   value: github
@@ -13475,7 +13475,7 @@ mcp_configs:
     args:
     - --with
     - mcp>=1.28,<2
-    - mcp-server-fetch==2026.10.24
+    - mcp-server-fetch==2026.10.28
     registry: false
     command: uvx
   github:

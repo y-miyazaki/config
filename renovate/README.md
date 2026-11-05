@@ -274,7 +274,7 @@ mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the p
 ### Labels and Automerge
 
 - Label all matched updates with `pre-commit-config-tool-version`
-- Automerge patch updates
+- Automerge patch updates (base policy; a consuming repository can override it in its own `packageRules`)
 - Add `automerge` label to automerged updates
 - Commit prefix: `renovate(pre-commit-config-tool-version):`
 
