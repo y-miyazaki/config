@@ -6,13 +6,13 @@ on:
   workflow_call:
     inputs:
       arc_checksum:
-        default: "85ea298d9f37c7371ca77826e811985103686bf9b418e9262506442171496c76" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/y-miyazaki/arc/releases/download/v1.0.12/arc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "783eb7d79a95c273776163ec4d98830c6a184890c282e97b14be4eb37642f333" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/y-miyazaki/arc/releases/download/v1.0.17/arc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for arc release tarball"
         required: false
         type: string
       arc_version:
-        default: "v1.0.12"
+        default: "v1.0.17"
         description: "arc version to use"
         required: false
         type: string

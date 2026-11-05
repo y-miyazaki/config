@@ -42,8 +42,8 @@ on:
         required: false
         type: string
       shfmt_checksum:
-        default: "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64" | sha256sum | awk '{print $1}'
+        default: "76e77641faa025814b77f153b29796b8e6fa2fca03e0c76a691608b86c7ea7bf" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.14.1/shfmt_v3.14.1_linux_amd64" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for shfmt linux amd64 binary"
         required: false
         type: string
@@ -53,7 +53,7 @@ on:
         required: false
         type: string
       shfmt_version:
-        default: "3.10.0"
+        default: "3.14.1"
         description: "shfmt release version to install when formatting script_path files"
         required: false
         type: string
@@ -173,9 +173,9 @@ jobs:
 
         with:
           binary: ghalint
-          checksum: 98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c # pragma: allowlist secret
+          checksum: eda1af79c1a4a31c2de5831cd1333ad582fa6fa72015f8e9c1c4525d550c1d35 # pragma: allowlist secret
           repo: suzuki-shunsuke/ghalint
-          version: "1.5.6"
+          version: "1.6.0"
 
       - name: Setup zizmor
         if: steps.discover.outputs.has_bats == 'true'

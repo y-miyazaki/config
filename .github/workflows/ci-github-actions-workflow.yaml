@@ -17,8 +17,8 @@ on:
         required: false
         type: string
       ghalint_checksum:
-        default: "98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.6/ghalint_1.5.6_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "eda1af79c1a4a31c2de5831cd1333ad582fa6fa72015f8e9c1c4525d550c1d35" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for ghalint release tarball"
         required: false
         type: string
@@ -28,7 +28,7 @@ on:
         required: false
         type: boolean
       ghalint_version:
-        default: "1.5.6"
+        default: "1.6.0"
         description: "ghalint version to use"
         required: false
         type: string

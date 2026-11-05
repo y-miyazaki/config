@@ -6,14 +6,14 @@ on:
   workflow_call:
     inputs:
       absc_checksum:
-        default: "6f5c79d460a978a854f61701666c589cf7369a54987696361d2a85152d347c27" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/y-miyazaki/absc/releases/download/v1.0.16/absc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "51fc06bdd3ac7bf0545e8efa5bc07ca77fe08364c25c30a3e689166713c26eac" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/y-miyazaki/absc/releases/download/v1.0.21/absc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for absc release tarball"
         required: false
         type: string
       absc_version:
-        default: "v1.0.16"
-        description: "absc version to use (e.g. v1.0.16)"
+        default: "v1.0.21"
+        description: "absc version to use (e.g. v1.0.21)"
         required: false
         type: string
       days_ago:
