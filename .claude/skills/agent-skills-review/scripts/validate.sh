@@ -1,0 +1,853 @@
+#!/bin/bash
+#######################################
+# Description: Deterministic validation for Agent Skills SKILL.md files
+#
+# Usage: ./validate.sh [SKILL.md]
+#   arguments:
+#     SKILL.md       Path to SKILL.md file to validate (required)
+#
+# Output:
+# - Human-readable validation results (terminal output)
+# - JSON format output for machine parsing
+#
+# Design Rules:
+# - Validates structural completeness and resource organization
+# - Input path must match <agent-root>/skills/*/SKILL.md pattern
+# - Normalizes paths with realpath to prevent path traversal
+# - Uses secure defaults (umask 027)
+# - Outputs structured JSON for automation
+#
+# Dependencies:
+# - bash (POSIX bash, /bin/bash)
+# - grep, jq, wc (standard Unix utilities)
+# - yamllint (optional, for YAML syntax validation)
+#
+# Examples:
+#   ./validate.sh .agents/skills/agent-skills-review/SKILL.md
+#   ./validate.sh .kiro/skills/go-validation/SKILL.md
+#######################################
+
+# Error handling: exit on error, unset variable, or failed pipeline
+set -euo pipefail
+
+# Secure defaults
+umask 027
+export LC_ALL=C.UTF-8
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load all-in-one library
+# shellcheck source=./lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/all.sh"
+
+#######################################
+# Global variables
+#######################################
+SKILL_FILE=""
+declare -a check_names=()
+declare -a check_statuses=()
+declare -a check_details_json=()
+declare -a required_sections=("Input" "Output Specification" "Execution Scope" "Reference Files Guide" "Workflow")
+declare -a required_fields=("name" "description" "license")
+
+#######################################
+# show_usage: Display script usage information
+#
+# Description:
+#   Displays usage information for the script, including options and examples
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Writes to stdout
+#
+# Returns:
+#   None
+#
+# Usage:
+#   show_usage
+#
+#######################################
+function show_usage {
+    cat << EOF
+Usage: $(basename "$0") <SKILL.md>
+
+Description: Deterministic validation for Agent Skills SKILL.md files
+             Validates structural completeness and resource organization
+
+Arguments:
+  SKILL.md       Path to SKILL.md file to validate (required)
+                                 Must match pattern: <agent-root>/skills/*/SKILL.md
+                                 agent-root: .github, .agents, .claude, .codex, .cursor, cursor, .kiro, kiro
+
+Validation Checks:
+    - Structural Completeness: 5 required sections exist
+  - YAML Frontmatter Fields: name, description, license fields present
+  - Description Quality: third person, no implementation instructions (activation trigger wording is advisory)
+  - Metadata Fields: author and version present
+    - Progressive Disclosure (soft guard): word count monitoring for readability
+    - Resource Separation: references/ is recommended (SHOULD); scripts/ is optional
+  - Reference Mandatory Files: common-checklist.md and common-output-format.md exist
+  - Reference Triggers: trigger conditions present in Reference Files Guide
+
+Output Format:
+  - Human-readable colored terminal output
+  - JSON format for machine parsing
+
+Examples:
+    $(basename "$0") .agents/skills/agent-skills-review/SKILL.md
+    $(basename "$0") .kiro/skills/go-validation/SKILL.md
+EOF
+    exit 0
+}
+
+#######################################
+# parse_arguments: Parse and validate command line arguments
+#
+# Description:
+#   Parses command line arguments, validates input, and normalizes paths
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file (normalized with realpath)
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Exits with error if validation fails
+#
+# Usage:
+#   parse_arguments "$@"
+#
+#######################################
+function parse_arguments {
+    # Handle help flag
+    if [[ $# -eq 0 ]] || [[ ${1:-} == "-h" ]] || [[ ${1:-} == "--help" ]]; then
+        show_usage
+    fi
+
+    # Validate argument count
+    if [[ $# -ne 1 ]]; then
+        error_exit "Error: Exactly one argument required (SKILL.md path)"
+    fi
+
+    local input_path="$1"
+
+    # Validate file existence before normalization
+    if [[ ! -f $input_path ]]; then
+        error_exit "Error: File not found: $input_path"
+    fi
+
+    # Validate file extension
+    if [[ ! $input_path =~ \.md$ ]]; then
+        error_exit "Error: File must have .md extension: $input_path"
+    fi
+
+    # Normalize path to prevent path traversal (SEC-03)
+    SKILL_FILE="$(realpath "$input_path")"
+
+    # Validate path matches expected pattern (SEC-01)
+    if [[ ! $SKILL_FILE =~ /(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro: $SKILL_FILE"
+    fi
+}
+
+#######################################
+# check_yaml_syntax: Validate YAML syntax with yamllint
+#
+# Description:
+#   Runs yamllint on SKILL.md to validate YAML frontmatter syntax
+#   Checks that YAML is well-formed and follows basic rules
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   check_names - Array of check names
+#   check_statuses - Array of check statuses
+#   check_details_json - Array of check details
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in arrays)
+#
+# Usage:
+#   check_yaml_syntax
+#
+#######################################
+function check_yaml_syntax {
+    # Check if yamllint is available
+    if ! command -v yamllint &> /dev/null; then
+        echo "⊘ YAML syntax validation skipped (yamllint not found)"
+        check_names+=("YAML Syntax")
+        check_statuses+=("SKIP")
+        check_details_json+=("yamllint not installed")
+        return
+    fi
+
+    local tmp_frontmatter
+    tmp_frontmatter="$(mktemp /tmp/agent-skill-frontmatter.XXXXXX.yaml)"
+
+    # Extract only frontmatter block between the first two --- markers.
+    awk '
+        BEGIN { in_frontmatter=0; marker_count=0 }
+        /^---$/ {
+            marker_count++
+            if (marker_count == 1) { in_frontmatter=1; next }
+            if (marker_count == 2) { in_frontmatter=0; exit }
+        }
+        in_frontmatter == 1 { print }
+    ' "$SKILL_FILE" > "$tmp_frontmatter"
+
+    if [[ ! -s $tmp_frontmatter ]]; then
+        rm -f "$tmp_frontmatter"
+        echo "✗ YAML syntax errors detected"
+        check_names+=("YAML Syntax")
+        check_statuses+=("FAIL")
+        check_details_json+=("empty frontmatter")
+        return
+    fi
+
+    if yamllint -d '{extends: default, rules: {document-start: disable, line-length: disable}}' "$tmp_frontmatter" > /dev/null 2>&1; then
+        rm -f "$tmp_frontmatter"
+        echo "✓ YAML syntax valid"
+        check_names+=("YAML Syntax")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        local yaml_errors
+        yaml_errors=$(yamllint -d '{extends: default, rules: {document-start: disable, line-length: disable}}' "$tmp_frontmatter" 2>&1 || true)
+        rm -f "$tmp_frontmatter"
+        echo "✗ YAML syntax errors detected"
+        check_names+=("YAML Syntax")
+        check_statuses+=("FAIL")
+        check_details_json+=("$yaml_errors")
+    fi
+}
+
+#######################################
+# check_structural_completeness: Function implementation
+#
+#
+# Description:
+#   Verifies that SKILL.md contains all 5 required sections:
+#   Input, Output Specification, Execution Scope,
+#   Reference Files Guide, Workflow
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   results - Associative array to store check results
+#   required_sections - Array of required section names
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in results array)
+#
+# Usage:
+#   check_structural_completeness
+#
+#######################################
+function check_structural_completeness {
+    local missing_sections=()
+
+    for section in "${required_sections[@]}"; do
+        if ! grep -q "^## $section$" "$SKILL_FILE" 2> /dev/null; then
+            missing_sections+=("$section")
+        fi
+    done
+
+    if [[ ${#missing_sections[@]} -eq 0 ]]; then
+        echo "✓ Required sections found"
+        check_names+=("Structural Completeness")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Missing sections: ${missing_sections[*]}"
+        check_names+=("Structural Completeness")
+        check_statuses+=("FAIL")
+        check_details_json+=("${missing_sections[*]}")
+    fi
+}
+
+#######################################
+# check_yaml_frontmatter: Check YAML frontmatter fields
+#
+# Description:
+#   Verifies that SKILL.md contains YAML frontmatter with required fields:
+#   name, description, license
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   results - Associative array to store check results
+#   required_fields - Array of required field names
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in results array)
+#
+# Usage:
+#   check_yaml_frontmatter
+#
+#######################################
+function check_yaml_frontmatter {
+    # Check for --- markers
+    if ! grep -q "^---$" "$SKILL_FILE" 2> /dev/null; then
+        echo "✗ YAML frontmatter not found"
+        check_names+=("YAML Frontmatter Fields")
+        check_statuses+=("FAIL")
+        check_details_json+=("frontmatter")
+        return
+    fi
+
+    local missing_fields=()
+    for field in "${required_fields[@]}"; do
+        if ! grep -q "^$field:" "$SKILL_FILE" 2> /dev/null; then
+            missing_fields+=("$field")
+        fi
+    done
+
+    if [[ ${#missing_fields[@]} -eq 0 ]]; then
+        echo "✓ YAML frontmatter fields valid"
+        check_names+=("YAML Frontmatter Fields")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Missing YAML fields: ${missing_fields[*]}"
+        check_names+=("YAML Frontmatter Fields")
+        check_statuses+=("FAIL")
+        check_details_json+=("${missing_fields[*]}")
+    fi
+}
+
+#######################################
+# check_progressive_disclosure: Soft guard word count check
+#
+# Description:
+#   Monitors SKILL.md word count as a readability soft guard.
+#   This check is advisory and does not block validation.
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   results - Associative array to store check results
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in results array)
+#
+# Usage:
+#   check_progressive_disclosure
+#
+#######################################
+function check_progressive_disclosure {
+    local word_count
+    word_count=$(wc -w < "$SKILL_FILE" 2> /dev/null || echo "0")
+    local limit=5000
+
+    if [[ $word_count -lt $limit ]]; then
+        echo "✓ Word count within limit ($word_count < $limit)"
+        check_names+=("Progressive Disclosure")
+        check_statuses+=("PASS")
+        check_details_json+=("$word_count")
+    else
+        echo "⊘ Word count exceeds soft guard ($word_count >= $limit)"
+        check_names+=("Progressive Disclosure")
+        check_statuses+=("SKIP")
+        check_details_json+=("soft-guard-exceeded:$word_count")
+    fi
+}
+
+#######################################
+# check_resource_separation: Check directory structure
+#
+# Description:
+#   Verifies that skill directory contains references/ for all skills.
+#   scripts/ is optional and expected when executable logic is provided.
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   results - Associative array to store check results
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in results array)
+#
+# Usage:
+#   check_resource_separation
+#
+#######################################
+function check_resource_separation {
+    local skill_dir
+    skill_dir="$(dirname "$SKILL_FILE")"
+
+    local scripts_exists=0
+    local reference_exists=0
+
+    [[ -d "$skill_dir/scripts" ]] && scripts_exists=1
+    [[ -d "$skill_dir/references" ]] && reference_exists=1
+
+    if [[ $reference_exists -eq 1 ]]; then
+        if [[ $scripts_exists -eq 1 ]]; then
+            echo "✓ Required directories present (references/; scripts/ available)"
+        else
+            echo "✓ Required directories present (references/; scripts/ optional)"
+        fi
+        check_names+=("Resource Separation")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "⚠ Missing directories: references/ (SHOULD)"
+        check_names+=("Resource Separation")
+        check_statuses+=("SKIP")
+        check_details_json+=("references/ not found (SHOULD)")
+    fi
+}
+
+#######################################
+# check_reference_mandatory_files: Check mandatory reference files
+#
+# Description:
+#   Verifies that references/ directory contains mandatory files:
+#   common-checklist.md and common-output-format.md
+#
+# Globals:
+#   SKILL_FILE - Path to SKILL.md file
+#   check_names - Array of check names
+#   check_statuses - Array of check statuses
+#   check_details_json - Array of check details
+#
+# Arguments:
+#   None (uses global SKILL_FILE)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (stores validation results in arrays)
+#
+# Usage:
+#   check_reference_mandatory_files
+#
+#######################################
+function check_reference_mandatory_files {
+    local skill_dir
+    skill_dir="$(dirname "$SKILL_FILE")"
+    local ref_dir="$skill_dir/references"
+
+    # Skip if references/ directory doesn't exist (already checked by check_resource_separation)
+    if [[ ! -d $ref_dir ]]; then
+        echo "⊘ Reference mandatory files check skipped (references/ directory not found)"
+        check_names+=("Reference Mandatory Files")
+        check_statuses+=("SKIP")
+        check_details_json+=("references/ directory not found")
+        return
+    fi
+
+    local missing_files=()
+    [[ ! -f "$ref_dir/common-checklist.md" ]] && missing_files+=("common-checklist.md")
+    [[ ! -f "$ref_dir/common-output-format.md" ]] && missing_files+=("common-output-format.md")
+
+    if [[ ${#missing_files[@]} -eq 0 ]]; then
+        echo "✓ Reference mandatory files present (common-checklist.md, common-output-format.md)"
+        check_names+=("Reference Mandatory Files")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Missing reference files: ${missing_files[*]}"
+        check_names+=("Reference Mandatory Files")
+        check_statuses+=("FAIL")
+        check_details_json+=("${missing_files[*]}")
+    fi
+}
+
+#######################################
+# check_description_quality: Check description field best practices
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function check_description_quality {
+    local issues=()
+
+    # Extract description from frontmatter
+    local desc
+    desc=$(awk '/^---$/{ n++; next } n==1 && /^description:/{found=1; sub(/^description: *>?-? */, ""); buf=$0; next} found && /^  /{sub(/^  +/, ""); buf=buf " " $0; next} found{found=0} n==2{exit} END{print buf}' "$SKILL_FILE")
+
+    # Check third person (should not start with "Use for" or imperative)
+    if echo "$desc" | grep -qiP '^\s*Use for\b'; then
+        issues+=("not third person")
+    fi
+
+    # Activation trigger content (WHEN) is BP-01 review judgment.
+    # Do not require the literal phrase "Use when" — recommended, not mandatory.
+
+    # Check no implementation instructions
+    if echo "$desc" | grep -qiP 'Always use|For troubleshooting|Individual commands'; then
+        issues+=("contains implementation instructions")
+    fi
+
+    # Check length <= 1024
+    local desc_len=${#desc}
+    if [[ $desc_len -gt 1024 ]]; then
+        issues+=("exceeds 1024 chars ($desc_len)")
+    fi
+
+    if [[ ${#issues[@]} -eq 0 ]]; then
+        echo "✓ Description quality valid"
+        check_names+=("Description Quality")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Description issues: ${issues[*]}"
+        check_names+=("Description Quality")
+        check_statuses+=("FAIL")
+        check_details_json+=("${issues[*]}")
+    fi
+}
+
+#######################################
+# check_metadata_fields: Check metadata author and version
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function check_metadata_fields {
+    local missing=()
+
+    if ! grep -q '^\s*author:' "$SKILL_FILE" 2> /dev/null; then
+        missing+=("metadata.author")
+    fi
+    if ! grep -q '^\s*version:' "$SKILL_FILE" 2> /dev/null; then
+        missing+=("metadata.version")
+    fi
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo "✓ Metadata fields present (author, version)"
+        check_names+=("Metadata Fields")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Missing metadata: ${missing[*]}"
+        check_names+=("Metadata Fields")
+        check_statuses+=("FAIL")
+        check_details_json+=("${missing[*]}")
+    fi
+}
+
+#######################################
+# check_reference_triggers: Check Reference Files Guide has trigger conditions
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function check_reference_triggers {
+    # Extract Reference Files Guide section
+    local ref_section
+    ref_section=$(sed -n '/^## Reference Files Guide$/,/^## /p' "$SKILL_FILE" | head -n -1)
+
+    if [[ -z $ref_section ]]; then
+        echo "⊘ Reference trigger check skipped (no Reference Files Guide section)"
+        check_names+=("Reference Triggers")
+        check_statuses+=("SKIP")
+        check_details_json+=("no Reference Files Guide section")
+        return
+    fi
+
+    local issues=()
+    local allowlist='\(always read\)|\(read on failure\)|\(read on debugging\)|\(read on automation path\)|\(read on interactive path\)|\(read when [^)]+\)'
+    local ref_line trigger trigger_lower
+
+    # Require at least one (always read) — case-insensitive for migration compatibility
+    if ! echo "$ref_section" | grep -qiE '\(always read\)'; then
+        issues+=("missing (always read) annotation")
+    fi
+
+    # Each reference line with a link must have an allowlisted parenthetical trigger (BP-02)
+    while IFS= read -r ref_line; do
+        [[ $ref_line =~ ^-[[:space:]] ]] || continue
+        echo "$ref_line" | grep -qE '\[[^]]+\]\([^)]+\)' || continue
+        remainder=$(echo "$ref_line" | sed -E 's/\[[^]]+\]\([^)]+\)//g')
+        if echo "$remainder" | grep -qE '\([^)]+\)'; then
+            trigger=$(echo "$remainder" | grep -oE '\([^)]+\)' | tail -n 1)
+            trigger_lower=$(echo "$trigger" | tr '[:upper:]' '[:lower:]')
+            if ! echo "$trigger_lower" | grep -qE "^(${allowlist})$"; then
+                issues+=("non-allowlist trigger ${trigger}")
+            fi
+        else
+            issues+=("missing trigger annotation on reference line")
+        fi
+    done <<< "$(echo "$ref_section" | grep '^-[[:space:]]')"
+
+    if [[ ${#issues[@]} -eq 0 ]]; then
+        echo "✓ Reference trigger conditions present"
+        check_names+=("Reference Triggers")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Reference trigger issues: ${issues[*]}"
+        check_names+=("Reference Triggers")
+        check_statuses+=("FAIL")
+        check_details_json+=("${issues[*]}")
+    fi
+}
+
+#######################################
+# check_path_conventions: Enforce path conventions and S-05 agent-root portability
+#
+# Globals:
+#   SKILL_FILE
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function check_path_conventions {
+    local issues=()
+    local skill_dir file rel_path line
+
+    # If <agent-root> is used, path form must be explicit and portable
+    if grep -q '<agent-root>' "$SKILL_FILE"; then
+        if ! grep -qE '<agent-root>/(skills|instructions)/' "$SKILL_FILE"; then
+            issues+=("invalid <agent-root> path form")
+        fi
+    fi
+
+    # S-05: do not hardcode a single agent-root install path (judgment examples in ❌ / Why: / Check: skipped)
+    skill_dir="$(dirname "${SKILL_FILE}")"
+    while IFS= read -r -d '' file; do
+        rel_path="${file#"${skill_dir}/"}"
+        while IFS= read -r line || [[ -n ${line} ]]; do
+            [[ ${line} == *"❌"* ]] && continue
+            [[ ${line} =~ ^[[:space:]]*Why: ]] && continue
+            [[ ${line} =~ ^[[:space:]]*Check: ]] && continue
+            [[ ${line} =~ ^\*\*S-05 ]] && continue
+            if [[ ${line} =~ (^|[^[:alnum:]_-])(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/ ]]; then
+                issues+=("hardcoded agent-root install path in ${rel_path} (S-05)")
+                break
+            fi
+        done < "${file}"
+    done < <(find "${skill_dir}" -maxdepth 2 \( -name 'SKILL.md' -o -path "${skill_dir}/references/*.md" \) -print0 2> /dev/null)
+
+    if [[ ${#issues[@]} -eq 0 ]]; then
+        echo "✓ Path conventions valid"
+        check_names+=("Path Conventions")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Path convention issues: ${issues[*]}"
+        check_names+=("Path Conventions")
+        check_statuses+=("FAIL")
+        check_details_json+=("${issues[*]}")
+    fi
+}
+
+#######################################
+# check_portable_reference_paths: Enforce S-04 portable reference paths
+#
+# Globals:
+#   SKILL_FILE
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function check_portable_reference_paths {
+    local issues=()
+    local skill_dir file rel_path
+
+    skill_dir="$(dirname "${SKILL_FILE}")"
+
+    while IFS= read -r -d '' file; do
+        rel_path="${file#"${skill_dir}/"}"
+        while IFS= read -r line || [[ -n ${line} ]]; do
+            [[ ${line} == *"❌"* ]] && continue
+            [[ ${line} =~ ^[[:space:]]*Why: ]] && continue
+            # Flag only actual markdown links with non-portable targets (S-04)
+            if [[ ${line} =~ \]\(\.\./ ]] || [[ ${line} =~ \]\(docs/ ]]; then
+                issues+=("non-portable reference in ${rel_path}")
+            fi
+        done < "${file}"
+    done < <(find "${skill_dir}" -maxdepth 2 \( -name 'SKILL.md' -o -path "${skill_dir}/references/*.md" \) -print0 2> /dev/null)
+
+    if [[ ${#issues[@]} -eq 0 ]]; then
+        echo "✓ Portable reference paths valid"
+        check_names+=("Portable Reference Paths")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Portable reference path issues: ${issues[*]}"
+        check_names+=("Portable Reference Paths")
+        check_statuses+=("FAIL")
+        check_details_json+=("${issues[*]}")
+    fi
+}
+
+#######################################
+# output_json: Generate JSON format output
+#
+# Description:
+#   Outputs validation results in JSON format for machine parsing
+#
+# Globals:
+#   results - Associative array containing check results
+#
+# Arguments:
+#   None (uses global results array)
+#
+# Outputs:
+#   None (outputs JSON to stdout)
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   output_json
+#
+#######################################
+function output_json {
+    local overall_status="PASS"
+    local -a results=()
+    local i check status detail
+
+    for status in "${check_statuses[@]}"; do
+        [[ $status == "FAIL" ]] && overall_status="FAIL"
+    done
+
+    for i in "${!check_names[@]}"; do
+        check="${check_names[$i]}"
+        status="${check_statuses[$i]}"
+        detail="${check_details_json[$i]}"
+        results+=("$(json_object check "${check}" status "${status}" detail "${detail}")")
+    done
+
+    json_object \
+        validation_results "$(json_array "${results[@]}")" \
+        overall_status "${overall_status}"
+}
+
+#######################################
+# main: Main process
+#
+# Description:
+#   Main entry point for the script. Coordinates all validation checks
+#   and output generation. Parses arguments, runs all checks, and
+#   outputs results in both human-readable and JSON formats.
+#
+# Globals:
+#   SKILL_FILE - Set by parse_arguments
+#
+# Arguments:
+#   $@ - Command line arguments (SKILL.md file path)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Exits with 0 on success, 1 on error
+#
+# Usage:
+#   main "$@"
+#
+#######################################
+function main {
+    # Validate required dependencies
+    require_dependencies "grep" "jq" "realpath" "wc"
+
+    # Parse and validate arguments
+    parse_arguments "$@"
+    echo_section "Validating SKILL.md: $SKILL_FILE"
+
+    # Run all checks
+    check_yaml_syntax
+    check_structural_completeness
+    check_yaml_frontmatter
+    check_description_quality
+    check_metadata_fields
+    check_progressive_disclosure
+    check_resource_separation
+    check_reference_mandatory_files
+    check_reference_triggers
+    check_path_conventions
+    check_portable_reference_paths
+
+    echo ""
+    echo_section "JSON Output"
+    output_json
+}
+
+# Entry point: only execute main if script is run directly (not sourced)
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    main "$@"
+fi
