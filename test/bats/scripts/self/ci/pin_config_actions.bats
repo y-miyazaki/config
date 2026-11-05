@@ -32,7 +32,7 @@ setup() {
 jobs:
   test:
     steps:
-      - uses: y-miyazaki/config/.github/actions/example@abc1234 # v1.0.0
+      - uses: y-miyazaki/config/.github/actions/example@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 EOF
     git_test_repo_commit "add workflow"
 
@@ -94,7 +94,7 @@ EOF
 jobs:
   test:
     steps:
-      - uses: y-miyazaki/config/.github/actions/example@abc1234 # v1.0.0
+      - uses: y-miyazaki/config/.github/actions/example@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 EOF
     git_test_repo_commit "add workflow"
     git_test_repo_git tag v1.0.0
@@ -115,7 +115,7 @@ EOF
 jobs:
   test:
     steps:
-      - uses: y-miyazaki/config/.github/actions/example@abc1234 # v1.0.0
+      - uses: y-miyazaki/config/.github/actions/example@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 EOF
     git_test_repo_commit "add workflow"
     git_test_repo_git tag v1.0.0

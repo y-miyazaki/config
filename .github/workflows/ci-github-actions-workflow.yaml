@@ -62,7 +62,7 @@ jobs:
 
       # GitHub Actions workflow linter
       - name: Setup actionlint
-        uses: y-miyazaki/config/.github/actions/install-github-release@edb41ab1459e4450544283da50beb27fc7617e39 # v1.9.1
+        uses: y-miyazaki/config/.github/actions/install-github-release@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 
         with:
           binary: actionlint
@@ -72,7 +72,7 @@ jobs:
 
       # Security and settings validation (persist-credentials, timeout-minutes, etc.)
       - name: Setup ghalint
-        uses: y-miyazaki/config/.github/actions/install-github-release@edb41ab1459e4450544283da50beb27fc7617e39 # v1.9.1
+        uses: y-miyazaki/config/.github/actions/install-github-release@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 
         with:
           binary: ghalint
@@ -104,7 +104,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@edb41ab1459e4450544283da50beb27fc7617e39 # v1.9.1
+        uses: y-miyazaki/config/.github/actions/summary@b28d12ff749dcdadf2d8ed308661145a51499f6c # v1.9.2
 
         with:
           artifacts: |
