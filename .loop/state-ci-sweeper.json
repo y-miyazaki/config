@@ -15,10 +15,7 @@
       "open_rejections": [
         {
           "attempt": 1,
-          "files": [
-            "env/common/scripts/init.sh",
-            "mise.lock"
-          ],
+          "files": ["env/common/scripts/init.sh", "mise.lock"],
           "issue": "Changed files are outside the allowlist",
           "fix": "Limit changes to allowlisted paths or update the allowlist in the caller workflow"
         },

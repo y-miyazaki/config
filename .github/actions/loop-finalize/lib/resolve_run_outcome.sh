@@ -48,7 +48,6 @@ DELIVERED_OUTCOME="${DELIVERED_OUTCOME:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 LOOP_FAILURE_FILE="${LOOP_FAILURE_FILE:-}"
 
-
 #######################################
 # record_run_failure: Record one failure stage unless a record already exists
 #

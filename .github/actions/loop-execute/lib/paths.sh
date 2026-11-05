@@ -12,7 +12,7 @@
 # - This file keeps checker-text path inference and branch diff listing
 #######################################
 
-# shellcheck source=../../lib/loop/edit_paths.sh
+# shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/edit_paths.sh"
 
 #######################################

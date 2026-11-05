@@ -125,8 +125,8 @@ setup() {
 }
 
 @test "create_pr_body keeps commit and release SHAs so the agent report can link them" {
-    local sha_a="abcdef0123456789abcdef0123456789abcdef01"
-    local sha_b="1234567890abcdef1234567890abcdef12345678"
+    local sha_a="abcdef0123456789abcdef0123456789abcdef01" # pragma: allowlist secret
+    local sha_b="1234567890abcdef1234567890abcdef12345678" # pragma: allowlist secret
     PR_BODY=""
     GITHUB_REPOSITORY="org/repo"
     GITHUB_SERVER_URL="https://github.com"

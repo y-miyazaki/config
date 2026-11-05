@@ -36,22 +36,22 @@ The caller ships with the `pull_request_target` trigger enabled; the `ci-loop-*`
 
 Do not dispatch or enable the workflow until a release that contains all of the following platform fixes is pinned in the `ci-loop-*` `uses:` lines of the caller chain (`ci-loop-caller-entity.yaml` → `ci-loop-agent.yaml` → `loop-*` actions):
 
-| Fix        | Change                                                                                                                                             |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fix        | Change                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_script` |
-| B2         | `loop-finalize` (and `render_review.sh`) always runs at L2/L3; the `finalize_enabled` flag no longer exists                                        |
-| Deliver    | `loop-finalize` accepts `delivery: pr_review` and `finalize_script`, and Deliver Message posts the review                                         |
-| B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                       |
-| Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job            |
+| B2         | `loop-finalize` (and `render_review.sh`) always runs at L2/L3; the `finalize_enabled` flag no longer exists                                   |
+| Deliver    | `loop-finalize` accepts `delivery: pr_review` and `finalize_script`, and Deliver Message posts the review                                     |
+| B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                  |
+| Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job       |
 
 With older pins, an APPROVE verdict can merge the agent branch, including `.loop-review/pr-<n>.json`, into the base branch, or the review is never posted (see [Finalize with `delivery: pr_review`](#finalize-with-delivery-pr_review)).
 
-| Stage                 | Action                                                                                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before the pin bump   | Do not run the workflow with older pins; the fixes above must be in the pinned release                                                                    |
-| After the pin bump    | The trigger is enabled and `zizmor` covers it; do not downgrade the pins                                                                                  |
+| Stage                 | Action                                                                                                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Before the pin bump   | Do not run the workflow with older pins; the fixes above must be in the pinned release                                                                      |
+| After the pin bump    | The trigger is enabled and `zizmor` covers it; do not downgrade the pins                                                                                    |
 | Manual dispatch       | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `render_review.sh` come from the ref the run starts on |
-| Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                                      |
+| Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                                        |
 
 ## Caller inputs
 
@@ -147,14 +147,14 @@ The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
 After `finalize_script`, Deliver Message in `loop-finalize` posts `review.json` when `delivery` is `pr_review`, the agent job succeeded, and the verdict is not `REJECT`. It reads the PR number from `target_json` (`handoff_key` `entity:pr:<n>`), not from the file.
 
-| Rule             | Behavior                                                                                                                                                                                       |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Marker, Meta     | The platform adds the marker `<!-- github-pr-review:v1 -->` first when missing, and Meta and the footer last, to both `body` and `fallback_body`, so the review goes out once, complete                 |
-| Event            | Always `COMMENT`; nothing in the file can change it                                                                                                                                            |
-| Inline failure   | When GitHub rejects the post with HTTP 422 and `comments` is non-empty, delivery retries once with `fallback_body` and no `comments`; other failures are not retried and fail the finalize step |
-| Stale `commit_id` | A `commit_id` that GitHub no longer accepts for inline comments is rejected with HTTP 422, so the review is posted from `fallback_body`. Whether GitHub accepts a stale `commit_id` is unverified  |
-| No file          | A missing or blank file posts nothing and lowers the outcome to `unchanged`                                                                                                                    |
-| Outcome          | `pr_reviewed` after a post; `rejected` for a `REJECT` verdict; `unchanged` when nothing is posted                                                                                              |
+| Rule              | Behavior                                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Marker, Meta      | The platform adds the marker `<!-- github-pr-review:v1 -->` first when missing, and Meta and the footer last, to both `body` and `fallback_body`, so the review goes out once, complete           |
+| Event             | Always `COMMENT`; nothing in the file can change it                                                                                                                                               |
+| Inline failure    | When GitHub rejects the post with HTTP 422 and `comments` is non-empty, delivery retries once with `fallback_body` and no `comments`; other failures are not retried and fail the finalize step   |
+| Stale `commit_id` | A `commit_id` that GitHub no longer accepts for inline comments is rejected with HTTP 422, so the review is posted from `fallback_body`. Whether GitHub accepts a stale `commit_id` is unverified |
+| No file           | A missing or blank file posts nothing and lowers the outcome to `unchanged`                                                                                                                       |
+| Outcome           | `pr_reviewed` after a post; `rejected` for a `REJECT` verdict; `unchanged` when nothing is posted                                                                                                 |
 
 ## Finalize with `delivery: pr_review`
 

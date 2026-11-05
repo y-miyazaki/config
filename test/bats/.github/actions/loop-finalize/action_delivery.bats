@@ -138,8 +138,10 @@ step_run() {
         run step_env "${step}"
         [[ ${output} == *$'PUSH_FAILED: ${{ steps.agent_push.outputs.failed }}'* ]]
     done
+    # shellcheck disable=SC2016
     run grep -c 'determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}" "${PUSH_FAILED}"' "${ACTION_YML}"
     [ "${output}" = "1" ]
+    # shellcheck disable=SC2016
     run grep -c 'resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}" "${PUSHED}"' "${ACTION_YML}"
     [ "${output}" = "1" ]
     local action_path
@@ -196,7 +198,8 @@ step_run() {
     run step_env "Deliver Message"
     [ "${status}" -eq 0 ]
     local expected
-    expected="$(cat <<'EOF2'
+    expected="$(
+        cat << 'EOF2'
 AGENT_ENGINE: ${{ inputs.agent_engine }}
 DELIVERY: ${{ inputs.delivery }}
 FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
@@ -211,7 +214,7 @@ TARGET_JSON: ${{ inputs.target_json }}
 USAGE_JSON: ${{ inputs.usage_json }}
 VERDICT: ${{ inputs.verdict }}
 EOF2
-)"
+    )"
     [ "${output}" = "${expected}" ]
 }
 
@@ -264,8 +267,10 @@ EOF2
 }
 
 @test "outcome output comes from Resolve Run Outcome and write state keeps the delivered outcome" {
+    # shellcheck disable=SC2016
     run grep -c 'value: ${{ steps.run_outcome.outputs.outcome }}' "${ACTION_YML}"
     [ "${output}" = "1" ]
+    # shellcheck disable=SC2016
     run grep -c 'value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}' "${ACTION_YML}"
     [ "${output}" = "0" ]
     run step_env "Write State"
@@ -292,6 +297,7 @@ EOF2
     local step
     for step in "Run Finalize Hook" "Push to Target Branch" "Create PR" "Delete Agent Branch"; do
         run step_env "${step}"
+        # shellcheck disable=SC2016
         [[ ${output} == *'${{ steps.agent_push.outputs.branch }}'* ]]
     done
 }
@@ -333,7 +339,8 @@ EOF2
     ' "${ACTION_YML}"
     [ "${output}" = $'id: agent_push\nrun: bash "${GITHUB_ACTION_PATH}/lib/push_agent_branch.sh"' ]
     local expected
-    expected="$(cat <<'EOF2'
+    expected="$(
+        cat << 'EOF2'
 AGENT_BRANCH: ${{ inputs.branch }}
 AGENT_BRANCH_PREFIX: ${{ inputs.agent_branch_prefix }}
 AGENT_BUNDLE_DIR: ${{ inputs.agent_bundle_dir }}
@@ -349,7 +356,7 @@ STATE_BRANCH: ${{ inputs.state_branch }}
 TARGET_JSON: ${{ inputs.target_json }}
 TO_BRANCH: ${{ steps.target.outputs.to_branch }}
 EOF2
-)"
+    )"
     run step_env "Push Agent Branch"
     [ "${output}" = "${expected}" ]
 }
@@ -382,7 +389,8 @@ EOF2
     run step_if "Resolve Run Outcome"
     [ "${output}" = "always()" ]
     local expected
-    expected="$(cat <<'EOF2'
+    expected="$(
+        cat << 'EOF2'
 ACTION_STATUS: ${{ github.action_status }}
 AGENT_FAILURE_MESSAGE: ${{ inputs.agent_failure_message }}
 AGENT_FAILURE_STAGE: ${{ inputs.agent_failure_stage }}
@@ -390,7 +398,7 @@ AGENT_RESULT: ${{ inputs.agent_result }}
 DELIVERED_OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
 LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
 EOF2
-)"
+    )"
     run step_env "Resolve Run Outcome"
     [ "${output}" = "${expected}" ]
 }

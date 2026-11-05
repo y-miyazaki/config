@@ -75,21 +75,21 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 
 ### Layer 1 — Platform (required, machine-sourced)
 
-| Field           | Source                                                                                |
-| --------------- | ------------------------------------------------------------------------------------- |
-| Loop name       | `loop_name` input                                                                     |
-| Actor (Meta `actor` row) | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
-| Outcome         | finalize outcome enum                                                                 |
-| Verdict         | `APPROVE` / `REJECT` / empty                                                          |
-| Reason          | execute `reason` (checker reject reason or unchanged reason); `—` when empty          |
-| Bot fix PR      | URL/number from finalize when `pr_create` succeeded                                   |
-| Branch (Meta `branch` row) | `target_json.to.branch` (PR head)                                                     |
-| Human PR number | `target_json.to.pr_number`                                                            |
-| Failed workflow | `target_json.workflow_run_id` + URL from detect `result` or event env                 |
-| Failing job     | detect `failures[].job_name` when present                                             |
+| Field                         | Source                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| Loop name                     | `loop_name` input                                                                     |
+| Actor (Meta `actor` row)      | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
+| Outcome                       | finalize outcome enum                                                                 |
+| Verdict                       | `APPROVE` / `REJECT` / empty                                                          |
+| Reason                        | execute `reason` (checker reject reason or unchanged reason); `—` when empty          |
+| Bot fix PR                    | URL/number from finalize when `pr_create` succeeded                                   |
+| Branch (Meta `branch` row)    | `target_json.to.branch` (PR head)                                                     |
+| Human PR number               | `target_json.to.pr_number`                                                            |
+| Failed workflow               | `target_json.workflow_run_id` + URL from detect `result` or event env                 |
+| Failing job                   | detect `failures[].job_name` when present                                             |
 | Loop run URL (Meta `run` row) | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` |
-| Attempt (Meta `attempt` row) | `attempts` / `agent_loop_max_attempts`                                                |
-| Level           | L2 vs L3 (merge guidance vs auto-merge note)                                          |
+| Attempt (Meta `attempt` row)  | `attempts` / `agent_loop_max_attempts`                                                |
+| Level                         | L2 vs L3 (merge guidance vs auto-merge note)                                          |
 
 ### Layer 2 — Mechanical fix context (required when `has_changes == true`)
 

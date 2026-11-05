@@ -22,7 +22,8 @@ source "${_bats_support}/support/common.bash"
 # decisions (metadata step and Append Run Log outcome expression).
 # Columns: name|agent_result|agent_stage|agent_message|action_status|record_stage|
 #   record_message|delivered_outcome|outcome|failure_stage|failure_message
-L2_CASES="$(cat <<'EOT'
+L2_CASES="$(
+    cat << 'EOT'
 success_created|success|||success|||pr_created|pr_created||
 rejected|success|||success|||rejected|rejected||
 unchanged|success|||success|||unchanged|unchanged||
@@ -177,7 +178,7 @@ run_named_case() {
     run env -u LOOP_FAILURE_FILE ACTION_STATUS=success AGENT_RESULT=success DELIVERED_OUTCOME=unchanged bash "${SCRIPT}"
     [ "${status}" -eq 1 ]
     [[ ${output} == *"::error::LOOP_FAILURE_FILE is required"* ]]
-    ! grep -q '^outcome=' "${GITHUB_OUTPUT}" 2> /dev/null
+    run ! grep -q '^outcome=' "${GITHUB_OUTPUT}" 2> /dev/null
 }
 
 @test "outcome is resolved before the agent stage is recorded" {

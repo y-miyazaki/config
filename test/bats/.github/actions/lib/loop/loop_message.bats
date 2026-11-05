@@ -97,6 +97,7 @@ teardown() {
 
 @test "round trip keeps the body byte-identical" {
     local out="${BATS_TEST_TMPDIR}/out" json
+    # shellcheck disable=SC2016
     printf '## A\n\n`code` and ```fence```\nEOF\n\n' > "${MSG_DIR}/message.md"
     printf '{"add":["bug"],"remove":[]}\n' > "${MSG_DIR}/message_labels.json"
     json="$(loop_message_to_json "${MSG_DIR}")"

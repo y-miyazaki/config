@@ -269,7 +269,7 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 | Input                   | Required | Default | Used by                                      |
 | ----------------------- | -------- | ------- | -------------------------------------------- |
 | `finalize_commit_paths` | no       | `""`    | `ci-loop-agent` finalize (ci-sweeper ledger) |
-| `finalize_script`  | no       | `""`    | `ci-loop-agent` finalize                     |
+| `finalize_script`       | no       | `""`    | `ci-loop-agent` finalize                     |
 
 #### Detect permissions
 
@@ -331,12 +331,12 @@ So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across j
 
 For the automatic job `GITHUB_TOKEN`, effective scopes **are** that job's `permissions:` (intersected with repository/org workflow defaults). It is not a separate full-power token that the job then “limits.”
 
-| Job                     | Typical fallback need      | Job `permissions` (minimum for fallback)                                   |
-| ----------------------- | -------------------------- | -------------------------------------------------------------------------- |
-| `detect`                | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
-| `record-skip`           | push run-log / state PR    | `contents: write`, `pull-requests: write`                                  |
-| `finalize-l2`           | push, PR create/comment    | `contents: write`, `issues: write`, `pull-requests: write`                 |
-| `finalize-l1`           | issue side effects         | `contents: write`, `issues: write`                                         |
+| Job                     | Typical fallback need      | Job `permissions` (minimum for fallback)                                                  |
+| ----------------------- | -------------------------- | ----------------------------------------------------------------------------------------- |
+| `detect`                | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires)                |
+| `record-skip`           | push run-log / state PR    | `contents: write`, `pull-requests: write`                                                 |
+| `finalize-l2`           | push, PR create/comment    | `contents: write`, `issues: write`, `pull-requests: write`                                |
+| `finalize-l1`           | issue side effects         | `contents: write`, `issues: write`                                                        |
 | `agent-l1` / `agent-l2` | none (reads only)          | `contents: read`, `issues: read`, `pull-requests: read` (+ `actions: read` on `agent-l2`) |
 
 App tokens and explicit PATs carry **their own** scopes; receiving-job `permissions:` do not reduce those passed tokens.

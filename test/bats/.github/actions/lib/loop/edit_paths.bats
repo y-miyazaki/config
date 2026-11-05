@@ -175,6 +175,7 @@ function make_diff_repo {
         printf 'x\n' > "${REPO}/${name}"
         git -C "${REPO}" add -- "${name}"
         git -C "${REPO}" commit -q -m unsafe
+        # shellcheck disable=SC2016
         run --separate-stderr bash -c 'cd "$1" && source "$2" && list_diff_paths main...HEAD --' _ "${REPO}" \
             "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
         [ "$status" -eq 2 ]
@@ -192,6 +193,7 @@ function make_diff_repo {
         printf 'x\n' > "${REPO}/${name}"
         git -C "${REPO}" add -- "${name}"
         git -C "${REPO}" commit -q -m invalid
+        # shellcheck disable=SC2016
         run --separate-stderr bash -c 'cd "$1" && source "$2" && list_diff_paths main...HEAD --' _ "${REPO}" \
             "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
         [ "$status" -eq 2 ]

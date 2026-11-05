@@ -107,6 +107,7 @@ function run_push {
     if [[ ! -d ${FINAL} ]]; then
         git clone -q --no-local "${ORIGIN}" "${FINAL}" 2> /dev/null
     fi
+    # shellcheck disable=SC2016
     run env \
         AGENT_BRANCH="${T_BRANCH-${BRANCH}}" \
         AGENT_BRANCH_PREFIX="${T_PREFIX-loop}" \

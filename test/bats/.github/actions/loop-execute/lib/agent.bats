@@ -454,7 +454,9 @@ STUB
         chmod +x "${BATS_TEST_TMPDIR}/bin/${bin}"
     done
     PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
+    # shellcheck disable=SC2329
     function prepare_agent_mcps { :; }
+    # shellcheck disable=SC2329
     function append_agent_mcp_args { :; }
     function run_cursor_agent_with_usage {
         local agent_bin="$1"

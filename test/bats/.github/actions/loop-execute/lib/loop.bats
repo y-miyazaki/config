@@ -147,11 +147,17 @@ _commit_branch_ahead_of_main() {
     COMMIT_MESSAGE="chore: legacy name"
     AGENT_UNCHANGED_VERDICT="APPROVE"
     NO_CHANGES_VERDICT="REJECT"
+    # shellcheck disable=SC2329
     function sync_reject_feedback { :; }
+    # shellcheck disable=SC2329
     function agent_report_skill_requires_format_check { return 1; }
+    # shellcheck disable=SC2329
     function build_agent_prompt { printf 'prompt'; }
+    # shellcheck disable=SC2329
     function run_agent_capture { : > "$1"; }
+    # shellcheck disable=SC2329
     function harvest_workspace_into_worktree { return 0; }
+    # shellcheck disable=SC2329
     function commit_worktree_if_needed {
         printf '%s\n' "$1" >> "${commit_log}"
         return 1
