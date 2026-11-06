@@ -28,7 +28,7 @@ When natural units are files: enumerate eligible paths, then apply this skill's 
 | ------------- | --------------------------------------------------------------------------------------------- |
 | Universe      | Repository production files, ranked by git churn (`hotspots[]`) and filtered by `ledger`      |
 | `all`         | Churn hotspots over the configured window, capped by the detect hotspot limit                 |
-| `range`       | Same facts, with `since` / `commit_range` echoed for the `--since` cursor                     |
-| `staged`      | Accepted for CLI parity; same output as `all` (no index cursor)                               |
+| `range`       | Churn hotspots limited to commits in `<since>..HEAD` (still within the window)                |
+| `staged`      | Not used — no index cursor; the detect script accepts it and returns the same output as `all` |
 | Detect script | `scripts/detect_test_gap.sh`                                                                  |
 | Interactive   | A user-named path is the primary target; still run detect when JSON is absent and tools allow |

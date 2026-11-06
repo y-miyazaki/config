@@ -20,6 +20,8 @@ metadata:
 
 Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md). That file is the source of truth for the output contract.
 
+Skill-local addition: unlike other review skills, this skill runs validation scripts, so `Status: failed` also applies when both scripts fail. The `## Issues` cause entry (no ItemID) then lists both commands, exit statuses, and stderr summaries.
+
 ## Execution Scope
 
 - Run validation scripts and parse results to assess SKILL.md quality against S-_, Q-_, P-_, and BP-_ checks.
@@ -53,7 +55,7 @@ Return structured Markdown in accordance with [references/common-output-format.m
 ## Workflow
 
 1. If target `SKILL.md` does not exist, set `Status: failed` per [references/common-output-format.md](references/common-output-format.md) and stop without running other checks. Otherwise run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>` (CWD: `<agent-root>/skills/agent-skills-review/`).
-2. Record token budget from `waza check` when present; if count > 500, add a Q-09 advisory entry to `## Issues` and do not list Q-09 in `## Checks (Failed/Deferred Only)`. Q-09 fails only when `waza check` evidence is missing. A skill compressed below sibling depth is a BP-04 finding, not Q-09.
+2. Record token budget from `waza check` when present; if count > 500, add a Q-09 advisory entry to `## Issues` and do not list Q-09 in `## Checks (Failed/Deferred Only)`. Q-09 fails only when `waza check` ran but its token count is not recorded; if `validate_waza.sh` failed, defer Q-09 per step 5. A skill compressed below sibling depth is a BP-04 finding, not Q-09.
 3. Apply checks in order: `BP-*` (best practices), `P-*` (workflow/policy), `Q-*` (quality language), `S-*` (structure). For Q-12, read every `references/` file and the option parsing of bundled `scripts/`; for P-04, compare shared rules with the sibling skills.
 4. Report failed/deferred items with ItemIDs.
 5. If one validation script fails and the other succeeds, report successful checks normally and mark unresolved checks as deferred with script name and exit status.

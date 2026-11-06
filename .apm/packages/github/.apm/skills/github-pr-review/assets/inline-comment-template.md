@@ -1,7 +1,7 @@
 <!--
 Inline review comment rendered by render_review.sh for findings whose lines are inside the PR diff (github-pr-review).
 Load ONLY when you need to see how an in-diff finding is posted. The agent writes report JSON; the platform renders this shape and attaches it to path / line / side (and start_line for ranges).
-<mention> is the caller's PR_MENTION token (default @loop), the same token github-pr-revise detects.
+<mention> is the PR_MENTION token: defaults to @loop; callers set PR_MENTION to match the revise trigger.
 Language: headings, labels, severities, and the closing sentence stay English. Agent-written prose (title, impact) uses the response language: Constraints response_language > language of the PR title/body > English. Quotes, code, and paths stay verbatim.
 -->
 

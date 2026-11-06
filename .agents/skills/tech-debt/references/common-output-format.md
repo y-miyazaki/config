@@ -37,7 +37,7 @@ No file edits. **Do not write `agent_report_file`.** **Do not emit `### Changes`
 
 ## Apply result (`agent_edit_allowed: true`)
 
-Survey runs internally first; final output uses apply shape. Write `agent_report_file` within allowlist.
+Survey runs internally first; final output uses apply shape. Write `agent_report_file` within allowlist. Interactive runs with no report path write no report file: omit the report row from `### Changes` and say so in Overview.
 
 ```markdown
 # Technical Debt Result

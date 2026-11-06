@@ -13,7 +13,7 @@ metadata:
 ## Input
 
 - Validation script (required): `scripts/validate.sh`
-- Workflows directory (optional): defaults to `.github/workflows`; scopes the ORD-01 map order check and ghalint (actionlint and zizmor always scan the whole repository)
+- Workflows directory (optional): defaults to `.github/workflows`; scopes the ORD-01 map order check and ghalint (actionlint and zizmor always scan the whole repository). Without it, the ORD-01 check covers git-tracked `.github/workflows/*.yml|yaml` and `.github/actions/**/action.yml|yaml`; untracked new files are not checked until they are added to git. With it, the ORD-01 check covers only YAML files under that directory (relative to the current directory), so composite actions are not checked
 - `--verbose` / `--quiet` (optional)
 
 ## Output Specification

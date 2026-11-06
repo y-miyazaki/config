@@ -506,7 +506,7 @@ No fix available for CVE-2024-5678
 **Solutions**:
 
 1. Consider alternative packages
-2. Document the accepted risk where the repository records security exceptions (for example its security policy or the govulncheck suppression record)
+2. Document the accepted risk where the repository records accepted security exceptions (for example its security policy)
 3. Monitor for updates
 4. Check if vulnerability affects your usage
 

@@ -1,7 +1,7 @@
 id: refactor-interactive-bare-refactor-001
-name: refactor bare skill name stays survey
+name: refactor "use refactor on X" stays survey
 description: >-
-  Validate that invoking the skill by name alone (bare "refactor", no edit verb)
+  Validate that invoking the skill by name alone ("use refactor on X" — names the skill, asks for no change)
   does not set agent_edit_allowed true — survey shape only.
 tags:
   - quality

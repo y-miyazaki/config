@@ -84,17 +84,18 @@ Return structured report per [references/common-output-format.md](references/com
 
 ### Error Handling
 
-| Condition                                           | Severity    | Action                                                      |
-| --------------------------------------------------- | ----------- | ----------------------------------------------------------- |
-| No docs directory exists                            | Recoverable | Create the Diataxis fallback directory needed, continue     |
-| Ambiguous intent                                    | Blocking    | Ask user; report `Status: blocked`                          |
-| `target_file` given but does not exist              | Recoverable | Treat as a new file at that path; note it in the report     |
-| Same filename exists in a different docs directory  | Blocking    | Stop and ask user; report `Status: blocked` with both paths |
-| Topic fits no quadrant and no existing directory    | Blocking    | Ask user for an explicit `target_file`                      |
-| `docs/index.md` exists but does not follow template | Recoverable | Leave unchanged; note in report                             |
-| mkdocs.yml missing                                  | Recoverable | Skip nav update                                             |
-| README markers malformed                            | Recoverable | Skip, note in report                                        |
-| QV check still fails after one fix attempt          | Recoverable | Keep the file; list the QV ItemID and cause in `## Notes`   |
+| Condition                                           | Severity    | Action                                                       |
+| --------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| No docs directory exists                            | Recoverable | Create the Diataxis fallback directory needed, continue      |
+| Ambiguous intent                                    | Blocking    | Ask user; report `Status: blocked`                           |
+| Request matches `DO NOT USE FOR`                    | Blocking    | Do not edit; report `Status: blocked`; explain in `## Notes` |
+| `target_file` given but does not exist              | Recoverable | Treat as a new file at that path; note it in the report      |
+| Same filename exists in a different docs directory  | Blocking    | Stop and ask user; report `Status: blocked` with both paths  |
+| Topic fits no quadrant and no existing directory    | Blocking    | Ask user for an explicit `target_file`                       |
+| `docs/index.md` exists but does not follow template | Recoverable | Leave unchanged; note in report                              |
+| mkdocs.yml missing                                  | Recoverable | Skip nav update                                              |
+| README markers malformed                            | Recoverable | Skip, note in report                                         |
+| QV check still fails after one fix attempt          | Recoverable | Keep the file; list the QV ItemID and cause in `## Notes`    |
 
 ### Examples
 

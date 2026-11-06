@@ -6,7 +6,7 @@ tags:
   - interactive
 inputs:
   prompt: >-
-    Use ci-sweeper. The user asks to triage the injected CI failure. Survey only. Classify
+    Use ci-sweeper. The user asks to triage the injected CI failure. Triage asks to look, not to change files, so agent_edit_allowed is false. Classify
     the regression under ### Candidates. Do not edit files. Emit ## Overview and ## Summary.
     Do not emit ### Changes or ## Verification. State no edits applied in Overview. Include
     Category labels on rows.

@@ -6,8 +6,7 @@ tags:
   - interactive
 inputs:
   prompt: >-
-    Use tech-debt. The user asks to survey technical debt for the injected signal. Survey
-    only. Classify under ### Candidates with Category code_quality. Do not write
+    Use tech-debt. The user asks to survey technical debt for the injected signal. Surveying asks to look, not to change files, so agent_edit_allowed is false. Classify under ### Candidates with Category code_quality. Do not write
     agent_report_file. Emit ## Overview and ## Summary. Do not emit ### Changes or ##
     Verification. State no edits applied in Overview.
   context:

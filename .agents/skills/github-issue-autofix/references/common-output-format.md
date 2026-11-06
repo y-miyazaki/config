@@ -9,7 +9,7 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 
 ## Overview
 
-<Issue Refs #N → root cause hypothesis → no edits applied>
+<Refs #N → root cause hypothesis → no edits applied>
 
 ## Summary
 

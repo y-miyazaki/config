@@ -4,7 +4,7 @@
 
 `scripts/validate.sh` runs these checks for each discovered script and continues after a failing script or check (no fail-fast); the exit code is non-zero when any check failed:
 
-1. Shebang and permission checks (with `-f`, formatting is rewritten by `shfmt` first)
+1. Shebang and permission checks (with `-f`, formatting is rewritten by `shfmt` first; with `-f` and `--check-function-docs`, function doc section order is also normalized by `scripts/fix_function_doc_order.sh` after shellcheck when that file is present)
 2. `bash -n` — syntax parse check
 3. `shellcheck` — static analysis and best practice enforcement
 4. Function doc sections and top-level function order — only with `--check-function-docs`

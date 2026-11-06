@@ -205,26 +205,26 @@ Closes #456
 
 **Branch**: feature/auth-gateway -> main
 
-**Stats**: 5 files changed (+250 / -30 lines)
+**Stats**: 4 files changed (+250 / -30 lines)
 
 _This section was auto-generated._
 
 ## Changes
+
+### Config
+
+- **terraform/iam_roles.tf**: +30 / -10 lines
 
 ### Feature
 
 - **src/AuthGateway.ts**: +120 / -10 lines
 - **src/CognitoClient.ts**: +80 / -5 lines
 
-### Config
-
-- **terraform/iam_roles.tf**: +30 / -10 lines
-
 ### Test
 
-- **tests/AuthGateway.test.ts**: +20 / -5 lines
+- **tests/auth_gateway_test.ts**: +20 / -5 lines
 
-**Summary**: 5 files changed (+250 / -30 lines)
+**Summary**: 4 files changed (+250 / -30 lines)
 
 ## Type of Change
 
@@ -265,7 +265,7 @@ Closes #456
 
 - Template has "Testing" section but it's empty
 - Code shows 10 new unit tests were added
-- Include in Changes section: `**Tests**: 10 new unit tests added for AuthGateway`
+- Fill the `## Testing` section: `10 new unit tests added for AuthGateway`; leave the script-generated `## Changes` as is
 
 ### Custom/Non-Standard Templates
 

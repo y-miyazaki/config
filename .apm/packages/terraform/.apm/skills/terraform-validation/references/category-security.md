@@ -1,11 +1,11 @@
 # Terraform Validation - Security Remediation Guide
 
-Use this guide when `trivy config` reports security findings.
+Use this guide when the trivy step (`trivy fs`) reports security findings. The step prints findings but does not fail on them, so apply this policy as reviewer guidance.
 
 ## Severity Handling Policy
 
-- **CRITICAL**: Blocks merge; fix before merge.
-- **HIGH**: Blocks merge; fix before merge.
+- **CRITICAL**: Fix before merge; flag it as blocking in the report.
+- **HIGH**: Fix before merge; flag it as blocking in the report.
 - **MEDIUM**: Fix in the current or next planned change window.
 - **LOW**: Fix when practical and track in backlog if deferred.
 

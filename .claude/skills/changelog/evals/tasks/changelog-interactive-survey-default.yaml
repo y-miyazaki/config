@@ -6,8 +6,7 @@ tags:
   - interactive
 inputs:
   prompt: >-
-    Use changelog. The user asks to check the changelog for unreleased commits. Run survey
-    only. Do not edit CHANGELOG.md. Emit ### Candidates and ## Overview. Do not emit ###
+    Use changelog. The user asks to check the changelog for unreleased commits. Checking asks to look, not to change files, so agent_edit_allowed is false. Do not edit CHANGELOG.md. Emit ### Candidates and ## Overview. Do not emit ###
     Changes or ## Verification. Include ## Summary per common-output-format.md. State no
     edits applied in Overview.
   context:

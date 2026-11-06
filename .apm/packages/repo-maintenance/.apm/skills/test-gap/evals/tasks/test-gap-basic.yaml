@@ -19,7 +19,7 @@ inputs:
         count: 7
         window: 90.days
     ledger:
-      file: .loop/state-test-gap-ledger.json
+      file: state-test-gap-ledger.json
       processed: []
 expected:
   output_contains:

@@ -68,7 +68,7 @@ Then, in `## Issues` and `## Checks (Failed/Deferred Only)`, prefix each entry w
 ## Workflow
 
 1. Read PR context and identify target instruction files.
-2. If a target file does not exist, record it as a `## Issues` entry and continue remaining targets. Process all target files independently — one failure does not stop the review of others.
+2. If a target file does not exist, mark it `missing` in `## Targets` (not a check failure, so no `## Issues` entry) and continue remaining targets. Process all target files independently — one failure does not stop the review of others.
 3. If PR context is unavailable, identify targets from the user prompt and review the files alone. No checklist item requires PR context, so nothing is deferred for its absence.
 4. Verify required chapter order (Scope → Standards → Guidelines → Testing and Validation → Security Guidelines), then review checklist priorities and collect failed/deferred ItemIDs.
 5. Output required report sections per [references/common-output-format.md](references/common-output-format.md).
@@ -96,8 +96,8 @@ Key evaluation criteria (inline summary of common-checklist):
 | `common-output-format.md` unavailable       | Recoverable | Note missing file; emit `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` only |
 | Category reference file missing             | Recoverable | Defer checks from that category, note missing file in report                                          |
 | All category files missing                  | Fatal       | Stop, report "no evaluation criteria available"                                                       |
-| Target instruction/rule file does not exist | Recoverable | Record the missing file in `## Issues`, continue remaining targets                                    |
-| All target files missing                    | Fatal       | Set `Status: failed`; stop, report "no reviewable instruction files found"                            |
+| Target instruction/rule file does not exist | Recoverable | Mark the file `missing` in `## Targets`, continue remaining targets                                   |
+| All target files missing                    | Fatal       | Set `Status: failed`; stop; `## Issues` cause entry: "no reviewable instruction files found"          |
 
 ### Examples
 

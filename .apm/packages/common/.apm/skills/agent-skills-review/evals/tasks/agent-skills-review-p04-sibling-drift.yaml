@@ -13,8 +13,8 @@ inputs:
     Assume the target treats a bare "apply" request as an edit request, while a
     sibling skill in the same package with the same edit-gate table excludes a
     bare "apply". Report P-04 as failed in ## Checks (Failed/Deferred Only) and
-    describe the drift in ## Issues with both skill paths in ## Checks Summary
-    context.
+    describe the drift in ## Issues, citing both skill paths. Include
+    ## Checks Summary.
   context:
     target: SKILL.md
 expected:

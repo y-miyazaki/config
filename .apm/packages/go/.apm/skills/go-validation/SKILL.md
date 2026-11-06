@@ -63,16 +63,16 @@ Structured validation results in fixed tool order.
 
 ### Error Handling
 
-| Condition                             | Severity    | Action                                                                               |
-| ------------------------------------- | ----------- | ------------------------------------------------------------------------------------ |
-| `scripts/validate.sh` missing         | Fatal       | Stop; report missing script                                                          |
-| No Go files under target path         | Info        | Report no reviewable Go code; stop                                                   |
-| `go` or `golangci-lint` missing       | Fatal       | Stop; report the missing binary; set `Status: ❌ FAIL`                               |
-| `govulncheck` missing                 | Recoverable | Script skips it with a warning; report govulncheck as `⊘ Skipped` (not installed)    |
-| Single tool fails, others succeed     | Recoverable | Report every tool; mark the failed tool ❌ Fail with exit status                     |
-| All tools fail                        | Fatal       | Set `Status: ❌ FAIL` with per-tool stderr summaries in `## Error Details`           |
-| `common-checklist.md` unavailable     | Fatal       | Stop; report missing dependency                                                      |
-| `common-output-format.md` unavailable | Recoverable | Note missing file; emit `## Summary`, `## Tool Results`, and `## Error Details` only |
+| Condition                             | Severity    | Action                                                                                                                                                                                    |
+| ------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/validate.sh` missing         | Fatal       | Stop; report missing script                                                                                                                                                               |
+| No Go files under target path         | Info        | Script exits non-zero before any check (`No Go files found`); report no reviewable Go code and stop                                                                                       |
+| `go` or `golangci-lint` missing       | Fatal       | Stop; report the missing binary; set `Status: ❌ FAIL`                                                                                                                                    |
+| `govulncheck` missing                 | Recoverable | Script logs `govulncheck not installed` and skips it, but its final Result block still prints ✅ for govulncheck; trust the warning and report govulncheck as `⊘ Skipped` (not installed) |
+| Single tool fails, others succeed     | Recoverable | Report every tool; mark the failed tool ❌ Fail with exit status                                                                                                                          |
+| All tools fail                        | Fatal       | Set `Status: ❌ FAIL` with per-tool stderr summaries in `## Error Details`                                                                                                                |
+| `common-checklist.md` unavailable     | Fatal       | Stop; report missing dependency                                                                                                                                                           |
+| `common-output-format.md` unavailable | Recoverable | Note missing file; emit `## Summary`, `## Tool Results`, and `## Error Details` only                                                                                                      |
 
 ### Examples
 

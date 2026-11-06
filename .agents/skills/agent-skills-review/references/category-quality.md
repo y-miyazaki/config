@@ -96,7 +96,7 @@ Examples:
 
 **Q-09 (SHOULD): Record waza token evidence; over-budget is advisory**
 
-Check: Does the review include `waza check` token evidence? When Token Budget exceeds 500 tokens, record an advisory note in `## Issues` (not a FAIL). Fail Q-09 only when the token evidence is missing. Isolated compression below sibling depth is reported under BP-04.
+Check: Does the review include `waza check` token evidence? When Token Budget exceeds 500 tokens, record an advisory note in `## Issues` (not a FAIL). Fail Q-09 only when `waza check` ran but its token count is not recorded in the review; when `validate_waza.sh` itself failed, defer Q-09 with the script's exit status instead, because the evidence never existed. Isolated compression below sibling depth is reported under BP-04.
 Why: External tooling may warn above ~500 tokens; that is **advisory**. Sibling `SKILL.md` documentation-level consistency outranks isolated token compression (per package sibling-consistency policy for skills in the same package). Do not mark Q-09 Failed solely for token count when structure and reference-load contracts meet package norms.
 Examples:
 

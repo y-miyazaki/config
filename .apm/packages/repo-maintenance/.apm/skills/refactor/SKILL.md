@@ -5,10 +5,9 @@ description: >-
   conversation when surveying or applying structural refactors. Also the loop
   entry skill when automation supplies hints (duplication_block,
   oversized_unit). Interactive default is survey only; apply edits when the
-  request contains an edit verb (fix, apply, or the skill's own verb) or
-  automation sets agent_edit_allowed in Constraints; a bare skill-name
-  invocation stays survey. Not for lint-only style, features,
-  behavior-changing bugfixes, or upgrades.
+  request asks for changes to be made (for example fix, apply, or update) or
+  automation sets agent_edit_allowed in Constraints. Not for lint-only style,
+  features, behavior-changing bugfixes, or upgrades.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -20,7 +19,7 @@ metadata:
 ## Input
 
 - **Interactive (required):** paths/symbols and optional mode — constraints in `## Constraints` or [category-scope.md](references/category-scope.md)
-- **Automation (optional):** detect JSON with `hints[]` in prompt — from a caller or optional skill detect script; not required for interactive runs. Read `agent_edit_allowed`, `agent_edit_target`, and `agent_report_file` (when `agent_edit_target: report`) from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
+- **Automation (optional):** detect JSON with `hints[]` in prompt — from a caller or optional skill detect script; not required for interactive runs. Read `agent_edit_allowed` and `agent_edit_target` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
 
 Path allowlist, when present, arrives in `## Constraints`.
 
@@ -60,14 +59,16 @@ Phases, modes, depth tiers, and intent: [category-contract.md](references/catego
 
 Canonical sequence: resolve `agent_edit_allowed` → Phase A (discover/classify; emit only when stopping) → Phase B only when edit-authorized → emit **one** result shape (OUT-01).
 
-Resolve **agent_edit_allowed** before Phase B. When structured JSON `mode` is present ([category-input-schema.md](references/category-input-schema.md)), it wins over the interactive rows: `survey` → `false`; `apply` → `true`. Otherwise:
+Resolve **agent_edit_allowed** before Phase B. When structured JSON `mode` is present ([category-input-schema.md](references/category-input-schema.md)), it wins over the interactive rows: `survey` → `false`; `apply` → `true`. Otherwise use the table. An imperative with a target ("refactor scripts/a.sh", "deduplicate these helpers") asks for changes; "use refactor on X" or "what could be refactored in X" only names the skill or asks to look, so it stays survey.
 
-| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit files                                                                                                     |
-| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, "apply the candidates", "deduplicate these"                                  |
-| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed candidates (bare `fix` / `apply` counts)                                       |
-| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                                                                                                          | `agent_edit_allowed`                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default: the request asks to look, check, triage, or survey, or only names the skill              | `false` — survey only; do not edit files                                                                                                     |
+| Interactive — the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) | `true`                                                                                                                                       |
+| Interactive — follow-up after a survey asking to apply                                                          | `true`                                                                                                                                       |
+| Automation — `## Constraints`                                                                                   | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+
+When intent is unclear, survey and offer to apply — edits are harder to undo than a report.
 
 When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: interactive → `fix`; automation → from `## Constraints`. Do not branch on other caller metadata. Before Phase B, load [category-techniques.md](references/category-techniques.md).
 
@@ -110,7 +111,7 @@ Discover and classify only. Emit a final report from Phase A **only** when this 
 
 | Condition                                                           | Severity    | Action                                                       |
 | ------------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| Detect script non-zero exit or `status: "error"`                    | Fatal       | Read stdout; stop — do not treat as success-path detect JSON |
+| Detect script non-zero exit or `status: "error"` (when invoked)     | Fatal       | Read stdout; stop — do not treat as success-path detect JSON |
 | Automation: empty/`skip`                                            | Info        | Emit survey no-op (Overview explains no-op); stop            |
 | Survey: zero candidates                                             | Info        | Emit survey no-op (Overview explains no-op); stop            |
 | Architecture request without slice                                  | Recoverable | Architecture proposal only; stop                             |

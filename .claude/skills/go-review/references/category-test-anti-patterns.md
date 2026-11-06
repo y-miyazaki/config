@@ -1,6 +1,6 @@
 # Test Anti-Patterns (TAP)
 
-When a TAP item cites a base ItemID in parentheses, report the finding once under the base ItemID; the TAP item is a lookup pointer, not a second finding.
+When a TAP item cites a base ItemID in parentheses, report the finding once under the base ItemID (the first one listed when several are cited); the TAP item is a lookup pointer, not a second finding.
 
 **TAP-01 (SHOULD): One `Test*` function per table row when a table-driven loop would suffice**
 
@@ -25,7 +25,7 @@ Fix: Use `t.Fatalf` inside `t.Run`, or testify `require` only — not `assert`
 Check: Are sentinel errors created with inline `errors.New` inside test functions instead of package-level `errTest*` variables?
 Why: Inline sentinels trigger err113 and break stable `errors.Is` identity across table rows
 Fix: Declare `var errTest<Name> = errors.New("...")` at package scope
-Note: Also detected by golangci-lint `err113` when enabled. When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.
+Note: golangci-lint `err113` reports inline `errors.New` when it is enabled for test files. When validation output is supplied and err113 ran on the tests, take this ItemID's status from it and cite it; otherwise evaluate it from source.
 
 **TAP-05 (SHOULD): Copying large table rows with `for _, tt := range tests` when gocritic `rangeValCopy` is enabled**
 

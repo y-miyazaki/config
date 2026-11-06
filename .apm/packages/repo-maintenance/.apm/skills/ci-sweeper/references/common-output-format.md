@@ -21,9 +21,9 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 
 ### Watch
 
-| Target                           | Evidence | Why not now             |
-| -------------------------------- | -------- | ----------------------- |
-| <linked workflow> / <linked job> | <reason> | flake \| infra \| human |
+| Target                           | Evidence | Why not now                                |
+| -------------------------------- | -------- | ------------------------------------------ |
+| <linked workflow> / <linked job> | <reason> | flake \| infra \| env \| >5 files \| human |
 ```
 
 ### Survey rules

@@ -15,7 +15,7 @@
 ## Edit boundary (EDIT)
 
 - EDIT-01: Touch only `Allowed paths`.
-- EDIT-02: Never modify production code. A suspected production bug goes in the PR body under `### Deferred`.
+- EDIT-02: Never modify production code. Report a suspected production bug under `### Deferred` (apply) or in Overview (survey).
 - EDIT-03: Never delete, skip, comment out, or loosen an existing test or assertion.
 
 ## Honesty (HON)

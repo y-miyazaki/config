@@ -7,7 +7,7 @@ tags:
 inputs:
   prompt: >-
     Use refactor. The user asks to survey structural refactor candidates in scripts/example.sh.
-    Survey only. Do not edit files. Emit ### Candidates and ## Overview. Do not emit ###
+    Surveying asks to look, not to change files, so agent_edit_allowed is false. Do not edit files. Emit ### Candidates and ## Overview. Do not emit ###
     Changes or ## Verification. Include ## Summary per common-output-format.md. State no
     edits applied in Overview.
   context:

@@ -91,7 +91,7 @@ Structured PR output:
       - If the section comment contains an `Example:` block, follow that structure to generate visible content.
       - If the section comment contains checkbox guidance, generate or update checkbox lines in the same format.
       - If the section has no guidance, preserve the section heading and template comment without inventing content.
-   4. Replace the metadata-only `## Overview` from Step 2 with a 2–5 sentence narrative per [common-output-format.md](references/common-output-format.md); keep `## Changes` from Step 2 output.
+   4. Replace the metadata-only `## Overview` from Step 2 with a narrative Overview in the format of [category-pr-body-guidelines.md](references/category-pr-body-guidelines.md) § Overview Format (2–4 sentence paragraph plus `Core Fixes:`, `Scope:`, and `Risk / Deployment Note:` bullets); keep `## Changes` from Step 2 output.
    5. Write the complete PR body (all sections) to a temporary file (e.g., `/tmp/completed_pr_body.md`).
 
 5. Apply full body (full-body mode only):
@@ -108,16 +108,16 @@ Structured PR output:
 
 ### Error Handling
 
-| Condition                                  | Severity    | Action                                                                            |
-| ------------------------------------------ | ----------- | --------------------------------------------------------------------------------- |
-| `gh` not authenticated                     | Fatal       | Stop; instruct `gh auth login`                                                    |
-| PR not found (404)                         | Fatal       | Verify PR number and `owner/repo`                                                 |
-| Access denied (403)                        | Fatal       | Verify `repo` write scope                                                         |
-| `pr_fetch.sh` or `pr_body.sh` missing      | Fatal       | Stop; report missing script                                                       |
-| `.github/PULL_REQUEST_TEMPLATE.md` missing | Fatal       | Stop; `pr_body.sh` exits with "Template file not found" in both modes — report it |
-| Body exceeds GitHub size limit (422)       | Recoverable | Truncate or split content; report in output                                       |
-| Rate limit exceeded (429)                  | Recoverable | Defer update; note retry window in report                                         |
-| Dry-run output unacceptable                | Info        | Do not apply; report diff issues and stop                                         |
+| Condition                                  | Severity    | Action                                                                                                                                                        |
+| ------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gh` not authenticated                     | Fatal       | Stop; instruct `gh auth login`                                                                                                                                |
+| PR not found (404)                         | Fatal       | Verify PR number and `owner/repo`                                                                                                                             |
+| Access denied (403)                        | Fatal       | Verify `repo` write scope                                                                                                                                     |
+| `pr_fetch.sh` or `pr_body.sh` missing      | Fatal       | Stop; report missing script                                                                                                                                   |
+| `.github/PULL_REQUEST_TEMPLATE.md` missing | Fatal       | Stop; the baseline run (Step 2, which both modes start with) exits with "Template file not found" — report it; `--body-file` alone does not read the template |
+| Body exceeds GitHub size limit (422)       | Recoverable | Truncate or split content; report in output                                                                                                                   |
+| Rate limit exceeded (429)                  | Recoverable | Defer update; note retry window in report                                                                                                                     |
+| Dry-run output unacceptable                | Info        | Do not apply; report diff issues and stop                                                                                                                     |
 
 ### Examples
 

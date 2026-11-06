@@ -5,10 +5,9 @@ description: >-
   hook, range cursor, or detect JSON). Use in conversation when the user asks
   to sync or update docs after code changes. Also the loop entry skill for
   documentation drift automation. Interactive default is survey only; edit
-  docs when the request contains an edit verb (fix, apply, or the skill's own
-  verb) or automation sets agent_edit_allowed in Constraints; a bare
-  skill-name invocation stays survey. Not for new document creation or
-  markdown linting.
+  docs when the request asks for changes to be made (for example fix, apply,
+  or update) or automation sets agent_edit_allowed in Constraints. Not for new
+  document creation or markdown linting.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -20,7 +19,7 @@ metadata:
 ## Input
 
 - **Interactive / hook (required):** resolve scope per [category-detect-scope.md](references/category-detect-scope.md) — Interactive free-form → `all` (full candidate docs); git hook → `staged`; automation cursor → `range` with `--since` — triage per [common-impact-map.md](references/common-impact-map.md); validate patches per [common-checklist.md](references/common-checklist.md)
-- **Automation (optional):** detect JSON in prompt — from a caller or optional skill detect script; not required for interactive runs. Load [category-input-schema.md](references/category-input-schema.md) and [category-automation-envelope.md](references/category-automation-envelope.md) on that path only
+- **Automation (optional):** detect JSON in prompt — from a caller or optional skill detect script; not required for interactive runs. Read `agent_edit_allowed` and `agent_edit_target` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md); load [category-input-schema.md](references/category-input-schema.md) on that path only
 
 Path allowlist, when present, arrives in `## Constraints`.
 
@@ -64,19 +63,23 @@ Target: candidate documentation per [common-impact-map.md](references/common-imp
 
 Resolve **agent_edit_allowed** before patching (git hook runs follow the Interactive rows):
 
-| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit documentation files                                                                                       |
-| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, "update the docs", "sync the docs"                                           |
-| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed documentation (bare `fix` / `apply` counts)                                    |
-| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                                                                                                          | `agent_edit_allowed`                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default: the request asks to look, check, triage, or survey, or only names the skill              | `false` — survey only; do not edit documentation files                                                                                       |
+| Interactive — the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) | `true`                                                                                                                                       |
+| Interactive — follow-up after a survey asking to apply                                                          | `true`                                                                                                                                       |
+| Automation — `## Constraints`                                                                                   | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+
+When intent is unclear, survey and offer to apply — edits are harder to undo than a report.
+
+When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `agent_edit_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 
 ### Interactive / hook path
 
 1. Resolve scope ([category-scope.md](references/category-scope.md)). Parse detect JSON when present; otherwise resolve the detect universe from the prompt ([category-detect-scope.md](references/category-detect-scope.md)), run this skill's optional detect script with the resolved `--scope` (default `all` for Interactive free-form; `staged` for git hook; `range` when the user named a SHA range), then Agent-complement beyond mechanical output; if tools for detect are unavailable, gather changed paths from git and the user request instead of silent no-op. On detect script non-zero exit, read stdout and stop.
 2. IF detect reports `skip` OR no documentation impact after gathering → emit survey no-op per [common-output-format.md](references/common-output-format.md) (Overview explains no-op); stop.
 3. Triage affected docs per [common-impact-map.md](references/common-impact-map.md); grep before full read.
-4. IF edits are not requested → emit survey shape per [common-output-format.md](references/common-output-format.md); stop — do not edit documentation files or run `git add`.
+4. IF `agent_edit_allowed` is `false` OR `agent_edit_target` is not `fix` → emit survey shape per [common-output-format.md](references/common-output-format.md); stop — do not edit documentation files or run `git add`.
 5. ELSE → apply minimal patches per [common-checklist.md](references/common-checklist.md); when the repository maintains a generated documentation index and documentation files were created/deleted/renamed, regenerate it per UV-05; stage with `git add`; emit apply shape per [common-output-format.md](references/common-output-format.md).
 
 ### Automation path

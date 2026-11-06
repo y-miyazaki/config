@@ -1,6 +1,6 @@
 # Anti-Patterns (AP)
 
-When an AP item cites a base ItemID in parentheses, report the finding once under the base ItemID; the AP item is a lookup pointer, not a second finding.
+When an AP item cites a base ItemID in parentheses, report the finding once under the base ItemID (the first one listed when several are cited); the AP item is a lookup pointer, not a second finding.
 
 **AP-01 (MUST): Discard errors with `_` without a justifying comment**
 

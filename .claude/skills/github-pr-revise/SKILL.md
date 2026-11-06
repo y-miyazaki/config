@@ -4,9 +4,10 @@ description: >-
   Apply human PR review feedback to a pull request. Use in conversation when
   the user gives a PR URL or number plus the feedback to apply. Also the L2
   loop entry skill on PR heads when detect finds the configured mention
-  token. Interactive default is survey; apply when the user explicitly
-  requests apply or agent_edit_allowed is true. Do not invent mention-less automation
-  triggers or treat bot comments as triggers.
+  token. Interactive default is survey only; apply the feedback when the
+  request asks for changes to be made (for example fix, apply, or update) or
+  automation sets agent_edit_allowed in Constraints. Do not invent
+  mention-less automation triggers or treat bot comments as triggers.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -18,7 +19,7 @@ metadata:
 ## Input
 
 - **Automation:** detect JSON from `detect_pr_revise.sh` with `result.pr_number`, `result.event_name`, `result.mention`, `result.actor`, the trigger comment fields (`comment_body`, `comment_id`, `path`, `line`, `start_line`, `side`, `diff_hunk`, `in_reply_to_id`, `subject_type`), and `result.comments` (array of open human `@mention` comments with `comment_id`, `body`, `path`, `line`, `start_line`, `side`, `diff_hunk`, `in_reply_to_id`, optional `parent_body`, `source`, `subject_type`). Read `agent_edit_allowed` / `agent_edit_target` from `## Constraints`. Address the full `comments` array — not only `comment_body`.
-- **Interactive:** PR URL or number plus the human feedback to apply (pasted text or a comment URL); there is no detect JSON and no mention gate. Read the PR with read-only `gh pr view <n> --json number,state,headRefName,baseRefOid,headRefOid,body`. `agent_edit_allowed` defaults to `false` (survey) unless the user explicitly requests apply. A human's explicit request in the conversation is human feedback even when it asks to apply findings that a bot posted (for example a review report); the bot comment itself stays context, never a trigger.
+- **Interactive:** PR URL or number plus the human feedback to apply (pasted text or a comment URL); there is no detect JSON and no mention gate. Read the PR with read-only `gh pr view <n> --json number,state,headRefName,baseRefOid,headRefOid,body`. `agent_edit_allowed` follows the edit gate in Workflow: survey unless the request asks for changes to be made. A human's explicit request in the conversation is human feedback even when it asks to apply findings that a bot posted (for example a review report); the bot comment itself stays context, never a trigger.
 
 ## Output Specification
 
@@ -49,13 +50,18 @@ Report per [common-output-format.md](references/common-output-format.md). Automa
 
 Resolve **agent_edit_allowed** before revising:
 
-| Source                                | `agent_edit_allowed`                                                                                                                         |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — default                 | `false` — survey only; do not edit files                                                                                                     |
-| Interactive — explicit apply language | `true` — user asks to apply/revise in the same request                                                                                       |
-| Automation — `## Constraints`         | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                                                                                                          | `agent_edit_allowed`                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default: the request asks to look, check, triage, or survey, or only names the skill              | `false` — survey only; do not edit files                                                                                                     |
+| Interactive — the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) | `true` — apply the requested revision                                                                                                        |
+| Interactive — follow-up after a survey asking to apply                                                          | `true` — apply the surveyed candidates                                                                                                       |
+| Automation — `## Constraints`                                                                                   | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+
+When intent is unclear, survey and offer to apply — edits are harder to undo than a report.
 
 When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `agent_edit_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
+
+**Delivery.** Interactive: leave edits in the working tree and report them; commit, push to the PR head, or open a follow-up PR only when the user explicitly asks for that step, because those change shared state that reviewers see and cannot be quietly taken back. Automation: do not push or open a PR yourself; the caller delivers the branch (to the PR head or a follow-up PR) and composes the PR body from your report.
 
 1. Automation: read detect JSON; if `skip: true` or `status: error`, report the reason and stop. Interactive: resolve the PR from the user's URL or number with `gh pr view`; if the PR is closed or merged, report that and stop.
 2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints and PR templates.
@@ -73,10 +79,11 @@ When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **inter
 
 ### Error Handling
 
-| Condition                                         | Severity    | Action                                       |
-| ------------------------------------------------- | ----------- | -------------------------------------------- |
-| Detect `status: error`                            | Fatal       | Stop; do not mutate repository files         |
-| Detect `skip: true`                               | Info        | Report skip reason; do not push              |
-| `agent_edit_allowed: false`                       | Info        | Survey only; do not edit files               |
-| `agent_edit_target` not `fix` when edits expected | Recoverable | Survey only; note mismatch in Overview       |
-| Validation tooling missing after edits            | Recoverable | Defer in report; do not claim passing checks |
+| Condition                                         | Severity    | Action                                         |
+| ------------------------------------------------- | ----------- | ---------------------------------------------- |
+| Detect `status: error`                            | Fatal       | Stop; do not mutate repository files           |
+| Detect `skip: true`                               | Info        | Report skip reason; do not push                |
+| Interactive: PR is closed or merged               | Info        | Report the PR state; do not edit files or push |
+| `agent_edit_allowed: false`                       | Info        | Survey only; do not edit files                 |
+| `agent_edit_target` not `fix` when edits expected | Recoverable | Survey only; note mismatch in Overview         |
+| Validation tooling missing after edits            | Recoverable | Defer in report; do not claim passing checks   |

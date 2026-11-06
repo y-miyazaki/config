@@ -13,7 +13,7 @@
 
 - [ ] First line is H1 heading (descriptive title, not filename)
 - [ ] Purpose paragraph follows H1 immediately
-- [ ] Structure matches the Diataxis quadrant intent
+- [ ] Structure matches the target directory's purpose (Diataxis quadrant intent when the fallback layout applies)
 - [ ] No YAML frontmatter added
 - **PASS** if structure is clear and appropriate
 

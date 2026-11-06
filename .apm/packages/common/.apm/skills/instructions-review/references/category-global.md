@@ -6,9 +6,9 @@ This file contains global checks applicable to all instructions files, covering 
 
 **G-01 (MUST): Front Matter**
 
-Check: Front Matter contains a `description` field and the file-scope glob key for the file's format — `applyTo` for package sources (`*.instructions.md`) and Claude rules, `globs` for Cursor `.mdc`, or the target agent's equivalent key for other rule formats
-Why: Missing Front Matter causes automation failures and unclear file scope
-Fix: Explicitly document `description` and the format's scope key (`applyTo` / `globs` / equivalent)
+Check: Front Matter contains the file-scope key for the file's format — `applyTo` plus `description` for package sources (`*.instructions.md`), `paths` for Claude rules (`.claude/rules/*.md`), `globs` plus `description` for Cursor `.mdc`, or the target agent's equivalent for other rule formats. Require `description` only for formats that define one.
+Why: The scope key decides which files the rule is injected for, so a missing or wrong key silently disables the rule; formats such as Claude rules have no `description` field, so requiring one there produces a false failure
+Fix: Add the format's scope key (`applyTo` / `paths` / `globs` / equivalent), and `description` where the format defines it
 
 **G-02 (MUST): Title**
 
@@ -18,9 +18,9 @@ Fix: Use clear, purpose-driven titles
 
 **G-03 (MUST): applyTo Target Precision**
 
-Check: Do scope globs (`applyTo`, or `globs` in Cursor `.mdc`) match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
+Check: Do scope globs (`applyTo`, `paths` in Claude rules, or `globs` in Cursor `.mdc`) match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
 Why: Over-broad globs inject instruction-authoring rules into unrelated files (skills, docs) and hide missing companion coverage
-Fix: Scope `applyTo` to package sources plus distributed rule paths (Cursor `.mdc`, Claude/Kiro rules), not entire agent trees
+Fix: Scope the glob key to package sources plus distributed rule paths (Cursor `.mdc`, Claude/Kiro rules), not entire agent trees
 
 **G-04 (MUST): Portable Cross-References**
 

@@ -51,7 +51,7 @@ Structured validation results from two tools: markdownlint-cli2 → markdown-lin
 ## Workflow
 
 1. From the repository root, run `bash <skill-dir>/scripts/validate.sh [path]` (omit `path` to scan the whole working directory).
-2. For each failed tool, get details per [common-individual-commands.md](references/common-individual-commands.md): re-run `markdownlint-cli2 <files>` (the script hides its output), and re-run `markdown-link-check` on every target file (the script stops at the first broken file, so later files are unchecked). Map rule IDs and broken links to checklist ItemIDs.
+2. For each failed tool, get details per [common-individual-commands.md](references/common-individual-commands.md): re-run `markdownlint-cli2 <files>` (the script hides its output), and re-run `markdown-link-check` on every target file (the script stops at the first broken file, so later files are unchecked). Map rule IDs and broken links to checklist ItemIDs and prefix each finding in `## Error Details` with its ItemID, so the report names which checklist item failed.
 3. Report failed/skipped tools per [references/common-output-format.md](references/common-output-format.md).
 
 ### Error Handling
@@ -59,7 +59,7 @@ Structured validation results from two tools: markdownlint-cli2 → markdown-lin
 | Condition                                    | Severity    | Action                                                                                         |
 | -------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------- |
 | `scripts/validate.sh` missing                | Fatal       | Stop; report missing script                                                                    |
-| No `.md` files under target path             | Info        | Report no reviewable markdown; stop                                                            |
+| No `.md` files under target path             | Info        | Report both tools as `⊘ Skipped` (no `.md` files) in `## Tool Results`; Status ✅ PASS; stop   |
 | markdownlint-cli2 or link-check tool missing | Recoverable | Report that tool as skipped in `## Tool Results`                                               |
 | External link timeout or transient network   | Recoverable | Report the link-check failure; note in `## Error Details` that it is network-only              |
 | Single tool fails, other succeeds            | Recoverable | Report both tools in `## Tool Results`; include the failed tool's output in `## Error Details` |
@@ -69,6 +69,6 @@ Structured validation results from two tools: markdownlint-cli2 → markdown-lin
 
 ### Examples
 
-- Prompt: `Validate Markdown files and report only failed checks`
+- Prompt: `Validate the Markdown files under docs/`
 - Command (from the repository root): `bash <skill-dir>/scripts/validate.sh docs/`
 - Result: Structured report per [references/common-output-format.md](references/common-output-format.md); mark network-only link failures as such in `## Error Details`.

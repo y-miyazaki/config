@@ -5,9 +5,8 @@ description: >-
   releases. Use in conversation when the user asks to check, review, or update
   the changelog. Also the loop entry skill when automation supplies
   commit/release detect JSON. Interactive default is survey only; edit
-  CHANGELOG.md when the request contains an edit verb (fix, apply, or the
-  skill's own verb) or automation sets agent_edit_allowed in Constraints; a
-  bare skill-name invocation stays survey.
+  CHANGELOG.md when the request asks for changes to be made (for example fix,
+  apply, or update) or automation sets agent_edit_allowed in Constraints.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -58,12 +57,14 @@ Changelog report per [common-output-format.md](references/common-output-format.m
 
 Resolve **agent_edit_allowed** before mapping commits:
 
-| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit `changelog_file`                                                                                          |
-| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, "update the changelog", "add these entries"                                  |
-| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed entries (bare `fix` / `apply` counts)                                          |
-| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                                                                                                          | `agent_edit_allowed`                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default: the request asks to look, check, triage, or survey, or only names the skill              | `false` — survey only; do not edit `changelog_file`                                                                                          |
+| Interactive — the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) | `true`                                                                                                                                       |
+| Interactive — follow-up after a survey asking to apply                                                          | `true`                                                                                                                                       |
+| Automation — `## Constraints`                                                                                   | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+
+When intent is unclear, survey and offer to apply — edits are harder to undo than a report.
 
 When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `agent_edit_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 

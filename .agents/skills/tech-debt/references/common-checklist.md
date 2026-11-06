@@ -76,7 +76,7 @@ Do not mark Resolved when only `line` shifted but `path` + `kind` + snippet stil
 ### EDIT-01: Closed-set apply only
 
 - [ ] When `agent_edit_allowed` is `false`, emit survey shape — do not write `agent_report_file`
-- [ ] When `agent_edit_allowed` is `true`, write allowlisted `agent_report_file` and apply closed-set fixes only (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) per [category-scope.md](category-scope.md)
+- [ ] When `agent_edit_allowed` is `true`, write allowlisted `agent_report_file` (interactive runs with no report path skip the report and note it in Overview — SKILL.md Workflow step 7) and apply closed-set fixes only (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) per [category-scope.md](category-scope.md)
 - [ ] Do not perform structural refactors here (Delegate to refactor)
 - **PASS** if apply edits are closed-set only
 

@@ -47,10 +47,10 @@ Overall Quality: <High | Medium | Low>
 
 - Keep full evaluation data for all checks internally using fixed ItemIDs from `references/common-checklist.md`.
 - Passed checks appear only as counts in `## Checks Summary`; do not list them in `## Checks (Failed/Deferred Only)`.
-- `Status` is `completed` when the review ran, `failed` when it could not run (for example, the target does not exist or every validation script failed), and `skipped` when there is nothing in scope to review. For `failed` and `skipped`, set the counts to `0` and write one `## Issues` entry stating the cause; omit `## Expert Assessment` and `## Good Practices`.
+- `Status` is `completed` when the review ran, `failed` when it could not run (for example, no target file exists), and `skipped` when there is nothing in scope to review. For `failed` and `skipped`, set the counts to `0`, write one `## Issues` entry without an ItemID that states the cause (it replaces `No issues found`), and omit `## Expert Assessment` and `## Good Practices` — no checks ran, so there is nothing to assess.
 - Keep ItemIDs fixed and sorted in checklist order.
 - `## Issues` must always contain full details for each failed or deferred check.
-- If there are no failed or deferred checks:
+- If `Status` is `completed` and there are no failed or deferred checks:
   - In `## Checks (Failed/Deferred Only)`, output `No failed or deferred checks`.
   - In `## Issues`, output `No issues found`.
 
@@ -65,7 +65,7 @@ Overall Quality: <High | Medium | Low>
 
 - Assign only ItemIDs that exist in `common-checklist.md`. Do not repurpose an existing ItemID for an unrelated finding.
 - Checklist-mapped findings go in `## Issues` with ItemIDs.
-- Findings that do not map to any checklist ItemID go in `## Expert Assessment` as numbered judgment items (no ItemID). Do not bury them in free-text prose after Issues.
+- Findings that do not map to any checklist ItemID go in `## Expert Assessment` as numbered judgment items (no ItemID). Do not bury them in free-text prose after Issues. The one exception is the cause entry for a `failed` or `skipped` Status (see Rules).
 
 ### Expert Assessment
 

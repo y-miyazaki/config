@@ -28,6 +28,8 @@ Output lines look like `docs/guide.md:12 MD022/blanks-around-headings ...`. Map 
 | MD055, MD056        | MDL-06         |
 | MD034               | MDL-07         |
 
+Rules not in this table (for example MD013, MD024, MD041) have no checklist item; report them with their rule ID only.
+
 ## markdown-link-check
 
 `scripts/validate.sh` stops at the first file with a broken link. Re-run per file to list every broken link:

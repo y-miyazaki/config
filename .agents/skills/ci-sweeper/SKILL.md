@@ -5,10 +5,9 @@ description: >-
   failures, apply minimal fixes when actionable. Use in conversation when the
   user asks to triage or fix CI failures. Also the loop entry skill when
   automation detects failed workflow runs or supplies detection JSON.
-  Interactive default is survey only; edit files when the request contains an
-  edit verb (fix, apply, or the skill's own verb) or automation sets
-  agent_edit_allowed in Constraints; a bare skill-name invocation stays
-  survey.
+  Interactive default is survey only; edit files when the request asks for
+  changes to be made (for example fix, apply, or update) or automation sets
+  agent_edit_allowed in Constraints.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -57,12 +56,14 @@ Triage report per [common-output-format.md](references/common-output-format.md).
 
 Resolve **agent_edit_allowed** before classifying failures:
 
-| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit files                                                                                                     |
-| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, 直して, "fix the failing job"                                                |
-| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed failures (bare `fix` / `apply` counts)                                         |
-| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                                                                                                          | `agent_edit_allowed`                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default: the request asks to look, check, triage, or survey, or only names the skill              | `false` — survey only; do not edit files                                                                                                     |
+| Interactive — the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) | `true`                                                                                                                                       |
+| Interactive — follow-up after a survey asking to apply                                                          | `true`                                                                                                                                       |
+| Automation — `## Constraints`                                                                                   | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+
+When intent is unclear, survey and offer to apply — edits are harder to undo than a report.
 
 When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `agent_edit_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 
@@ -72,7 +73,7 @@ When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: on the **inter
 4. Classify **each** failure per [common-checklist.md](references/common-checklist.md): fixable `regression` within scope, or Watch-class (`flake`, `infra`, `env`, or a fix requiring more than five files). Note `ignored[]` in Overview when non-empty.
 5. IF `agent_edit_allowed` is `false` → emit survey shape (`### Candidates` for regressions, `### Watch` for Watch-class failures); on automation path load `assets/pr-body-template-survey.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not edit files.
 6. ELSE IF `agent_edit_allowed` is `true` AND `agent_edit_target` is not `fix` → emit survey shape; note expected `agent_edit_target: fix` in Overview; stop — do not edit files.
-7. ELSE IF no failure is a fixable regression (every failure is Watch-class) → emit survey shape with `### Watch` per [common-output-format.md](references/common-output-format.md); on automation path append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not edit files.
+7. ELSE IF no failure is a fixable regression (every failure is Watch-class) → emit survey shape with `### Watch` per [common-output-format.md](references/common-output-format.md); on automation path load `assets/pr-body-template-survey.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not edit files.
 8. ELSE (`agent_edit_allowed` is `true` AND `agent_edit_target` is `fix`) → fix fixable regressions within [category-scope.md](references/category-scope.md). When more than three failures are present, fix only the first regression and defer the rest. Watch-class failures get no edits.
 9. After edits, run the repository's existing check for each fixed job (the command the failing job runs, when available locally) and record commands and outcomes in `## Verification`; never claim a check passed when it failed or was not run.
 10. Emit apply shape per [common-output-format.md](references/common-output-format.md): fixed regressions under `### Changes`; deferred regressions and Watch-class failures under `### Deferred`. Reconcile **Changes** / **Deferred** with `git diff --name-only`; on automation path load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` (including validation commands) per [category-automation-envelope.md](references/category-automation-envelope.md).

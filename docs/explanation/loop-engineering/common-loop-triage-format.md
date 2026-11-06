@@ -23,7 +23,7 @@ Automation runs branch on **`agent_edit_allowed`** from `## Constraints` (derive
 | `false`              | Survey — emit `### Candidates`; no file edits                                     |
 | `true`               | Apply — edit within allowlist; emit `### Changes` / deferrals + `## Verification` |
 
-Interactive runs resolve `agent_edit_allowed` from natural language (default survey; explicit fix language → apply). See each skill's `SKILL.md` Workflow.
+Interactive runs resolve `agent_edit_allowed` from the request's intent: default survey (look, check, triage, survey, or only names the skill); a request that asks for changes to be made (for example fix, apply, update) → apply; unclear intent → survey and offer to apply. See each skill's `SKILL.md` Workflow.
 
 ## Four-plane contract (caller vs skill)
 
@@ -54,6 +54,7 @@ When `agent_edit_allowed: true`:
 | docs-updater | `### Candidates` | `### Changes` | `### Deferred`                           |
 | refactor     | `### Candidates` | `### Changes` | `### Deferred`                           |
 | tech-debt    | `### Candidates` | `### Changes` | `### Deferred`                           |
+| test-gap     | `### Candidates` | `### Changes` | `### Deferred`                           |
 
 ## Overview contract
 

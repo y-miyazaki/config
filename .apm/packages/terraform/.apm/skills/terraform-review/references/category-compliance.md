@@ -5,7 +5,7 @@
 Check: Is there no use of default networks, are firewall/security rules restrictive, and is storage private by default?
 Why: Unsafe default settings expand attack surface and risk information leakage
 Fix: Use explicit network/subnet references, restrict ingress/egress rules, block public access on storage
-Note: Open firewall rules and public storage are also commonly reported by `trivy config`. When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.
+Note: When validation output includes trivy misconfiguration findings for open firewall rules or public storage, cite them as evidence instead of re-describing them. Still evaluate this item from source: the companion validation's trivy step scans for misconfigurations only when the repository enables it, does not fail on findings, and does not judge default-network use.
 
 **COMP-02 (MUST): Policy documents via jsonencode or provider policy data sources**
 
