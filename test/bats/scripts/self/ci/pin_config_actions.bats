@@ -121,9 +121,10 @@ EOF
     git_test_repo_git tag v1.0.0
     local head_before
     head_before="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    cp "${GIT_TEST_REPO}/.github/workflows/test.yaml" "${BATS_TEST_TMPDIR}/test.yaml.before"
 
     git_test_repo_run "bash '${PIN_SCRIPT}' --pin-only --dry-run"
     [ "$status" -eq 0 ]
-    grep -q "example@abc1234" "${GIT_TEST_REPO}/.github/workflows/test.yaml"
+    cmp -s "${BATS_TEST_TMPDIR}/test.yaml.before" "${GIT_TEST_REPO}/.github/workflows/test.yaml"
     [ "$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)" = "${head_before}" ]
 }
