@@ -35,6 +35,8 @@ Normative rules for **all** skills under `.apm/packages/**`. Design depth: [apm-
 
 Violations are **blocking portability defects** on package PRs — same severity as DIST table rows below.
 
+**Design comparison (SHOULD):** when deciding how a skill is written (edit gates, structure, rule style), compare with well-known external skills — for example the official plugin skills `skill-creator`, `claude-md-improver`, and `plugin-dev` `skill-development` — and record the comparison in the proposal or PR. Prefer an intent-level rule with its reason over enumerations or stacked MUSTs, as those skills do.
+
 ## Package placement (MUST)
 
 Place new skills by **forge/runtime**, never by “this is a loop skill”:
@@ -89,12 +91,14 @@ Review skills (`agent-skills-review`, `instructions-review`) **MUST** encode gen
 
 ## Release bar (this repository only)
 
-| Rule           | Requirement                                                                                                                                                             |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mock eval      | Verifies contract structure — not production behavior.                                                                                                                  |
-| Behavior       | **MUST** be covered by `test/bats/`, `scripts/*/validate.sh`, and/or real executor / `waza run --baseline` in this repo.                                                |
-| Ship decision  | **Mock eval green + repo CI green** before releasing skills from this repository.                                                                                       |
-| Eval packaging | **SHOULD** keep a thin harness (`eval.yaml`, task YAMLs); avoid large corpora inside distributable skill trees (E-01 / E-03 — maintainer judgment, not review ItemIDs). |
+| Rule           | Requirement                                                                                                                                                                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mock eval      | Verifies contract structure — not production behavior.                                                                                                                                                                                                                        |
+| Behavior       | **MUST** be covered by `test/bats/`, `scripts/*/validate.sh`, and/or real executor / `waza run --baseline` in this repo.                                                                                                                                                      |
+| Ship decision  | **Mock eval green + repo CI green** before releasing skills from this repository.                                                                                                                                                                                             |
+| Eval packaging | **SHOULD** keep a thin harness (`eval.yaml`, task YAMLs); avoid large corpora inside distributable skill trees (E-01 / E-03 — maintainer judgment, not review ItemIDs).                                                                                                       |
+| Eval naming    | **MUST** name task files `evals/tasks/<skill-name>-<scenario>.yaml`, and start task `id` with `<skill-name>-`.                                                                                                                                                                |
+| Eval contract  | Mock executor echoes the prompt, so mock green does not prove graders match the output contract. Before release, run a real executor (`waza run --baseline`) when SKILL.md or `common-output-format.md` changes, and keep grader strings inside that skill's output contract. |
 
 ---
 

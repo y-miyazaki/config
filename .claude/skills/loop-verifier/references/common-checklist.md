@@ -1,6 +1,6 @@
 # Loop Checker Checklist
 
-Generic checker gates. Domain callers append extra REJECT rules; they do not remove these.
+Generic checker gates. Domain callers may add REJECT rules or stricter thresholds; they never remove or relax these gates.
 
 ## Gates
 
@@ -30,6 +30,9 @@ Generic checker gates. Domain callers append extra REJECT rules; they do not rem
 
 ### RISK-01: Human review
 
-- **Check:** For medium or higher risk, note human review even if other gates pass.
+- **Check:** Classify the change risk and, for medium or high, note human review even if other gates pass.
+  - **Low:** docs, comments, tests only, or config with no runtime effect.
+  - **Medium:** runtime code or build/CI config within the stated target.
+  - **High:** auth, secrets handling, permissions, data migration or deletion, release or deploy pipelines, or public interface changes.
 - **Why:** APPROVE is not a substitute for branch protection.
 - **Fix:** APPROVE may still apply; put the risk in `reason`.

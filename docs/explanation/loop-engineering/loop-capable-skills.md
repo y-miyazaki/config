@@ -44,8 +44,12 @@ Update this table in the **same change** as adding or renaming a loop caller `ag
 1. State **what** the skill does in one clause.
 2. State **Interactive** use (“when the user asks …”) with concrete verbs — not only L2/workflow jargon.
 3. State **Automation** use (detect JSON / Constraints) as a second clause.
-4. State the **edit gate**: Interactive default survey; explicit apply/fix language or `agent_edit_allowed: true` applies.
+4. State the **edit gate** by intent: Interactive default is survey; the run edits when the request asks for changes to be made (for example fix, apply, 修正して, 適用して, update, add) or automation sets `agent_edit_allowed: true`. A request to look, check, triage, or survey — or one that only names the skill — stays survey. Use the family sentence: "Interactive default is survey only; <edit action> when the request asks for changes to be made (for example fix, apply, or update) or automation sets agent_edit_allowed in Constraints." Exception: `github-issue-triage` never edits files — its default action is labels and comments.
 5. **MUST NOT** imply the skill is workflow-only (`Use for L2 …` as the only “when”).
+
+The `SKILL.md` Workflow edit-gate table uses the same four rows in the same order in every loop entry skill that edits files: Interactive default (look, check, triage, survey, or only names the skill) → the request asks for changes to be made → follow-up after a survey asking to apply → Automation `## Constraints`. Under the table: "When intent is unclear, survey and offer to apply — edits are harder to undo than a report." Skill-specific structured inputs that override natural language (for example `refactor`'s JSON `mode`) are stated in a sentence above the table, not as an extra row.
+
+Why intent rather than a verb list: the cost is asymmetric — a survey costs one extra turn, an unwanted edit costs a revert — and a fixed verb list misfires on skill names that are themselves verbs ("refactor", "triage"). The agent judges whether the user wants files changed; when it cannot tell, it surveys first and offers to apply.
 
 Automation-only detect details (`repository_dispatch`, `@loop` mention) belong in Input/Workflow, not as the sole description trigger.
 
