@@ -21,6 +21,21 @@ The Agent may apply `triage:failed` on unsafe partial failure. In a message run 
 
 ## Events → recommended transitions
 
+## Choosing the event
+
+The helper accepts only the four events below. Map Issue activity to them:
+
+| Issue activity                                 | Event                                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Issue opened                                   | `opened`                                                                             |
+| Issue reopened                                 | `opened`                                                                             |
+| Human reply while `triage:needs-info` present  | Re-classify with the new facts, then `mark_ready` (enough info) or `mark_needs_info` |
+| Classification complete with enough info       | `mark_ready`                                                                         |
+| Facts missing                                  | `mark_needs_info`                                                                    |
+| Human asks to re-triage a `triage:ready` Issue | `human_retriage`                                                                     |
+
+Type labels are not produced by the helper; see SKILL.md Workflow step 5.
+
 Helpers: `scripts/label_fsm.sh` → `label_fsm_next_state <labels_json> <event>` → `{"add":[],"remove":[]}`.
 
 | Event             | Add                        | Remove                              |

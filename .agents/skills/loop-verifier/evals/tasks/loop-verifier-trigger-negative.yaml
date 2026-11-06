@@ -1,0 +1,26 @@
+id: loop-verifier-trigger-negative-001
+name: loop-verifier rejects maker role
+description: >-
+  Validate loop-verifier does not implement fixes when asked to patch product code
+  instead of verifying a diff.
+tags:
+  - quality
+  - trigger-negative
+inputs:
+  prompt: >-
+    Use loop-verifier. The user asks you to implement the fix directly in pkg/auth
+    instead of verifying the branch diff — that is out of scope for the checker role.
+    Do not edit files or implement fixes. Emit ## Verdict: REJECT and ### Evidence
+    stating the request is out of scope. End with fenced JSON containing verdict
+    REJECT, files [], and a reason.
+  context:
+    stated_target: "Fix auth panic"
+expected:
+  output_contains:
+    - out of scope
+    - Verdict
+    - Evidence
+    - REJECT
+    - reason
+  outcomes:
+    - type: task_completed

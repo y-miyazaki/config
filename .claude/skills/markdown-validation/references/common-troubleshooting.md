@@ -13,8 +13,8 @@
 
 **Fix**:
 
-1. Run auto-fix first: `markdownlint-cli2 --fix **/*.md`
-2. Manually adjust lines that cannot be auto-fixed
+1. Report the rule IDs and lines; do not modify files during validation
+2. When the user asks for fixes, run `markdownlint-cli2 --fix <files>` and adjust remaining lines by hand
 
 ## markdown-link-check Failures
 

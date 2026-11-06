@@ -4,8 +4,8 @@ Use this guide when `trivy config` reports security findings.
 
 ## Severity Handling Policy
 
-- **CRITICAL**: Must be fixed before merge.
-- **HIGH**: Must be fixed before production deployment.
+- **CRITICAL**: Blocks merge; fix before merge.
+- **HIGH**: Blocks merge; fix before merge.
 - **MEDIUM**: Fix in the current or next planned change window.
 - **LOW**: Fix when practical and track in backlog if deferred.
 
@@ -46,7 +46,7 @@ bash scripts/validate.sh
 For faster feedback on specific directories:
 
 ```bash
-bash scripts/validate.sh ./terraform/base/ ./terraform/management/
+bash scripts/validate.sh <terraform-dir-1> <terraform-dir-2>
 ```
 
 ## Escalation Rule

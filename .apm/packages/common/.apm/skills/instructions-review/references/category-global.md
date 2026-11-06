@@ -6,9 +6,9 @@ This file contains global checks applicable to all instructions files, covering 
 
 **G-01 (MUST): Front Matter**
 
-Check: Front Matter contains applyTo and description fields
+Check: Front Matter contains a `description` field and the file-scope glob key for the file's format — `applyTo` for package sources (`*.instructions.md`) and Claude rules, `globs` for Cursor `.mdc`, or the target agent's equivalent key for other rule formats
 Why: Missing Front Matter causes automation failures and unclear file scope
-Fix: Explicitly document `applyTo` and `description`
+Fix: Explicitly document `description` and the format's scope key (`applyTo` / `globs` / equivalent)
 
 **G-02 (MUST): Title**
 
@@ -18,7 +18,7 @@ Fix: Use clear, purpose-driven titles
 
 **G-03 (MUST): applyTo Target Precision**
 
-Check: Do `applyTo` globs match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
+Check: Do scope globs (`applyTo`, or `globs` in Cursor `.mdc`) match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
 Why: Over-broad globs inject instruction-authoring rules into unrelated files (skills, docs) and hide missing companion coverage
 Fix: Scope `applyTo` to package sources plus distributed rule paths (Cursor `.mdc`, Claude/Kiro rules), not entire agent trees
 
@@ -68,9 +68,9 @@ Fix: Order subsections as: domain-specific rules → Anti-Patterns → Code Modi
 
 **STRUCT-06 (MUST): H3 Heading Format**
 
-Check: Do H3 headings use `### Name（LEVEL）` format for rule sections, and `### Name` for process/declaration sections?
+Check: Do H3 headings use `### Category Name (PREFIX)` for ItemID rule groups (for example `### Security (SEC)`), and `### Name` for process/declaration sections (for example `### Code Modification Guidelines`)?
 Why: Inconsistent H3 formats make the instruction file type unclear at a glance
-Fix: Use `### Name（MUST）` or `### Name（SHOULD）` for rule groups; use `### Name` for non-rule sections
+Fix: Use `### Category Name (PREFIX)` for rule groups whose bullets carry `PREFIX-nn` ItemIDs; use `### Name` for non-rule sections
 
 **STRUCT-07 (MUST): Concise Testing and Validation Chapter**
 

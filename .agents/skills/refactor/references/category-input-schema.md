@@ -49,7 +49,7 @@ Natural-language `agent_edit_allowed` triggers: SKILL.md Workflow table (not dup
 ### Rules
 
 - When structured JSON includes `mode`, resolve `agent_edit_allowed` from `mode` before natural-language triggers
-- Bare skill name `refactor` or bare `fix` alone do **not** set `agent_edit_allowed: true` — require explicit apply language or `mode: apply`
+- A bare skill-name invocation (`refactor` with no edit verb) does **not** set `agent_edit_allowed: true`; any edit verb, bare or qualified (`fix`, `apply`, 修正して, 適用して), does — see SKILL.md Workflow
 - If neither actionable scope nor `hints[]` nor exploratory target → no-op after survey
 - `hint.kind` values outside the closed set → ignore hint; fall back to `target` or scope exploration
 - Classify `intent` from user natural language ([category-contract.md](category-contract.md))

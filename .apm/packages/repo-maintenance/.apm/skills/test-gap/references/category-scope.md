@@ -13,7 +13,7 @@
 
 ## Denylist
 
-The automation checker enforces the platform default denylist. Treat denylisted paths as Watch and never edit them.
+When the caller supplies a denylist (in `## Constraints` or the prompt), treat denylisted paths as Watch and never edit them.
 
 ## Target size
 

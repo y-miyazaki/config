@@ -5,8 +5,10 @@ description: >-
   hook, range cursor, or detect JSON). Use in conversation when the user asks
   to sync or update docs after code changes. Also the loop entry skill for
   documentation drift automation. Interactive default is survey only; edit
-  docs when the user explicitly requests a fix or Constraints allow edits.
-  Not for new document creation or markdown linting.
+  docs when the request contains an edit verb (fix, apply, or the skill's own
+  verb) or automation sets agent_edit_allowed in Constraints; a bare
+  skill-name invocation stays survey. Not for new document creation or
+  markdown linting.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -28,7 +30,7 @@ Report per [common-output-format.md](references/common-output-format.md). On the
 
 ## Execution Scope
 
-Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated directories), and `mkdocs.yml` (nav section) when present.
+Target: candidate documentation per [common-impact-map.md](references/common-impact-map.md) Search Scope — typically root `*.md`, the repository's documentation tree, nested `README.md` files (excluding generated directories), and site nav config when present.
 
 ### USE FOR:
 
@@ -60,22 +62,22 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 
 ## Workflow
 
-Resolve whether to edit documentation files before patching:
+Resolve **agent_edit_allowed** before patching (git hook runs follow the Interactive rows):
 
-| Source                                                             | Edit docs                                                                                                                            |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Interactive / hook — default                                       | No — survey only                                                                                                                     |
-| Interactive / hook — explicit fix language in the same request     | Yes — examples: 修正して, "update the docs", "apply the doc patches". Do **not** treat bare `fix`/`sync` or skill name alone as edit |
-| Interactive / hook — follow-up after a prior survey in the session | Yes when the user explicitly asks to apply or patch listed documentation                                                             |
-| Automation — `## Constraints`                                      | Per `agent_edit_allowed` in [category-automation-envelope.md](references/category-automation-envelope.md)                            |
+| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit documentation files                                                                                       |
+| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, "update the docs", "sync the docs"                                           |
+| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed documentation (bare `fix` / `apply` counts)                                    |
+| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
 ### Interactive / hook path
 
 1. Resolve scope ([category-scope.md](references/category-scope.md)). Parse detect JSON when present; otherwise resolve the detect universe from the prompt ([category-detect-scope.md](references/category-detect-scope.md)), run this skill's optional detect script with the resolved `--scope` (default `all` for Interactive free-form; `staged` for git hook; `range` when the user named a SHA range), then Agent-complement beyond mechanical output; if tools for detect are unavailable, gather changed paths from git and the user request instead of silent no-op. On detect script non-zero exit, read stdout and stop.
-2. IF detect reports `skip` OR no documentation impact after gathering → report skip and exit.
+2. IF detect reports `skip` OR no documentation impact after gathering → emit survey no-op per [common-output-format.md](references/common-output-format.md) (Overview explains no-op); stop.
 3. Triage affected docs per [common-impact-map.md](references/common-impact-map.md); grep before full read.
 4. IF edits are not requested → emit survey shape per [common-output-format.md](references/common-output-format.md); stop — do not edit documentation files or run `git add`.
-5. ELSE → apply minimal patches per [common-checklist.md](references/common-checklist.md); regenerate `docs/index.md` when `docs/` files created/deleted/renamed; stage with `git add`; emit apply shape per [common-output-format.md](references/common-output-format.md).
+5. ELSE → apply minimal patches per [common-checklist.md](references/common-checklist.md); when the repository maintains a generated documentation index and documentation files were created/deleted/renamed, regenerate it per UV-05; stage with `git add`; emit apply shape per [common-output-format.md](references/common-output-format.md).
 
 ### Automation path
 
@@ -83,18 +85,18 @@ When detect JSON and `## Constraints` are present: follow [category-automation-e
 
 ### Error Handling
 
-| Condition                                                       | Severity    | Action                                                                                        |
-| --------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------- |
-| Detect script non-zero exit or `status: "error"` (when invoked) | Fatal       | Read stdout; stop — do not treat as success-path detect JSON                                  |
-| No git repository                                               | Fatal       | Stop                                                                                          |
-| Empty diff / no documentation impact                            | Info        | Report skip, exit                                                                             |
-| Affected doc file missing                                       | Recoverable | Skip file; note in report                                                                     |
-| Exceeds scope (>3 H2, new top-level document, etc.)             | Recoverable | Stop for file; note out of scope for new top-level authoring                                  |
-| `mkdocs.yml` missing                                            | Recoverable | Skip nav update                                                                               |
-| Fix requested but edits not allowed                             | Info        | Survey only; note that edits require an explicit fix request or caller permission             |
-| Automation `agent_edit_target` mismatch                         | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Condition                                                           | Severity    | Action                                                                                        |
+| ------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| Detect script non-zero exit or `status: "error"` (when invoked)     | Fatal       | Read stdout; stop — do not treat as success-path detect JSON                                  |
+| No git repository                                                   | Fatal       | Stop                                                                                          |
+| Empty diff / no documentation impact                                | Info        | Emit survey no-op (Overview explains no-op); stop                                             |
+| Affected doc file missing                                           | Recoverable | Skip file; note in report                                                                     |
+| Exceeds scope (>3 H2, new top-level document, etc.)                 | Recoverable | Stop for file; note out of scope for new top-level authoring                                  |
+| `mkdocs.yml` missing                                                | Recoverable | Skip nav update                                                                               |
+| Edit requested but `## Constraints` set `agent_edit_allowed: false` | Info        | Survey only; note that the caller Constraints disallow edits                                  |
+| Automation `agent_edit_target` mismatch                             | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
 
 ### Examples
 
 - Prompt: `Sync docs after the latest commit diff`
-- Result: Survey or apply report per [references/common-output-format.md](references/common-output-format.md); stay within UV scope gates.
+- Result: Survey or apply report per [references/common-output-format.md](references/common-output-format.md); stay within the UV-04 scope gate in [references/common-checklist.md](references/common-checklist.md).

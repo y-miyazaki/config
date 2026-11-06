@@ -14,21 +14,26 @@ metadata:
 
 - Shell script path or directory (optional): defaults to workspace root
 - Validation script (required): `scripts/validate.sh`
-- Canonical flags (required): `-v -f --check-function-docs` unless opted out below
-- `--check-function-docs` (optional): omit only when targets intentionally skip Google function header sections and function order checks
+- Default flags: `-v -f --check-function-docs`
+- `-f` (default on): rewrites script formatting with `shfmt` in place — review the diff before continuing
+- `--check-function-docs` (default on in this skill; off in the script unless passed): omit only when targets intentionally skip Google function header sections and function order checks
+- `--tests PATH` (optional, repeatable): limit the Bats suites the script runs to PATH (directory or `.bats` file)
+- `--skip-tests` (optional): skip Bats execution; use when the repository has no Bats suites or `bats` is not installed
 
 ## Output Specification
 
 Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md). That file is the source of truth for the output contract.
 
-Structured results for bash -n and shellcheck (syntax and lint only). With `--check-function-docs`, also reports [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html#s4.2-function-comments) function header sections and top-level function order (show_usage, parse_arguments, a-z, main; detection only).
+Structured results for bash -n and shellcheck (syntax and lint), plus Bats suite results unless `--skip-tests` is passed. With `--check-function-docs`, also reports [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html#s4.2-function-comments) function header sections and top-level function order (show_usage, parse_arguments, a-z, main; detection only).
 
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
 - Script runs checks in fixed order.
 - Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md)).
-- **Bats output:** By default only failing tests and the summary line are printed. Use `-v` for the full pass/fail listing.
+- The script continues after a failing check (no fail-fast) and reports every script.
+- **Bats:** Unless `--skip-tests` is passed, the script also discovers and runs the repository's Bats suites (all suites, or only those under `--tests PATH`) and requires `bats` or `bats-core`. By default only failing tests and the summary line are printed; use `-v` for the full pass/fail listing.
+- **File changes:** `-f` rewrites files in place (`shfmt` formatting). Do not modify files otherwise.
 
 ### USE FOR:
 
@@ -54,7 +59,7 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 
 ## Workflow
 
-1. Run `bash scripts/validate.sh -v -f --check-function-docs` with an optional target path (file or directory under review).
+1. Run `bash scripts/validate.sh -v -f --check-function-docs` with an optional target path (file or directory under review). Add `--tests PATH` to scope Bats to the suites paired with the target, or `--skip-tests` when the repository has no Bats suites.
 2. When function doc sections are out of order and `scripts/fix_function_doc_order.sh` exists, run it on the target before re-validating.
 3. Review auto-fix diffs from `-f` before continuing.
 4. If checks fail, fix reported issues and rerun the same command.
@@ -62,16 +67,16 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 
 ### Error Handling
 
-| Condition                             | Severity    | Action                                                                                                |
-| ------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
-| `scripts/validate.sh` missing         | Fatal       | Stop; report missing script                                                                           |
-| No shell scripts under target path    | Info        | Report no reviewable scripts; stop                                                                    |
-| bash -n or shellcheck missing         | Recoverable | Defer checks for that tool; note in deferred table                                                    |
-| Single tool fails, other succeeds     | Recoverable | Report passing tool; defer failed tool with exit status                                               |
-| All tools fail                        | Fatal       | Return `status: failed` with per-tool stderr summaries                                                |
-| Function docs intentionally skipped   | Info        | Omit `--check-function-docs`; document opt-out in Summary                                             |
-| `common-checklist.md` unavailable     | Fatal       | Stop; report missing dependency                                                                       |
-| `common-output-format.md` unavailable | Recoverable | Note missing file; emit `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` only |
+| Condition                                                                             | Severity    | Action                                                                               |
+| ------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------ |
+| `scripts/validate.sh` missing                                                         | Fatal       | Stop; report missing script                                                          |
+| No shell scripts under target path                                                    | Info        | Report no reviewable scripts; stop                                                   |
+| Required binary missing (`shellcheck`, `shfmt`, or `bats`/`bats-core` when Bats runs) | Fatal       | Stop; report the missing binary; set `Status: ❌ FAIL`                               |
+| Single tool fails, others succeed                                                     | Recoverable | Report every tool; mark the failed tool ❌ Fail with exit status                     |
+| All tools fail                                                                        | Fatal       | Set `Status: ❌ FAIL` with per-tool stderr summaries in `## Error Details`           |
+| Function docs intentionally skipped                                                   | Info        | Omit `--check-function-docs`; document opt-out in Summary                            |
+| `common-checklist.md` unavailable                                                     | Fatal       | Stop; report missing dependency                                                      |
+| `common-output-format.md` unavailable                                                 | Recoverable | Note missing file; emit `## Summary`, `## Tool Results`, and `## Error Details` only |
 
 ### Examples
 

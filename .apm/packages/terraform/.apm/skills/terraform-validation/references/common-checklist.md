@@ -2,12 +2,15 @@
 
 ## Execution Order
 
-Run tools in this order (fail-fast: stop on first failure):
+`scripts/validate.sh` runs these tools in this order and continues after a failing tool (no fail-fast); the exit code is non-zero when any tool failed:
 
-1. `terraform fmt` — formatting compliance
+1. `tflint` — linting and provider-specific rule checks
 2. `terraform validate` — HCL syntax and schema validation
-3. `tflint` — linting and provider-specific rule checks
-4. `trivy config` — security misconfiguration scan
+3. `terraform fmt` — formatting compliance (rewrites only with `--fix`)
+4. Argument order check (ORD-01) — only with `--check-order`; otherwise report `⊘ Skipped`
+5. `trivy config` — security misconfiguration scan
+
+`terraform`, `tflint`, and `trivy` are required (`python3` with `--check-order`); the script stops before any check when one is missing.
 
 ## terraform fmt (FMT)
 
@@ -21,6 +24,10 @@ Run tools in this order (fail-fast: stop on first failure):
 - SYNTAX-02 (SHOULD): All referenced variables and modules resolve
 - SYNTAX-03 (SHOULD): Resource and data source schemas are valid
 - SYNTAX-04 (SHOULD): No missing required arguments
+
+## Argument order (ORD)
+
+- ORD-01 (MUST): Argument keys inside resource/module/data/locals blocks are alphabetically ordered (checked only with `--check-order`)
 
 ## tflint (LINT)
 

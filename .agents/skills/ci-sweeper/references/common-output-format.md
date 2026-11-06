@@ -64,6 +64,7 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 ### Apply rules
 
 - **MUST NOT** include `### Candidates` or `### Watch` in final output
+- Watch-class failures (`flake`, `infra`, `env`, >5 files) and deferred regressions go under `### Deferred`
 - Reconcile `### Changes` and `### Deferred` with `git diff --name-only` before synthesis
 
 ## Session metrics (automation)

@@ -44,4 +44,6 @@ Rules:
 
 - `verdict` must be `APPROVE` or `REJECT`
 - On REJECT, `files` (array), `issue`, `fix`, and `reason` are required
+- With several REJECT reasons, `files` is the union of affected paths; `issue` and `fix` are numbered lists in one string (`"1. … 2. …"`) in the same order as the Markdown Reasons; `reason` is a one-line summary
 - Use repo-relative paths in `files`
+- `files` may be `[]` when no changed file is at fault (diff unreadable, or the request is out of scope for the checker role); state the cause in `issue` and `reason`

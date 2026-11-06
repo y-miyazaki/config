@@ -1,18 +1,18 @@
 # Ordering (ORD)
 
-**ORD-01 (MUST): Alphabetize keys in env/permissions/with/secrets blocks**
+**ORD-01 (MUST): Alphabetize keys in env/inputs/outputs/permissions/secrets/with maps**
 
-Note: Not enforced by deterministic validators (`actionlint`, `ghalint`, `zizmor`). Omit from review output unless workflow YAML key ordering is the primary finding.
+Note: Enforced deterministically by the companion `github-actions-validation` ORD-01 step (map key order check). When that validation output is supplied, do not re-evaluate ORD-01 — mark it Passed or Failed from the validation result and cite it. Evaluate ORD-01 from source only when no validation output is available.
 
-Check: Are map keys sorted alphabetically (A-Z) within each ORD-01 in-scope block listed below?
+Check: Are map keys sorted alphabetically (A-Z, ASCII order) within each ORD-01 in-scope map listed below?
 Why: Inconsistent key ordering adds diff noise and makes change detection harder across workflow files
-Fix: Sort keys alphabetically within each listed block.
+Fix: Sort keys alphabetically within each listed map.
 
-In-scope blocks:
+In-scope maps (any `env`, `inputs`, `outputs`, `permissions`, `secrets`, or `with` map in workflow or composite action YAML), for example:
 
-- Workflow and job: `env`, `permissions`, `with`, `secrets`
-- Reusable workflow declaration: `on.workflow_call.inputs`, `on.workflow_call.secrets`
-- Composite `action.yml`: `inputs`, `outputs`; per-step `with`, `env`
+- Workflow and job: `env`, `outputs`, `permissions`, `secrets`, `with`
+- Reusable workflow declaration: `on.workflow_call.inputs`, `on.workflow_call.outputs`, `on.workflow_call.secrets`
+- Composite `action.yml`: `inputs`, `outputs`; per-step `env`, `with`
 
 Out of scope:
 

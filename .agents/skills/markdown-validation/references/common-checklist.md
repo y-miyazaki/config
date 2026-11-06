@@ -2,7 +2,7 @@
 
 ## Execution Order
 
-Run tools in this order (fail-fast: stop on first failure):
+Tools run in this order; both run even when the first fails:
 
 1. `markdownlint-cli2` — Markdown syntax and style enforcement
 2. `markdown-link-check` — broken link detection

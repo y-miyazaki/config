@@ -1,5 +1,7 @@
 # Anti-Patterns (AP)
 
+When an AP item cites a base ItemID in parentheses, report the finding once under the base ItemID; the AP item is a lookup pointer, not a second finding.
+
 **AP-01 (MUST): Echoing or logging secrets**
 
 Check: Are `${{ secrets.* }}` values printed to logs, artifacts, or step outputs (SEC-01)?
@@ -17,15 +19,18 @@ Fix: Use `pull_request` for forks, or gate privileged steps on trusted actor/rep
 Check: Are third-party actions pinned only to a moving tag (for example `@v4`) without SHA pinning?
 Why: Tags can be retargeted; compromised actions run with workflow permissions
 Fix: Pin actions to full commit SHA; document exceptions in a comment
+Note: Also detected by `zizmor` (unpinned uses). When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.
 
 **AP-04 (SHOULD): Overly broad workflow permissions**
 
 Check: Does `permissions` grant `write-all` or unnecessary `write` scopes at workflow level?
 Why: Excess permissions amplify impact when a step or action is compromised
 Fix: Set least-privilege `permissions` per job; add writes only where required
+Note: Also detected by `ghalint` / `zizmor` (permissions). When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.
 
 **AP-05 (SHOULD): Passing untrusted PR input directly to shell**
 
 Check: Are PR titles, bodies, branch names, or `workflow_dispatch` inputs interpolated into shell without sanitization (SEC-04)?
 Why: Untrusted input in `run:` scripts enables injection and exfiltration
 Fix: Pass through environment variables with validation, or use structured `with:` inputs — not raw shell expansion
+Note: Also detected by `zizmor` (template injection). When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.

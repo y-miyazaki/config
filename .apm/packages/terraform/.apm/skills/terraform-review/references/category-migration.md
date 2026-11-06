@@ -11,3 +11,4 @@ Fix: Use `moved` block for state migration, avoid destructive changes
 Check: Are there no deprecated features in use?
 Why: Using deprecated features and end-of-life APIs cause future operation failures and security risks
 Fix: Replace with recommended alternatives, verify latest documentation
+Note: Deprecated resources and arguments are also reported by `tflint` when the provider ruleset is enabled. When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.

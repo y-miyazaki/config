@@ -44,8 +44,9 @@ Update this table in the **same change** as adding or renaming a loop caller `ag
 1. State **what** the skill does in one clause.
 2. State **Interactive** use (“when the user asks …”) with concrete verbs — not only L2/workflow jargon.
 3. State **Automation** use (detect JSON / Constraints) as a second clause.
-4. State the **edit gate**: Interactive default survey; explicit apply/fix language or `agent_edit_allowed: true` applies.
-5. **MUST NOT** imply the skill is workflow-only (`Use for L2 …` as the only “when”).
+4. State the **edit gate**: Interactive default survey; any edit verb in the request (bare or qualified — `fix`, `apply`, 修正して, 適用して, or the skill's own verb) or `agent_edit_allowed: true` applies; a bare skill-name invocation with no edit verb stays survey. Use the family sentence: "Interactive default is survey only; <edit action> when the request contains an edit verb (fix, apply, or the skill's own verb) or automation sets agent_edit_allowed in Constraints; a bare skill-name invocation stays survey."
+
+The `SKILL.md` Workflow edit-gate table uses the same four rows in the same order in every `repo-maintenance` loop entry skill: Interactive default (no edit verb) → edit verb in the same request → follow-up after a prior survey → Automation `## Constraints`. Skill-specific structured inputs that override natural language (for example `refactor`'s JSON `mode`) are stated in a sentence above the table, not as an extra row. 5. **MUST NOT** imply the skill is workflow-only (`Use for L2 …` as the only “when”).
 
 Automation-only detect details (`repository_dispatch`, `@loop` mention) belong in Input/Workflow, not as the sole description trigger.
 

@@ -5,6 +5,7 @@
 Check: Is encryption enabled for sensitive resources?
 Why: Missing encryption and plaintext data storage cause data leak risk, compliance violations, and audit failures
 Fix: Enable provider-managed or customer-managed key encryption and set the key argument explicitly
+Note: Missing encryption is also commonly reported by `trivy config`. When validation output is supplied, take this ItemID's status from that result and cite the tool instead of re-reporting it.
 
 **SEC-02 (SHOULD): Access policies follow least privilege**
 

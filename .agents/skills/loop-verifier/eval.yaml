@@ -23,14 +23,14 @@ graders:
     config:
       assertions:
         - "'verdict' in output.lower() or 'REJECT' in output or 'APPROVE' in output"
-        - "'## Overview' in output or 'Overview' in output"
+        - "'Verdict' in output"
         - "'Evidence' in output or 'reason' in output.lower()"
   - type: text
     name: report_sections
     weight: 0.5
     config:
       regex_match:
-        - (## Overview|## Evidence|verdict)
+        - (## Verdict|### Evidence|verdict)
   - type: behavior
     name: bounded_runtime
     weight: 0.5

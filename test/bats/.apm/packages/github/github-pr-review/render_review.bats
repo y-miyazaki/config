@@ -24,6 +24,7 @@
 # - caps findings at 20 (most severe kept) and reports the omitted count
 # - escapes backticks and brackets in path link labels (hostile paths)
 # - verifies evidence at non-ASCII paths
+# - inline comments name PR_MENTION as the fix-request token (default @loop)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -591,6 +592,16 @@ rendered() { cat "${BATS_TEST_TMPDIR}/msg/review.json"; }
         run grep -c -- '--method POST' "${GH_LOG}"
         [ "$output" -eq 0 ]
     done
+}
+
+@test "uses PR_MENTION in the inline fix request and falls back to @loop when empty" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_render PR_MENTION='@bot'
+    [ "$status" -eq 0 ]
+    [[ "$(rendered | jq -r '.comments[0].body')" == *'reply to this comment with `@bot`.'* ]]
+    run_render PR_MENTION=''
+    [ "$status" -eq 0 ]
+    [[ "$(rendered | jq -r '.comments[0].body')" == *'reply to this comment with `@loop`.'* ]]
 }
 
 @test "uses the PR's SHAs from gh pr view" {

@@ -5,8 +5,10 @@ description: >-
   conversation when surveying or applying structural refactors. Also the loop
   entry skill when automation supplies hints (duplication_block,
   oversized_unit). Interactive default is survey only; apply edits when the
-  user explicitly requests apply or automation sets agent_edit_allowed in Constraints.
-  Not for lint-only style, features, behavior-changing bugfixes, or upgrades.
+  request contains an edit verb (fix, apply, or the skill's own verb) or
+  automation sets agent_edit_allowed in Constraints; a bare skill-name
+  invocation stays survey. Not for lint-only style, features,
+  behavior-changing bugfixes, or upgrades.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -58,15 +60,14 @@ Phases, modes, depth tiers, and intent: [category-contract.md](references/catego
 
 Canonical sequence: resolve `agent_edit_allowed` → Phase A (discover/classify; emit only when stopping) → Phase B only when edit-authorized → emit **one** result shape (OUT-01).
 
-Resolve **agent_edit_allowed** before Phase B. Interactive rows — first match wins:
+Resolve **agent_edit_allowed** before Phase B. When structured JSON `mode` is present ([category-input-schema.md](references/category-input-schema.md)), it wins over the interactive rows: `survey` → `false`; `apply` → `true`. Otherwise:
 
-| Source                                                      | `agent_edit_allowed`                                                                                                                                       |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Interactive — structured JSON `mode` present                | From `mode` only (`survey` → `false`; `apply` → `true`) — wins over natural-language; load [category-input-schema.md](references/category-input-schema.md) |
-| Interactive — explicit apply language in the same request   | `true` — examples: apply, 適用して, "apply the candidates". Do **not** treat bare skill name `refactor` or bare `fix` as apply                             |
-| Interactive — follow-up after a prior survey in the session | `true` when the user explicitly asks to apply listed candidates                                                                                            |
-| Interactive — default                                       | `false` — survey only; do not edit files                                                                                                                   |
-| Automation — `## Constraints`                               | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md)               |
+| Source                                                                       | `agent_edit_allowed`                                                                                                                         |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Interactive — default (no edit verb, including a bare skill-name invocation) | `false` — survey only; do not edit files                                                                                                     |
+| Interactive — edit verb in the same request                                  | `true` — bare or qualified: `fix`, `apply`, 修正して, 適用して, "apply the candidates", "deduplicate these"                                  |
+| Interactive — follow-up after a prior survey in the session                  | `true` when the user replies with an edit verb for the listed candidates (bare `fix` / `apply` counts)                                       |
+| Automation — `## Constraints`                                                | `agent_edit_allowed: true` or `agent_edit_allowed: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
 When `agent_edit_allowed` is `true`, resolve `agent_edit_target`: interactive → `fix`; automation → from `## Constraints`. Do not branch on other caller metadata. Before Phase B, load [category-techniques.md](references/category-techniques.md).
 
@@ -80,7 +81,7 @@ Discover and classify only. Emit a final report from Phase A **only** when this 
 2. Classify intent ([category-contract.md](references/category-contract.md)).
 3. **Architecture without `approved_slice`:** emit survey shape with `### Architecture Proposal` only; stop (INTENT-02). Do **not** treat as zero-actionable no-op.
 4. Discover candidates (SURVEY-01): structural → all in-scope; architecture Phase B → **only** the `approved_slice`. Read targets before classifying (SURVEY-03); route apply-worthy → Candidates, else → Watch (SURVEY-02).
-5. Structural zero actionable → no-op report; stop.
+5. Structural zero actionable → emit survey no-op per [common-output-format.md](references/common-output-format.md) (Overview explains no-op); stop.
 
 ### Phase B — Apply (`agent_edit_allowed: true` and `agent_edit_target: fix`)
 
@@ -90,7 +91,7 @@ Discover and classify only. Emit a final report from Phase A **only** when this 
 ### Automation path (`hints[]` in detect JSON)
 
 1. Parse detect JSON; read `agent_edit_allowed` / `agent_edit_target` from `## Constraints`.
-2. Empty/`skip` → no-op; stop.
+2. Empty/`skip` → emit survey no-op per [common-output-format.md](references/common-output-format.md) (Overview explains no-op) + Session Metrics; stop.
 3. Phase A on **all** `hints[]` (structural only — no architecture Phase A/B).
 4. `agent_edit_allowed: false` or `agent_edit_target` ≠ `fix` → emit survey shape + Session Metrics (note expected `agent_edit_target: fix` when mismatched); no Phase B.
 5. Else → Phase B; emit apply shape + Session Metrics ([category-automation-envelope.md](references/category-automation-envelope.md)).
@@ -107,17 +108,17 @@ Discover and classify only. Emit a final report from Phase A **only** when this 
 
 ### Error Handling
 
-| Condition                                                    | Severity    | Action                                                                                    |
-| ------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------- |
-| Detect script non-zero exit or `status: "error"`             | Fatal       | Read stdout; stop — do not treat as success-path detect JSON                              |
-| Automation: empty/`skip`                                     | Info        | No-op report; stop                                                                        |
-| Survey: zero candidates                                      | Info        | No-op report; stop                                                                        |
-| Architecture request without slice                           | Recoverable | Architecture proposal only; stop                                                          |
-| Lint-primary or feature/API candidate                        | Recoverable | Watch on candidate; skip apply                                                            |
-| Weak or failed gate for one candidate                        | Recoverable | Revert that candidate; Deferred; continue                                                 |
-| Cross-boundary or out-of-scope target                        | Recoverable | Watch on candidate; skip apply                                                            |
-| Apply requested but `agent_edit_allowed` is `false`          | Info        | Survey only; note that edits require explicit apply request or `agent_edit_allowed: true` |
-| `agent_edit_allowed` true with `agent_edit_target` not `fix` | Recoverable | Survey only; note expected `agent_edit_target: fix`                                       |
+| Condition                                                           | Severity    | Action                                                       |
+| ------------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| Detect script non-zero exit or `status: "error"`                    | Fatal       | Read stdout; stop — do not treat as success-path detect JSON |
+| Automation: empty/`skip`                                            | Info        | Emit survey no-op (Overview explains no-op); stop            |
+| Survey: zero candidates                                             | Info        | Emit survey no-op (Overview explains no-op); stop            |
+| Architecture request without slice                                  | Recoverable | Architecture proposal only; stop                             |
+| Lint-primary or feature/API candidate                               | Recoverable | Watch on candidate; skip apply                               |
+| Weak or failed gate for one candidate                               | Recoverable | Revert that candidate; Deferred; continue                    |
+| Cross-boundary or out-of-scope target                               | Recoverable | Watch on candidate; skip apply                               |
+| Edit requested but `## Constraints` set `agent_edit_allowed: false` | Info        | Survey only; note that the caller Constraints disallow edits |
+| `agent_edit_allowed` true with `agent_edit_target` not `fix`        | Recoverable | Survey only; note expected `agent_edit_target: fix`          |
 
 ### Examples
 
