@@ -35,6 +35,8 @@ Normative rules for **all** skills under `.apm/packages/**`. Design depth: [apm-
 
 Violations are **blocking portability defects** on package PRs — same severity as DIST table rows below.
 
+**Design comparison (SHOULD):** when deciding how a skill is written (edit gates, structure, rule style), compare with well-known external skills — for example the official plugin skills `skill-creator`, `claude-md-improver`, and `plugin-dev` `skill-development` — and record the comparison in the proposal or PR. Prefer an intent-level rule with its reason over enumerations or stacked MUSTs, as those skills do.
+
 ## Package placement (MUST)
 
 Place new skills by **forge/runtime**, never by “this is a loop skill”:
