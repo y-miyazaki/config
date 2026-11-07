@@ -177,7 +177,7 @@ repos:
   # For SQL
   # --------------------------------------------------------------
   # - repo: https://github.com/sqlfluff/sqlfluff
-  #   rev: 4.4.0
+  #   rev: 4.5.0
   #   hooks:
   #     - id: sqlfluff-lint
   #       args: [--dialect, mysql]
