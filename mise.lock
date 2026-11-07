@@ -1671,6 +1671,47 @@ url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghali
 url_api = "https://api.github.com/repos/suzuki-shunsuke/ghalint/releases/assets/694554169"
 provenance = "cosign"
 
+[[tools."aqua:suzuki-shunsuke/ghalint"]]
+version = "1.6.0"
+backend = "aqua:suzuki-shunsuke/ghalint"
+
+[tools."aqua:suzuki-shunsuke/ghalint".options]
+"vars.lazy" = "true"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.linux-arm64"]
+checksum = "sha256:f9d8e20a75c934d21ee6ab1967eb79fa125237ef5633c6bfd03b27999c6a6cda"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_linux_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.linux-arm64-musl"]
+checksum = "sha256:f9d8e20a75c934d21ee6ab1967eb79fa125237ef5633c6bfd03b27999c6a6cda"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_linux_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.linux-x64"]
+checksum = "sha256:eda1af79c1a4a31c2de5831cd1333ad582fa6fa72015f8e9c1c4525d550c1d35"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_linux_amd64.tar.gz"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.linux-x64-musl"]
+checksum = "sha256:eda1af79c1a4a31c2de5831cd1333ad582fa6fa72015f8e9c1c4525d550c1d35"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_linux_amd64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.macos-arm64"]
+checksum = "sha256:427acb85cb6cdda8828bf46643825b47cb46e6d2d5d3fa4f60b7bdfee194d2c7"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_darwin_arm64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.macos-x64"]
+checksum = "sha256:0b5ceda34753d74b6fd024ba6306fa332cd03c855801430bd7cbd44a94692252"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_darwin_amd64.tar.gz"
+provenance = "slsa"
+
+[tools."aqua:suzuki-shunsuke/ghalint"."platforms.windows-x64"]
+checksum = "sha256:9119faab7bad322f1fe3895da456846d780e84cc5e98405493b8e86ae03f215f"
+url = "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.6.0/ghalint_1.6.0_windows_amd64.zip"
+provenance = "slsa"
+
 [[tools."aqua:suzuki-shunsuke/ghatm"]]
 version = "1.0.1"
 backend = "aqua:suzuki-shunsuke/ghatm"
