@@ -71,7 +71,7 @@ claude = { version = "2.1.316", lazy = true, lazy_bins = ["claude"] }           
 "aqua:rhysd/actionlint" = { version = "1.7.12", lazy = true, lazy_bins = ["actionlint"] }                          # GitHub Actions linter
 "aqua:suzuki-shunsuke/disable-checkout-persist-credentials" = { version = "1.0.2", lazy = true, lazy_bins = ["disable-checkout-persist-credentials"] } # disable persist-credentials in checkout action
 "aqua:cli/cli" = { version = "2.103.3", lazy = true, lazy_bins = ["gh"] }                                          # GitHub CLI (gh)
-"aqua:suzuki-shunsuke/ghalint" = { version = "1.5.7", lazy = true, lazy_bins = ["ghalint"] }                       # GitHub Actions linter
+"aqua:suzuki-shunsuke/ghalint" = { version = "1.6.0", lazy = true, lazy_bins = ["ghalint"] }                       # GitHub Actions linter
 "aqua:suzuki-shunsuke/ghatm" = { version = "1.0.1", lazy = true, lazy_bins = ["ghatm"] }                           # auto-set timeout-minutes for GitHub Actions jobs
 "aqua:suzuki-shunsuke/pinact" = { version = "5.0.2", lazy = true, lazy_bins = ["pinact"] }                         # GitHub Actions pinning tool
 "aqua:zizmorcore/zizmor" = { version = "1.31.1", lazy = true, lazy_bins = ["zizmor"] }                             # GitHub Actions security auditor
