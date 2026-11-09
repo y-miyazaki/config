@@ -13,6 +13,7 @@
 # - --force, --check, explicit components and --skip-* flags never skip
 # - only a successful default run records the fingerprint
 # - the fingerprint lives in the git dir and ignores files outside the watched paths
+# - apm install gets --force only with --apm-force, and a failed install prints the --apm-force recovery hint
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -130,4 +131,34 @@ function fp_decide {
     [ -s "${FP_REPO}/.git/apm-sync-fingerprint" ]
     run git -C "${FP_REPO}" status --porcelain
     [[ $output != *"apm-sync-fingerprint"* ]]
+}
+
+# apm_install_run: Source the script with a mock apm and run the install component
+function apm_install_run {
+    local mock_bin="${BATS_TEST_TMPDIR}/mock_bin"
+    local apm_exit="$1"
+    shift
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\nprintf "apm-args:%%s\\n" "$*"\nexit %s\n' "${apm_exit}" > "${mock_bin}/apm"
+    chmod +x "${mock_bin}/apm"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && $* && run_apm_install_component"
+}
+
+@test "apm install runs without --force by default" {
+    apm_install_run 0 "parse_arguments apm-install"
+    [ "$status" -eq 0 ]
+    [[ $output == *"apm-args:install --update"* ]]
+    [[ $output != *"--force"* ]]
+}
+
+@test "--apm-force passes --force to apm install" {
+    apm_install_run 0 "parse_arguments --apm-force apm-install"
+    [ "$status" -eq 0 ]
+    [[ $output == *"apm-args:install --update --force"* ]]
+}
+
+@test "a failed apm install prints the --apm-force recovery hint" {
+    apm_install_run 1 "parse_arguments apm-install"
+    [ "$status" -eq 1 ]
+    [[ $output == *"--apm-force"* ]]
 }

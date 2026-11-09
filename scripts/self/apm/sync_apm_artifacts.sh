@@ -2,9 +2,11 @@
 #######################################
 # Description: Sync all APM distribution artifacts from repository source-of-truth paths
 #
-# Usage: ./sync_apm_artifacts.sh [--check] [--force] [--skip-install] [--skip-audit] [component...]
+# Usage: ./sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--skip-install] [--skip-audit] [component...]
 #   --check         Dry-run for bash-based sync scripts; skip apm install/audit
 #   --force         Run even when the inputs are unchanged since the last full sync
+#   --apm-force     Pass --force to apm install (recovery when apm has no trusted
+#                   deployment baseline; also bypasses apm's critical security-scan block)
 #   --skip-install  Apply sync but do not run apm install --update
 #   --skip-audit    Apply sync/install but do not run apm audit --ci
 #   component       skill-lib | validate-mirror | guidelines | loop-contract |
@@ -38,6 +40,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CHECK_MODE="false"
 FORCE="false"
+APM_FORCE="false"
 SKIP_INSTALL="false"
 SKIP_AUDIT="false"
 declare -a COMPONENTS=()
@@ -57,7 +60,7 @@ declare -a SYNC_COMPONENTS=(
 #######################################
 function show_usage {
     cat << 'EOF'
-Usage: sync_apm_artifacts.sh [--check] [--force] [--skip-install] [--skip-audit] [component...]
+Usage: sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--skip-install] [--skip-audit] [component...]
 
 Description:
     Sync APM artifacts, install package outputs, and verify integrity.
@@ -77,6 +80,7 @@ Components:
 Options:
     --check         Dry-run where supported; skip apm install and apm audit
     --force         Run even when the inputs are unchanged since the last full sync
+    --apm-force     Pass --force to apm install (no trusted deployment baseline)
     --skip-install  Do not run apm install --update after sync
     --skip-audit    Do not run apm audit --ci after install
 
@@ -104,6 +108,10 @@ function parse_arguments {
                 ;;
             --force)
                 FORCE="true"
+                shift
+                ;;
+            --apm-force)
+                APM_FORCE="true"
                 shift
                 ;;
             --skip-install)
@@ -320,7 +328,19 @@ function run_apm_install_component {
         echo "ERROR: apm command not found; install APM CLI before running sync_apm_artifacts.sh" >&2
         return 1
     fi
-    run_apm_command install --update
+    local -a install_args=(install --update)
+
+    if [[ ${APM_FORCE} == "true" ]]; then
+        install_args+=(--force)
+    fi
+    if ! run_apm_command "${install_args[@]}"; then
+        # apm's own advice (delete the receipt) makes the next run skip changed
+        # targets and then clean them as stale; overwriting is safe here because
+        # sync targets are git-tracked outputs that are never hand-edited.
+        echo "HINT: if apm reports an invalid or missing deployment baseline, rerun with --apm-force" \
+            "instead of deleting the receipt; review git status afterwards." >&2
+        return 1
+    fi
 }
 
 #######################################
