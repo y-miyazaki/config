@@ -208,7 +208,7 @@ function artifact_file_size {
 #######################################
 function collect_artifact_signals {
     local extensions="${TECH_DEBT_ARTIFACT_EXTENSIONS:-zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc}"
-    local pattern file dir ext_list size noun
+    local pattern file dir ext ext_list size noun
     local emitted=0
     local -a ext_array=()
     local -a dirs=()
@@ -220,14 +220,21 @@ function collect_artifact_signals {
     fi
 
     IFS=',' read -ra ext_array <<< "${extensions}"
-    [[ ${#ext_array[@]} -eq 0 ]] && return 0
-    ext_list="$(printf '%s|' "${ext_array[@]}")"
-    ext_list="${ext_list%|}"
+    ext_list=""
+    for ext in "${ext_array[@]}"; do
+        ext="${ext#"${ext%%[![:space:]]*}"}"
+        ext="${ext%"${ext##*[![:space:]]}"}"
+        [[ -z ${ext} ]] && continue
+        ext_list+="${ext_list:+|}${ext}"
+    done
+    # An empty alternative would match every path ending in a dot.
+    [[ -z ${ext_list} ]] && return 0
     pattern="\\.(${ext_list})$"
 
     # Walk git ls-files directly: repo_emit_tracked_paths prunes dist/ build/ bin/,
     # which are exactly where tracked build output is expected to live.
-    while IFS= read -r file; do
+    # -z keeps non-ASCII paths unquoted (core.quotePath would C-quote them).
+    while IFS= read -r -d '' file; do
         [[ -z ${file} ]] && continue
         [[ ${file} =~ ${pattern} ]] || continue
         case "${file}" in
@@ -237,7 +244,7 @@ function collect_artifact_signals {
         size="$(artifact_file_size "${file}")"
         dir_counts[${dir}]=$((${dir_counts[${dir}]:-0} + 1))
         dir_bytes[${dir}]=$((${dir_bytes[${dir}]:-0} + size))
-    done < <(git ls-files 2> /dev/null || true)
+    done < <(git ls-files -z 2> /dev/null || true)
 
     [[ ${#dir_counts[@]} -eq 0 ]] && return 0
     mapfile -t dirs < <(printf '%s\n' "${!dir_counts[@]}" | sort)

@@ -25,6 +25,8 @@
 # - detect_tech_debt honors TECH_DEBT_ARTIFACT_EXTENSIONS and reports repository-root artifacts under path dot
 # - detect_tech_debt excludes vendored node_modules from tracked_artifact signals
 # - detect_tech_debt caps tracked_artifact signals independently of the dependency cap and warns on truncation
+# - detect_tech_debt reads tracked paths NUL-delimited so non-ASCII artifact names keep their path and size
+# - detect_tech_debt trims and skips empty TECH_DEBT_ARTIFACT_EXTENSIONS entries
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -519,5 +521,32 @@ EOF
     [ "$status" -eq 0 ]
     [[ $output == *'"tracked_artifact signals truncated"'* ]]
     run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 50' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt reports tracked_artifact path and bytes for non-ASCII file names" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/out"
+    printf 'zip\n' > "${GIT_TEST_REPO}/out/日本語.zip"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1
+        and .[0].path == "out"
+        and .[0].snippet == "1 tracked build artifact (4 bytes)"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt ignores empty and blank TECH_DEBT_ARTIFACT_EXTENSIONS entries" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/out"
+    printf 'note\n' > "${GIT_TEST_REPO}/notes."
+    printf 'zip\n' > "${GIT_TEST_REPO}/out/a.zip"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_ARTIFACT_EXTENSIONS=', zip,, ' TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1 and .[0].path == "out"' <<< "${output}"
     [ "$status" -eq 0 ]
 }
