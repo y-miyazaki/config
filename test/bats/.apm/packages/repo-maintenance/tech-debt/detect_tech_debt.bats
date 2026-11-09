@@ -30,6 +30,7 @@
 # - detect_tech_debt matches artifact extensions case-insensitively, accepts a leading dot, and escapes regex metacharacters
 # - detect_tech_debt sums tracked blob sizes rather than work-tree file sizes
 # - detect_tech_debt excludes vendored apm_modules and .terraform from tracked_artifact signals
+# - detect_tech_debt applies the shared path exclusions (agent dirs, extra prunes) to tracked_artifact while keeping build output and tracked-but-ignored files
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -65,6 +66,22 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     assert_detect_tech_debt_ok_json "${output}" "all" ""
     [[ $output == *"\"agent_report_file\": \"docs/report/tech-debt/${expected_date}.md\""* ]] \
         || [[ $output == *"\"agent_report_file\":\"docs/report/tech-debt/${expected_date}.md\""* ]]
+}
+
+@test "detect_tech_debt applies shared path exclusions to tracked_artifact but keeps build output" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/.agents/skills/x" "${GIT_TEST_REPO}/fixtures" "${GIT_TEST_REPO}/dist" "${GIT_TEST_REPO}/build"
+    printf 'zip\n' > "${GIT_TEST_REPO}/.agents/skills/x/a.zip"
+    printf 'zip\n' > "${GIT_TEST_REPO}/fixtures/sample.zip"
+    printf 'zip\n' > "${GIT_TEST_REPO}/dist/app.zip"
+    printf 'zip\n' > "${GIT_TEST_REPO}/build/app.zip"
+    printf 'build/\n' > "${GIT_TEST_REPO}/.gitignore"
+    git_test_repo_git add -f .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env REPO_PATHS_EXTRA_PRUNES=fixtures TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact") | .path] == ["build", "dist"]' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_tech_debt defaults to scope all and skips on empty fixture repo" {

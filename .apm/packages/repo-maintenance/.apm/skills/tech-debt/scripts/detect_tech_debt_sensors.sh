@@ -200,6 +200,7 @@ function artifact_extension_pattern {
 #
 # Globals:
 #   ARTIFACT_GLOBAL_CAP - Maximum tracked_artifact signals (one per directory)
+#   REPO_PATHS_EXTRA_PRUNES - Shared prune roots honored through repo_path_should_skip
 #   SIGNALS_JSON - Output array of signal objects
 #   TECH_DEBT_ARTIFACT_EXTENSIONS - Comma-separated extensions, case-insensitive, optional leading dot (default: zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc)
 #   WARNINGS - Warning messages when the artifact cap is reached
@@ -235,18 +236,20 @@ function collect_artifact_signals {
     pattern="$(artifact_extension_pattern "${extensions}")"
     [[ -z ${pattern} ]] && return 0
 
-    # Walk the index directly: repo_emit_tracked_paths prunes dist/ build/ bin/,
-    # which are exactly where tracked build output is expected to live.
-    # -z keeps non-ASCII paths unquoted (core.quotePath would C-quote them);
-    # -s yields the blob id so sizes come from the tracked object, not the work tree.
+    # Walk the index directly instead of repo_emit_tracked_paths: sizes need the
+    # blob id (-s), and -z keeps non-ASCII paths unquoted (core.quotePath).
+    # Filtering still goes through repo_path_should_skip so the sensor shares the
+    # other sensors' exclusions, except that build output (dist/ build/ bin/) and
+    # tracked-but-gitignored files are kept: they are what this sensor reports.
     while IFS= read -r -d '' entry; do
         meta="${entry%%$'\t'*}"
         file="${entry#*$'\t'}"
         [[ -z ${file} || ${meta} == 160000\ * ]] && continue
         [[ ${file,,} =~ ${pattern} ]] || continue
-        case "${file}" in
-            apm_modules/* | node_modules/* | */node_modules/* | .terraform/* | */.terraform/*) continue ;;
-        esac
+        if REPO_PATHS_INCLUDE_BUILD_OUTPUT=true REPO_PATHS_INCLUDE_GITIGNORED=true \
+            repo_path_should_skip "${file}"; then
+            continue
+        fi
         meta="${meta#* }"
         paths+=("${file}")
         shas+=("${meta%% *}")
