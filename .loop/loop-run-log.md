@@ -339,3 +339,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-08T10:08:16Z","loop_name":"refactor","duration_s":18,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"42470096090"}
 {"run_id":"2026-11-09T08:13:18Z","loop_name":"tech-debt","duration_s":18,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"42584315667"}
 {"run_id":"2026-11-09T09:04:28Z","loop_name":"docs-updater","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"42590527701"}
+{"run_id":"2026-11-09T10:09:59Z","loop_name":"test-gap","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"42598819648"}
