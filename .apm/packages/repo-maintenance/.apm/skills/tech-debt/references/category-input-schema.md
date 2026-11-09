@@ -76,7 +76,7 @@ Detect emits only these kinds. Unexpected kinds → classify as Watch or Noise.
 | `stale_doc`        | Core        | `git_log` or `mtime`  |
 | `tracked_artifact` | Core        | `git_ls_files`        |
 
-**`tracked_artifact`** is one signal per directory (not per file): `path` is the directory (`.` for the repository root), `snippet` carries the file count and total bytes, and `hint` is `operational`. Extensions come from `TECH_DEBT_ARTIFACT_EXTENSIONS` (comma-separated, no dot). Vendored `node_modules`, `apm_modules`, and `.terraform` paths are excluded. At most 50 directories are reported; beyond that, `warnings` carries `tracked_artifact signals truncated`. Classify as `operational` and report only; removing tracked files from history is a human decision.
+**`tracked_artifact`** is one signal per directory (not per file): `path` is the directory (`.` for the repository root), `snippet` carries the file count and total bytes, and `hint` is `operational`. Extensions come from `TECH_DEBT_ARTIFACT_EXTENSIONS` (comma-separated, case-insensitive, leading dot optional); byte totals are the tracked blob sizes, not the work-tree files. Vendored `node_modules`, `apm_modules`, and `.terraform` paths are excluded. At most 50 directories are reported; beyond that, `warnings` carries `tracked_artifact signals truncated`. Classify as `operational` and report only; removing tracked files from history is a human decision.
 
 **Marker kinds** (`todo_comment`, `fixme`, `hack`, `xxx`) are secondary enrichment — default toward Watch unless systemic. Core sensors cover dependency manifests, docs links/staleness, and churn hotspots.
 

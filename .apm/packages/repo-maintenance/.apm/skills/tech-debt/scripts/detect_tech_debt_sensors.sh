@@ -158,30 +158,41 @@ function append_signal {
 }
 
 #######################################
-# artifact_file_size: Return the size in bytes of a tracked file
+# artifact_extension_pattern: Build a case-folded ERE suffix pattern from a CSV extension list
 #
 # Globals:
 #   None
 #
 # Arguments:
-#   $1 - Repository-relative file path
+#   $1 - Comma-separated extensions (optional leading dot, surrounding blanks allowed)
 #
 # Outputs:
-#   Size in bytes on stdout (0 when unreadable)
+#   ERE pattern on stdout (empty when no usable extension remains)
 #
 # Returns:
 #   0 always
 #
 # Usage:
-#   size="$(artifact_file_size "out/app.zip")"
+#   pattern="$(artifact_extension_pattern "zip, .jar")"
 #
 #######################################
-function artifact_file_size {
-    local file="$1"
-    local size
+function artifact_extension_pattern {
+    local csv="$1"
+    local ext ext_list=""
+    local -a ext_array=()
 
-    size="$(stat -c %s "${file}" 2> /dev/null || stat -f %z "${file}" 2> /dev/null || printf '0')"
-    printf '%s' "${size}"
+    IFS=',' read -ra ext_array <<< "${csv}"
+    for ext in "${ext_array[@]}"; do
+        ext="${ext#"${ext%%[![:space:]]*}"}"
+        ext="${ext%"${ext##*[![:space:]]}"}"
+        ext="${ext#.}"
+        # An empty alternative would match every path ending in a dot.
+        [[ -z ${ext} ]] && continue
+        ext="$(printf '%s' "${ext,,}" | sed 's/[][\.*^$+?(){}|/]/\\&/g')"
+        ext_list+="${ext_list:+|}${ext}"
+    done
+    [[ -z ${ext_list} ]] && return 0
+    printf '\\.(%s)$' "${ext_list}"
 }
 
 #######################################
@@ -190,7 +201,7 @@ function artifact_file_size {
 # Globals:
 #   ARTIFACT_GLOBAL_CAP - Maximum tracked_artifact signals (one per directory)
 #   SIGNALS_JSON - Output array of signal objects
-#   TECH_DEBT_ARTIFACT_EXTENSIONS - Comma-separated extensions without dot (default: zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc)
+#   TECH_DEBT_ARTIFACT_EXTENSIONS - Comma-separated extensions, case-insensitive, optional leading dot (default: zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc)
 #   WARNINGS - Warning messages when the artifact cap is reached
 #
 # Arguments:
@@ -208,10 +219,12 @@ function artifact_file_size {
 #######################################
 function collect_artifact_signals {
     local extensions="${TECH_DEBT_ARTIFACT_EXTENSIONS:-zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc}"
-    local pattern file dir ext ext_list size noun
+    local pattern entry meta file dir size noun idx
     local emitted=0
-    local -a ext_array=()
     local -a dirs=()
+    local -a paths=()
+    local -a shas=()
+    local -a sizes=()
     declare -A dir_counts=()
     declare -A dir_bytes=()
 
@@ -219,34 +232,37 @@ function collect_artifact_signals {
         return 0
     fi
 
-    IFS=',' read -ra ext_array <<< "${extensions}"
-    ext_list=""
-    for ext in "${ext_array[@]}"; do
-        ext="${ext#"${ext%%[![:space:]]*}"}"
-        ext="${ext%"${ext##*[![:space:]]}"}"
-        [[ -z ${ext} ]] && continue
-        ext_list+="${ext_list:+|}${ext}"
-    done
-    # An empty alternative would match every path ending in a dot.
-    [[ -z ${ext_list} ]] && return 0
-    pattern="\\.(${ext_list})$"
+    pattern="$(artifact_extension_pattern "${extensions}")"
+    [[ -z ${pattern} ]] && return 0
 
-    # Walk git ls-files directly: repo_emit_tracked_paths prunes dist/ build/ bin/,
+    # Walk the index directly: repo_emit_tracked_paths prunes dist/ build/ bin/,
     # which are exactly where tracked build output is expected to live.
-    # -z keeps non-ASCII paths unquoted (core.quotePath would C-quote them).
-    while IFS= read -r -d '' file; do
-        [[ -z ${file} ]] && continue
-        [[ ${file} =~ ${pattern} ]] || continue
+    # -z keeps non-ASCII paths unquoted (core.quotePath would C-quote them);
+    # -s yields the blob id so sizes come from the tracked object, not the work tree.
+    while IFS= read -r -d '' entry; do
+        meta="${entry%%$'\t'*}"
+        file="${entry#*$'\t'}"
+        [[ -z ${file} || ${meta} == 160000\ * ]] && continue
+        [[ ${file,,} =~ ${pattern} ]] || continue
         case "${file}" in
             apm_modules/* | node_modules/* | */node_modules/* | .terraform/* | */.terraform/*) continue ;;
         esac
-        dir="$(dirname "${file}")"
-        size="$(artifact_file_size "${file}")"
+        meta="${meta#* }"
+        paths+=("${file}")
+        shas+=("${meta%% *}")
+    done < <(git ls-files -z -s 2> /dev/null || true)
+
+    [[ ${#paths[@]} -eq 0 ]] && return 0
+    mapfile -t sizes < <(printf '%s\n' "${shas[@]}" | git cat-file --batch-check='%(objectsize)' 2> /dev/null || true)
+    for idx in "${!paths[@]}"; do
+        dir="${paths[${idx}]%/*}"
+        [[ ${dir} == "${paths[${idx}]}" ]] && dir="."
+        size="${sizes[${idx}]:-0}"
+        [[ ${size} =~ ^[0-9]+$ ]] || size=0
         dir_counts[${dir}]=$((${dir_counts[${dir}]:-0} + 1))
         dir_bytes[${dir}]=$((${dir_bytes[${dir}]:-0} + size))
-    done < <(git ls-files -z 2> /dev/null || true)
+    done
 
-    [[ ${#dir_counts[@]} -eq 0 ]] && return 0
     mapfile -t dirs < <(printf '%s\n' "${!dir_counts[@]}" | sort)
     for dir in "${dirs[@]}"; do
         if [[ ${emitted} -ge ${ARTIFACT_GLOBAL_CAP} ]]; then
