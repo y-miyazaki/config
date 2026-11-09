@@ -20,6 +20,11 @@
 # - detect_tech_debt accepts --scope staged for loop-detect parity
 # - detect_tech_debt staged scope is noop without running sensors
 # - detect_tech_debt truncates dependency signals when dep cap is reached
+# - detect_tech_debt emits one tracked_artifact signal per directory of tracked build artifacts
+# - detect_tech_debt emits no tracked_artifact signal for source-only or untracked files
+# - detect_tech_debt honors TECH_DEBT_ARTIFACT_EXTENSIONS and reports repository-root artifacts under path dot
+# - detect_tech_debt excludes vendored node_modules from tracked_artifact signals
+# - detect_tech_debt caps tracked_artifact signals independently of the dependency cap and warns on truncation
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -391,4 +396,128 @@ EOF
     git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"warnings"'* ]]
+}
+
+@test "detect_tech_debt emits one tracked_artifact signal per directory of tracked build artifacts" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/out" "${GIT_TEST_REPO}/src"
+    printf 'zip-a\n' > "${GIT_TEST_REPO}/out/a.zip"
+    printf 'zip-b\n' > "${GIT_TEST_REPO}/out/b.zip"
+    printf 'jar\n' > "${GIT_TEST_REPO}/out/c.jar"
+    printf 'ok\n' > "${GIT_TEST_REPO}/src/app.txt"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_ok_json "${output}" "all" ""
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1
+        and .[0].path == "out"
+        and .[0].source == "git_ls_files"
+        and .[0].hint == "operational"
+        and (.[0].snippet | test("^3 tracked build artifacts"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt emits no tracked_artifact signal when only source files are tracked" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/src"
+    printf 'package main\n// TODO: keep repo non-empty\n' > "${GIT_TEST_REPO}/src/app.go"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt ignores artifact-like files that are not tracked" {
+    git_test_repo_setup
+    printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
+    git_test_repo_git add README.md
+    git_test_repo_git commit -q -m "chore: init"
+    printf 'zip\n' > "${GIT_TEST_REPO}/untracked.zip"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output != *'tracked_artifact'* ]]
+}
+
+@test "detect_tech_debt honors TECH_DEBT_ARTIFACT_EXTENSIONS override" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/dist"
+    printf 'blob\n' > "${GIT_TEST_REPO}/dist/pkg.custom"
+    printf 'zip\n' > "${GIT_TEST_REPO}/dist/other.zip"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_ARTIFACT_EXTENSIONS='custom' TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1
+        and .[0].path == "dist"
+        and (.[0].snippet | test("^1 tracked build artifact"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt reports repository-root tracked artifacts under path dot" {
+    git_test_repo_setup
+    printf 'zip\n' > "${GIT_TEST_REPO}/bundle.zip"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1 and .[0].path == "."' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt excludes vendored node_modules from tracked_artifact signals" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/node_modules/pkg" "${GIT_TEST_REPO}/out"
+    printf 'zip\n' > "${GIT_TEST_REPO}/node_modules/pkg/vendored.zip"
+    printf 'zip\n' > "${GIT_TEST_REPO}/out/real.zip"
+    git_test_repo_git add -f .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1 and .[0].path == "out"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt keeps tracked_artifact signals when dep cap is reached" {
+    git_test_repo_setup
+    local dep_idx
+    {
+        printf '{\n  "name": "dep-cap-artifact",\n  "dependencies": {\n'
+        for dep_idx in $(seq 0 54); do
+            printf '    "pkg%d": "^1.0.0"' "${dep_idx}"
+            if [[ ${dep_idx} -lt 54 ]]; then
+                printf ',\n'
+            else
+                printf '\n'
+            fi
+        done
+        printf '  }\n}\n'
+    } > "${GIT_TEST_REPO}/package.json"
+    mkdir -p "${GIT_TEST_REPO}/out"
+    printf 'zip\n' > "${GIT_TEST_REPO}/out/app.zip"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"dependency signals truncated"'* ]]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 1 and .[0].path == "out"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt truncates tracked_artifact signals with a warning when artifact cap is reached" {
+    git_test_repo_setup
+    local dir_idx
+    for dir_idx in $(seq 0 54); do
+        mkdir -p "${GIT_TEST_REPO}/out/d${dir_idx}"
+        printf 'zip\n' > "${GIT_TEST_REPO}/out/d${dir_idx}/a.zip"
+    done
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"tracked_artifact signals truncated"'* ]]
+    run jq -e '[.signals[] | select(.kind == "tracked_artifact")] | length == 50' <<< "${output}"
+    [ "$status" -eq 0 ]
 }

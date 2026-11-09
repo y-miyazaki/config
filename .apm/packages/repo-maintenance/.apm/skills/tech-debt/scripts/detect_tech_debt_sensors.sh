@@ -13,6 +13,7 @@ MARKER_PER_FILE_CAP=10
 MARKER_GLOBAL_CAP=50
 DEP_PER_FILE_CAP=20
 DEP_GLOBAL_CAP=50
+ARTIFACT_GLOBAL_CAP=50
 MLC_VERSION="3.14.2"
 
 declare -a SIGNALS_JSON=()
@@ -154,6 +155,105 @@ function append_signal {
     SIGNALS_JSON+=("$(json_object --skip-empty \
         kind "${kind}" path "${path}" line "$(json_number "${line}")" snippet "${snippet}" \
         source "${source}" hint "${hint}")")
+}
+
+#######################################
+# artifact_file_size: Return the size in bytes of a tracked file
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Outputs:
+#   Size in bytes on stdout (0 when unreadable)
+#
+# Returns:
+#   0 always
+#
+# Usage:
+#   size="$(artifact_file_size "out/app.zip")"
+#
+#######################################
+function artifact_file_size {
+    local file="$1"
+    local size
+
+    size="$(stat -c %s "${file}" 2> /dev/null || stat -f %z "${file}" 2> /dev/null || printf '0')"
+    printf '%s' "${size}"
+}
+
+#######################################
+# collect_artifact_signals: Emit one tracked_artifact signal per directory of tracked build artifacts
+#
+# Globals:
+#   ARTIFACT_GLOBAL_CAP - Maximum tracked_artifact signals (one per directory)
+#   SIGNALS_JSON - Output array of signal objects
+#   TECH_DEBT_ARTIFACT_EXTENSIONS - Comma-separated extensions without dot (default: zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc)
+#   WARNINGS - Warning messages when the artifact cap is reached
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_artifact_signals
+#
+#######################################
+function collect_artifact_signals {
+    local extensions="${TECH_DEBT_ARTIFACT_EXTENSIONS:-zip,jar,war,whl,tar,tgz,gz,exe,dll,so,dylib,class,pyc}"
+    local pattern file dir ext_list size noun
+    local emitted=0
+    local -a ext_array=()
+    local -a dirs=()
+    declare -A dir_counts=()
+    declare -A dir_bytes=()
+
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    IFS=',' read -ra ext_array <<< "${extensions}"
+    [[ ${#ext_array[@]} -eq 0 ]] && return 0
+    ext_list="$(printf '%s|' "${ext_array[@]}")"
+    ext_list="${ext_list%|}"
+    pattern="\\.(${ext_list})$"
+
+    # Walk git ls-files directly: repo_emit_tracked_paths prunes dist/ build/ bin/,
+    # which are exactly where tracked build output is expected to live.
+    while IFS= read -r file; do
+        [[ -z ${file} ]] && continue
+        [[ ${file} =~ ${pattern} ]] || continue
+        case "${file}" in
+            apm_modules/* | node_modules/* | */node_modules/* | .terraform/* | */.terraform/*) continue ;;
+        esac
+        dir="$(dirname "${file}")"
+        size="$(artifact_file_size "${file}")"
+        dir_counts[${dir}]=$((${dir_counts[${dir}]:-0} + 1))
+        dir_bytes[${dir}]=$((${dir_bytes[${dir}]:-0} + size))
+    done < <(git ls-files 2> /dev/null || true)
+
+    [[ ${#dir_counts[@]} -eq 0 ]] && return 0
+    mapfile -t dirs < <(printf '%s\n' "${!dir_counts[@]}" | sort)
+    for dir in "${dirs[@]}"; do
+        if [[ ${emitted} -ge ${ARTIFACT_GLOBAL_CAP} ]]; then
+            WARNINGS+=("tracked_artifact signals truncated")
+            break
+        fi
+        noun="artifacts"
+        [[ ${dir_counts[${dir}]} -eq 1 ]] && noun="artifact"
+        SIGNALS_JSON+=("$(json_object --skip-empty \
+            kind "tracked_artifact" path "${dir}" line "$(json_number 1)" \
+            snippet "${dir_counts[${dir}]} tracked build ${noun} (${dir_bytes[${dir}]} bytes)" \
+            source "git_ls_files" hint "operational")")
+        emitted=$((emitted + 1))
+    done
 }
 
 #######################################
