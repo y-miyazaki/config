@@ -39,7 +39,7 @@ uvx = true # Install uv/uvx via pipx for better isolation and performance.
 #   - npm:awsp: shell functions (_awsp), no executable to shim
 
 # A Runtime tools
-aqua = "v2.65.2"
+aqua = "v2.66.0"
 node = "24.22.2"
 pnpm = { version = "11.28.10", depends = ["node"] }
 python = "3.15.2"
