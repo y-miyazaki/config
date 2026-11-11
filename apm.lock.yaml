@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-11T13:04:16.597742+00:00'
+generated_at: '2026-11-11T13:41:42.014832+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -678,7 +678,7 @@ dependencies:
     .agents/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .agents/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .agents/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:86d7fe1ab1b82cacc4a40a4a594fd7ff0358801e8377fda2d8804b222fd9151c
+    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:b1d24c768f0bf337799a6ffb806e92d1ca3f86beeb9dbc997d3961991bcd3723
     .agents/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -808,7 +808,7 @@ dependencies:
     .claude/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .claude/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .claude/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:86d7fe1ab1b82cacc4a40a4a594fd7ff0358801e8377fda2d8804b222fd9151c
+    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:b1d24c768f0bf337799a6ffb806e92d1ca3f86beeb9dbc997d3961991bcd3723
     .claude/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:9f8f14595dedda4cdcb71e79ea98920ff144433073a515c914e4c90c902bd5df
+  content_hash: sha256:6799fa6a6c4e54056a373f5c7c0b8f3c9b2a1da58af4de60411ec3f0b24145e0
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -4720,7 +4720,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:86d7fe1ab1b82cacc4a40a4a594fd7ff0358801e8377fda2d8804b222fd9151c
+  content_hash: sha256:b1d24c768f0bf337799a6ffb806e92d1ca3f86beeb9dbc997d3961991bcd3723
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-autofix/scripts/lib/all.sh
@@ -10111,7 +10111,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:86d7fe1ab1b82cacc4a40a4a594fd7ff0358801e8377fda2d8804b222fd9151c
+  content_hash: sha256:b1d24c768f0bf337799a6ffb806e92d1ca3f86beeb9dbc997d3961991bcd3723
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-autofix/scripts/lib/all.sh

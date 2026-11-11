@@ -11,6 +11,15 @@
 # - Consume issue facts from environment variables
 # - Hydrate ISSUE_NUMBER from GITHUB_EVENT_PATH when unset
 # - Skip when an open/draft PR already closes the Issue (Fixes/Close/Resolve #N)
+# - Scan mode (AUTOFIX_SCAN=true): list qualifying Issues as result.items (oldest first, max 50,
+#   never truncated to the platform detect_max_targets); no ISSUE_NUMBER required
+# - Scan mode qualifies Issues: open, not a PR, AUTOFIX_SOURCE_LABEL present, no autofix label,
+#   author user.type Bot, body contains AUTOFIX_SOURCE_MARKER
+# - Scan mode excludes Issues closed by an open PR, and handled Issues (closed autofix PR whose latest
+#   closedAt is not older than the latest human comment)
+# - Scan mode skips when open autofix PRs (AUTOFIX_PR_LABEL + AUTOFIX_BRANCH_PREFIX head) reach
+#   AUTOFIX_MAX_OPEN_PRS; single-Issue mode ignores that limit
+# - Scan mode fails closed (status=error, exit 1) on any gh failure
 # - Fail closed when PR scan prerequisites (GITHUB_REPOSITORY, token, gh) are missing
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 on success; fatal errors emit status=error JSON and exit 1
@@ -26,6 +35,12 @@
 #   GITHUB_EVENT_PATH         Path to GitHub webhook event JSON
 #   GITHUB_REPOSITORY         Repository slug for gh pr list (owner/repo)
 #   GH_TOKEN / GITHUB_TOKEN   Token for gh pr list when scanning open PRs
+#   AUTOFIX_SCAN              "true" enables scan mode (list Issues as result.items)
+#   AUTOFIX_SOURCE_LABEL      Scan mode (required): label an Issue must carry
+#   AUTOFIX_SOURCE_MARKER     Scan mode (required): marker string the Issue body must contain
+#   AUTOFIX_PR_LABEL          Scan mode (required): label identifying autofix PRs
+#   AUTOFIX_BRANCH_PREFIX     Scan mode: head branch prefix of autofix PRs (open-PR limit)
+#   AUTOFIX_MAX_OPEN_PRS      Scan mode: skip when open autofix PRs >= this integer (unset = no limit)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -318,6 +333,314 @@ function output_json {
 }
 
 #######################################
+# scan_validate_env: Fail when scan mode required environment is missing
+#
+# Globals:
+#   AUTOFIX_SOURCE_LABEL
+#   AUTOFIX_SOURCE_MARKER
+#   AUTOFIX_PR_LABEL
+#   AUTOFIX_MAX_OPEN_PRS
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (calls output_error on missing or invalid values)
+#
+# Usage:
+#   scan_validate_env
+#
+#######################################
+function scan_validate_env {
+    local name
+    for name in AUTOFIX_SOURCE_LABEL AUTOFIX_SOURCE_MARKER AUTOFIX_PR_LABEL; do
+        if [[ -z ${!name:-} ]]; then
+            output_error "github-issue-autofix: ${name} required when AUTOFIX_SCAN=true"
+        fi
+    done
+
+    if [[ -n ${AUTOFIX_MAX_OPEN_PRS:-} && ! ${AUTOFIX_MAX_OPEN_PRS} =~ ^[0-9]+$ ]]; then
+        output_error "github-issue-autofix: AUTOFIX_MAX_OPEN_PRS must be a non-negative integer"
+    fi
+}
+
+#######################################
+# scan_list_open_prs: List open PRs once (number, title, body, head, labels)
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   GH_TOKEN
+#   GITHUB_TOKEN
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   JSON array to stdout
+#
+# Returns:
+#   gh exit status (caller reports the error; output_error cannot run inside $(...))
+#
+# Usage:
+#   open_prs="$(scan_list_open_prs)" || output_error "..."
+#
+#######################################
+function scan_list_open_prs {
+    export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 200 \
+        --json number,title,body,headRefName,labels 2> /dev/null
+}
+
+#######################################
+# scan_open_pr_count: Count open autofix PRs (label + head branch prefix)
+#
+# Globals:
+#   AUTOFIX_PR_LABEL
+#   AUTOFIX_BRANCH_PREFIX
+#
+# Arguments:
+#   $1 - Open PR JSON array (from scan_list_open_prs)
+#
+# Outputs:
+#   Integer count to stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   count="$(scan_open_pr_count "${open_prs}")"
+#
+#######################################
+function scan_open_pr_count {
+    jq -r --arg label "${AUTOFIX_PR_LABEL}" --arg prefix "${AUTOFIX_BRANCH_PREFIX:-}" '
+        [.[] | select(((.labels // []) | map(.name) | index($label)) != null)
+             | select((.headRefName // "") | startswith($prefix))] | length
+    ' <<< "$1"
+}
+
+#######################################
+# scan_fetch_issues: Fetch candidate Issue numbers (oldest first)
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   AUTOFIX_SOURCE_LABEL
+#   AUTOFIX_SOURCE_MARKER
+#   GH_TOKEN
+#   GITHUB_TOKEN
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   JSON array of Issue numbers to stdout
+#
+# Returns:
+#   non-zero when gh or jq fails (caller reports the error)
+#
+# Usage:
+#   numbers="$(scan_fetch_issues)" || output_error "..."
+#
+#######################################
+function scan_fetch_issues {
+    local encoded raw
+    encoded="$(jq -rn --arg v "${AUTOFIX_SOURCE_LABEL}" '$v | @uri')"
+    export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    raw="$(gh api --paginate \
+        "repos/${GITHUB_REPOSITORY}/issues?labels=${encoded}&state=open&sort=created&direction=asc&per_page=100" 2> /dev/null)" || return 1
+
+    jq -s -c --arg label "${AUTOFIX_SOURCE_LABEL}" --arg marker "${AUTOFIX_SOURCE_MARKER}" '
+        [.[] | (if type == "array" then .[] else empty end)
+            | select((.pull_request // null) == null)
+            | select(((.labels // []) | map(.name // "") | index($label)) != null)
+            | select(((.labels // []) | map(.name // "") | index("autofix")) == null)
+            | select((.user.type // "") == "Bot")
+            | select((.body // "") | contains($marker))
+            | .number]
+    ' <<< "${raw}"
+}
+
+#######################################
+# scan_latest_closed_at: Latest closedAt of closed autofix PRs referencing an Issue
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Closed PR JSON array
+#   $2 - Issue number
+#
+# Outputs:
+#   closedAt string to stdout, empty when none
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   closed_at="$(scan_latest_closed_at "${closed_prs}" 12)"
+#
+#######################################
+function scan_latest_closed_at {
+    local pattern="(?i)\\b(fix(?:e[sd])?|close[sd]?|resolve[sd]?)\\s+#${2}\\b"
+    jq -r --arg re "${pattern}" '
+        [.[] | select(.closedAt != null)
+             | select(((.title // "") + "\n" + (.body // "")) | test($re))
+             | .closedAt] | max // ""
+    ' <<< "$1"
+}
+
+#######################################
+# scan_has_newer_human_comment: Whether a human commented after closedAt
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#
+# Arguments:
+#   $1 - Issue number
+#   $2 - closedAt (ISO-8601 UTC)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when a newer human comment exists; 1 when none (calls output_error when gh fails)
+#
+# Usage:
+#   if scan_has_newer_human_comment 12 "${closed_at}"; then ...; fi
+#
+#######################################
+function scan_has_newer_human_comment {
+    local comments
+    if ! comments="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${1}/comments?per_page=100" 2> /dev/null)"; then
+        output_error "github-issue-autofix: failed to list comments for Issue #${1}"
+    fi
+    jq -s -e --arg closed "${2}" '
+        [.[] | (if type == "array" then .[] else empty end)
+             | select((.user.type // "") != "Bot")
+             | .created_at // ""] | any(. > $closed)
+    ' <<< "${comments}" > /dev/null
+}
+
+#######################################
+# scan_build_items: Filter candidates and build the result.items array
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   AUTOFIX_PR_LABEL
+#   GH_TOKEN
+#   GITHUB_TOKEN
+#   SCAN_ITEMS (set)
+#
+# Arguments:
+#   $1 - Candidate Issue numbers (JSON array)
+#   $2 - Open PR JSON array
+#
+# Outputs:
+#   None (result JSON array is stored in SCAN_ITEMS; not a subshell so errors can exit)
+#
+# Returns:
+#   0 on success (calls output_error when gh fails)
+#
+# Usage:
+#   scan_build_items "${numbers}" "${open_prs}"
+#
+#######################################
+function scan_build_items {
+    local numbers="$1" open_prs="$2"
+    local closed_prs closed_at number pattern kept="[]" count=0
+    SCAN_ITEMS="[]"
+
+    export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    if ! closed_prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state closed \
+        --label "${AUTOFIX_PR_LABEL}" --limit 200 \
+        --json number,title,body,closedAt,headRefName 2> /dev/null)"; then
+        output_error "github-issue-autofix: failed to list closed PRs"
+    fi
+
+    while IFS= read -r number; do
+        [[ -n ${number} ]] || continue
+        pattern="(?i)\\b(fix(?:e[sd])?|close[sd]?|resolve[sd]?)\\s+#${number}\\b"
+        if jq -e --arg re "${pattern}" '
+            any(.[]; ((.title // "") + "\n" + (.body // "")) | test($re))
+        ' <<< "${open_prs}" > /dev/null; then
+            continue
+        fi
+
+        closed_at="$(scan_latest_closed_at "${closed_prs}" "${number}")"
+        if [[ -n ${closed_at} ]] && ! scan_has_newer_human_comment "${number}" "${closed_at}"; then
+            continue
+        fi
+
+        kept="$(jq -c --argjson n "${number}" '. + [{
+            key: ("issue:" + ($n | tostring)),
+            entity: {kind: "issue", number: $n},
+            context: {issue_number: $n}
+        }]' <<< "${kept}")"
+        count=$((count + 1))
+        if [[ ${count} -ge 50 ]]; then
+            break
+        fi
+    done < <(jq -r '.[]' <<< "${numbers}")
+
+    SCAN_ITEMS="${kept}"
+}
+
+#######################################
+# scan_main: Scan mode entry; emit detect JSON with result.items
+#
+# Globals:
+#   AUTOFIX_MAX_OPEN_PRS
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   JSON object to stdout
+#
+# Returns:
+#   0 on success; exits 1 on fatal errors
+#
+# Usage:
+#   scan_main
+#
+#######################################
+function scan_main {
+    local open_prs open_count numbers items count
+
+    scan_validate_env
+    ensure_pr_scan_prerequisites
+
+    open_prs="$(scan_list_open_prs)" || output_error "github-issue-autofix: failed to list open PRs"
+    if [[ -n ${AUTOFIX_MAX_OPEN_PRS:-} ]]; then
+        open_count="$(scan_open_pr_count "${open_prs}")"
+        if [[ ${open_count} -ge ${AUTOFIX_MAX_OPEN_PRS} ]]; then
+            json_object status "ok" skip "true" \
+                message "github-issue-autofix: ${open_count} open autofix PRs (limit ${AUTOFIX_MAX_OPEN_PRS})" \
+                result "{}"
+            return 0
+        fi
+    fi
+
+    numbers="$(scan_fetch_issues)" || output_error "github-issue-autofix: failed to list Issues"
+    scan_build_items "${numbers}" "${open_prs}"
+    items="${SCAN_ITEMS}"
+    count="$(jq 'length' <<< "${items}")"
+
+    if [[ ${count} -eq 0 ]]; then
+        json_object status "ok" skip "true" \
+            message "github-issue-autofix: no eligible Issues" \
+            result "{}"
+        return 0
+    fi
+
+    json_object status "ok" skip "false" \
+        message "github-issue-autofix: ${count} eligible Issue(s)" \
+        result "$(jq -c '{items: .}' <<< "${items}")"
+}
+
+#######################################
 # main: Validate inputs, evaluate skip policy, emit detect JSON
 #
 # Globals:
@@ -326,6 +649,7 @@ function output_json {
 #   GITHUB_REPOSITORY
 #   GH_TOKEN
 #   GITHUB_TOKEN
+#   AUTOFIX_SCAN
 #
 # Arguments:
 #   None
@@ -345,6 +669,11 @@ function main {
     local message=""
 
     ensure_dependencies bash jq
+
+    if [[ ${AUTOFIX_SCAN:-} == "true" ]]; then
+        scan_main
+        return 0
+    fi
 
     hydrate_issue_number_from_event
     ISSUE_NUMBER="${ISSUE_NUMBER:-}"
