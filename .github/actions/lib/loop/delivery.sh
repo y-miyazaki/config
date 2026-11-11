@@ -11,9 +11,10 @@
 #
 # Design Rules:
 #   - Functions are pure: no globals are read or written
-#   - Implemented deliveries: issue_comment, none, pr_create, pr_push, pr_review
-#   - Declared but unimplemented deliveries (issue_create) fail closed
+#   - Implemented deliveries: issue_comment, issue_create, none, pr_create, pr_push, pr_review
+#   - Unknown deliveries fail closed
 #   - pr_push targets pull_request kinds only
+#   - issue_create targets integration kinds only, needs a branch match, and rejects detect_pr_enabled
 #   - issue_comment targets issue entities only; pr_review targets pr entities only
 #   - issue_comment and pr_review need an entity caller (loop-entity-detect)
 #
@@ -28,7 +29,7 @@
 #   None
 #
 # Arguments:
-#   $1 - delivery (issue_comment | none | pr_create | pr_push | pr_review)
+#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
 #   $2 - detect_pr_number (PR number | empty | 0)
 #
 # Outputs:
@@ -56,7 +57,7 @@ function delivery_requires_pr_number_skip {
 #
 # Arguments:
 #   $1 - level (L1 | L2 | L3)
-#   $2 - delivery (issue_comment | none | pr_create | pr_push | pr_review)
+#   $2 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
 #
 # Outputs:
 #   true when level is L3 and delivery is pr_create; false otherwise
@@ -83,7 +84,7 @@ function derive_pr_auto_merge {
 #   None
 #
 # Arguments:
-#   $1 - delivery (issue_comment | none | pr_create | pr_push | pr_review)
+#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
 #   $2 - detect_pr_enabled (true | false)
 #   $3 - detect_branch_match (pattern | empty)
 #
@@ -101,6 +102,11 @@ function validate_delivery_detect_config {
 
     if [[ ${delivery} == "issue_comment" || ${delivery} == "pr_review" ]]; then
         echo "::error::delivery ${delivery} requires an entity caller (loop-entity-detect)" >&2
+        return 1
+    fi
+
+    if [[ ${delivery} == "issue_create" && ${detect_pr_enabled} == "true" ]]; then
+        echo "::error::delivery issue_create does not allow detect_pr_enabled true" >&2
         return 1
     fi
 
@@ -129,7 +135,7 @@ function validate_delivery_detect_config {
 #   None
 #
 # Arguments:
-#   $1 - delivery (issue_comment | none | pr_create | pr_push | pr_review)
+#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
 #   $2 - target_json (JSON with .mode integration|pull_request or .entity.kind issue|pr)
 #
 # Outputs:
@@ -163,6 +169,13 @@ function validate_delivery_target {
             echo "::error::delivery issue_comment allows only issue targets (got: ${kind})" >&2
             return 1
             ;;
+        issue_create)
+            if [[ ${kind} == "integration" ]]; then
+                return 0
+            fi
+            echo "::error::delivery issue_create allows only integration targets (got: ${kind})" >&2
+            return 1
+            ;;
         pr_review)
             if [[ ${kind} == "pr" ]]; then
                 return 0
@@ -185,32 +198,28 @@ function validate_delivery_target {
 }
 
 #######################################
-# validate_delivery_value: Validate the delivery value is implemented
+# validate_delivery_value: Validate the delivery value is a known delivery
 #
 # Globals:
 #   None
 #
 # Arguments:
-#   $1 - delivery (issue_comment | none | pr_create | pr_push | pr_review)
+#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
 #
 # Outputs:
 #   None
 #
 # Returns:
-#   0 for issue_comment, none, pr_create, pr_push, pr_review; 1 otherwise
+#   0 for issue_comment, issue_create, none, pr_create, pr_push, pr_review; 1 otherwise
 #
 #######################################
 function validate_delivery_value {
     local delivery="${1:-}"
 
     case "${delivery}" in
-        issue_comment | none | pr_create | pr_push | pr_review) return 0 ;;
-        issue_create)
-            echo "::error::delivery ${delivery} is not implemented" >&2
-            return 1
-            ;;
+        issue_comment | issue_create | none | pr_create | pr_push | pr_review) return 0 ;;
         *)
-            echo "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: ${delivery:-empty})" >&2
+            echo "::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: ${delivery:-empty})" >&2
             return 1
             ;;
     esac

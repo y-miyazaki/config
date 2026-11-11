@@ -257,16 +257,33 @@ GOLDEN_ROWS=(
 
 @test "validate_delivery_value: implemented values pass" {
     local v
-    for v in none pr_create pr_push issue_comment pr_review; do
+    for v in none pr_create pr_push issue_comment issue_create pr_review; do
         run validate_delivery_value "${v}"
         [ "$status" -eq 0 ]
     done
 }
 
-@test "validate_delivery_value: unimplemented values fail with not implemented" {
-    run validate_delivery_value issue_create
+@test "validate_delivery_target: issue_create accepts integration only" {
+    run validate_delivery_target issue_create '{"mode":"integration"}'
+    [ "$status" -eq 0 ]
+    run validate_delivery_target issue_create '{"mode":"pull_request"}'
     [ "$status" -eq 1 ]
-    [ "$output" = "::error::delivery issue_create is not implemented" ]
+    [ "$output" = "::error::delivery issue_create allows only integration targets (got: pull_request)" ]
+    run validate_delivery_target issue_create '{"entity":{"kind":"issue"}}'
+    [ "$status" -eq 1 ]
+    run validate_delivery_target issue_create '{"entity":{"kind":"pr"}}'
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_delivery_detect_config: issue_create needs a branch match and no pr detect" {
+    run validate_delivery_detect_config issue_create true main
+    [ "$status" -eq 1 ]
+    [ "$output" = "::error::delivery issue_create does not allow detect_pr_enabled true" ]
+    run validate_delivery_detect_config issue_create false ""
+    [ "$status" -eq 1 ]
+    [[ $output == *"detect_branch_match"* ]]
+    run validate_delivery_detect_config issue_create false main
+    [ "$status" -eq 0 ]
 }
 
 @test "validate_delivery_value: unknown and empty values fail" {
@@ -281,10 +298,10 @@ GOLDEN_ROWS=(
 @test "validate_delivery_value: unknown and empty values name the full allowed list" {
     run validate_delivery_value ""
     [ "$status" -eq 1 ]
-    [ "$output" = "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)" ]
+    [ "$output" = "::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)" ]
     run validate_delivery_value bogus
     [ "$status" -eq 1 ]
-    [ "$output" = "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: bogus)" ]
+    [ "$output" = "::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: bogus)" ]
 }
 
 @test "validate_delivery_target: issue_comment accepts entity issue only" {

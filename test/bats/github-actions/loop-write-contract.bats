@@ -137,11 +137,11 @@ setup() {
     [ "$status" -eq 0 ]
     run validate_loop_write_contract "L1" "none" "" "" "" "" "" "bug"
     [ "$status" -eq 1 ]
-    [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment or pr_review (got: none)" ]
+    [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: none)" ]
     for delivery in pr_create pr_push none; do
         run validate_loop_write_contract "L2" "${delivery}" "fix" "src/**" "" "APPROVE" "" "bug"
         [ "$status" -eq 1 ]
-        [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment or pr_review (got: ${delivery})" ]
+        [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: ${delivery})" ]
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 3 ]
@@ -196,14 +196,14 @@ setup() {
 @test "validate rejects L2 and L3 delivery unimplemented or unknown" {
     local checked=0 level delivery
     for level in L2 L3; do
-        for delivery in "" issue_create log issue notion open_pr slack; do
+        for delivery in "" log issue notion open_pr slack; do
             run validate_loop_write_contract "${level}" "${delivery}" "fix" "src/**" "" "APPROVE" "" ""
             [ "$status" -eq 1 ]
             [[ $output == *"delivery"* ]]
             checked=$((checked + 1))
         done
     done
-    [ "${checked}" -eq 14 ]
+    [ "${checked}" -eq 12 ]
 }
 
 @test "validate rejects L2 and L3 empty agent_edit_allowlist" {
@@ -271,4 +271,31 @@ setup() {
     run validate_loop_write_contract "" "none" "" "" "" "" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"level is required"* ]]
+}
+
+@test "validate L2 and L3 issue_create requires finalize_script, finalize_label_allowlist and REJECT" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "" "loop:code-review"
+        [ "$status" -eq 1 ]
+        [[ $output == *"finalize_script is required for delivery issue_create"* ]]
+        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" ""
+        [ "$status" -eq 1 ]
+        [[ $output == *"finalize_label_allowlist is required for delivery issue_create"* ]]
+        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "APPROVE" "scripts/x.sh" "loop:code-review"
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_unchanged_verdict must be REJECT for delivery issue_create"* ]]
+        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" "loop:code-review"
+        [ "$status" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate_finalize_label_allowlist accepts a non-empty allowlist for issue_create" {
+    run validate_finalize_label_allowlist "issue_create" "loop:code-review"
+    [ "$status" -eq 0 ]
+    run validate_finalize_label_allowlist "pr_create" "loop:code-review"
+    [ "$status" -eq 1 ]
+    [[ $output == *"issue_comment, issue_create or pr_review"* ]]
 }

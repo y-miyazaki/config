@@ -157,9 +157,9 @@ state_file"
 @test "validate_detect_inputs fails on each invalid configuration" {
     local -a cases=(
         'LEVEL=|::error::level is required (L1, L2, or L3)'
-        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
-        'DELIVERY=open_pr|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: open_pr)'
-        'DELIVERY=issue_create|::error::delivery issue_create is not implemented'
+        'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
+        'DELIVERY=open_pr|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: open_pr)'
+        'DELIVERY=issue_create FINALIZE_SCRIPT=x.sh FINALIZE_LABEL_ALLOWLIST=loop:x DETECT_PR_ENABLED=true|::error::delivery issue_create does not allow detect_pr_enabled true'
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
         'AGENT_UNCHANGED_VERDICT=|::error::agent_unchanged_verdict is required at L2 (APPROVE or REJECT)'
         'DETECT_BRANCH_MATCH=|::error::detect_branch_match or detect_pr_enabled true is required'
