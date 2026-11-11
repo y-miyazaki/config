@@ -405,12 +405,13 @@ function retry_state_write {
             write_target_state "${now}" "${consecutive}"
         fi
 
+        mkdir -p "$(dirname "${STATE_FILE}")"
         cp "${STATE_TMP}" "${STATE_FILE}"
-        if git diff --quiet -- "${STATE_FILE}"; then
+        git add "${STATE_FILE}"
+        if git diff --cached --quiet -- "${STATE_FILE}"; then
             echo "No state changes to commit."
             return 0
         fi
-        git add "${STATE_FILE}"
         git commit -m "chore(loop): update state [skip ci]"
         if push_err="$(git push origin HEAD:"${PUSH_BRANCH}" 2>&1)"; then
             echo "State pushed to ${PUSH_BRANCH}."

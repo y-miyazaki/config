@@ -26,6 +26,7 @@
 # - write_state gives up after WRITE_STATE_MAX_RETRIES and opens the state PR fallback
 # - write_state does not retry on remote rejected or when FINALIZE_COMMIT_PATHS is set
 # - write_state retry leaves no stale temp state file
+# - write_state retry rewrites state when the remote tip lacks the state file
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -52,6 +53,7 @@ state_write_git_setup() {
 
 state_write_race_setup() {
     local count="$1"
+    local mode="${2:-add_key}"
     STATE_WRITE_COMP="${BATS_TEST_TMPDIR}/competitor"
     STATE_WRITE_RACE_COUNT="${BATS_TEST_TMPDIR}/race_count"
     rm -rf "${STATE_WRITE_COMP}"
@@ -66,8 +68,12 @@ echo \$((n - 1)) > '${STATE_WRITE_RACE_COUNT}'
 cd '${STATE_WRITE_COMP}' || exit 1
 git fetch -q origin main > /dev/null 2>&1
 git reset -q --hard origin/main > /dev/null 2>&1
-jq --arg k "race-\${n}" '.targets[\$k] = {last_sha: "x"}' .loop/state-test.json > .loop/tmp.json
-mv .loop/tmp.json .loop/state-test.json
+if [ '${mode}' = remove_file ]; then
+    git rm -q .loop/state-test.json
+else
+    jq --arg k "race-\${n}" '.targets[\$k] = {last_sha: "x"}' .loop/state-test.json > .loop/tmp.json
+    mv .loop/tmp.json .loop/state-test.json
+fi
 git -c user.name=rival -c user.email=rival@example.com commit -q -am "rival \${n}" > /dev/null 2>&1
 git push -q origin HEAD:main > /dev/null 2>&1
 exit 0
@@ -629,6 +635,30 @@ setup() {
     [ "$status" -eq 0 ]
     jq -e '.targets["race-1"].last_sha == "x"
            and .targets["integration:main"].last_sha == "abcdefghi"' <<< "${output}"
+}
+@test "write_state retry rewrites state when rival removed the state file from the remote tip" {
+    state_write_race_setup 1 remove_file
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 1/3"* ]]
+    [[ $output != *"No state changes to commit."* ]]
+    [[ $output == *"State pushed to main."* ]]
+    run git --git-dir="${STATE_WRITE_BARE}" show main:.loop/state-test.json
+    [ "$status" -eq 0 ]
+    jq -e '.targets["integration:main"].last_sha == "abcdefghi"' <<< "${output}"
 }
 @test "write_state retry leaves no stale temp state file" {
     local tmpd="${BATS_TEST_TMPDIR}/tmpd"
