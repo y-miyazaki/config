@@ -23,13 +23,13 @@ The conditions for A1 are in [Issue Autofix Workflow Design](workflows/loop-gith
 
 ### Stage D (L1): current behavior
 
-The scheduled `loop-scheduled` job runs at L1 and does not write state. It moves an Issue only between A0, A1 and A2.
+The scheduled `loop-scheduled` job moves an Issue only between A0, A1 and A2.
 
 | ID  | State    | Trigger                                                                                                          | Next state |
 | --- | -------- | ---------------------------------------------------------------------------------------------------------------- | ---------- |
 | A0  | Filed    | The code-review (L2) checker approves and re-verification passes                                                 | A1         |
 | A1  | Eligible | The schedule picks it up (next run if over `detect_max_targets`)                                                  | A2         |
-| A2  | Running  | (L1) The agent logs a fix plan in the `agent-l1` job log. No PR is created and no state is written              | A1         |
+| A2  | Running  | (L1) The agent logs a fix plan (see [Intake paths](workflows/loop-github-issue-autofix-workflow-design.md#intake-paths))              | A1         |
 
 ### Stage E and later (not implemented)
 
