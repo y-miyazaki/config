@@ -223,6 +223,14 @@
       "reject_count": 1,
       "loop_run_id": "42982337200",
       "updated_at": "2026-11-11T07:50:39Z"
+    },
+    "42988705312": {
+      "workflow_name": "on-ci-push-github-actions-workflow (pull_request)",
+      "head_sha": "550994a901acca234e73dd7a5b109fc2a5628800",
+      "outcome": "rejected",
+      "reject_count": 1,
+      "loop_run_id": "42988751297",
+      "updated_at": "2026-11-11T08:40:19Z"
     }
   }
 }
