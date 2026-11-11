@@ -53,6 +53,8 @@ PENDING_PR_NUMBER="${PENDING_PR_NUMBER:-}"
 PENDING_PR_URL="${PENDING_PR_URL:-}"
 LOOP_NAME="${LOOP_NAME:-}"
 STATE_PR_SKIP="${STATE_PR_SKIP:-false}"
+# Max retries of a push rejected by a concurrent state write (fetch first / non-fast-forward)
+WRITE_STATE_MAX_RETRIES="${WRITE_STATE_MAX_RETRIES:-3}"
 
 READ_BRANCH=""
 PUSH_BRANCH=""
@@ -102,7 +104,7 @@ function validate_finalize_commit_path {
 #   READ_BRANCH - STATE_BRANCH for direct push
 #   STATE_PR_SKIP - When true, skip PR fallback on push failure
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
-#   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths
+#   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths; non-empty disables push retry
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
 #
@@ -118,7 +120,7 @@ function validate_finalize_commit_path {
 #######################################
 function commit_and_push_state {
     local -a paths_to_add=("${STATE_FILE}")
-    local item has_changes path
+    local item has_changes path push_err
 
     mkdir -p "$(dirname "${STATE_FILE}")"
     cp "${STATE_TMP}" "${STATE_FILE}"
@@ -155,9 +157,16 @@ function commit_and_push_state {
         fi
     done
     git commit -m "chore(loop): update state [skip ci]"
-    if git push origin HEAD:"${PUSH_BRANCH}" 2> /dev/null; then
+    if push_err="$(git push origin HEAD:"${PUSH_BRANCH}" 2>&1)"; then
         echo "State pushed to ${PUSH_BRANCH}."
         return 0
+    fi
+    echo "${push_err}" >&2
+
+    if [[ -z ${FINALIZE_COMMIT_PATHS} ]] && is_push_race_error "${push_err}"; then
+        if retry_state_write; then
+            return 0
+        fi
     fi
 
     if [[ ${STATE_PR_SKIP} == "true" ]]; then
@@ -242,6 +251,31 @@ function configure_git_auth {
     git config user.name "github-actions[bot]"
     git config user.email "github-actions[bot]@users.noreply.github.com"
     git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+}
+
+#######################################
+# is_push_race_error: Detect a push rejected because the remote moved
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - git push stderr text
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 for "! [rejected] ... (fetch first|non-fast-forward)" without "[remote rejected]", 1 otherwise
+#
+#######################################
+function is_push_race_error {
+    local text="$1"
+
+    if [[ ${text} == *"[remote rejected]"* ]]; then
+        return 1
+    fi
+    [[ ${text} =~ \!\ \[rejected\].*\((fetch\ first|non-fast-forward)\) ]]
 }
 
 #######################################
@@ -331,6 +365,63 @@ function resolve_consecutive_failures {
             echo "0"
             ;;
     esac
+}
+
+#######################################
+# retry_state_write: Rebuild the state write on the latest remote and push again
+#
+# Globals:
+#   WRITE_STATE_MAX_RETRIES - Max retries
+#   READ_BRANCH - Branch fetched before each retry
+#   PUSH_BRANCH - Branch reset to its remote tip and pushed
+#   STATE_TMP - Replaced with a fresh temp file on each retry
+#   STATE_FILE - State file path
+#   WRITE_TARGET_STATE - When true, the target update is re-applied
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Retry progress on stdout; git push stderr on stderr when a push fails
+#
+# Returns:
+#   0 when pushed or nothing left to commit; 1 when retries are exhausted or the
+#   push failed for a reason other than a race
+#
+#######################################
+function retry_state_write {
+    local attempt consecutive now push_err
+
+    for ((attempt = 1; attempt <= WRITE_STATE_MAX_RETRIES; attempt++)); do
+        echo "Push race detected; retry ${attempt}/${WRITE_STATE_MAX_RETRIES}"
+        git fetch origin "${READ_BRANCH}"
+        git reset --hard "origin/${PUSH_BRANCH}"
+        rm -f "${STATE_TMP}" "${STATE_TMP}.next"
+        load_state_tmp
+        prune_targets_by_retention "${STATE_TMP}"
+        now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+        if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+            consecutive="$(resolve_consecutive_failures)"
+            write_target_state "${now}" "${consecutive}"
+        fi
+
+        cp "${STATE_TMP}" "${STATE_FILE}"
+        if git diff --quiet -- "${STATE_FILE}"; then
+            echo "No state changes to commit."
+            return 0
+        fi
+        git add "${STATE_FILE}"
+        git commit -m "chore(loop): update state [skip ci]"
+        if push_err="$(git push origin HEAD:"${PUSH_BRANCH}" 2>&1)"; then
+            echo "State pushed to ${PUSH_BRANCH}."
+            return 0
+        fi
+        echo "${push_err}" >&2
+        if ! is_push_race_error "${push_err}"; then
+            return 1
+        fi
+    done
+    return 1
 }
 
 #######################################

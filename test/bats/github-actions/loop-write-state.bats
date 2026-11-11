@@ -21,6 +21,11 @@
 # - refuses PR fallback for advance + pr_pushed when push is blocked
 # - opens the state PR fallback for advance + pr_created (the refusal keys on pr_pushed only)
 # - state_pr_skip warns when direct push is blocked
+# - is_push_race_error matches fetch first / non-fast-forward and rejects remote rejected
+# - write_state retries a raced push (non-fast-forward) and keeps both targets
+# - write_state gives up after WRITE_STATE_MAX_RETRIES and opens the state PR fallback
+# - write_state does not retry on remote rejected or when FINALIZE_COMMIT_PATHS is set
+# - write_state retry leaves no stale temp state file
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -43,6 +48,31 @@ state_write_git_setup() {
     git init -q --bare "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" remote add origin "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" push -q -u origin main
+}
+
+state_write_race_setup() {
+    local count="$1"
+    STATE_WRITE_COMP="${BATS_TEST_TMPDIR}/competitor"
+    STATE_WRITE_RACE_COUNT="${BATS_TEST_TMPDIR}/race_count"
+    rm -rf "${STATE_WRITE_COMP}"
+    git clone -q "${STATE_WRITE_BARE}" "${STATE_WRITE_COMP}"
+    printf '%s\n' "${count}" > "${STATE_WRITE_RACE_COUNT}"
+    cat > "${STATE_WRITE_WORK}/.git/hooks/post-commit" << EOF
+#!/bin/sh
+unset GIT_DIR GIT_WORK_TREE
+n=\$(cat '${STATE_WRITE_RACE_COUNT}')
+[ "\${n}" -gt 0 ] || exit 0
+echo \$((n - 1)) > '${STATE_WRITE_RACE_COUNT}'
+cd '${STATE_WRITE_COMP}' || exit 1
+git fetch -q origin main > /dev/null 2>&1
+git reset -q --hard origin/main > /dev/null 2>&1
+jq --arg k "race-\${n}" '.targets[\$k] = {last_sha: "x"}' .loop/state-test.json > .loop/tmp.json
+mv .loop/tmp.json .loop/state-test.json
+git -c user.name=rival -c user.email=rival@example.com commit -q -am "rival \${n}" > /dev/null 2>&1
+git push -q origin HEAD:main > /dev/null 2>&1
+exit 0
+EOF
+    chmod +x "${STATE_WRITE_WORK}/.git/hooks/post-commit"
 }
 
 state_write_run() {
@@ -117,6 +147,21 @@ setup() {
         "${STATE_TMP}"
     [ "$status" -eq 0 ]
     rm -f "${STATE_TMP}"
+}
+@test "is_push_race_error matches fetch first" {
+    state_write_source_helpers
+    run is_push_race_error " ! [rejected]        HEAD -> main (fetch first)"
+    [ "$status" -eq 0 ]
+}
+@test "is_push_race_error matches non-fast-forward" {
+    state_write_source_helpers
+    run is_push_race_error " ! [rejected]        HEAD -> main (non-fast-forward)"
+    [ "$status" -eq 0 ]
+}
+@test "is_push_race_error rejects remote rejected" {
+    state_write_source_helpers
+    run is_push_race_error " ! [remote rejected] HEAD -> main (pre-receive hook declined)"
+    [ "$status" -eq 1 ]
 }
 @test "run.sh clear_pending mode clears pending without advancing last_sha" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
@@ -489,6 +534,124 @@ setup() {
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 2 ]
+}
+@test "write_state does not retry on remote rejected" {
+    state_write_block_push
+    state_write_mock_gh
+
+    state_write_run \
+        PATH="${PATH}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output != *"Push race detected"* ]]
+    [[ $output == *"State PR queued for auto-merge"* ]]
+}
+@test "write_state does not retry when FINALIZE_COMMIT_PATHS is set" {
+    state_write_mock_gh
+    state_write_race_setup 1
+    printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        PATH="${PATH}" \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output != *"Push race detected"* ]]
+    [[ $output == *"State PR queued for auto-merge"* ]]
+}
+@test "write_state gives up after 3 retries and opens state PR fallback" {
+    state_write_mock_gh
+    state_write_race_setup 10
+
+    state_write_run \
+        PATH="${PATH}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 3/3"* ]]
+    [[ $output != *"retry 4/3"* ]]
+    [[ $output == *"State PR queued for auto-merge: https://github.com/test/repo/pull/99"* ]]
+    # initial commit + 3 retry commits each raced
+    [ "$(cat "${STATE_WRITE_RACE_COUNT}")" -eq 6 ]
+}
+@test "write_state retries after non-fast-forward and keeps both targets" {
+    state_write_race_setup 1
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 1/3"* ]]
+    [[ $output == *"State pushed to main."* ]]
+    run git --git-dir="${STATE_WRITE_BARE}" show main:.loop/state-test.json
+    [ "$status" -eq 0 ]
+    jq -e '.targets["race-1"].last_sha == "x"
+           and .targets["integration:main"].last_sha == "abcdefghi"' <<< "${output}"
+}
+@test "write_state retry leaves no stale temp state file" {
+    local tmpd="${BATS_TEST_TMPDIR}/tmpd"
+    mkdir -p "${tmpd}"
+    state_write_race_setup 2
+
+    state_write_run \
+        TMPDIR="${tmpd}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 2/3"* ]]
+    [ -z "$(ls -A "${tmpd}")" ]
 }
 @test "write_state_clear_pending clears pending without advancing last_sha" {
     TARGET_KEY='integration:main'
