@@ -302,3 +302,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-09T09:04:28Z","loop_name":"docs-updater","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"42590527701"}
 {"run_id":"2026-11-09T10:09:59Z","loop_name":"test-gap","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"42598819648"}
 {"run_id":"2026-11-11T05:16:23Z","loop_name":"github-pr-review","duration_s":48,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"42964565100","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
+{"run_id":"2026-11-11T05:16:29Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"42964639405"}
