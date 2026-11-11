@@ -42,9 +42,8 @@
 
 _DELIVER_MESSAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-_LOOP_DELIVER_MESSAGE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./ensure_labels.sh disable=SC1091
-source "${_LOOP_DELIVER_MESSAGE_LIB_DIR}/ensure_labels.sh"
+source "${_DELIVER_MESSAGE_DIR}/ensure_labels.sh"
 
 #######################################
 # apply_loop_message_labels: Add and remove the allowlisted labels on an Issue or PR
@@ -73,7 +72,7 @@ function apply_loop_message_labels {
     local number="$1"
     local labels_file="$2"
     local allowlist="${3:-}"
-    local requested filtered rejected add_file err encoded
+    local requested filtered rejected allow_json add_file err encoded
     local -a add_names=() encoded_names=()
 
     if [[ ! -f ${labels_file} ]]; then
@@ -88,9 +87,9 @@ function apply_loop_message_labels {
         return 0
     fi
 
-    filtered="$(jq -c --arg allow "${allowlist}" '
-        ($allow | split("\n") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))) as $a
-        | {
+    allow_json="$(parse_label_list "${allowlist}" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+    filtered="$(jq -c --argjson a "${allow_json}" '
+        {
             add: [.add[] | select(IN($a[]))],
             remove: [.remove[] | select(IN($a[]))],
             rejected: [(.add + .remove)[] | select(IN($a[]) | not)]
@@ -644,11 +643,7 @@ function deliver_issue_create {
         return 0
     fi
 
-    while IFS= read -r label; do
-        label="${label#"${label%%[![:space:]]*}"}"
-        label="${label%"${label##*[![:space:]]}"}"
-        [[ -n ${label} ]] && labels+=("${label}")
-    done <<< "${FINALIZE_LABEL_ALLOWLIST:-}"
+    mapfile -t labels < <(parse_label_list "${FINALIZE_LABEL_ALLOWLIST:-}")
     if [[ ${#labels[@]} -eq 0 ]]; then
         fail_loop_message "finalize_label_allowlist is empty; issue_create needs the labels to apply"
         return 1

@@ -8,11 +8,13 @@
 # Usage:
 #   source ensure_labels.sh
 #   ensure_repo_labels LABEL [LABEL...]
+#   parse_label_list LIST [SEPARATOR]
 #
 # Output:
 #   None (library file, sourced by other scripts)
 #
 # Design Rules:
+#   - parse_label_list is the one place that turns a caller-supplied label list into names
 #   - An existing label is never changed (no --force; color and description stay)
 #   - "already exists" is success, so a concurrent run creating the same label is safe
 #   - Any other gh failure stops at the first label and is reported on stderr
@@ -50,5 +52,39 @@ function ensure_repo_labels {
             return 1
         fi
     done
+    return 0
+}
+
+#######################################
+# parse_label_list: Print one trimmed label name per line from a delimited list
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Label list (may be empty)
+#   $2 - Single-character separator (default: newline)
+#
+# Outputs:
+#   One label per line on stdout; empty entries are dropped
+#
+# Returns:
+#   0 always
+#
+# Usage:
+#   mapfile -t labels < <(parse_label_list "${FINALIZE_LABEL_ALLOWLIST:-}")
+#   mapfile -t labels < <(parse_label_list "${PR_LABELS}" ",")
+#
+#######################################
+function parse_label_list {
+    local list="${1:-}"
+    local separator="${2:-$'\n'}"
+    local label
+
+    while IFS= read -r label; do
+        label="${label#"${label%%[![:space:]]*}"}"
+        label="${label%"${label##*[![:space:]]}"}"
+        [[ -n ${label} ]] && printf '%s\n' "${label}"
+    done < <(tr "${separator}" '\n' <<< "${list}")
     return 0
 }

@@ -86,7 +86,7 @@ function main {
     local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
-    local composed url number pr_err pr_label
+    local composed url number pr_err
     local -a pr_label_names=()
 
     : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
@@ -137,11 +137,7 @@ function main {
     if [[ -n ${PR_LABELS} ]]; then
         gh_args+=(--label "${PR_LABELS}")
         # gh splits --label on commas; create each missing label first
-        while IFS= read -r pr_label; do
-            pr_label="${pr_label#"${pr_label%%[![:space:]]*}"}"
-            pr_label="${pr_label%"${pr_label##*[![:space:]]}"}"
-            [[ -n ${pr_label} ]] && pr_label_names+=("${pr_label}")
-        done < <(tr ',' '\n' <<< "${PR_LABELS}")
+        mapfile -t pr_label_names < <(parse_label_list "${PR_LABELS}" ",")
     fi
     if [[ ${PR_DRAFT} == "true" ]]; then
         gh_args+=(--draft)
