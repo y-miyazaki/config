@@ -12,6 +12,7 @@
 # - budget_exceeded counts legacy pattern and tokens_estimate log entries
 # - budget_exceeded applies a token-only limit when no run limit is configured
 # - budget_exceeded excludes skipped entries from run and token aggregation
+# - budget_exceeded still counts entries that carry target_key
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -215,4 +216,19 @@ teardown() {
     run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily cost budget exceeded"* ]]
+}
+
+@test "budget_exceeded still counts entries that carry target_key" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"ci-sweeper":{max_runs_per_day:1,max_tokens_per_day:1000000}}}' > "${budget_file}"
+    printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"tokens_total\":10,\"target_key\":\"entity:issue:7\"}" \
+        > "${run_log}"
+
+    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Daily run budget exceeded"* ]]
 }

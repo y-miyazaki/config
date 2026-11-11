@@ -7,6 +7,8 @@
 # - loop_run_log_build_entry includes tokens_total zero by default
 # - loop_run_log_build_entry sets tokens_total from measured usage_json
 # - loop_run_log_append_entry writes JSONL entry with expected format
+# - loop_run_log_build_entry ignores target_key when empty
+# - loop_run_log_build_entry appends target_key last
 # - loop_run_log_compute_duration returns zero for empty start
 # - loop_run_log_compute_duration returns elapsed seconds
 # - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
@@ -98,6 +100,21 @@ _push_concurrent_entry() {
     [ "$(jq -r '.agent_result' <<< "${result}")" = "failure" ]
     [ "$(jq -r '.failure_stage' <<< "${result}")" = "push" ]
     [ "$(jq -r '.failure_message' <<< "${result}")" = "remote rejected" ]
+}
+
+@test "loop_run_log_build_entry ignores target_key when empty" {
+    local without with_empty
+
+    without="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected")"
+    with_empty="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected" "")"
+    [ "$(jq -c 'del(.run_id)' <<< "${with_empty}")" = "$(jq -c 'del(.run_id)' <<< "${without}")" ]
+    [ "$(jq -r 'has("target_key")' <<< "${with_empty}")" = "false" ]
+}
+
+@test "loop_run_log_build_entry appends target_key last" {
+    result="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected" "entity:issue:7")"
+    [ "$(jq -r '.target_key' <<< "${result}")" = "entity:issue:7" ]
+    [ "$(jq -r 'keys_unsorted | last' <<< "${result}")" = "target_key" ]
 }
 
 @test "loop_run_log_append_entry writes JSONL entry with expected format" {

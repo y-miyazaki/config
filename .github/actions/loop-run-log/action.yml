@@ -54,6 +54,10 @@ inputs:
   state_branch:
     description: "Branch hosting .loop/* state files; the run log commit is pushed here"
     required: true
+  target_key:
+    default: ""
+    description: "Target key recorded as target_key in run log JSON (empty when the run has no target)"
+    required: false
   usage_json:
     default: ""
     description: "Measured token usage JSON from loop-execute (empty when unavailable)"
@@ -89,6 +93,7 @@ runs:
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         STATE_BRANCH: ${{ inputs.state_branch }}
+        TARGET_KEY: ${{ inputs.target_key }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

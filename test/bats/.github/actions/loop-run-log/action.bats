@@ -6,6 +6,7 @@
 # Use cases:
 # - state_branch is a required input with no default; base_branch is gone
 # - Append Run Log Entry passes STATE_BRANCH
+# - target_key input is optional with an empty default and reaches TARGET_KEY
 # - the outcome and skip_reason descriptions list the current values
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -41,4 +42,13 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-run-log/action.yml"
     [ "${output}" = "true" ]
     run action_yml_input_field "${ACTION_YML}" state_branch default
     [ -z "${output}" ]
+}
+
+@test "action target_key input defaults to empty and is passed as TARGET_KEY" {
+    run action_yml_input_names "${ACTION_YML}"
+    [[ ${output} == *"target_key"* ]]
+    run action_yml_input_field "${ACTION_YML}" target_key default
+    [ "${output}" = '""' ]
+    run action_yml_step_env "${ACTION_YML}" "Append Run Log Entry"
+    [[ ${output} == *'TARGET_KEY: ${{ inputs.target_key }}'* ]]
 }

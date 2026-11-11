@@ -46,6 +46,7 @@ RUN_LOG_FILE="${RUN_LOG_FILE:-.loop/loop-run-log.md}"
 RUN_STARTED_AT="${RUN_STARTED_AT:-}"
 SKIP_REASON="${SKIP_REASON:-none}"
 STATE_BRANCH="${STATE_BRANCH:-}"
+TARGET_KEY="${TARGET_KEY:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 USAGE_JSON="${USAGE_JSON:-}"
 VERDICT="${VERDICT:-}"
@@ -57,7 +58,7 @@ LOOP_RUN_ID="${LOOP_RUN_ID:-}"
 # Globals:
 #   RUN_LOG_FILE - Target run log path
 #   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, AGENT_RESULT
-#   FAILURE_STAGE, FAILURE_MESSAGE, VERDICT, LOOP_RUN_ID, USAGE_JSON - Entry fields
+#   FAILURE_STAGE, FAILURE_MESSAGE, VERDICT, LOOP_RUN_ID, USAGE_JSON, TARGET_KEY - Entry fields
 #
 # Arguments:
 #   $1 - Duration in seconds
@@ -85,7 +86,8 @@ function append_run_log_entry {
         "${USAGE_JSON}" \
         "${AGENT_RESULT}" \
         "${FAILURE_STAGE}" \
-        "${FAILURE_MESSAGE}")"
+        "${FAILURE_MESSAGE}" \
+        "${TARGET_KEY}")"
     loop_run_log_append_entry "${RUN_LOG_FILE}" "${entry_json}"
     printf '%s' "${entry_json}"
 }
