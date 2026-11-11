@@ -318,6 +318,6 @@ ok_count() {
 @test "selects up to the limit after exclusions" {
     set_issues "$(issue 1 triage:ready)" "$(issue 2 '' User)" "$(issue 3)" "$(issue 4)" "$(issue 5)" "$(issue 6)"
     run_list
+    ok_count 3
     [ "$(selected)" = "3,4,5" ]
-    grep -qx 'count=3' "${OUT}"
 }
