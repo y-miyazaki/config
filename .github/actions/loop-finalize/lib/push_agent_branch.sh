@@ -76,6 +76,9 @@ _LOOP_PUSH_AGENT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" &
 source "${_LOOP_PUSH_AGENT_LIB_DIR}/edit_paths.sh"
 # shellcheck source=../../lib/loop/failure_record.sh disable=SC1091
 source "${_LOOP_PUSH_AGENT_LIB_DIR}/failure_record.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${_LOOP_PUSH_AGENT_LIB_DIR}/git_auth.sh"
 
 #######################################
 # Global variables
@@ -140,27 +143,6 @@ function collect_workflow_violations {
             printf '%s\n' "${file}"
         fi
     done <<< "${changed_files}"
-}
-
-#######################################
-# configure_git_auth: Set commit identity and HTTPS push credentials
-#
-# Globals:
-#   GITHUB_TOKEN - Token used for http.extraheader
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 on success, non-zero when git config fails
-#######################################
-function configure_git_auth {
-    git config user.name "github-actions[bot]" \
-        && git config user.email "github-actions[bot]@users.noreply.github.com" \
-        && git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 }
 
 #######################################
@@ -353,7 +335,7 @@ function main {
     fi
 
     # 5. Fetch base, verify the bundle, import only the agent branch
-    if ! configure_git_auth; then
+    if ! loop_git_configure_auth; then
         fail_push "git auth configuration failed"
     fi
     if ! err="$(git fetch --no-tags origin "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}" 2>&1)"; then

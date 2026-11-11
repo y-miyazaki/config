@@ -5,6 +5,7 @@
 
 # Use cases:
 # - render_template replaces placeholders
+# - validate_agent_report_check accepts empty, paths, and commits and rejects other values
 # - validate_agent_unchanged_verdict accepts APPROVE and REJECT
 # - validate_agent_unchanged_verdict fails on empty (no REJECT default) and ignores
 #   the legacy NO_CHANGES_VERDICT name
@@ -142,6 +143,21 @@ EOF
     run materialize_matrix_handoff_context
     [ "$status" -eq 1 ]
     [[ $output == *"inline DETECT_RESULT_JSON is invalid"* ]]
+}
+
+@test "validate_agent_report_check accepts empty, paths, and commits and rejects other values" {
+    local value
+    for value in "" paths commits; do
+        AGENT_REPORT_CHECK="${value}"
+        run validate_agent_report_check
+        [ "${status}" -eq 0 ]
+    done
+    for value in path Paths none; do
+        AGENT_REPORT_CHECK="${value}"
+        run validate_agent_report_check
+        [ "${status}" -eq 1 ]
+        [ "${output}" = "::error::agent_report_check must be empty, paths, or commits; got: '${value}'" ]
+    done
 }
 
 @test "validate_agent_unchanged_verdict accepts APPROVE and REJECT" {

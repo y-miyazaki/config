@@ -16,6 +16,7 @@ bats_require_minimum_version 1.5.0
 # - main fails when the entity target kind is not allowed by delivery
 # - main skips when daily budget is exceeded
 # - main builds target matrix, handoff payload, and pr_auto_merge from a successful entity detect
+# - main passes detect_env_json entries to the detect script only and rejects reserved or conflicting keys
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -91,6 +92,7 @@ budget_file
 budget_max_runs_per_day
 budget_max_tokens_per_day
 delivery
+detect_env_json
 detect_script
 finalize_label_allowlist
 finalize_script
@@ -218,6 +220,27 @@ state_file"
     run find "${RUNNER_TEMP}/loop-handoff" -type f
     [ "$status" -eq 0 ]
     [ "$(wc -l <<< "${output}")" -ge 1 ]
+}
+
+@test "main passes detect_env_json entries to the detect script only" {
+    local payload='{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:9","entity":{"kind":"issue"},"issue_number":9,"event_name":"issues","event_action":"opened"},"verifier_context":"Issue #9"}'
+    printf '%s\n' "${payload}" > "${BATS_TEST_TMPDIR}/detect.sh.json"
+    # shellcheck disable=SC2016 # the generated script expands ENTITY_T_VALUE when it runs
+    printf '#!/bin/bash\nprintf %%s "${ENTITY_T_VALUE-unset}" > "%s/seen"\ncat "%s/detect.sh.json"\n' \
+        "${BATS_TEST_TMPDIR}" "${BATS_TEST_TMPDIR}" > "${BATS_TEST_TMPDIR}/detect.sh"
+    chmod +x "${BATS_TEST_TMPDIR}/detect.sh"
+    run_main DETECT_ENV_JSON='{"ENTITY_T_VALUE":"seen-by-script"}'
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/seen")" = "seen-by-script" ]
+    [ ! -s "${GITHUB_ENV:-/dev/null}" ]
+}
+
+@test "main rejects reserved detect_env_json keys without running the detect script" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":true}'
+    run_main DETECT_ENV_JSON='{"GIT_DIR":"/tmp"}'
+    [ "$status" -eq 1 ]
+    [[ $stderr == *"detect_env_json key is reserved: GIT_DIR"* ]]
+    [ ! -s "${GITHUB_OUTPUT}" ]
 }
 
 @test "main publishes target matrix for L1 issue_comment on an issue entity" {

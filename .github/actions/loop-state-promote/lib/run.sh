@@ -37,6 +37,14 @@ STATE_PR_SKIP="${STATE_PR_SKIP:-false}"
 OUTCOME=""
 WRITE_MODE=""
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
+# shellcheck source=../../lib/loop/state_pr.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/state_pr.sh"
+
 #######################################
 # apply_pending_update: Apply promote or clear_pending jq transform for one target
 #
@@ -173,52 +181,12 @@ function commit_changed_state_files {
 #######################################
 function open_state_pr_fallback {
     local push_branch="$1"
-    local state_branch pr_url
 
     echo "Direct push blocked; opening state promote PR."
-    state_branch="loop/state-promote-${GITHUB_RUN_ID:-0}-${GITHUB_RUN_ATTEMPT:-0}-$(openssl rand -hex 4)"
-    git checkout -B "${state_branch}"
-    if ! git push origin "${state_branch}"; then
-        echo "::error::Failed to push state branch ${state_branch}"
-        exit 1
-    fi
-    pr_url=$(gh pr create \
-        --repo "${GITHUB_REPOSITORY}" \
-        --base "${push_branch}" \
-        --head "${state_branch}" \
-        --title "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
-        --body "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed.")
-    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
-        echo "State promote PR queued for auto-merge: ${pr_url}"
-    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
-        echo "State promote PR merged: ${pr_url}"
-    else
-        echo "::warning::State promote PR requires manual merge: ${pr_url}"
-    fi
-}
-
-#######################################
-# configure_git_auth: Configure git identity and GitHub auth header
-#
-# Globals:
-#   GITHUB_TOKEN - GitHub token
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-#######################################
-function configure_git_auth {
-    : "${GITHUB_TOKEN:?}"
-
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+    loop_open_state_pr "${push_branch}" "loop/state-promote" \
+        "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
+        "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed." \
+        "State promote PR"
 }
 
 #######################################
@@ -363,7 +331,7 @@ function process_state_push_branch {
 function main {
     : "${STATE_BRANCH:?STATE_BRANCH is required}"
 
-    configure_git_auth
+    loop_git_configure_auth
 
     if [[ ${MERGED} == "true" ]]; then
         OUTCOME="pr_merged"

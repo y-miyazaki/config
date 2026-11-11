@@ -65,6 +65,7 @@ budget_max_tokens_per_day
 delivery
 detect_branch_match
 detect_branch_match_mode
+detect_env_json
 detect_items
 detect_max_targets
 detect_pr_bot_allowlist

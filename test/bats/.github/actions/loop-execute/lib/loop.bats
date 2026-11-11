@@ -150,7 +150,7 @@ _commit_branch_ahead_of_main() {
     # shellcheck disable=SC2329
     function sync_reject_feedback { :; }
     # shellcheck disable=SC2329
-    function agent_report_skill_requires_format_check { return 1; }
+    function agent_report_requires_check { return 1; }
     # shellcheck disable=SC2329
     function build_agent_prompt { printf 'prompt'; }
     # shellcheck disable=SC2329
@@ -186,7 +186,7 @@ _commit_branch_ahead_of_main() {
     AGENT_UNCHANGED_VERDICT="APPROVE"
     NO_CHANGES_VERDICT="REJECT"
     function sync_reject_feedback { :; }
-    function agent_report_skill_requires_format_check { return 1; }
+    function agent_report_requires_check { return 1; }
     function build_agent_prompt { printf 'prompt'; }
     function run_agent_capture { printf '::warning::Agent permission_denials: [{"tool_name":"Edit"}]\n' > "$1"; }
     function harvest_workspace_into_worktree { return 0; }

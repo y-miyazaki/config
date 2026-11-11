@@ -207,7 +207,7 @@ The Checker cannot run tests, cannot see CI, and does not receive the Maker's re
 
 **Not enforced by the Checker.** PR-body honesty (no claim that the tests ran, the stated CI command and expected result, the new-reason statement for a re-selected target) is enforced by the Maker instructions and the skill's honesty rules (HON-01), and by human PR review, because the Checker does not receive the Maker's report.
 
-**Open item (platform follow-up, needs a ruling and a pin bump):** either add `test-gap` to `agent_report_skill_requires_format_check` in `.github/actions/loop-execute/lib/validate_agent_report.sh`, or pass the maker summary to the Checker. Until then the PR body is not machine-checked.
+**Report format check:** the caller sets `agent_report_check: paths`, so `loop-execute` machine-checks the PR body report (`### Changes` / `### Deferred`) against the branch diff before the LLM Checker runs.
 
 **Limits:** "Breaking the implementation makes the test fail" (mutation check) and "coverage increases" cannot be confirmed by the Checker. Protection against tests that pass but verify nothing is therefore weaker than execution-based verification. CI confirms green status and human review covers depth.
 

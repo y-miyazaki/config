@@ -42,7 +42,8 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-execute/action.yml"
         agent_cli_version agent_commit_message agent_edit_allowlist \
         agent_edit_denylist agent_engine agent_loop_max_attempts \
         agent_maker_effort agent_maker_max_turns agent_maker_model \
-        agent_maker_skill_name agent_token agent_tool_allowlist agent_tool_denylist \
+        agent_maker_skill_name agent_report_check agent_token agent_tool_allowlist \
+        agent_tool_denylist \
         agent_unchanged_verdict base_branch branch github_token handoff_dir \
         handoff_key node_version prompt_implementer_feedback prompt_text \
         prompt_verifier_default_criteria prompt_verifier_initial \

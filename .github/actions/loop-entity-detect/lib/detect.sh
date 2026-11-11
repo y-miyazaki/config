@@ -43,6 +43,8 @@ source "${SCRIPT_DIR}/_init.sh"
 #######################################
 # Environment supplied by loop-entity-detect composite action (validated in main).
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
+# KEY=VALUE entries from detect_env_json, filled by loop_build_detect_env_args (detect_env.sh).
+LOOP_DETECT_ENV_ARGS=()
 LOOP_NAME="${LOOP_NAME-}"
 AGENT_MAKER_SKILL_NAME="${AGENT_MAKER_SKILL_NAME-}"
 AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
@@ -167,6 +169,11 @@ function main {
     if ! resolve_detect_script_path; then
         exit 1
     fi
+    # shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+    source "${loop_action_lib}/detect_env.sh"
+    if ! loop_build_detect_env_args "${DETECT_ENV_JSON:-}"; then
+        exit 1
+    fi
 
     if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
         "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
@@ -174,7 +181,7 @@ function main {
         write_entity_skip_outputs "budget"
     fi
 
-    bash "${DETECT_SCRIPT}" > "${DETECT_OUT}"
+    env "${LOOP_DETECT_ENV_ARGS[@]}" bash "${DETECT_SCRIPT}" > "${DETECT_OUT}"
     detect_status="$(jq -r '.status // "error"' "${DETECT_OUT}")"
     if [[ ${detect_status} != "ok" ]]; then
         echo "::error::entity detect failed: status=$(jq -r '.status // "error"' "${DETECT_OUT}") message=$(jq -r '.message // ""' "${DETECT_OUT}")" >&2

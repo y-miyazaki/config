@@ -60,40 +60,12 @@ source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
 # shellcheck source=../../lib/loop/loop_meta.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/loop_meta.sh"
-
-#######################################
-# redact_sensitive_text: Redact common secret patterns
-#
-# Description:
-#   Replace common credential patterns with placeholders. Keep patterns
-#   aligned with loop-execute/lib/notify_context.sh.
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#
-# Outputs:
-#   Redacted text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function redact_sensitive_text {
-    local text="$1"
-    # Keep patterns aligned with loop-ci-sweeper sanitize_log_excerpt.
-    text=$(sed -E 's/gh[pousr]_[A-Za-z0-9_]{20,}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/(password|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*[^[:space:]\"]+/\1=[REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/x-access-token:[A-Za-z0-9._-]+/x-access-token:[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Bearer[[:space:]]+[A-Za-z0-9._-]+/Bearer [REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Authorization:[[:space:]]*[^[:space:]\"]+/Authorization: [REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[REDACTED-JWT]/g' <<< "${text}")
-    text=$(sed -E 's/-----BEGIN [A-Z ]+-----[^-]*-----END [A-Z ]+-----/[REDACTED-PEM]/g' <<< "${text}")
-    printf '%s' "${text}"
-}
+# shellcheck source=../../lib/loop/redact.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/redact.sh"
+# shellcheck source=../../lib/loop/text.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/text.sh"
 
 #######################################
 # render_agent_section: Render a redacted agent report section with heading
@@ -650,37 +622,6 @@ function render_pr_body {
     fi
 
     render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${AGENT_ENGINE}" "${USAGE_JSON}"
-}
-
-#######################################
-# truncate_text: Truncate text to max length
-#
-# Description:
-#   Return the input unchanged when within max; otherwise cut to max chars.
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#   $2 - Maximum length
-#
-# Outputs:
-#   Truncated text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function truncate_text {
-    local text="$1"
-    local max="$2"
-
-    if [[ ${#text} -le ${max} ]]; then
-        printf '%s' "${text}"
-    else
-        printf '%s' "${text:0:max}"
-    fi
 }
 
 #######################################

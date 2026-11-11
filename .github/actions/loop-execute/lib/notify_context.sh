@@ -196,33 +196,9 @@ function parse_agent_summary {
 _LOOP_NOTIFY_REDACT_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/redact.sh disable=SC1091
 source "${_LOOP_NOTIFY_REDACT_LIB}/redact.sh"
-
-#######################################
-# truncate_text: Truncate text to max length
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#   $2 - Maximum length
-#
-# Outputs:
-#   Truncated text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function truncate_text {
-    local text="$1"
-    local max="$2"
-    if [[ ${#text} -le ${max} ]]; then
-        printf '%s' "${text}"
-    else
-        printf '%s' "${text:0:max}"
-    fi
-}
+# shellcheck source=../../lib/loop/text.sh
+# shellcheck disable=SC1091
+source "${_LOOP_NOTIFY_REDACT_LIB}/text.sh"
 
 #######################################
 # validate_required_inputs: Validate required notify_context environment

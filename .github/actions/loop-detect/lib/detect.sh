@@ -62,6 +62,8 @@ source "${SCRIPT_DIR}/_init.sh"
 # Environment supplied by loop-detect composite action (validated in main).
 STATE_BRANCH="${STATE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
+# KEY=VALUE entries from detect_env_json, filled by loop_build_detect_env_args (detect_env.sh).
+LOOP_DETECT_ENV_ARGS=()
 STATE_FILE="${STATE_FILE-}"
 
 #######################################
@@ -979,7 +981,7 @@ function invoke_detect_script {
     if [[ -z ${DETECT_SCRIPT} ]]; then
         detect_result="$(range_detect "${last_sha}" "$(git rev-parse HEAD)" "${STATE_FILE}" "${RUN_LOG_FILE:-}")" || detect_status=$?
     else
-        detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+        detect_result="$(env "${LOOP_DETECT_ENV_ARGS[@]}" bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
     fi
     # set -e: without ||, a non-zero detect exit aborts before we can log context or echo stdout to stderr.
 
@@ -1359,6 +1361,11 @@ function main {
 
     # A configuration error fails the job instead of skipping (no outputs written).
     if ! validate_detect_inputs; then
+        return 1
+    fi
+    # shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+    source "${SCRIPT_DIR}/../../lib/loop/detect_env.sh"
+    if ! loop_build_detect_env_args "${DETECT_ENV_JSON:-}"; then
         return 1
     fi
 

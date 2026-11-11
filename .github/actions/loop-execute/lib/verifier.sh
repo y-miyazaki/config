@@ -201,7 +201,7 @@ function write_verifier_output_contract {
 #   AGENT_UNCHANGED_VERDICT - Verdict for an empty branch diff (APPROVE|REJECT)
 #   AGENT_CHECKER_EFFORT, AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS
 #   AGENT_CHECKER_MODEL
-#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, VERIFIER_CONTEXT
+#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, AGENT_REPORT_CHECK, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
 # Arguments:
@@ -304,9 +304,9 @@ function run_verify {
     local agent_output_file="${attempt_dir}/agent-output.txt"
     local format_violations=""
     if [[ -f ${agent_output_file} ]] \
-        && agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
-        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}"
-        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}" || true)"
+        && agent_report_requires_check "${AGENT_REPORT_CHECK:-}"; then
+        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}"
+        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
                 "Agent report output format or Changes/Deferred consistency failed" \
@@ -329,7 +329,7 @@ function run_verify {
     if [[ -z ${criteria} && -z ${VERIFIER_SKILL_ROOT:-} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
     fi
-    if agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
+    if agent_report_requires_check "${AGENT_REPORT_CHECK:-}"; then
         local format_criteria_file="${LIB_DIR}/agent_output_format_criteria.md"
         if [[ -f ${format_criteria_file} ]]; then
             criteria="${criteria}"$'\n\n'"$(cat "${format_criteria_file}")"

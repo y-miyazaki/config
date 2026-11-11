@@ -229,6 +229,36 @@ function render_template {
 }
 
 #######################################
+# validate_agent_report_check: Reject unknown agent_report_check values
+#
+# Description:
+#   An empty value skips the deterministic report check by design. Any other value
+#   must be paths or commits; a typo fails closed instead of silently skipping.
+#
+# Globals:
+#   AGENT_REPORT_CHECK - empty, paths, or commits (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when the value is unknown
+#
+# Returns:
+#   0 when the value is empty, paths, or commits; 1 otherwise
+#
+#######################################
+function validate_agent_report_check {
+    case "${AGENT_REPORT_CHECK:-}" in
+        "" | commits | paths) return 0 ;;
+        *)
+            echo "::error::agent_report_check must be empty, paths, or commits; got: '${AGENT_REPORT_CHECK}'" >&2
+            return 1
+            ;;
+    esac
+}
+
+#######################################
 # validate_agent_unchanged_verdict: Require an explicit unchanged verdict
 #
 # Description:

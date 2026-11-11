@@ -3,24 +3,24 @@
 # Description: Mechanical validation of loop maker agent-output.txt
 #
 # Usage: source lib/validate_agent_report.sh
-#        validate_agent_report <output_file> <changed_files_newline> <agent_maker_skill_name>
+#        validate_agent_report <output_file> <changed_files_newline> <agent_report_check>
 #
 # Output:
 # - Prints violation lines to stdout (empty when valid)
 #
 # Design Rules:
 # - Deterministic checks only; runs before the LLM checker
-# - Applies to loop fix skills listed in agent_report_skill_requires_format_check
+# - Applies only when the caller sets agent_report_check (paths | commits); empty skips all checks
 #######################################
 
 #######################################
-# agent_report_skill_requires_format_check: Return whether skill uses fix-skill report format
+# agent_report_requires_check: Return whether the caller opted into fix-report format checks
 #
 # Globals:
 #   None
 #
 # Arguments:
-#   $1 - Skill name
+#   $1 - Report check mode (caller agent_report_check)
 #
 # Outputs:
 #   None
@@ -29,32 +29,10 @@
 #   0 when format checks apply; 1 otherwise
 #
 #######################################
-function agent_report_skill_requires_format_check {
+function agent_report_requires_check {
     case "${1:-}" in
-        changelog | ci-sweeper | docs-updater | refactor | tech-debt | test-gap) return 0 ;;
+        commits | paths) return 0 ;;
         *) return 1 ;;
-    esac
-}
-
-#######################################
-# agent_report_primary_subsection: Return primary Summary subsection name for skill
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Skill name
-#
-# Outputs:
-#   Subsection title without hashes to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function agent_report_primary_subsection {
-    case "${1:-}" in
-        *) printf '%s' "Changes" ;;
     esac
 }
 
@@ -95,7 +73,7 @@ function agent_report_is_survey_output {
 #   None
 #
 # Arguments:
-#   $1 - Skill name
+#   $1 - Report check mode (caller agent_report_check)
 #
 # Outputs:
 #   Subsection title without hashes to stdout
@@ -106,7 +84,7 @@ function agent_report_is_survey_output {
 #######################################
 function agent_report_deferred_subsection {
     case "${1:-}" in
-        changelog) printf '%s' "Skipped" ;;
+        commits) printf '%s' "Skipped" ;;
         *) printf '%s' "Deferred" ;;
     esac
 }
@@ -118,7 +96,7 @@ function agent_report_deferred_subsection {
 #   None
 #
 # Arguments:
-#   $1 - Skill name
+#   $1 - Report check mode (caller agent_report_check)
 #
 # Outputs:
 #   None
@@ -128,10 +106,7 @@ function agent_report_deferred_subsection {
 #
 #######################################
 function agent_report_uses_path_changes_table {
-    case "${1:-}" in
-        changelog) return 1 ;;
-        *) return 0 ;;
-    esac
+    [[ ${1:-} != "commits" ]]
 }
 
 #######################################
@@ -277,7 +252,7 @@ function format_reconcile_changes_row {
 # Arguments:
 #   $1 - Agent output file path (modified in place)
 #   $2 - Changed files (newline-separated, repository-relative)
-#   $3 - Skill name
+#   $3 - Report check mode (caller agent_report_check)
 #
 # Outputs:
 #   None
@@ -289,11 +264,12 @@ function format_reconcile_changes_row {
 function reconcile_agent_report_with_branch_diff {
     local output_file="$1"
     local changed_files="$2"
-    local agent_maker_skill_name="$3"
-    local primary path norm changed_path found
+    local agent_report_check="$3"
+    local path norm changed_path found
+    local -r primary="Changes"
     local -a change_paths=() missing_paths=()
 
-    if ! agent_report_skill_requires_format_check "${agent_maker_skill_name}"; then
+    if ! agent_report_requires_check "${agent_report_check}"; then
         return 0
     fi
     if [[ ! -f ${output_file} || -z ${changed_files} ]]; then
@@ -302,11 +278,10 @@ function reconcile_agent_report_with_branch_diff {
     if agent_report_is_survey_output "${output_file}" "${changed_files}"; then
         return 0
     fi
-    if ! agent_report_uses_path_changes_table "${agent_maker_skill_name}"; then
+    if ! agent_report_uses_path_changes_table "${agent_report_check}"; then
         return 0
     fi
 
-    primary="$(agent_report_primary_subsection "${agent_maker_skill_name}")"
     mapfile -t change_paths < <(extract_subsection_table_col1 "${output_file}" "${primary}")
 
     while IFS= read -r changed_path; do
@@ -428,7 +403,7 @@ PY
 # Arguments:
 #   $1 - Agent output file path
 #   $2 - Changed files (newline-separated, repository-relative)
-#   $3 - Skill name
+#   $3 - Report check mode (caller agent_report_check)
 #
 # Outputs:
 #   Violation lines to stdout (empty when valid)
@@ -440,13 +415,14 @@ PY
 function validate_agent_report {
     local output_file="$1"
     local changed_files="$2"
-    local agent_maker_skill_name="$3"
-    local primary deferred survey=false
+    local agent_report_check="$3"
+    local deferred survey=false
+    local -r primary="Changes"
     local -a violations=()
     local path norm changed_path
     local -a change_paths=() deferred_paths=()
 
-    if ! agent_report_skill_requires_format_check "${agent_maker_skill_name}"; then
+    if ! agent_report_requires_check "${agent_report_check}"; then
         return 0
     fi
     if [[ ! -f ${output_file} ]]; then
@@ -516,8 +492,7 @@ function validate_agent_report {
         return 0
     fi
 
-    primary="$(agent_report_primary_subsection "${agent_maker_skill_name}")"
-    deferred="$(agent_report_deferred_subsection "${agent_maker_skill_name}")"
+    deferred="$(agent_report_deferred_subsection "${agent_report_check}")"
 
     if [[ -n ${changed_files} ]] && ! grep -qE "^### ${primary}[[:space:]]*$" "${output_file}"; then
         violations+=("Missing ### ${primary} under ## Summary while branch has file changes")
@@ -539,7 +514,7 @@ function validate_agent_report {
         done
     done
 
-    if agent_report_uses_path_changes_table "${agent_maker_skill_name}"; then
+    if agent_report_uses_path_changes_table "${agent_report_check}"; then
         while IFS= read -r changed_path; do
             [[ -z ${changed_path} ]] && continue
             changed_path="${changed_path#./}"

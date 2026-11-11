@@ -36,6 +36,12 @@ source "${SCRIPT_DIR}/prune_targets.sh"
 # shellcheck source=../../lib/loop/outcome.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/outcome.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
+# shellcheck source=../../lib/loop/state_pr.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/state_pr.sh"
 
 #######################################
 # Global variables
@@ -205,52 +211,11 @@ function commit_and_push_state {
 #
 #######################################
 function open_state_pr_fallback {
-    local state_branch pr_url
-
     echo "Direct push blocked; opening state PR."
-    state_branch="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 4)"
-    git checkout -B "${state_branch}"
-    if ! git push origin "${state_branch}"; then
-        echo "::error::Failed to push state branch ${state_branch}"
-        exit 1
-    fi
-    pr_url=$(gh pr create \
-        --repo "${GITHUB_REPOSITORY}" \
-        --base "${READ_BRANCH}" \
-        --head "${state_branch}" \
-        --title "chore(loop): update state [skip ci]" \
-        --body "Automated loop state update (mode: ${STATE_WRITE_MODE}, outcome: ${OUTCOME}, sha: ${SHA}).")
-    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
-        echo "State PR queued for auto-merge: ${pr_url}"
-    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
-        echo "State PR merged: ${pr_url}"
-    else
-        echo "::warning::State PR requires manual merge: ${pr_url}"
-    fi
-}
-
-#######################################
-# configure_git_auth: Configure git identity and GitHub auth header
-#
-# Globals:
-#   GITHUB_TOKEN - GitHub token for push and gh CLI
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-#######################################
-function configure_git_auth {
-    : "${GITHUB_TOKEN:?}"
-
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+    loop_open_state_pr "${READ_BRANCH}" "loop/state" \
+        "chore(loop): update state [skip ci]" \
+        "Automated loop state update (mode: ${STATE_WRITE_MODE}, outcome: ${OUTCOME}, sha: ${SHA})." \
+        "State PR"
 }
 
 #######################################
@@ -823,7 +788,7 @@ function main {
 
     validate_state_file_path || exit 1
 
-    configure_git_auth
+    loop_git_configure_auth
 
     if [[ -z ${STATE_BRANCH} ]]; then
         echo "::error::state_branch is required"

@@ -23,6 +23,10 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/git_auth.sh"
+
 #######################################
 # Global variables
 #######################################
@@ -270,9 +274,7 @@ function loop_run_log_commit_and_push {
     local attempt push_error=""
 
     export GITHUB_TOKEN="${token}"
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+    loop_git_configure_auth
 
     for attempt in 1 2 3; do
         if [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then

@@ -74,6 +74,7 @@ setup() {
         BRANCH_PREFIX='legacy' \
         FROM_BRANCH='release' \
         FROM_REF='' \
+        GITHUB_ACTION_PATH='$(dirname "${ACTION_YML}")' \
         GITHUB_OUTPUT='${output_file}' \
         GITHUB_TOKEN='dummy-token' \
         RUNNER_TEMP='${runner_temp}' \
@@ -145,6 +146,7 @@ run_setup_with_key() {
         BRANCH='' \
         FROM_BRANCH='' \
         FROM_REF='bad ref;' \
+        GITHUB_ACTION_PATH='$(dirname "${ACTION_YML}")' \
         GITHUB_OUTPUT='${BATS_TEST_TMPDIR}/github_output_invalid' \
         GITHUB_TOKEN='dummy-token' \
         RUNNER_TEMP='${BATS_TEST_TMPDIR}' \

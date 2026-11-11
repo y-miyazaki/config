@@ -45,6 +45,7 @@ FINALIZE_OUTCOME_OVERRIDE=""
 # initialize_loop_state: Prepare status directory and prompt defaults
 #
 # Globals:
+#   AGENT_REPORT_CHECK - Empty, paths, or commits (read; validated)
 #   AGENT_UNCHANGED_VERDICT - Required APPROVE or REJECT (read; validated)
 #   STATUS_DIR - Caller env directory for attempt artifacts (read)
 #
@@ -52,15 +53,16 @@ FINALIZE_OUTCOME_OVERRIDE=""
 #   None
 #
 # Outputs:
-#   Error annotation on stderr when AGENT_UNCHANGED_VERDICT is invalid
+#   Error annotation on stderr when AGENT_UNCHANGED_VERDICT or AGENT_REPORT_CHECK is invalid
 #
 # Returns:
-#   0 on success; 1 when AGENT_UNCHANGED_VERDICT is missing or invalid
+#   0 on success; 1 when AGENT_UNCHANGED_VERDICT or AGENT_REPORT_CHECK is invalid
 #
 #######################################
 function initialize_loop_state {
     mkdir -p "${STATUS_DIR}"
     validate_agent_unchanged_verdict || return 1
+    validate_agent_report_check || return 1
     materialize_matrix_handoff_context
     load_default_prompts
     apply_platform_denylist_default
@@ -232,6 +234,7 @@ function write_loop_outputs {
 #
 # Globals:
 #   AGENT_COMMIT_MESSAGE - Commit message prefix for attempt commits (read)
+#   AGENT_REPORT_CHECK - Caller report check mode; empty skips the fix-report checks (read)
 #   AGENT_UNCHANGED_VERDICT - Verdict when the maker produces no changes (read)
 #   ATTEMPT - Current attempt counter (read/write)
 #   DENYLIST_BLOCKED - Whether the latest checked attempt hit the denylist (write)
@@ -264,7 +267,7 @@ function run_bounded_loop {
         sync_reject_feedback
 
         synthesis_block=""
-        if agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}" \
+        if agent_report_requires_check "${AGENT_REPORT_CHECK:-}" \
             && { [[ ${HAS_CHANGES} == "true" ]] || [[ ${ATTEMPT} -gt 1 ]]; }; then
             local pre_branch_files
             pre_branch_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
