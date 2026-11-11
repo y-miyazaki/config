@@ -1,13 +1,14 @@
 #######################################
 # Description:
-#   Loop workflow: Issue autofix (L2) and scheduled code-review Issue observation (L1)
+#   Loop workflow: Issue autofix (L2) from Webhook/dispatch and from a daily code-review Issue scan
 #   Intake: labeled(autofix) | repository_dispatch(loop-github-issue-autofix) | workflow_dispatch
-#   → loop job (L2, ci-loop-caller). Detect skips when open/draft Fixes #N PR exists.
-#   Daily schedule → loop-scheduled job (L1, delivery none): detect scan mode lists code-review
-#   Issues as items; the agent only outputs a fix plan (no edits, no PR).
+#   → loop job (L2, pr_create, ci-loop-caller). Detect skips when open/draft Fixes #N PR exists.
+#   Daily schedule → loop-scheduled job (L2, pr_create): detect scan mode lists code-review
+#   Issues as items; each Issue is fixed and delivered as its own PR (Fixes #N).
 #
 # Usage:
 #   Runs on: issues, repository_dispatch, schedule, workflow_dispatch
+#   Both jobs run in items mode: state keys are per Issue (integration:main#issue:<N>)
 #
 # Design Rules:
 #   None
@@ -17,7 +18,7 @@
 #
 # References:
 #   - Design: docs/superpowers/specs/2026-11-11-loop-scheduled-intake-design.md
-#   - Plan: docs/superpowers/plans/2026-11-11-loop-scheduled-intake-autofix-l1.md
+#   - Plan: docs/superpowers/plans/2026-11-11-loop-scheduled-intake-autofix-l2.md
 #######################################
 name: on-loop-github-issue-autofix
 
@@ -107,7 +108,8 @@ jobs:
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
       detect_branch_match: main
-      detect_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
+      detect_env_json: ${{ format('{{"AUTOFIX_ITEMS":"true","ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
+      detect_items: true
       detect_script: .agents/skills/github-issue-autofix/scripts/detect_autofix.sh
       level: L2
       loop_name: github-issue-autofix
@@ -117,9 +119,8 @@ jobs:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
-  # Stage D: observe only. L1 + delivery none: the agent outputs a fix plan and
-  # never edits files, opens PRs or fires repository_dispatch. Items mode fans out
-  # one target per code-review Issue listed by the detect script scan mode.
+  # Stage E: L2 + delivery pr_create, same write settings as loop. Items mode fans out
+  # one target per code-review Issue listed by the detect script scan mode (max 3 per run).
   loop-scheduled:
     if: github.event_name == 'schedule'
     permissions:
@@ -130,49 +131,59 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      # Checker inputs are required by ci-loop-caller but the rubric never runs at L1 (no checker), so it is not an edit guard; edits are prevented by agent_edit_allowed being false, the maker instructions and the read-only job token.
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
-        1. The agent output a fix plan (target files, change summary, risks) for the Issue in detect JSON
-        2. No repository file edits were made
-        3. No PR was opened and the agent did not call repository_dispatch
+        1. When detect skip is false, a fix was implemented for the Issue (or explicitly deferred with justification)
+        2. PR path includes Fixes #<N> (or equivalent closing keyword) for the source Issue
+        3. Agent did not call repository_dispatch
+        4. Edits stay within allowlist when set
 
         ## Criteria for REJECT
 
         ANY of the following triggers REJECT:
-        - Repository files modified
-        - PR creation or repository_dispatch attempted by the Agent
+        - repository_dispatch attempted by the Agent
+        - Missing Fixes #<N> / closing keyword for the source Issue when changes exist
+        - Unrelated drive-by refactors
       agent_checker_max_turns: 100
       agent_checker_model: claude-opus-5
+      agent_edit_allowlist: "**"
+      agent_edit_target: fix
       agent_engine: claude
       agent_loop_max_attempts: 3
       agent_maker_effort: medium
       agent_maker_instructions: |
-        Read the Issue from detect JSON and output a fix plan only: target files, a summary of the
-        change, and risks.
-        Do not edit any file. Do not create a PR, branch or commit. Do not call repository_dispatch.
+        Implement a minimal fix for the Issue from detect JSON.
+        Synthesize PR body with Fixes #<N>. Do not call repository_dispatch.
+        Run a validation skill's script from the repository root by this exact form: `bash .claude/skills/<skill>/scripts/validate.sh [path]` (other forms such as cd into the skill directory or an absolute path are denied in CI).
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-autofix
-      # Read-only: the plan is printed, nothing is pushed or created.
+      # Autofix reads the Issue and checks for an existing PR that closes it; the
+      # branch push and PR creation are done by the workflow, not by the agent.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
         Bash(gh issue view:*)
         Bash(gh pr list:*)
         Bash(gh pr view:*)
+        Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
+      agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000
-      delivery: none
+      delivery: pr_create
       detect_branch_match: main
-      detect_env_json: '{"AUTOFIX_BRANCH_PREFIX":"loop/github-issue-autofix/","AUTOFIX_MAX_OPEN_PRS":"3","AUTOFIX_PR_LABEL":"loop-automation","AUTOFIX_SCAN":"true","AUTOFIX_SOURCE_LABEL":"loop:code-review","AUTOFIX_SOURCE_MARKER":"<!-- code-review:fp:"}'
+      detect_env_json: '{"AUTOFIX_BRANCH_PREFIX":"loop/github-issue-autofix/","AUTOFIX_MAX_OPEN_PRS":"3","AUTOFIX_PR_LABEL":"loop-automation","AUTOFIX_PR_SCAN_LIMIT":"1000","AUTOFIX_SCAN":"true","AUTOFIX_SOURCE_LABEL":"loop:code-review","AUTOFIX_SOURCE_MARKER":"<!-- code-review:fp:"}'
       detect_items: true
       detect_max_targets: 3
       detect_script: .agents/skills/github-issue-autofix/scripts/detect_autofix.sh
-      level: L1
+      level: L2
       loop_name: github-issue-autofix
+      pr_draft: ${{ inputs.pr_draft || false }}
       state_branch: main
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

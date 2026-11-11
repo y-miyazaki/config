@@ -7,9 +7,9 @@
 # - workflow-level permissions are empty; loop and loop-scheduled each hold the five write permissions
 # - concurrency group is loop-state-main on schedule and keeps queue max
 # - loop if excludes schedule and admits issues only for the autofix label
-# - loop-scheduled is the L1 delivery none items-mode observer with the scan detect env
-# - loop-scheduled passes no L2-only write inputs and its maker is read-only
-# - loop job configuration stays L2 pr_create
+# - loop-scheduled is the L2 pr_create items-mode job with the scan detect env and PR scan limit
+# - loop-scheduled maker and checker match loop (Fixes #N, no repository_dispatch) and tool allowlists are equal
+# - loop job stays L2 pr_create and runs in items mode (AUTOFIX_ITEMS) with a valid detect_env_json
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -85,11 +85,29 @@ EXPECTED_PERMS="$(printf '%s\n' \
     [ "$(job_if loop)" = "github.event_name != 'schedule' && (github.event_name != 'issues' || github.event.label.name == 'autofix')" ]
 }
 
-@test "loop-scheduled runs only on schedule and calls the caller at L1 with items mode" {
+# block_value JOB KEY: print the lines of a multi-line with: key
+block_value() {
+    job_block "$1" | awk -v key="$2" '$0 ~ "^      " key ":" {f=1; next} f && /^      [a-z#]/ {exit} f'
+}
+
+# env_json_template JOB: print the format() template of detect_env_json
+# with the {0} argument replaced by a sample ISSUE_NUMBER string ($2) and
+# the {{ }} escapes resolved, so jq can validate the resulting JSON.
+env_json_template() {
+    with_line "$1" detect_env_json |
+        sed -E "s/^.*format\('(\{\{.*\}\})', toJSON.*\$/\1/" |
+        sed -e "s/{0}/\"$2\"/" -e 's/{{/{/g' -e 's/}}/}/g'
+}
+
+@test "loop-scheduled runs only on schedule and calls the caller at L2 with items mode" {
     [ "$(job_if loop-scheduled)" = "github.event_name == 'schedule'" ]
     job_block loop-scheduled | grep -qx '    uses: ./.github/workflows/ci-loop-caller.yaml'
-    [ "$(with_line loop-scheduled level)" = "L1" ]
-    [ "$(with_line loop-scheduled delivery)" = "none" ]
+    [ "$(with_line loop-scheduled level)" = "L2" ]
+    [ "$(with_line loop-scheduled delivery)" = "pr_create" ]
+    [ "$(with_line loop-scheduled agent_edit_target)" = "fix" ]
+    [ "$(with_line loop-scheduled agent_edit_allowlist)" = '"**"' ]
+    [ "$(with_line loop-scheduled agent_unchanged_verdict)" = "REJECT" ]
+    [ "$(with_line loop-scheduled pr_draft)" = '${{ inputs.pr_draft || false }}' ]
     [ "$(with_line loop-scheduled detect_items)" = "true" ]
     [ "$(with_line loop-scheduled detect_branch_match)" = "main" ]
     [ "$(with_line loop-scheduled detect_max_targets)" = "3" ]
@@ -97,17 +115,14 @@ EXPECTED_PERMS="$(printf '%s\n' \
     [ "$(with_line loop-scheduled loop_name)" = "github-issue-autofix" ]
 }
 
-@test "loop-scheduled passes no L2-only write inputs" {
-    local block key
-    block="$(job_block loop-scheduled)"
-    [ -n "${block}" ]
-    for key in agent_edit_target agent_edit_allowlist agent_edit_denylist agent_unchanged_verdict finalize_script pr_draft pr_title pr_body pr_labels; do
-        run grep -qE "^      ${key}:" <<<"${block}"
-        [ "$status" -ne 0 ]
-    done
+@test "loop-scheduled does not enable detect_pr_enabled (items mode requirement)" {
+    run grep -qE '^      detect_pr_enabled:' <<<"$(job_block loop-scheduled)"
+    [ "$status" -ne 0 ]
+    run grep -qE '^      detect_pr_enabled:' <<<"$(job_block loop)"
+    [ "$status" -ne 0 ]
 }
 
-@test "loop-scheduled detect_env_json is valid JSON with the scan variables" {
+@test "loop-scheduled detect_env_json is valid JSON with the scan variables and PR scan limit" {
     local raw json
     raw="$(with_line loop-scheduled detect_env_json)"
     [ -n "${raw}" ]
@@ -121,39 +136,60 @@ EXPECTED_PERMS="$(printf '%s\n' \
         .AUTOFIX_SOURCE_MARKER == "<!-- code-review:fp:" and
         .AUTOFIX_PR_LABEL == "loop-automation" and
         .AUTOFIX_BRANCH_PREFIX == "loop/github-issue-autofix/" and
-        .AUTOFIX_MAX_OPEN_PRS == "3"
+        .AUTOFIX_MAX_OPEN_PRS == "3" and
+        .AUTOFIX_PR_SCAN_LIMIT == "1000"
     ' <<<"${json}"
     [ "$status" -eq 0 ]
 }
 
-@test "loop-scheduled maker is read-only and forbids edits, PRs and repository_dispatch" {
+@test "loop-scheduled maker implements the fix, closes the Issue via PR body and never fires repository_dispatch" {
     local instr
-    instr="$(job_block loop-scheduled | awk '/^      agent_maker_instructions:/ {f=1; next} f && /^      [a-z]/ {exit} f')"
+    instr="$(block_value loop-scheduled agent_maker_instructions)"
     [ -n "${instr}" ]
-    grep -qi 'do not edit' <<<"${instr}"
-    grep -qi 'do not create' <<<"${instr}"
-    grep -q 'repository_dispatch' <<<"${instr}"
-    grep -qi 'target files' <<<"${instr}"
-    grep -qi 'risks' <<<"${instr}"
+    grep -q 'Fixes #' <<<"${instr}"
+    grep -q 'Do not call repository_dispatch' <<<"${instr}"
+    grep -q 'bash .claude/skills/<skill>/scripts/validate.sh \[path\]' <<<"${instr}"
+    run grep -qi 'do not edit' <<<"${instr}"
+    [ "$status" -ne 0 ]
+    [ "${instr}" = "$(block_value loop agent_maker_instructions)" ]
 }
 
-@test "loop-scheduled tool allowlist is read-only" {
-    local list
-    list="$(job_block loop-scheduled | awk '/^      agent_tool_allowlist:/ {f=1; next} f && /^      [a-z]/ {exit} f')"
-    grep -q 'Bash(gh issue view:\*)' <<<"${list}"
-    run grep -q 'validate.sh' <<<"${list}"
+@test "loop-scheduled checker rubric is the loop one and carries no L1-only comment" {
+    [ "$(block_value loop-scheduled agent_checker_instructions)" = "$(block_value loop agent_checker_instructions)" ]
+    run grep -qi 'never runs at L1' <<<"$(job_block loop-scheduled)"
     [ "$status" -ne 0 ]
 }
 
-@test "loop job keeps L2 pr_create configuration and detect_env_json" {
+@test "both jobs share the same tool allowlist including the validate.sh lines" {
+    local list
+    list="$(block_value loop-scheduled agent_tool_allowlist)"
+    [ "${list}" = "$(block_value loop agent_tool_allowlist)" ]
+    grep -q 'Bash(gh issue view:\*)' <<<"${list}"
+    [ "$(grep -c 'validate.sh:\*)' <<<"${list}")" -eq 4 ]
+}
+
+@test "loop job keeps L2 pr_create configuration and runs per issue in items mode" {
     [ "$(with_line loop level)" = "L2" ]
     [ "$(with_line loop delivery)" = "pr_create" ]
     [ "$(with_line loop agent_edit_target)" = "fix" ]
     [ "$(with_line loop agent_unchanged_verdict)" = "REJECT" ]
     [ "$(with_line loop pr_draft)" = '${{ inputs.pr_draft || false }}' ]
+    [ "$(with_line loop detect_items)" = "true" ]
+    [ "$(with_line loop detect_branch_match)" = "main" ]
     with_line loop detect_env_json | grep -q '"ISSUE_NUMBER"'
+    with_line loop detect_env_json | grep -q '"AUTOFIX_ITEMS":"true"'
+    with_line loop detect_env_json | grep -q "github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''"
     run grep -q 'AUTOFIX_SCAN' <<<"$(job_block loop)"
     [ "$status" -ne 0 ]
+}
+
+@test "loop detect_env_json template yields valid JSON for numeric and empty issue numbers" {
+    local sample json
+    for sample in 7 ""; do
+        json="$(env_json_template loop "${sample}")"
+        run jq -e --arg n "${sample}" '.AUTOFIX_ITEMS == "true" and .ISSUE_NUMBER == $n and (keys | length) == 2' <<<"${json}"
+        [ "$status" -eq 0 ]
+    done
 }
 
 @test "run-name has no literal # before the expression and formats numbers with event_name fallback" {
