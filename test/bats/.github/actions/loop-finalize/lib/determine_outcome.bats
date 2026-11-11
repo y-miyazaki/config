@@ -16,6 +16,8 @@
 #   has_changes and APPROVE/empty verdict
 # - REJECT is rejected for issue_comment and pr_review
 # - an override wins and a failed agent is error for issue_comment and pr_review
+# - issue_create APPROVE is issue_created (override ignored), REJECT is rejected,
+#   a failed agent or push is error
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -144,4 +146,25 @@ setup() {
     [ "$output" = "error" ]
     run determine_outcome "" success true APPROVE pr_create false
     [ "$output" = "pr_created" ]
+}
+
+@test "issue_create APPROVE is issue_created and ignores an outcome override" {
+    run determine_outcome "" success true APPROVE issue_create false
+    [ "$status" -eq 0 ]
+    [ "$output" = "issue_created" ]
+    run determine_outcome watch success true APPROVE issue_create false
+    [ "$output" = "issue_created" ]
+}
+
+@test "issue_create REJECT is rejected, a failed agent or push is error" {
+    run determine_outcome "" success true REJECT issue_create false
+    [ "$output" = "rejected" ]
+    run determine_outcome watch success true REJECT issue_create false
+    [ "$output" = "rejected" ]
+    run determine_outcome "" success true APPROVE issue_create true
+    [ "$output" = "error" ]
+    run determine_outcome "" failure true APPROVE issue_create false
+    [ "$output" = "error" ]
+    run determine_outcome "" success true "" issue_create false
+    [ "$output" = "error" ]
 }

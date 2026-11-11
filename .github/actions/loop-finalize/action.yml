@@ -46,7 +46,7 @@ inputs:
     description: "SHA to record in per-target state"
     required: true
   delivery:
-    description: "Declared delivery (pr_create | pr_push | issue_comment | pr_review | none); every step branches on this value only"
+    description: "Declared delivery (pr_create | pr_push | issue_comment | issue_create | pr_review | none); every step branches on this value only"
     required: true
   finalize_commit_paths:
     default: ""
@@ -275,9 +275,9 @@ runs:
     - name: Deliver Message
       id: deliver
       if: >-
-        (inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') &&
+        ((inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.verdict != 'REJECT' ||
+        inputs.delivery == 'issue_create' && inputs.verdict == 'APPROVE') &&
         inputs.agent_result == 'success' &&
-        inputs.verdict != 'REJECT' &&
         steps.agent_push.outputs.failed != 'true'
       shell: bash
       env:
@@ -381,7 +381,7 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Agent Branch
-      if: always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')
+      if: always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'issue_create' || inputs.delivery == 'pr_review')
       shell: bash
       env:
         AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}

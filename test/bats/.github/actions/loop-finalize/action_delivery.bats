@@ -129,7 +129,7 @@ step_run() {
 
 @test "delete agent branch keys on REJECT or a delivery that never lands the branch" {
     run step_if "Delete Agent Branch"
-    [ "${output}" = "always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')" ]
+    [ "${output}" = "always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'issue_create' || inputs.delivery == 'pr_review')" ]
 }
 
 @test "determine outcome and state mode receive the push failure" {
@@ -218,9 +218,14 @@ EOF2
     [ "${output}" = "${expected}" ]
 }
 
-@test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent" {
+@test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent and for issue_create after APPROVE" {
     run step_if "Deliver Message"
-    [ "${output}" = "(inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.agent_result == 'success' && inputs.verdict != 'REJECT' && steps.agent_push.outputs.failed != 'true'" ]
+    [ "${output}" = "((inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.verdict != 'REJECT' || inputs.delivery == 'issue_create' && inputs.verdict == 'APPROVE') && inputs.agent_result == 'success' && steps.agent_push.outputs.failed != 'true'" ]
+}
+
+@test "write state never runs under always() so a failed hook or delivery leaves state untouched" {
+    run step_if "Write State"
+    [[ ${output} != *"always()"* ]]
 }
 
 @test "fail agent push runs after delete agent branch and before resolve run outcome" {

@@ -85,3 +85,15 @@ setup() {
     run resolve_state_write_mode APPROVE true none false false
     [ "${output}" = "metadata" ]
 }
+
+@test "issue_create advances on APPROVE with a pushed agent branch and records metadata otherwise" {
+    run resolve_state_write_mode APPROVE true issue_create false true
+    [ "$status" -eq 0 ]
+    [ "$output" = "advance" ]
+    run resolve_state_write_mode APPROVE true issue_create false false
+    [ "$output" = "metadata" ]
+    run resolve_state_write_mode REJECT true issue_create false true
+    [ "$output" = "metadata" ]
+    run resolve_state_write_mode APPROVE true issue_create true true
+    [ "$output" = "metadata" ]
+}
