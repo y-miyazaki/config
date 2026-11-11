@@ -10,6 +10,7 @@ bats_require_minimum_version 1.5.0
 # - ensure_repo_labels treats an already existing label as success
 # - ensure_repo_labels stops at the first other failure and reports the label and gh error
 # - ensure_repo_labels skips empty names and does nothing without arguments
+# - parse_label_list trims names, drops empty entries, and splits on newlines or a given separator
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -41,6 +42,32 @@ EOF2
 
 teardown() {
     rm -f "${BATS_TEST_TMPDIR}/gh.log"
+}
+
+@test "parse_label_list splits on newlines by default, trims names and drops empty entries" {
+    run parse_label_list $'  loop:code-review \n\n\textra label\t\n   \n'
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "loop:code-review" ]
+    [ "${lines[1]}" = "extra label" ]
+    [ "${#lines[@]}" -eq 2 ]
+}
+
+@test "parse_label_list splits on the given separator and keeps newlines out of names" {
+    run parse_label_list "a, b ,, needs review" ","
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "a" ]
+    [ "${lines[1]}" = "b" ]
+    [ "${lines[2]}" = "needs review" ]
+    [ "${#lines[@]}" -eq 3 ]
+}
+
+@test "parse_label_list prints nothing for an empty or blank list" {
+    run parse_label_list ""
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+    run parse_label_list $' \n \n'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }
 
 @test "ensure_repo_labels creates each label once in order without --force" {
