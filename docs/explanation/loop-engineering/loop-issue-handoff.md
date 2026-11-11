@@ -10,12 +10,12 @@ Current behavior. The triage loop is described in [Issue Triage Workflow Design]
 
 | ID  | State                                           | Trigger                                                                  | Next state               |
 | --- | ----------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
-| T0  | Not triaged (lister conditions)                 | The daily schedule picks it up (at most 3 per run)                       | T1 / T2 / T3 / T4        |
+| T0  | Not triaged (lister conditions)                 | The daily schedule picks it up (per-run limit in [Intake paths](workflows/loop-github-issue-triage-workflow-design.md#intake-paths))                       | T1 / T2 / T3 / T4        |
 | T1  | `triage:ready`                                  | A human removes `triage:ready` and comments after the marker comment     | T0                       |
 | T2  | `triage:needs-info`                             | A human comments (Webhook)                                               | Re-triage -> T1 / T2 / T3 |
 | T3  | `triage:failed`                                 | A human removes the label and starts `workflow_dispatch`                 | Re-triage                |
 | T4  | Low confidence (still `needs-triage`, marker present) | A human comments after the marker comment                          | T0                       |
-|     | The agent failed (no label or comment applied)  | The next run (3 failures in 7 days exclude the Issue from the lister)    | T0                       |
+|     | The agent failed (no label or comment applied)  | The next run (the retry limit in [Intake paths](workflows/loop-github-issue-triage-workflow-design.md#intake-paths) can exclude the Issue)    | T0                       |
 
 ## Autofix states (stage D and later, not implemented)
 
