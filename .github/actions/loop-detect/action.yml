@@ -14,6 +14,10 @@ inputs:
     default: ""
     description: "Maker artifact: fix | report (required at L2/L3; must be empty at L1)"
     required: false
+  agent_engine:
+    default: ""
+    description: "AI engine (claude | copilot | codex | cursor); read only to validate agent_tool_denylist"
+    required: false
   agent_maker_instructions:
     default: ""
     description: "Domain-specific maker instructions appended during loop-detect prompt assembly"
@@ -21,6 +25,10 @@ inputs:
   agent_maker_skill_name:
     description: "Skill name to invoke (e.g. docs-updater)"
     required: true
+  agent_tool_denylist:
+    default: ""
+    description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+    required: false
   agent_unchanged_verdict:
     default: ""
     description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
@@ -161,8 +169,10 @@ runs:
         AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
         AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
         AGENT_EDIT_TARGET: ${{ inputs.agent_edit_target }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
         AGENT_MAKER_INSTRUCTIONS: ${{ inputs.agent_maker_instructions }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_TOOL_DENYLIST: ${{ inputs.agent_tool_denylist }}
         AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}

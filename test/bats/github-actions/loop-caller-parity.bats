@@ -1338,3 +1338,16 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
         [[ ${desc} == *'Bash(gh issue view:*)'* ]]
     done
 }
+
+@test "agent_tool_denylist is wired to detect and agent-l2 only and absent from the entity caller" {
+    local keys
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_tool_denylist'
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_engine'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    run ! grep -q agent_tool_denylist "${ENTITY_CALLER}"
+    job_block "${AGENT}" agent-l2 | grep -q 'agent_tool_denylist: ${{ inputs.agent_tool_denylist }}'
+    run ! grep -q agent_tool_denylist <(job_block "${AGENT}" agent-l1)
+    workflow_inputs "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    workflow_inputs "${AGENT}" | grep -qx agent_tool_denylist
+}

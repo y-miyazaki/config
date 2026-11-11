@@ -25,6 +25,7 @@
 #   - L2/L3: agent_edit_allowlist is required; empty fails, ** means unrestricted
 #   - L2/L3: agent_edit_denylist is optional; empty uses the default denylist
 #   - L2/L3: agent_unchanged_verdict must be APPROVE or REJECT (required)
+#   - validate_agent_tool_denylist: agent_tool_denylist needs L2/L3 and agent_engine claude
 #   - Required values are enforced here, not by composite action required: true
 #
 # Output:
@@ -58,6 +59,41 @@ function validate_finalize_label_allowlist {
 
     if [[ -n ${finalize_label_allowlist} && ${delivery} != "issue_comment" && ${delivery} != "issue_create" && ${delivery} != "pr_review" ]]; then
         echo "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: ${delivery:-empty})" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
+# validate_agent_tool_denylist: Validate agent_tool_denylist against the level and engine
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - level (L1 | L2 | L3)
+#   $2 - agent_engine (claude | copilot | codex | cursor | empty)
+#   $3 - agent_tool_denylist (newline-separated deny rules | empty)
+#
+# Outputs:
+#   STDERR: ::error:: annotation when a non-empty denylist cannot be enforced
+#
+# Returns:
+#   0 when empty, or when level is L2/L3 and the engine is claude; 1 otherwise
+#
+#######################################
+function validate_agent_tool_denylist {
+    local level="${1:-}"
+    local agent_engine="${2:-}"
+    local agent_tool_denylist="${3:-}"
+
+    [[ -z ${agent_tool_denylist} ]] && return 0
+    if [[ ${level} == "L1" ]]; then
+        echo "::error::agent_tool_denylist is not allowed at L1" >&2
+        return 1
+    fi
+    if [[ ${agent_engine} != "claude" ]]; then
+        echo "::error::agent_tool_denylist requires agent_engine claude (got: ${agent_engine:-empty}); other engines cannot enforce it" >&2
         return 1
     fi
     return 0

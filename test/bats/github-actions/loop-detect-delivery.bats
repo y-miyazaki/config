@@ -54,8 +54,10 @@ setup() {
     expected="agent_edit_allowlist
 agent_edit_denylist
 agent_edit_target
+agent_engine
 agent_maker_instructions
 agent_maker_skill_name
+agent_tool_denylist
 agent_unchanged_verdict
 budget_file
 budget_max_runs_per_day

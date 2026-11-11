@@ -299,3 +299,20 @@ setup() {
     [ "$status" -eq 1 ]
     [[ $output == *"issue_comment, issue_create or pr_review"* ]]
 }
+
+@test "validate_agent_tool_denylist allows claude at L2 and L3 and rejects other engines and L1" {
+    run validate_agent_tool_denylist L2 claude "Agent"
+    [ "$status" -eq 0 ]
+    run validate_agent_tool_denylist L3 claude "Agent"
+    [ "$status" -eq 0 ]
+    run validate_agent_tool_denylist L2 codex "Agent"
+    [ "$status" -eq 1 ]
+    [[ $output == *"agent_tool_denylist requires agent_engine claude"* ]]
+    run validate_agent_tool_denylist L1 claude "Agent"
+    [ "$status" -eq 1 ]
+    [[ $output == *"agent_tool_denylist is not allowed at L1"* ]]
+    run validate_agent_tool_denylist L1 claude ""
+    [ "$status" -eq 0 ]
+    run validate_agent_tool_denylist L2 codex ""
+    [ "$status" -eq 0 ]
+}

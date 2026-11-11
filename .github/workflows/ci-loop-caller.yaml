@@ -102,6 +102,11 @@ on:
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). Caller-declared only — never derived from detect output. The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
         required: false
         type: string
+      agent_tool_denylist:
+        default: ""
+        description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+        required: false
+        type: string
       agent_unchanged_verdict:
         default: ""
         description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
@@ -338,8 +343,10 @@ jobs:
           agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
           agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
           agent_edit_target: ${{ inputs.agent_edit_target }}
+          agent_engine: ${{ inputs.agent_engine }}
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
+          agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
           agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
@@ -494,6 +501,7 @@ jobs:
       agent_maker_model: ${{ inputs.agent_maker_model }}
       agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
       agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+      agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
       agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
       delivery: ${{ needs.detect.outputs.delivery }}
       environment: ${{ inputs.environment }}

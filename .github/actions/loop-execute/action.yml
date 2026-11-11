@@ -71,6 +71,10 @@ inputs:
     default: ""
     description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The host repository''s .claude/settings.json allow rules are not applied (no workspace trust); claude adds a fixed read-only git baseline (git diff/log/show/status), runs makers in acceptEdits and checkers in dontAsk, and always denies a fixed list of GitHub-write, push, network, and env commands. Engines without a per-tool allowlist warn and ignore it.'
     required: false
+  agent_tool_denylist:
+    default: ""
+    description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+    required: false
   agent_unchanged_verdict:
     default: ""
     description: "Verdict when the maker produces no file changes (APPROVE or REJECT). Required at L2/L3 (validated at detect); empty is an error, there is no default"
@@ -219,6 +223,7 @@ runs:
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
         AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        AGENT_TOOL_DENYLIST: ${{ inputs.agent_tool_denylist }}
         AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}

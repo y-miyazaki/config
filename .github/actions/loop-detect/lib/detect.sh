@@ -973,6 +973,7 @@ function validate_candidate_targets {
 # Globals:
 #   LEVEL, DELIVERY - Decision inputs (read; no defaults)
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT - Read
+#   AGENT_ENGINE, AGENT_TOOL_DENYLIST - Read (optional; denylist needs L2/L3 and claude)
 #   FINALIZE_SCRIPT, FINALIZE_LABEL_ALLOWLIST - Read (optional)
 #   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH - Read
 #
@@ -991,6 +992,7 @@ function validate_detect_inputs {
         "${LEVEL:-}" "${DELIVERY:-}" "${AGENT_EDIT_TARGET:-}" \
         "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_EDIT_DENYLIST:-}" "${AGENT_UNCHANGED_VERDICT:-}" \
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}" || return 1
+    validate_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
     validate_delivery_value "${DELIVERY:-}" || return 1
     validate_delivery_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
     return 0
