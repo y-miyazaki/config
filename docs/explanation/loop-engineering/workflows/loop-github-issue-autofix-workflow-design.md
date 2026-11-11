@@ -125,6 +125,8 @@ The job passes the same keys as above except the following. It has no `agent_edi
 | `detect_max_targets`  | `3`                                                                   |
 | `level`               | `L1`                                                                  |
 
+The L1 job and the Webhook L2 job share one daily budget because the budget counts runs by `loop_name` (`github-issue-autofix`, capped at 10 runs per day in `.loop/loop-budget.json`) and each daily L1 tick can spend up to 3, so a human `autofix` label can be refused with `skip_reason=budget` earlier than before.
+
 ### Domain detect environment (`detect_env_json`)
 
 ```yaml

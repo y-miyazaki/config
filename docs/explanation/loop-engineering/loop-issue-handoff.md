@@ -23,7 +23,7 @@ The conditions for A1 are in [Issue Autofix Workflow Design](workflows/loop-gith
 
 ### Stage D (L1): current behavior
 
-The scheduled `loop-scheduled` job moves an Issue only between A0, A1 and A2.
+The scheduled `loop-scheduled` job moves an Issue only between A1 and A2 (the code-review loop performs A0).
 
 | ID  | State    | Trigger                                                                                                          | Next state |
 | --- | -------- | ---------------------------------------------------------------------------------------------------------------- | ---------- |

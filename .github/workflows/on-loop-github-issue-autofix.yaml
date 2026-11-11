@@ -130,6 +130,7 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
+      # Checker inputs are required by ci-loop-caller but the rubric never runs at L1 (no checker), so it is not an edit guard; edits are prevented by agent_edit_allowed being false, the maker instructions and the read-only job token.
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE

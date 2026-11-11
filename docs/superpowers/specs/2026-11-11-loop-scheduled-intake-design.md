@@ -203,6 +203,9 @@ overview の第5.1節は、triage を branch の caller の対象ごとのター
 
 - **D:** `loop-scheduled` は L1、`delivery: none`。エージェントは修正方針を出すだけで PR を作らない(ログに出る)。拾う対象の選び方と方針の妥当性を2週間以上観察する。L1 は state を書かないので `last_run` による並べ替えが働かず、毎回、古い順の同じ3件を見る(標本が増えにくいことを受け入れる)。**Webhook の経路は変えない。**
 - **E(L2):** `loop-scheduled` を L2、`delivery: pr_create`(既存の Webhook と同じ設定)に上げる。checker が APPROVE した修正 PR だけを作る。人間のマージ承認は変えない。**この段階で Webhook の経路も `detect_items: true`、`result.items` に1件だけを返す形にする**(定期実行と同じ per-Issue のキーで pending と breaker を共有するため。既存の L2 のキーが変わる挙動変更を、L1 の観察の後に入れる)。
+- **段階 E の前提(PR 3 の最終レビュー):**
+  - 直近200件の閉じた PR の窓は fail open で、`loop-automation` は全 loop の PR(state PR を含む)に付く。L2 の前に、返った件数が上限と等しいときに fail closed にするか、一覧を autofix の head ブランチに絞る(GitHub 検索の `head:` が前方一致かは、頼る前に確認する)。
+  - open PR の `any()` 判定と `scan_has_newer_human_comment` で `jq -e` の終了コードが混ざっている。終了コード1とそれ以外を区別し、jq の実行時エラーで fail closed にする。どちらも L2 では PR の重複を生む。
 - 「triage を経由する構成」は取らない(第0節)。`github-issue-triage` の skill の文書の変更は不要。
 
 ## 7. 論点の扱い(overview の H1〜Low)
@@ -268,6 +271,7 @@ overview の第2.2節を踏襲する。この spec で足す指標(計測は `gh
 - **直近200件の閉じた PR の窓:** それより古い閉じた autofix の PR は参照できず、その Issue が再び拾われうる(第6.2節)。
 - **`write_state` の再試行を使い切った場合:** state PR のフォールバックになり、並行する別の対象の state と食い違いうる。
 - **`AUTOFIX_MAX_OPEN_PRS`:** 定期実行と Webhook の間は soft。上限を超える分は `detect_max_targets - 1` 以下。
+- **L1 と Webhook の日次予算の共有:** 予算は `loop_name`(`github-issue-autofix`、`.loop/loop-budget.json` で1日10 run)で数えるため、L1 の1日1回の tick が最大3 run を使い、人間の `autofix` ラベルが以前より早く `skip_reason=budget` で断られうる。
 - **`workflow_dispatch` と定期実行の重複:** 定期実行のセルが triage 中の Issue に `workflow_dispatch` すると、concurrency group が異なるため、triage のコメントが重複しうる(窓は小さく、許容する)。
 - **`unchanged` を失敗に数える:** triage の lister は `unchanged` を失敗に数えるので、正当に空の triage 結果の Issue は7日に3回で除外され、窓が明けると自然に戻る。
 - **GitHub Actions の仕様(未確認):** matrix の式の短絡評価、`list` が skipped のときの `fromJSON`、`loop-state-main` の `queue: max` の上限は、PR 2 の dogfood で確認する。

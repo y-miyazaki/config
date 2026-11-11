@@ -454,8 +454,8 @@ function scan_fetch_issues {
     jq -s -c --arg label "${AUTOFIX_SOURCE_LABEL}" --arg marker "${AUTOFIX_SOURCE_MARKER}" '
         [.[] | (if type == "array" then .[] else empty end)
             | select((.pull_request // null) == null)
-            | select(((.labels // []) | map(.name // "") | index($label)) != null)
-            | select(((.labels // []) | map(.name // "") | index("autofix")) == null)
+            | select(((.labels // []) | map((.name // "") | ascii_downcase) | index($label | ascii_downcase)) != null)
+            | select(((.labels // []) | map((.name // "") | ascii_downcase) | index("autofix")) == null)
             | select((.user.type // "") == "Bot")
             | select((.body // "") | contains($marker))
             | .number]
@@ -615,7 +615,7 @@ function scan_main {
     open_prs="$(scan_list_open_prs)" || output_error "github-issue-autofix: failed to list open PRs"
     if [[ -n ${AUTOFIX_MAX_OPEN_PRS:-} ]]; then
         open_count="$(scan_open_pr_count "${open_prs}")"
-        if [[ ${open_count} -ge ${AUTOFIX_MAX_OPEN_PRS} ]]; then
+        if [[ ${open_count} -ge $((10#${AUTOFIX_MAX_OPEN_PRS})) ]]; then
             json_object status "ok" skip "true" \
                 message "github-issue-autofix: ${open_count} open autofix PRs (limit ${AUTOFIX_MAX_OPEN_PRS})" \
                 result "{}"

@@ -191,6 +191,24 @@ assert_jq() {
     assert_jq '[.result.items[].key] == ["issue:8"]'
 }
 
+@test "scan: autofix label exclusion is case-insensitive" {
+    setup_scan_stub
+    jq -s -c '.' \
+        <(mk_issue 1 '{"labels":[{"name":"src:label"},{"name":"AutoFix"}]}') \
+        <(mk_issue 2) > "${FIX}/issues.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '[.result.items[].key] == ["issue:2"]'
+}
+
+@test "scan: source label match is case-insensitive" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 3 '{"labels":[{"name":"SRC:Label"}]}') > "${FIX}/issues.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '[.result.items[].key] == ["issue:3"]'
+}
+
 @test "scan: excludes Issue referenced by open PR and does not confuse #1 with #12" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 12) <(mk_issue 13) <(mk_issue 14) > "${FIX}/issues.json"
@@ -289,6 +307,18 @@ assert_jq() {
     [ "$status" -eq 0 ]
     assert_jq '.skip == true and .result == {}'
     AUTOFIX_MAX_OPEN_PRS=3 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.skip == false and ([.result.items[].key] == ["issue:5"])'
+}
+
+@test "scan: AUTOFIX_MAX_OPEN_PRS with leading zeros is decimal" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 5) > "${FIX}/issues.json"
+    jq -n -c '[range(1;9) as $n | {number:$n,title:"t",body:"",headRefName:("bot/autofix/"+($n|tostring)),labels:[{name:"pr-label"}]}]' > "${FIX}/open_prs.json"
+    AUTOFIX_MAX_OPEN_PRS=08 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.skip == true'
+    AUTOFIX_MAX_OPEN_PRS=010 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     assert_jq '.skip == false and ([.result.items[].key] == ["issue:5"])'
 }
