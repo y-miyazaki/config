@@ -24,17 +24,17 @@
 #   ISSUE_TITLE               Issue title
 #   ISSUE_BODY                Issue body
 #   ISSUE_LABELS_JSON         JSON array of label names
-#   ISSUE_EVENT_NAME          GitHub event name (issues, issue_comment, ...)
+#   ISSUE_EVENT_NAME          GitHub event name (issues, issue_comment, schedule, ...); schedule skips issues with any triage:* label
 #   ISSUE_EVENT_ACTION        GitHub event action (opened, created, ...)
 #   ISSUE_COMMENT_ID          Comment id for issue_comment events (optional)
 #   ISSUE_ACTOR               Event actor login
 #   ISSUE_ACTOR_TYPE          Event actor type (User, Bot, ...)
 #   ISSUE_COMMENT_USER_TYPE   Comment author type for issue_comment events (optional)
 #   GITHUB_EVENT_PATH         Path to GitHub webhook event JSON (hydrates ISSUE_* when ISSUE_NUMBER unset)
-#   GITHUB_EVENT_NAME         GitHub event name for hydration (issues, issue_comment, workflow_dispatch)
-#   GITHUB_REPOSITORY         Repository slug for workflow_dispatch gh api fetch
-#   GITHUB_ACTOR              Actor login for workflow_dispatch hydration
-#   GH_TOKEN / GITHUB_TOKEN   Token for workflow_dispatch gh api fetch when title/body/labels empty
+#   GITHUB_EVENT_NAME         GitHub event name for hydration (issues, issue_comment, workflow_dispatch, schedule)
+#   GITHUB_REPOSITORY         Repository slug for gh api fetch when ISSUE_NUMBER is set
+#   GITHUB_ACTOR              Actor login for gh api hydration
+#   GH_TOKEN / GITHUB_TOKEN   Token for gh api fetch when ISSUE_NUMBER is set and title/body/labels empty
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -177,7 +177,7 @@ function hydrate_issue_env_from_event {
 }
 
 #######################################
-# hydrate_issue_from_api_if_needed: Fill missing issue fields for workflow_dispatch
+# hydrate_issue_from_api_if_needed: Fill missing issue fields via gh api (workflow_dispatch, schedule)
 #
 # Globals:
 #   ISSUE_NUMBER
@@ -299,6 +299,14 @@ function should_skip_issue {
 
     if jq -e --arg name "triage:failed" 'contains([$name])' <<< "${ISSUE_LABELS_JSON}" > /dev/null 2>&1; then
         return 0
+    fi
+
+    if [[ ${ISSUE_EVENT_NAME} == "schedule" ]]; then
+        # Scheduled intake: any triage:* label means the issue was already triaged
+        if jq -e 'any(.[]; startswith("triage:"))' <<< "${ISSUE_LABELS_JSON}" > /dev/null 2>&1; then
+            return 0
+        fi
+        return 1
     fi
 
     if [[ ${ISSUE_EVENT_NAME} == "workflow_dispatch" ]]; then
@@ -488,9 +496,7 @@ function main {
     ensure_dependencies bash jq
 
     if [[ -n ${ISSUE_NUMBER:-} ]]; then
-        if [[ ${GITHUB_EVENT_NAME:-} == "workflow_dispatch" || ${ISSUE_EVENT_NAME:-} == "workflow_dispatch" ]]; then
-            hydrate_issue_from_api_if_needed
-        fi
+        hydrate_issue_from_api_if_needed
     elif [[ -n ${GITHUB_EVENT_PATH:-} && -f ${GITHUB_EVENT_PATH} ]]; then
         hydrate_issue_env_from_event
     else

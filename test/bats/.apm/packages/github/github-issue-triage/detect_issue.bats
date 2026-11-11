@@ -130,6 +130,58 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+# schedule_detect: run detect with schedule env; gh api stub returns labels in $1 (JSON array)
+function schedule_detect {
+    local labels="$1"
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << EOF2
+#!/bin/bash
+if [[ "\$1" == "api" ]]; then
+    printf '%s\n' '{"title":"Sched title","body":"sched body","labels":$(jq -c '[.[] | {name: .}]' <<< "${labels}")}'
+    exit 0
+fi
+exit 1
+EOF2
+    chmod +x "${mock_bin}/gh"
+    run env PATH="${mock_bin}:${PATH}" ISSUE_NUMBER=7 ISSUE_EVENT_NAME=schedule \
+        GITHUB_EVENT_NAME=schedule GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token \
+        bash "${DETECT_SCRIPT}"
+}
+
+@test "schedule hydrates from gh api and does not skip without triage labels" {
+    schedule_detect '["loop:code-review"]'
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.title == "Sched title" and .result.labels == ["loop:code-review"]' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "schedule does not skip needs-triage only" {
+    schedule_detect '["needs-triage"]'
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "schedule skips when any triage label is present" {
+    local labels
+    for labels in '["loop:code-review","triage:ready"]' '["loop:code-review","triage:needs-info"]' '["triage:failed"]'; do
+        schedule_detect "${labels}"
+        [ "$status" -eq 0 ]
+        run jq -e '.skip == true' <<< "${output}"
+        [ "$status" -eq 0 ]
+    done
+}
+
+@test "workflow_dispatch still does not skip when triage:ready is present" {
+    run env ISSUE_NUMBER=8 ISSUE_TITLE=t ISSUE_BODY=b ISSUE_LABELS_JSON='["triage:ready"]' \
+        ISSUE_EVENT_NAME=workflow_dispatch ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "omits dispatch flags on labeled(autofix) because autofix workflow handles intake" {
     run env ISSUE_NUMBER=12 ISSUE_TITLE=t ISSUE_BODY=b \
         ISSUE_LABELS_JSON='["triage:ready","autofix"]' \
