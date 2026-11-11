@@ -126,7 +126,7 @@ on:
         required: false
         type: number
       delivery:
-        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (required; no default)"
+        description: "Where the agent output is delivered: issue_comment | issue_create | none | pr_create | pr_push | pr_review (required; no default; issue_create is L2/L3 integration targets only)"
         required: true
         type: string
       detect_branch_match:
@@ -195,7 +195,7 @@ on:
         type: number
       finalize_label_allowlist:
         default: ""
-        description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
+        description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment, issue_create or pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
         required: false
         type: string
       finalize_outcome_override:

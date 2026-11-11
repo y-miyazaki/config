@@ -58,7 +58,7 @@ inputs:
     required: false
   finalize_label_allowlist:
     default: ""
-    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
+    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | issue_create | pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
     required: false
   finalize_outcome_override:
     default: ""
