@@ -66,6 +66,8 @@ The `result` body is **observation-trigger-specific** — not one shared schema:
 
 Semantic arrays such as `findings[]` are **Execute** output only — see [Semantic Findings](CONTEXT.md#language). Detect emits mechanical facts.
 
+With `detect_items: true` on `ci-loop-caller`, `result` may also carry `items[]`, each `{key, entity: {kind, number}, context, verifier_context}`; `loop-detect` fans each item out as its own target. See [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#per-target-items-detect_items).
+
 ##### Execute — stack routing (A')
 
 Distributable entry skills stay **repository-neutral**. Named domain skills (e.g. `github-actions-validation`, repo-specific sweepers) are **caller configuration** — not hardcoded in APM skill `references/`. Coupling belongs in the consumer caller YAML.
@@ -330,6 +332,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 - State read is performed inline by `loop-detect` (`lib/state.sh`); writes are performed inline by `loop-finalize` (`lib/write_state.sh`)
 - `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, and token usage
 - `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
+- With `detect_items`, state targets are keyed `integration:<branch>#<key>`, one per item. `loop-finalize` removes a `#` key when it has no `pending` and `last_run` is older than 30 days, whatever the outcome. `write_state` retries the state push up to 3 times on `fetch first` / `non-fast-forward`
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
 - On first run, `loop-detect` resolves `last_sha` with a default (`HEAD~10`) when the state file or target entry is absent (`lib/state.sh`)
 
@@ -595,7 +598,7 @@ Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream w
 | ----------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Same PR auto-fixed 5+ times                     | Weak checker (Infinite Fix Loop)                          | Retry limit of 3. Replace checker with a more powerful model             |
 | CI fails but checker approves                   | Test execution skipped (Checker Theater)                  | "Look for reasons to reject" framing. Make test output mandatory         |
-| Closed items accumulate in `.loop/state-*.json` | No pruning (State Rot)                                    | 30-day prune of terminal `pull_request:*` keys; one file per `loop_name` |
+| Closed items accumulate in `.loop/state-*.json` | No pruning (State Rot)                                    | 30-day prune of terminal `pull_request:*` keys and aged per-item `#` keys; one file per `loop_name` |
 | Team cannot understand change intent            | Auto-merge expansion (Comprehension Debt Spiral)          | Mandatory weekly digest. Route medium-risk to human gate                 |
 | Quality degrades due to context bloat           | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls                        |
 
@@ -713,7 +716,7 @@ stateDiagram-v2
 
 **Implementation**: `loop-finalize` increments `consecutive_failures` per `target.key` on `outcome: rejected`. `loop-detect` reads per-target counter and sets `skip_reason=circuit_breaker` when threshold is exceeded.
 
-**State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr_closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
+**State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr_closed`, no `pending`) and per-item `#` keys (`integration:<branch>#<key>`) with no `pending` and `last_run` older than 30 days, whatever the outcome. Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
 
 **Reject reason recording**: On REJECT, Finalize writes the checker's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 

@@ -188,6 +188,16 @@ pull_request mode (ci-sweeper, detect_pr_enabled: true)
 
 **Summary:** monitored branches and PR heads are **watch targets**; `state_branch` is **metadata only**; fixes and pushes always target the **branch that was watched** (`to.branch`), not `main`, unless `main` itself is the watch target.
 
+### Per-target items (`detect_items`)
+
+With `detect_items: true`, a detect script may return `result.items[]`, each `{key, entity: {kind, number}, context, verifier_context}`. `loop-detect` turns every item into its own target and keeps state per item under `integration:<branch>#<key>`.
+
+- Requires exactly one literal branch in `detect_branch_match` and `detect_pr_enabled: false`.
+- The branch-level `integration:<branch>` circuit breaker is not consulted. The per-item breaker and `pending` state apply instead.
+- Items are ordered by state `last_run`, oldest first, then capped by `detect_max_targets`.
+- Each execute cell passes `target_key` to the run log and to `loop-worktree-setup`, which names the agent branch `<prefix>/<skill>/<YYYYMMDD-HHMMSS>-<slug>-<hash8>`.
+- The `detect` job has `issues: read` so detect scripts can read Issue data.
+
 ### Branch-related inputs (complete)
 
 | Input                      | Type    | Role                                                                 | Default                               | Maps to `loop-detect`      |
@@ -263,6 +273,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `detect_branch_match`       | string  | Comma-separated integration branch patterns to watch. Empty = no integration watch; rejected with `pr_push`                                                                                                                                                                                                                                                                                                                                         | `main` (pr-revise: unset)                                    |
 | `detect_branch_match_mode`  | string  | How to interpret `detect_branch_match`: `list`, `glob`, or `regex`                                                                                                                                                                                                                                                                                                                                                                                  | `glob`                                                       |
 | `detect_env_json`           | string  | JSON object of domain detect-script environment variables (see [Domain detect environment](#domain-detect-environment-detect_env_json))                                                                                                                                                                                                                                                                                                             | `{}`                                                         |
+| `detect_items` | boolean | Per-target mode. The detect script's `result.items[]` becomes one target per item, keyed `integration:<branch>#<key>`. Requires exactly one literal `detect_branch_match` and `detect_pr_enabled: false`; see [Per-target items](#per-target-items-detect_items) | `false` |
 | `detect_max_targets`        | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                                                                                                                                                    | `3`                                                          |
 | `detect_pr_bot_allowlist`   | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots. The bot-author heuristic is a scanning filter only: when `detect_pr_number` names a PR, author provenance never excludes it, while `detect_pr_denylist` tokens (`fork`, `draft`, `wip_title`, `label:*`) still apply                                                                                                                                             | `""`                                                         |
 | `detect_pr_denylist`        | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                                                                                                                                                   | `fork,draft,label:no-loop` (pr-revise: `fork,label:no-loop`) |
@@ -318,6 +329,7 @@ The agent-prefixed inputs for the maker prompt and engine are in [Agent and engi
 | `delivery`                           | `delivery`                                                                     |
 | `detect_branch_match`                | `detect_branch_match`                                                          |
 | `detect_branch_match_mode`           | `detect_branch_match_mode`                                                     |
+| `detect_items`                       | `detect_items`                                                                 |
 | `detect_max_targets`                 | `detect_max_targets`                                                           |
 | `detect_pr_bot_allowlist`            | `detect_pr_bot_allowlist`                                                      |
 | `detect_pr_denylist`                 | `detect_pr_denylist`                                                           |
@@ -377,7 +389,7 @@ See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller
 
 | Job / scope                      | Permissions                                               |
 | -------------------------------- | --------------------------------------------------------- |
-| `ci-loop-caller` `detect`        | `actions: write`, `contents: read`, `pull-requests: read` |
+| `ci-loop-caller` `detect`        | `actions: write`, `contents: read`, `issues: read`, `pull-requests: read` |
 | `ci-loop-caller-entity` `detect` | `actions: write`, `contents: read`, `issues: read`        |
 | Thin caller workflow             | execute baseline + `actions: write`                       |
 
@@ -391,7 +403,7 @@ Binds one GitHub entity event (Issue / PR) via `loop-entity-detect` instead of s
 
 Branch-watch and PR-scan inputs have no meaning when detect is bound to a single entity:
 
-`detect_branch_match`, `detect_branch_match_mode`, `detect_max_targets`, `detect_pr_bot_allowlist`, `detect_pr_denylist`, `detect_pr_enabled`, `detect_pr_number`, `detect_priority`, `trigger_comment_ack`
+`detect_branch_match`, `detect_branch_match_mode`, `detect_items`, `detect_max_targets`, `detect_pr_bot_allowlist`, `detect_pr_denylist`, `detect_pr_enabled`, `detect_pr_number`, `detect_priority`, `trigger_comment_ack`
 
 ### Entity-specific behavior
 
@@ -403,6 +415,8 @@ The entity caller has no per-caller defaults for `delivery` or `level`; both are
 | github-pr-review    | `L2`    | `pr_review`     | `agent_edit_allowlist: "**"`, `agent_edit_target: report`, `agent_unchanged_verdict: REJECT` |
 
 An L1 loop that edited nothing is behaving correctly, so triage sets none of the edit inputs and L1 outcomes without a diff are `unchanged`.
+
+`handoff_artifact_suffix` (default `""`) is appended to the handoff artifact name, giving `loop-handoff-<run_id><suffix>`. Allowed characters: `A-Z a-z 0-9 . _ -`. Set it when one workflow run starts several entity callers, so their artifacts do not collide. `ci-loop-caller.yaml` has no such input.
 
 ## Domain detect environment (`detect_env_json`)
 
