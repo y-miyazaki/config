@@ -10,6 +10,11 @@ bats_require_minimum_version 1.5.0
 # - extract_items returns nothing when items absent
 # - extract_items returns empty array for empty items
 # - extract_items returns compact items array
+# - extract_items returns nothing when items is null
+# - extract_items rejects newline / unicode / double colon / trailing colon keys
+# - extract_items rejects non-object element and missing or non-string key
+# - extract_items accepts a 64 char key and rejects 65 chars
+# - item_result_json fails when context is not an object
 # - item_result_json keeps only that item's context and adds key
 # - item_result_json does not leak other items
 # - item_target_key joins branch and key with a hash
@@ -66,6 +71,43 @@ teardown() {
     run extract_items '{"issue_number":1}'
     [ "$status" -eq 0 ]
     [ -z "$output" ]
+}
+
+@test "extract_items returns nothing when items is null" {
+    run extract_items '{"items":null}'
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "extract_items rejects newline / unicode / double colon / trailing colon keys" {
+    local json
+    for json in '{"items":[{"key":"a\nb"}]}' '{"items":[{"key":"é"}]}' '{"items":[{"key":"a::b"}]}' '{"items":[{"key":"a:"}]}'; do
+        run --separate-stderr extract_items "${json}"
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"* ]]
+    done
+}
+
+@test "extract_items rejects non-object element and missing or non-string key" {
+    local json
+    for json in '{"items":["x"]}' '{"items":[{"context":{}}]}' '{"items":[{"key":1}]}'; do
+        run --separate-stderr extract_items "${json}"
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"* ]]
+    done
+}
+
+@test "extract_items accepts a 64 char key and rejects 65 chars" {
+    run extract_items "{\"items\":[{\"key\":\"$(printf 'a%.0s' {1..64})\"}]}"
+    [ "$status" -eq 0 ]
+    run extract_items "{\"items\":[{\"key\":\"$(printf 'a%.0s' {1..65})\"}]}"
+    [ "$status" -eq 1 ]
+}
+
+@test "item_result_json fails when context is not an object" {
+    run --separate-stderr item_result_json '{"key":"a","context":"x"}'
+    [ "$status" -ne 0 ]
+    [[ ${stderr} == *"::error::"* ]]
 }
 
 @test "item_result_json does not leak other items" {
@@ -125,6 +167,8 @@ JSON
     run validate_item_key ".a"
     [ "$status" -eq 1 ]
     run validate_item_key "a."
+    [ "$status" -eq 1 ]
+    run validate_item_key "é"
     [ "$status" -eq 1 ]
     run validate_item_key "a b"
     [ "$status" -eq 1 ]
