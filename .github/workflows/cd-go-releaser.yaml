@@ -52,7 +52,7 @@ on:
         required: false
         type: string
       goreleaser_version:
-        default: "v2.19.0"
+        default: "v2.20.0"
         description: "GoReleaser version to use"
         required: false
         type: string
