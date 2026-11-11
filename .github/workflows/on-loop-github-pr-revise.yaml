@@ -1,6 +1,21 @@
-# Loop workflow: PR revise (L2)
-# Intake: issue_comment / pull_request_review_comment with mention | repository_dispatch | workflow_dispatch
-# → branch / PR-head caller (ci-loop-caller). Default delivery pr_push (manual dispatch may pick pr_create).
+#######################################
+# Description:
+#   Loop workflow: PR revise (L2)
+#   Intake: issue_comment / pull_request_review_comment with mention | repository_dispatch | workflow_dispatch
+#   → branch / PR-head caller (ci-loop-caller). Default delivery pr_push (manual dispatch may pick pr_create).
+#
+# Usage:
+#   Runs on: issue_comment, pull_request_review_comment, repository_dispatch, workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-loop-github-pr-revise
 
 run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}"

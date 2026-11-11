@@ -14,6 +14,8 @@
 #   - Functions are pure: no globals are read or written
 #   - The body is carried verbatim (jq --rawfile / -j), so it round-trips byte-identical
 #   - message_labels.json is only read when message.md is present
+#   - issues.json (delivery issue_create) travels as {"issues": [...]}; only a JSON array
+#     is carried, anything else is ignored here (deliver_issue_create validates the shape)
 #   - Invalid labels drop the whole delivery: a body without its labels would not match
 #
 # Output:
@@ -54,6 +56,9 @@ function loop_message_from_json {
     if jq -e '.labels != null' > /dev/null <<< "${message_json}"; then
         jq -c '.labels' <<< "${message_json}" > "${dir}/message_labels.json"
     fi
+    if jq -e '.issues | type == "array"' > /dev/null 2>&1 <<< "${message_json}"; then
+        jq -c '.issues' <<< "${message_json}" > "${dir}/issues.json"
+    fi
 }
 
 #######################################
@@ -66,7 +71,8 @@ function loop_message_from_json {
 #   $1 - dir containing message.md and optionally message_labels.json
 #
 # Outputs:
-#   One-line {"body": ..., "labels": ... | null} on stdout; nothing when message.md is
+#   One-line {"body": ..., "labels": ... | null, "issues"?: [...]} (or {"issues": [...]} alone)
+#   on stdout; nothing when message.md is
 #   missing or blank, or when message_labels.json is invalid (with a ::warning:: on stderr)
 #
 # Returns:
@@ -77,9 +83,18 @@ function loop_message_to_json {
     local dir="${1:-}"
     local message_file="${dir}/message.md"
     local labels_file="${dir}/message_labels.json"
+    local issues_file="${dir}/issues.json"
     local labels="null"
+    local issues="null"
+
+    if [[ -f ${issues_file} ]] && jq -e 'type == "array"' "${issues_file}" > /dev/null 2>&1; then
+        issues="$(jq -c . "${issues_file}")"
+    fi
 
     if [[ ! -f ${message_file} ]] || ! grep -q '[^[:space:]]' "${message_file}"; then
+        if [[ ${issues} != "null" ]]; then
+            jq -cn --argjson issues "${issues}" '{issues: $issues}'
+        fi
         return 0
     fi
 
@@ -95,5 +110,6 @@ function loop_message_to_json {
         labels="$(jq -c . "${labels_file}")"
     fi
 
-    jq -cn --rawfile body "${message_file}" --argjson labels "${labels}" '{body: $body, labels: $labels}'
+    jq -cn --rawfile body "${message_file}" --argjson labels "${labels}" --argjson issues "${issues}" \
+        '{body: $body, labels: $labels} + (if $issues == null then {} else {issues: $issues} end)'
 }

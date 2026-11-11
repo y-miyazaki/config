@@ -1,14 +1,24 @@
-# Platform workflow: promote pending loop state when a fix PR closes.
-# Design: docs/explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy
-# Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
+#######################################
+# Description:
+#   Platform workflow: promote pending loop state when a fix PR closes.
 #
-# Trigger: pull_request_target (not pull_request) so a [skip ci] annotation on the closed
-# PR HEAD cannot suppress this merge-gate handler (GitHub skips pull_request for skip-ci HEADs).
-# Security model (required for zizmor ignore):
-# - Checkout only the PR base ref (never the untrusted head).
-# - Run only trusted composite action / scripts from that base checkout.
-# - Use event payload fields only (number, merged, labels); no head checkout or head script exec.
-# - Job gated on loop-automation label.
+# Usage:
+#   Runs on: pull_request_target
+#
+# Design Rules:
+#   - Trigger: pull_request_target (not pull_request) so a [skip ci] annotation on the closed PR HEAD cannot suppress this merge-gate handler (GitHub skips pull_request for skip-ci HEADs).
+#   - Security model (required for zizmor ignore):
+#     - Checkout only the PR base ref (never the untrusted head).
+#     - Run only trusted composite action / scripts from that base checkout.
+#     - Use event payload fields only (number, merged, labels); no head checkout or head script exec.
+#     - Job gated on loop-automation label.
+#
+# Dependencies:
+#   - Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
+#
+# References:
+#   - Design: docs/explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy
+#######################################
 name: on-loop-state-promote
 
 run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.merged && 'merged' || 'closed' }})"

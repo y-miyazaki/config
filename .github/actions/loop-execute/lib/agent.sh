@@ -86,11 +86,13 @@ CLAUDE_PLATFORM_DENY_RULES=(
 #     without an allow rule is denied).
 #   - --allowedTools carries CLAUDE_PLATFORM_ALLOW_RULES followed by the rules
 #     the calling workflow declared in AGENT_TOOL_ALLOWLIST.
-#   - --disallowedTools carries CLAUDE_PLATFORM_DENY_RULES, which outrank every
-#     allow rule.
+#   - --disallowedTools carries CLAUDE_PLATFORM_DENY_RULES followed by the rules
+#     the calling workflow declared in AGENT_TOOL_DENYLIST; deny rules outrank
+#     every allow rule.
 #
 # Globals:
 #   AGENT_TOOL_ALLOWLIST - Optional newline-separated permission rules (may be unset)
+#   AGENT_TOOL_DENYLIST - Optional newline-separated deny rules (may be unset)
 #   CLAUDE_PLATFORM_ALLOW_RULES - Fixed read-only allow baseline (read)
 #   CLAUDE_PLATFORM_DENY_RULES - Fixed deny list (read)
 #
@@ -109,6 +111,7 @@ function append_claude_permission_args {
     local -n args_ref=$1
     local allow_writes="${2:-true}"
     local -a allow_rules=("${CLAUDE_PLATFORM_ALLOW_RULES[@]}")
+    local -a deny_rules=("${CLAUDE_PLATFORM_DENY_RULES[@]}")
     local rule
 
     args_ref+=(--setting-sources project)
@@ -122,8 +125,13 @@ function append_claude_permission_args {
             [[ -n ${rule} ]] && allow_rules+=("${rule}")
         done <<< "${AGENT_TOOL_ALLOWLIST}"
     fi
+    if [[ -n ${AGENT_TOOL_DENYLIST:-} ]]; then
+        while IFS= read -r rule; do
+            [[ -n ${rule} ]] && deny_rules+=("${rule}")
+        done <<< "${AGENT_TOOL_DENYLIST}"
+    fi
     args_ref+=(--allowedTools "${allow_rules[@]}")
-    args_ref+=(--disallowedTools "${CLAUDE_PLATFORM_DENY_RULES[@]}")
+    args_ref+=(--disallowedTools "${deny_rules[@]}")
 }
 
 #######################################
@@ -349,6 +357,7 @@ function run_agent_capture {
 #
 # Globals:
 #   AGENT_TOOL_ALLOWLIST - Optional newline-separated extra tool rules (claude only)
+#   AGENT_TOOL_DENYLIST - Optional newline-separated extra deny rules (claude only)
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ATTEMPT - Optional loop attempt number recorded on the usage session
 #   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory

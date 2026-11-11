@@ -1,4 +1,20 @@
-# CI workflow: GitHub Actions workflow lint on push/PR
+#######################################
+# Description:
+#   CI workflow: GitHub Actions workflow lint on push/PR
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push, pull_request
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-github-actions-workflow
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -46,7 +62,7 @@ permissions:
 
 jobs:
   github-actions-workflow-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     permissions:
       contents: read

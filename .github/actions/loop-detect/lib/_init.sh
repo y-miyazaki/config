@@ -34,6 +34,10 @@ source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
+source "${_loop_action_lib}/edit_paths.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/range_detect.sh"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"
 # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091

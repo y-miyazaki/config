@@ -1,0 +1,111 @@
+#######################################
+# Description:
+#   Loop workflow: Review merged code
+#   Reviews the code merged since the last run with Claude Code's built-in code-review skill and files the
+#   findings a checker approved as GitHub Issues (L2, delivery issue_create).
+#
+# Usage:
+#   Runs on: schedule, workflow_dispatch
+#
+# Design Rules:
+#   - The repository label `loop:code-review` is created on the first filed Issue if missing; it is applied to every created Issue. Never remove it: the duplicate check lists Issues by this label.
+#
+# Dependencies:
+#   - Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+#   - Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/workflows/loop-code-review-workflow-design.md
+#   - Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
+name: on-loop-code-review
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  schedule:
+    - cron: "0 9 * * 3"
+      timezone: Etc/UTC
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: write
+  copilot-requests: write # zizmor: ignore[excessive-permissions]
+  issues: write
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
+
+jobs:
+  loop:
+    uses: ./.github/workflows/ci-loop-caller.yaml
+    with:
+      agent_checker_effort: medium
+      agent_checker_instructions: |
+        ## Default stance
+
+        REJECT unless every criterion below is met with evidence you verified yourself.
+
+        ## Criteria for APPROVE
+
+        ALL of the following must be true:
+        1. `.loop-code-review/findings.json` is a JSON array and is the only file changed. An empty array is valid when the review found nothing.
+        2. Every finding has `title`, `body`, `fingerprint`, and `evidence` with `path`, `start_line`, and `end_line`.
+        3. For every finding, the evidence path and lines exist in the diff of the range named in the verifier context (`<since>..<head>`); read the diff yourself and confirm the cited lines.
+        4. For every finding, the failure path in `body` holds: the described input or state really leads to the described wrong behavior in the code. A guess, a style preference, or a speculative risk is not a finding.
+        5. `fingerprint` follows `<path>:<function name or one-line summary of the line>:<kind of defect>` and is determined by the location and the kind of defect, not by wording.
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - `findings.json` is missing, is not a JSON array, or lacks a required key
+        - Any single finding without verifiable evidence in the range diff
+        - Any finding that is speculative, a preference, or already handled in the code
+        - Any file other than `.loop-code-review/findings.json` changed
+      agent_checker_max_turns: 100
+      agent_checker_model: claude-opus-5
+      agent_cli_version: 2.1.318
+      agent_edit_allowlist: .loop-code-review/findings.json
+      agent_edit_target: report
+      agent_engine: claude
+      agent_loop_max_attempts: 3
+      agent_maker_effort: medium
+      agent_maker_instructions: |
+        Run the built-in `code-review` skill (Skill tool, skill `code-review`) at effort `medium` with the `Last SHA` from this prompt as the base commit, so it reviews the changes from that commit to HEAD.
+        Keep only findings you have verified against the code. For each, write an object with:
+        - `title`: a short statement of the defect
+        - `body`: the failure path (what input or state leads to what wrong behavior) and why the code is wrong
+        - `fingerprint`: `<path>:<function name or one-line summary of the line>:<kind of defect>`, determined by the location and the kind of defect, not by wording
+        - `evidence`: `{"path", "start_line", "end_line"}` of the lines in the reviewed range that show the defect
+        Write all findings as one JSON array to `.loop-code-review/findings.json`. Write an empty array `[]` when there are none.
+        Do not modify any other file. Do not create GitHub Issues, comments, or labels.
+      agent_maker_max_turns: 100
+      agent_maker_model: claude-sonnet-5
+      agent_maker_skill_name: code-review
+      agent_tool_allowlist: |
+        Bash(git cat-file:*)
+        Bash(git ls-files:*)
+        Bash(git rev-parse:*)
+      agent_tool_denylist: |
+        Agent
+      agent_unchanged_verdict: REJECT
+      budget_max_runs_per_day: 2
+      budget_max_tokens_per_day: 8000000
+      delivery: issue_create
+      detect_branch_match: main
+      detect_max_targets: 1
+      finalize_issue_limit: 3
+      finalize_label_allowlist: |
+        loop:code-review
+      finalize_script: scripts/self/loop/render_code_review_issues.sh
+      level: L2
+      loop_name: code-review
+      state_branch: main
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

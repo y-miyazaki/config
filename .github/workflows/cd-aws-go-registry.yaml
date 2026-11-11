@@ -1,5 +1,22 @@
-# Reusable workflow: Build and push Docker images to Amazon ECR
-# Builds Go application Docker images and pushes them to ECR.
+#######################################
+# Description:
+#   Reusable workflow: Build and push Docker images to Amazon ECR
+#   Builds Go application Docker images and pushes them to ECR.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-go-registry.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-go-registry
 
 on:
@@ -180,7 +197,7 @@ jobs:
       - name: Detect SARIF Upload Support
         id: detect
         if: env.TRIVY_IMAGE_SCAN == 'true'
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
       - name: Upload Trivy image SARIF to GitHub Security
         if: always() && env.TRIVY_IMAGE_SCAN == 'true' && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-image.sarif') != ''
@@ -199,7 +216,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |

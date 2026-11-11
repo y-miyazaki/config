@@ -1,5 +1,22 @@
-# Reusable workflow: GitHub Actions workflow lint and validation
-# Uses actionlint, ghalint, and zizmor for syntax, security, and static analysis.
+#######################################
+# Description:
+#   Reusable workflow: GitHub Actions workflow lint and validation
+#   Uses actionlint, ghalint, and zizmor for syntax, security, and static analysis.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-github-actions-workflow
 
 on:
@@ -62,7 +79,7 @@ jobs:
 
       # GitHub Actions workflow linter
       - name: Setup actionlint
-        uses: y-miyazaki/config/.github/actions/install-github-release@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/install-github-release@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           binary: actionlint
@@ -72,7 +89,7 @@ jobs:
 
       # Security and settings validation (persist-credentials, timeout-minutes, etc.)
       - name: Setup ghalint
-        uses: y-miyazaki/config/.github/actions/install-github-release@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/install-github-release@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           binary: ghalint
@@ -104,7 +121,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |

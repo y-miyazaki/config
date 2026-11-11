@@ -1,5 +1,22 @@
-# Reusable workflow: Generate AWS resources and upload as zip artifact
-# Generates AWS resource outputs and uploads them for downstream consumption.
+#######################################
+# Description:
+#   Reusable workflow: Generate AWS resources and upload as zip artifact
+#   Generates AWS resource outputs and uploads them for downstream consumption.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-resources.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-resources
 
 on:
@@ -85,7 +102,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Download and install arc
-        uses: y-miyazaki/config/.github/actions/install-github-release@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/install-github-release@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           asset_pattern: "arc-linux-amd64.tar.gz"
@@ -176,7 +193,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |

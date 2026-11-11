@@ -20,6 +20,43 @@ Design background: [GitHub Workflows Design](../../docs/explanation/github-workf
 
 ---
 
+## Header format
+
+Every `.github/workflows/*.yaml` and `example/*.yaml` file **MUST** open with this comment block immediately before `name:`, in the same style as shell script headers. All five sections are required; write `None` on the next line when a section does not apply. Checked by `test/bats/github-actions/workflow-header.bats`.
+
+```yaml
+#######################################
+# Description:
+#   <Kind> workflow: <title>
+#   <details, optional extra lines>
+#
+# Usage:
+#   <how it is called or triggered>
+#
+# Design Rules:
+#   - <constraint>  (or `#   None`)
+#
+# Dependencies:
+#   - <secrets, labels, permissions>  (or `#   None`)
+#
+# References:
+#   - <design doc or spec path>  (or `#   None`)
+#######################################
+name: ...
+```
+
+| Section      | Requirement                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Description  | **MUST**. First line is `<Kind> workflow: <title>` with Kind one of `Reusable`, `Loop`, `CI`, `CD`, `Manual`, `Platform`.            |
+| Usage        | **MUST**. Reusable (`ci-*`, `cd-*`): the `uses:` line and the `with:` / `secrets:` contract. `on-*` and `example/`: `Runs on:` list. |
+| Design Rules | **MUST**. Constraints a maintainer must not break (security model, concurrency, delivery contract).                                       |
+| Dependencies | **MUST**. Required secrets, labels, permissions, external setup.                                                                          |
+| References   | **MUST**. Design doc, spec, or inputs reference paths.                                                                                    |
+
+Sections appear in the order above, each `# Name:` heading followed by `#` indented lines (list items use `#   -`; `None` is plain text, not a list item). Keep one fact per line and no trailing prose outside a section.
+
+---
+
 ## Composition
 
 | Rule                          | Requirement                                                                                                                                                                                                    |

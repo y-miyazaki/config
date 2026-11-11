@@ -657,6 +657,7 @@ dogfood_value() {
             github-pr-revise) expected="${revise}" ;;
             github-issue-triage) expected='issue_comment L1' ;;
             github-pr-review) expected='pr_review L2' ;;
+            code-review) expected='issue_create L2' ;;
             changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
                 expected='pr_create L2'
                 ;;
@@ -671,7 +672,7 @@ dogfood_value() {
         fi
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers pass only declared inputs and every required input of the local reusable" {
@@ -700,7 +701,7 @@ dogfood_value() {
         done
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers pass the level-dependent inputs only on L2 and above" {
@@ -725,7 +726,7 @@ dogfood_value() {
         fi
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers repeat no reusable default and no removed input" {
@@ -1178,6 +1179,13 @@ triage_block() {
 expected_tool_allowlist() {
     case "$1" in
         changelog) ;;
+        code-review)
+            cat << 'EOF'
+Bash(git cat-file:*)
+Bash(git ls-files:*)
+Bash(git rev-parse:*)
+EOF
+            ;;
         docs-updater | tech-debt | test-gap)
             cat << 'EOF'
 Bash(git remote get-url:*)
@@ -1247,7 +1255,7 @@ EOF
     esac
 }
 
-LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
+LOOP_AGENT_CALLERS=(changelog code-review docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
 
 @test "callers declare the tool rules their skill needs without host allow rules" {
     local name wf actual expected
@@ -1337,4 +1345,86 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
         [[ ${desc} == *'allow rules are not applied in CI'* ]]
         [[ ${desc} == *'Bash(gh issue view:*)'* ]]
     done
+}
+
+@test "agent_tool_denylist is wired to detect and agent-l2 only and absent from the entity caller" {
+    local keys
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_tool_denylist'
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_engine'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    run ! grep -q agent_tool_denylist "${ENTITY_CALLER}"
+    job_block "${AGENT}" agent-l2 | grep -q 'agent_tool_denylist: ${{ inputs.agent_tool_denylist }}'
+    run ! grep -q agent_tool_denylist <(job_block "${AGENT}" agent-l1)
+    workflow_inputs "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    workflow_inputs "${AGENT}" | grep -qx agent_tool_denylist
+}
+
+@test "detect_script is optional for the branch caller and loop-detect and required for the entity caller" {
+    [ -z "$(workflow_required_inputs "${BRANCH_CALLER}" | grep -x detect_script)" ]
+    [ -z "$(action_required_inputs loop-detect | grep -x detect_script)" ]
+    workflow_required_inputs "${ENTITY_CALLER}" | grep -qx detect_script
+    input_block "${BRANCH_CALLER}" detect_script | grep -qF 'default: ""'
+    input_block "${BRANCH_CALLER}" detect_script | grep -qi 'built-in'
+}
+
+@test "finalize_issue_limit defaults to 5 and reaches loop-detect and both finalize steps" {
+    local keys
+    input_block "${BRANCH_CALLER}" finalize_issue_limit | grep -q 'default: 5'
+    input_block "${AGENT}" finalize_issue_limit | grep -q 'default: 5'
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' finalize_issue_limit'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx finalize_issue_limit
+    [ "$(grep -c 'finalize_issue_limit: ${{ format' "${AGENT}")" -eq 2 ]
+    action_inputs loop-finalize | grep -qx finalize_issue_limit
+    action_inputs loop-detect | grep -qx finalize_issue_limit
+    run ! grep -q finalize_issue_limit "${ENTITY_CALLER}"
+}
+
+@test "issue_create callers never apply an intake label" {
+    local wf block checked=0 label
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        [[ "$(dogfood_value "${wf}" delivery)" == "issue_create" ]] || continue
+        block="$(triage_block "${wf}" finalize_label_allowlist)"
+        [ -n "${block}" ]
+        for label in autofix needs-triage triage:needs-info; do
+            run ! grep -qx "${label}" <<< "${block}"
+        done
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -ge 1 ]
+}
+
+@test "on-loop-code-review uses L2 issue_create with REJECT on unchanged and denies Agent" {
+    local wf="${ROOT}/.github/workflows/on-loop-code-review.yaml"
+    [ -f "${wf}" ]
+    [ "$(dogfood_value "${wf}" level)" = "L2" ]
+    [ "$(dogfood_value "${wf}" delivery)" = "issue_create" ]
+    [ "$(dogfood_value "${wf}" agent_unchanged_verdict)" = "REJECT" ]
+    [ "$(dogfood_value "${wf}" agent_engine)" = "claude" ]
+    [ "$(dogfood_value "${wf}" loop_name)" = "code-review" ]
+    [ "$(dogfood_value "${wf}" finalize_issue_limit)" = "3" ]
+    [ "$(dogfood_value "${wf}" agent_edit_target)" = "report" ]
+    [ "$(dogfood_value "${wf}" agent_edit_allowlist)" = ".loop-code-review/findings.json" ]
+    [ "$(dogfood_value "${wf}" finalize_script)" = "scripts/self/loop/render_code_review_issues.sh" ]
+    [ -z "$(dogfood_value "${wf}" detect_script)" ]
+    [ "$(triage_block "${wf}" agent_tool_denylist)" = "Agent" ]
+    [ "$(triage_block "${wf}" finalize_label_allowlist)" = "loop:code-review" ]
+    run dogfood_value "${wf}" agent_cli_version
+    [[ $output =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    grep -qx '  group: loop-state-main' "${wf}"
+    grep -q 'cron:' "${wf}"
+}
+
+@test "loop-budget has a code-review entry with every cap" {
+    run jq -e '.loops["code-review"] | (.max_runs_per_day > 0) and (.max_tokens_per_day > 0) and (.max_cost_usd_per_day > 0) and (.max_attempts_per_run > 0)' "${ROOT}/.loop/loop-budget.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "renovate tracks the code-review claude CLI pin without automerge" {
+    run jq -e '
+        (.customManagers // [] | map(select(.depNameTemplate == "@anthropic-ai/claude-code" and .datasourceTemplate == "npm"
+            and (.managerFilePatterns | join(" ") | contains("on-loop-code-review")))) | length) == 1
+        and ((.packageRules | map(select((.matchDepNames // []) | index("@anthropic-ai/claude-code"))) | last | .automerge) == false)' "${ROOT}/.github/renovate.json"
+    [ "$status" -eq 0 ]
 }

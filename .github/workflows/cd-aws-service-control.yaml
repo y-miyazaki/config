@@ -1,5 +1,22 @@
-# Reusable workflow: AWS service control (unified interface)
-# Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#######################################
+# Description:
+#   Reusable workflow: AWS service control (unified interface)
+#   Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-service-control.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-service-control
 
 on:
@@ -198,7 +215,7 @@ jobs:
   # reusable-workflow reference per job (no dynamic uses: or shared job templates).
   control-ec2-instances:
     if: ${{ inputs.control_ec2 }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -217,7 +234,7 @@ jobs:
 
   control-ecs-services:
     if: ${{ inputs.control_ecs_service }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -239,7 +256,7 @@ jobs:
 
   control-batch-job-queues:
     if: ${{ inputs.control_batch }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -258,7 +275,7 @@ jobs:
 
   control-ecs-scheduled-tasks:
     if: ${{ inputs.control_ecs_scheduled_task }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -277,7 +294,7 @@ jobs:
 
   control-rds-clusters:
     if: ${{ inputs.control_rds }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -296,7 +313,7 @@ jobs:
 
   control-redshift-clusters:
     if: ${{ inputs.control_redshift }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       action: ${{ inputs.action }}
@@ -369,7 +386,7 @@ jobs:
           echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Summary
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           outputs: |

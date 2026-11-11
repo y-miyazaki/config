@@ -11,6 +11,7 @@ bats_require_minimum_version 1.5.0
 # - create_pr threads OUTCOME into the rendered PR body loop meta block
 # - ci-sweeper Failure context comes from the handoff-resolved detect JSON (no inline input)
 # - PR_LABELS adds --label; AGENT_ENGINE reaches the loop meta block
+# - PR_LABELS entries are created before the PR when missing, and a failed label create stops before gh pr create
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -47,6 +48,16 @@ if [[ "$1" == "pr" && "$2" == "create" ]]; then
         exit 1
     fi
     echo "https://github.com/example/repo/pull/42"
+    exit 0
+fi
+if [[ "$1" == "label" && "$2" == "create" ]]; then
+    if [[ -n ${GH_LABEL_LOG:-} ]]; then
+        printf '%s\n' "$*" >> "${GH_LABEL_LOG}"
+    fi
+    if [[ "${GH_LABEL_CREATE_FAIL:-}" == "1" ]]; then
+        echo "HTTP 403: Resource not accessible by integration" >&2
+        exit 1
+    fi
     exit 0
 fi
 if [[ "$1" == "pr" && "$2" == "view" ]]; then
@@ -233,6 +244,58 @@ teardown() {
     run sed -E 's/--body-file [^ ]+/--body-file BODY/' "${GH_ARGV_FILE}"
     [ "$output" = "pr create --repo example/repo --base main --head loop/test-branch --title chore: test --body-file BODY --label loop-automation" ]
     grep -qxF -- '| engine | cursor |' "${body_file}"
+}
+
+@test "create_pr creates each PR_LABELS entry before gh pr create" {
+    local script
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    export GH_LABEL_LOG="${BATS_TEST_TMPDIR}/gh-labels"
+    export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
+    export AGENT_BRANCH="loop/test-branch"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_LABELS="loop-automation, needs review"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    [ "$(wc -l < "${GH_LABEL_LOG}")" -eq 2 ]
+    [[ "$(sed -n 1p "${GH_LABEL_LOG}")" == "label create loop-automation --repo example/repo "* ]]
+    [[ "$(sed -n 2p "${GH_LABEL_LOG}")" == "label create needs review --repo example/repo "* ]]
+}
+
+@test "create_pr stops before gh pr create when a label cannot be created" {
+    local script
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    export GH_LABEL_CREATE_FAIL=1
+    export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
+    export LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json"
+    export AGENT_BRANCH="loop/test-branch"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_LABELS="loop-automation"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 1 ]
+    [ ! -f "${GH_ARGV_FILE}" ]
+    grep -q 'loop-automation' "${LOOP_FAILURE_FILE}"
 }
 
 @test "create_pr renders ci-sweeper Failure context from the handoff detect result" {

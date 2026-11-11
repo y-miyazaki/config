@@ -1,17 +1,30 @@
-# Reusable workflow: Loop agent execution
-# L1: agent-l1 (loop-agent-once) → finalize-l1 (loop-finalize and run-log)
-# L2/L3: agent-l2 (loop-execute) → finalize-l2 (loop-finalize and run-log always)
-# loop-finalize branches on delivery alone (issue_comment | none | pr_create | pr_push | pr_review); delivery and
-# pr_auto_merge are detect outputs passed through unchanged by the callers.
-# The handoff key, checkout ref and base branch are read from target_json in each job.
-# Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
-# Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
-# Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
-# Token resolution: agent jobs (agent-l1 / agent-l2) get only the read-only github.token; only the finalize jobs
-# (finalize-l1 / finalize-l2) resolve a write token from BOT_APP_* + optional GH_TOKEN.
-# agent-l2 hands its branch to finalize-l2 as a git bundle artifact; finalize-l2 verifies and pushes it.
-# Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
-#   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#######################################
+# Description:
+#   Reusable workflow: Loop agent execution
+#   L1: agent-l1 (loop-agent-once) → finalize-l1 (loop-finalize and run-log)
+#   L2/L3: agent-l2 (loop-execute) → finalize-l2 (loop-finalize and run-log always)
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   - loop-finalize branches on delivery alone (issue_comment | issue_create | none | pr_create | pr_push | pr_review); delivery and pr_auto_merge are detect outputs passed through unchanged by the callers.
+#   - The handoff key, checkout ref and base branch are read from target_json in each job.
+#   - Caller-facing prompts: loop-detect assembles the maker text (prompt_text); the domain checker rubric is agent_checker_instructions.
+#   - Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
+#   - Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
+#   - Token resolution: agent jobs (agent-l1 / agent-l2) get only the read-only github.token; only the finalize jobs (finalize-l1 / finalize-l2) resolve a write token from BOT_APP_* + optional GH_TOKEN.
+#   - agent-l2 hands its branch to finalize-l2 as a git bundle artifact; finalize-l2 verifies and pushes it.
+#   - Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
+#
+# Dependencies:
+#   None
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#######################################
 name: ci-loop-agent
 
 on:
@@ -106,13 +119,18 @@ on:
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
         required: false
         type: string
+      agent_tool_denylist:
+        default: ""
+        description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+        required: false
+        type: string
       agent_unchanged_verdict:
         default: ""
         description: "Verdict when the maker produces no file changes: APPROVE | REJECT (L2/L3; validated by detect)"
         required: false
         type: string
       delivery:
-        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (detect output; loop-finalize branches on it)"
+        description: "Where the agent output is delivered: issue_comment | issue_create | none | pr_create | pr_push | pr_review (detect output; loop-finalize branches on it)"
         required: true
         type: string
       environment:
@@ -125,9 +143,14 @@ on:
         description: "Comma-separated paths to commit with state after the finalize hook"
         required: false
         type: string
+      finalize_issue_limit:
+        default: 5
+        description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+        required: false
+        type: number
       finalize_label_allowlist:
         default: ""
-        description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
+        description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | issue_create | pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
         required: false
         type: string
       finalize_outcome_override:
@@ -287,7 +310,7 @@ jobs:
 
       - name: Run Agent Once
         id: agent
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_cli_version: ${{ inputs.agent_cli_version }}
@@ -321,7 +344,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -341,7 +364,7 @@ jobs:
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_engine: ${{ inputs.agent_engine }}
@@ -349,6 +372,7 @@ jobs:
           branch: ""
           current_sha: ""
           delivery: ${{ inputs.delivery }}
+          finalize_issue_limit: ${{ format('{0}', inputs.finalize_issue_limit) }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           level: ${{ inputs.level }}
@@ -360,7 +384,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-run-log@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_result: ${{ needs.agent-l1.result }}
@@ -441,7 +465,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
@@ -452,7 +476,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-execute@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
@@ -473,6 +497,7 @@ jobs:
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+          agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
           agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
           base_branch: ${{ steps.target.outputs.base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}
@@ -552,7 +577,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -577,7 +602,7 @@ jobs:
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
@@ -593,6 +618,7 @@ jobs:
           current_sha: ${{ steps.target.outputs.from_ref }}
           delivery: ${{ inputs.delivery }}
           finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+          finalize_issue_limit: ${{ format('{0}', inputs.finalize_issue_limit) }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_outcome_override: ${{ inputs.finalize_outcome_override != '' && inputs.finalize_outcome_override || needs.agent-l2.outputs.finalize_outcome_override }}
           finalize_script: ${{ inputs.finalize_script }}
@@ -619,7 +645,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-run-log@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_result: ${{ needs.agent-l2.result }}
@@ -642,7 +668,7 @@ jobs:
         if: >-
           always() &&
           steps.target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_engine: ${{ inputs.agent_engine }}

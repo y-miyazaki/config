@@ -1,10 +1,24 @@
-# Reusable workflow: Loop caller orchestration (branch/PR)
-# Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
-# Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
-# Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
-# Do not fan out resolved tokens via job outputs — see:
-#   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#######################################
+# Description:
+#   Reusable workflow: Loop caller orchestration (branch/PR)
+#   Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   - Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
+#   - Do not fan out resolved tokens via job outputs — see: docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#
+# Dependencies:
+#   None
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: ci-loop-caller
 
 on:
@@ -102,6 +116,11 @@ on:
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). Caller-declared only — never derived from detect output. The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
         required: false
         type: string
+      agent_tool_denylist:
+        default: ""
+        description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+        required: false
+        type: string
       agent_unchanged_verdict:
         default: ""
         description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
@@ -121,7 +140,7 @@ on:
         required: false
         type: number
       delivery:
-        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (required; no default)"
+        description: "Where the agent output is delivered: issue_comment | issue_create | none | pr_create | pr_push | pr_review (required; no default; issue_create is L2/L3 integration targets only)"
         required: true
         type: string
       detect_branch_match:
@@ -169,8 +188,9 @@ on:
         required: false
         type: string
       detect_script:
-        description: "Path to domain detect_*.sh script"
-        required: true
+        default: ""
+        description: "Path to domain detect_*.sh script. Empty (default) uses the built-in range detect: it runs when files changed between the stored last_sha and HEAD, ignoring .loop/, the state file and the run log"
+        required: false
         type: string
       environment:
         default: default
@@ -182,9 +202,14 @@ on:
         description: "Extra paths included in finalize commit (e.g. ledger file)"
         required: false
         type: string
+      finalize_issue_limit:
+        default: 5
+        description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+        required: false
+        type: number
       finalize_label_allowlist:
         default: ""
-        description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
+        description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment, issue_create or pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
         required: false
         type: string
       finalize_outcome_override:
@@ -323,7 +348,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -332,14 +357,16 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-detect@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-detect@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
           agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
           agent_edit_target: ${{ inputs.agent_edit_target }}
+          agent_engine: ${{ inputs.agent_engine }}
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
+          agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
           agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
@@ -354,6 +381,7 @@ jobs:
           detect_pr_number: ${{ inputs.detect_pr_number != 0 && format('{0}', inputs.detect_pr_number) || '' }}
           detect_priority: ${{ inputs.detect_priority }}
           detect_script: ${{ inputs.detect_script }}
+          finalize_issue_limit: ${{ format('{0}', inputs.finalize_issue_limit) }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
@@ -381,7 +409,7 @@ jobs:
     steps:
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -473,7 +501,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
@@ -494,10 +522,12 @@ jobs:
       agent_maker_model: ${{ inputs.agent_maker_model }}
       agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
       agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+      agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
       agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
       delivery: ${{ needs.detect.outputs.delivery }}
       environment: ${{ inputs.environment }}
       finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+      finalize_issue_limit: ${{ inputs.finalize_issue_limit }}
       finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
       finalize_outcome_override: ${{ inputs.finalize_outcome_override }}
       finalize_script: ${{ inputs.finalize_script }}
@@ -545,7 +575,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -553,7 +583,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/loop-run-log@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}

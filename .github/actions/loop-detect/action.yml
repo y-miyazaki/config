@@ -14,6 +14,10 @@ inputs:
     default: ""
     description: "Maker artifact: fix | report (required at L2/L3; must be empty at L1)"
     required: false
+  agent_engine:
+    default: ""
+    description: "AI engine (claude | copilot | codex | cursor); read only to validate agent_tool_denylist"
+    required: false
   agent_maker_instructions:
     default: ""
     description: "Domain-specific maker instructions appended during loop-detect prompt assembly"
@@ -21,6 +25,10 @@ inputs:
   agent_maker_skill_name:
     description: "Skill name to invoke (e.g. docs-updater)"
     required: true
+  agent_tool_denylist:
+    default: ""
+    description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
+    required: false
   agent_unchanged_verdict:
     default: ""
     description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
@@ -38,7 +46,7 @@ inputs:
     description: "Default daily token limit when budget file is absent or omits max_tokens_per_day"
     required: false
   delivery:
-    description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
+    description: "Where the agent output is delivered: issue_comment | issue_create | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
     required: true
   detect_branch_match:
     default: ""
@@ -73,15 +81,20 @@ inputs:
     description: "Target mode priority order (comma-separated)"
     required: false
   detect_script:
-    description: "Path to domain detect script (bash)"
-    required: true
+    default: ""
+    description: "Path to domain detect script (bash). Empty uses the built-in range detect (changed files between last_sha and HEAD, excluding .loop/, the state file and the run log)"
+    required: false
+  finalize_issue_limit:
+    default: "5"
+    description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+    required: false
   finalize_label_allowlist:
     default: ""
-    description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
+    description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment, issue_create or pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
     required: false
   finalize_script:
     default: ""
-    description: "Trusted script that writes the delivery message files (required at L2/L3 for delivery issue_comment or pr_review; must be empty at L1)"
+    description: "Trusted script that writes the delivery message files (required at L2/L3 for delivery issue_comment, issue_create or pr_review; must be empty at L1)"
     required: false
   github_token:
     description: "Resolved GitHub token for PR enumeration and API calls"
@@ -112,7 +125,7 @@ outputs:
     description: "Current SHA for first matrix cell (legacy compat)"
     value: ${{ steps.detect.outputs.current_sha }}
   delivery:
-    description: "Declared delivery (issue_comment | none | pr_create | pr_push | pr_review)"
+    description: "Declared delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)"
     value: ${{ steps.detect.outputs.delivery }}
   handoff_artifact_name:
     description: "Uploaded artifact name for loop-handoff bundle (empty when should_run=false)"
@@ -161,8 +174,10 @@ runs:
         AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
         AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
         AGENT_EDIT_TARGET: ${{ inputs.agent_edit_target }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
         AGENT_MAKER_INSTRUCTIONS: ${{ inputs.agent_maker_instructions }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_TOOL_DENYLIST: ${{ inputs.agent_tool_denylist }}
         AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
@@ -177,6 +192,7 @@ runs:
         DETECT_PR_ENABLED: ${{ inputs.detect_pr_enabled }}
         DETECT_PR_NUMBER: ${{ inputs.detect_pr_number }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
+        FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
         GITHUB_TOKEN: ${{ inputs.github_token }}

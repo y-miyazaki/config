@@ -14,15 +14,18 @@
 #   - level is the primary key and is required: L1, L2, or L3
 #   - L1: delivery must be none or issue_comment; agent_edit_target, agent_edit_allowlist,
 #     agent_edit_denylist, agent_unchanged_verdict, and finalize_script must be empty
-#   - L2/L3: delivery must be issue_comment, none, pr_create, pr_push, or pr_review
-#     (validate_delivery_value)
-#   - L2/L3: finalize_script is required for delivery issue_comment and pr_review
-#   - All levels: finalize_label_allowlist is allowed only with delivery issue_comment
-#     or pr_review
+#   - L2/L3: delivery must be issue_comment, issue_create, none, pr_create, pr_push, or
+#     pr_review (validate_delivery_value)
+#   - L2/L3: finalize_script is required for delivery issue_comment, issue_create and pr_review
+#   - issue_create (L2/L3 only): finalize_label_allowlist is required and
+#     agent_unchanged_verdict must be REJECT (an APPROVE on no output would fail delivery forever)
+#   - All levels: finalize_label_allowlist is allowed only with delivery issue_comment,
+#     issue_create or pr_review
 #   - L2/L3: agent_edit_target must be fix or report (required)
 #   - L2/L3: agent_edit_allowlist is required; empty fails, ** means unrestricted
 #   - L2/L3: agent_edit_denylist is optional; empty uses the default denylist
 #   - L2/L3: agent_unchanged_verdict must be APPROVE or REJECT (required)
+#   - validate_agent_tool_denylist: agent_tool_denylist needs L2/L3 and agent_engine claude
 #   - Required values are enforced here, not by composite action required: true
 #
 # Output:
@@ -47,15 +50,79 @@ source "${_LOOP_WRITE_CONTRACT_LIB_DIR}/delivery.sh"
 #   STDERR: ::error:: annotation when a non-empty allowlist is set for another delivery
 #
 # Returns:
-#   0 when empty or delivery is issue_comment or pr_review; 1 otherwise
+#   0 when empty or delivery is issue_comment, issue_create or pr_review; 1 otherwise
 #
 #######################################
 function validate_finalize_label_allowlist {
     local delivery="${1:-}"
     local finalize_label_allowlist="${2:-}"
 
-    if [[ -n ${finalize_label_allowlist} && ${delivery} != "issue_comment" && ${delivery} != "pr_review" ]]; then
-        echo "::error::finalize_label_allowlist requires delivery issue_comment or pr_review (got: ${delivery:-empty})" >&2
+    if [[ -n ${finalize_label_allowlist} && ${delivery} != "issue_comment" && ${delivery} != "issue_create" && ${delivery} != "pr_review" ]]; then
+        echo "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: ${delivery:-empty})" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
+# validate_finalize_issue_limit: Validate finalize_issue_limit for delivery issue_create
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - delivery
+#   $2 - finalize_issue_limit (positive integer | empty for the default)
+#
+# Outputs:
+#   STDERR: ::error:: annotation for an invalid value
+#
+# Returns:
+#   0 when delivery is not issue_create, or the value is empty or a positive integer; 1 otherwise
+#
+#######################################
+function validate_finalize_issue_limit {
+    local delivery="${1:-}"
+    local finalize_issue_limit="${2:-}"
+
+    [[ ${delivery} != "issue_create" || -z ${finalize_issue_limit} ]] && return 0
+    if ! [[ ${finalize_issue_limit} =~ ^[1-9][0-9]*$ ]]; then
+        echo "::error::finalize_issue_limit must be a positive integer (got: ${finalize_issue_limit})" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
+# validate_agent_tool_denylist: Validate agent_tool_denylist against the level and engine
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - level (L1 | L2 | L3)
+#   $2 - agent_engine (claude | copilot | codex | cursor | empty)
+#   $3 - agent_tool_denylist (newline-separated deny rules | empty)
+#
+# Outputs:
+#   STDERR: ::error:: annotation when a non-empty denylist cannot be enforced
+#
+# Returns:
+#   0 when empty, or when level is L2/L3 and the engine is claude; 1 otherwise
+#
+#######################################
+function validate_agent_tool_denylist {
+    local level="${1:-}"
+    local agent_engine="${2:-}"
+    local agent_tool_denylist="${3:-}"
+
+    [[ -z ${agent_tool_denylist} ]] && return 0
+    if [[ ${level} == "L1" ]]; then
+        echo "::error::agent_tool_denylist is not allowed at L1" >&2
+        return 1
+    fi
+    if [[ ${agent_engine} != "claude" ]]; then
+        echo "::error::agent_tool_denylist requires agent_engine claude (got: ${agent_engine:-empty}); other engines cannot enforce it" >&2
         return 1
     fi
     return 0
@@ -69,13 +136,13 @@ function validate_finalize_label_allowlist {
 #
 # Arguments:
 #   $1 - level (L1 | L2 | L3)
-#   $2 - delivery (issue_comment | none | pr_create | pr_push | pr_review; L1 allows only none or issue_comment)
+#   $2 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review; L1 allows only none or issue_comment)
 #   $3 - agent_edit_target (fix | report; empty at L1)
 #   $4 - agent_edit_allowlist (non-empty at L2/L3, ** for unrestricted; empty at L1)
 #   $5 - agent_edit_denylist (any at L2/L3 including empty; empty at L1)
 #   $6 - agent_unchanged_verdict (APPROVE | REJECT; empty at L1)
-#   $7 - finalize_script (required for issue_comment and pr_review at L2/L3; empty at L1)
-#   $8 - finalize_label_allowlist (newline-separated; only with issue_comment or pr_review)
+#   $7 - finalize_script (required for issue_comment, issue_create and pr_review at L2/L3; empty at L1)
+#   $8 - finalize_label_allowlist (newline-separated; required for issue_create; only with issue_comment, issue_create or pr_review)
 #
 # Outputs:
 #   STDERR: ::error:: annotation naming the invalid field
@@ -136,8 +203,12 @@ function validate_loop_write_contract {
 
     validate_delivery_value "${delivery}" || return 1
 
-    if [[ (${delivery} == "issue_comment" || ${delivery} == "pr_review") && -z ${finalize_script} ]]; then
+    if [[ (${delivery} == "issue_comment" || ${delivery} == "issue_create" || ${delivery} == "pr_review") && -z ${finalize_script} ]]; then
         echo "::error::finalize_script is required for delivery ${delivery}" >&2
+        return 1
+    fi
+    if [[ ${delivery} == "issue_create" && -z ${finalize_label_allowlist} ]]; then
+        echo "::error::finalize_label_allowlist is required for delivery issue_create" >&2
         return 1
     fi
     validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
@@ -170,6 +241,10 @@ function validate_loop_write_contract {
             return 1
             ;;
     esac
+    if [[ ${delivery} == "issue_create" && ${agent_unchanged_verdict} != "REJECT" ]]; then
+        echo "::error::agent_unchanged_verdict must be REJECT for delivery issue_create (got: ${agent_unchanged_verdict})" >&2
+        return 1
+    fi
 
     return 0
 }

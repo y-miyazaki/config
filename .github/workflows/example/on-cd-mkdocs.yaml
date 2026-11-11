@@ -1,4 +1,20 @@
-# CD workflow: Build and deploy MkDocs to GitHub Pages
+#######################################
+# Description:
+#   CD workflow: Build and deploy MkDocs to GitHub Pages
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push, workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-cd-mkdocs
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -19,7 +35,7 @@ permissions:
 
 jobs:
   build:
-    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       artifact_name: mkdocs-site
@@ -30,7 +46,7 @@ jobs:
 
   deploy:
     needs: build
-    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       artifact_name: mkdocs-site

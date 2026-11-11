@@ -1,5 +1,22 @@
-# Reusable workflow: Go CI (test, lint, security)
-# Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#######################################
+# Description:
+#   Reusable workflow: Go CI (test, lint, security)
+#   Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-go.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-go
 
 on:
@@ -196,7 +213,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |
@@ -263,7 +280,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/git-auth@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           github_token: ${{ github.token }}
@@ -294,7 +311,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/git-auth@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           github_token: ${{ github.token }}
@@ -324,7 +341,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |
@@ -413,7 +430,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |

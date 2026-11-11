@@ -1,16 +1,27 @@
-# CI workflow: repository security (Trivy + SBOM + SAST) on schedule and security-relevant changes
-# Copy to .github/workflows/on-ci-security.yaml in your repository.
-# Design doc: docs/superpowers/specs/2026-07-24-ci-security-workflow-design.md
+#######################################
+# Description:
+#   CI workflow: repository security (Trivy + SBOM + SAST) on schedule and security-relevant changes
 #
-# Monorepo: add security jobs with different scan_ref / artifact_prefix, for example:
-#   with:
-#     artifact_prefix: api
-#     scan_ref: services/api
+# Usage:
+#   Copy to .github/workflows/on-ci-security.yaml in your repository.
+#   Monorepo: add security jobs with different scan_ref / artifact_prefix, for example:
+#     with:
+#       artifact_prefix: api
+#       scan_ref: services/api
+#   CodeQL languages (codeql_languages):
+#     Go:         '["actions","go"]'
+#     Node.js:    '["javascript-typescript","actions"]'
+#     Terraform/IaC-only (no app source): '["actions"]'
 #
-# CodeQL languages (codeql_languages):
-#   Go:         '["actions","go"]'
-#   Node.js:    '["javascript-typescript","actions"]'
-#   Terraform/IaC-only (no app source): '["actions"]'
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   - Design doc: docs/superpowers/specs/2026-07-24-ci-security-workflow-design.md
+#######################################
 name: on-ci-security
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -92,7 +103,7 @@ permissions:
 
 jobs:
   sast:
-    uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     with:
       # Go:         codeql_languages: '["actions","go"]'
@@ -105,7 +116,7 @@ jobs:
       security-events: write
 
   security:
-    uses: y-miyazaki/config/.github/workflows/ci-security.yaml@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+    uses: y-miyazaki/config/.github/workflows/ci-security.yaml@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
     permissions:
       contents: read

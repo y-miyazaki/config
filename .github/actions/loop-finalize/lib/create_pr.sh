@@ -67,7 +67,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 #   OUTCOME - Finalize outcome for Created By footer icon (optional)
 #   PR_BASE_BRANCH - Base branch
 #   PR_BODY - Static PR body prefix (optional)
-#   PR_LABELS - PR labels (optional)
+#   PR_LABELS - PR labels, comma-separated; missing ones are created first (optional)
 #   PR_TITLE - PR title
 #   SKIP_REASON - Footer skip reason (optional)
 #   TARGET_JSON - Target JSON (optional)
@@ -86,7 +86,8 @@ function main {
     local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
-    local composed url number pr_err
+    local composed url number pr_err pr_label
+    local -a pr_label_names=()
 
     : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
@@ -99,6 +100,9 @@ function main {
     # shellcheck source=../../lib/loop/handoff.sh
     # shellcheck disable=SC1091
     source "${loop_action_lib}/handoff.sh"
+    # shellcheck source=../../lib/loop/ensure_labels.sh
+    # shellcheck disable=SC1091
+    source "${loop_action_lib}/ensure_labels.sh"
 
     work_dir="$(mktemp -d)"
     # Capture path at trap-set time; local work_dir is out of scope on EXIT.
@@ -132,12 +136,18 @@ function main {
     fi
     if [[ -n ${PR_LABELS} ]]; then
         gh_args+=(--label "${PR_LABELS}")
+        # gh splits --label on commas; create each missing label first
+        while IFS= read -r pr_label; do
+            pr_label="${pr_label#"${pr_label%%[![:space:]]*}"}"
+            pr_label="${pr_label%"${pr_label##*[![:space:]]}"}"
+            [[ -n ${pr_label} ]] && pr_label_names+=("${pr_label}")
+        done < <(tr ',' '\n' <<< "${PR_LABELS}")
     fi
     if [[ ${PR_DRAFT} == "true" ]]; then
         gh_args+=(--draft)
     fi
 
-    if ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then
+    if ! pr_err="$(ensure_repo_labels "${pr_label_names[@]}" 2>&1)" || ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then
         if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091

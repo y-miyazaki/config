@@ -54,8 +54,10 @@ setup() {
     expected="agent_edit_allowlist
 agent_edit_denylist
 agent_edit_target
+agent_engine
 agent_maker_instructions
 agent_maker_skill_name
+agent_tool_denylist
 agent_unchanged_verdict
 budget_file
 budget_max_runs_per_day
@@ -70,6 +72,7 @@ detect_pr_enabled
 detect_pr_number
 detect_priority
 detect_script
+finalize_issue_limit
 finalize_label_allowlist
 finalize_script
 github_token
@@ -157,9 +160,9 @@ state_file"
 @test "validate_detect_inputs fails on each invalid configuration" {
     local -a cases=(
         'LEVEL=|::error::level is required (L1, L2, or L3)'
-        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
-        'DELIVERY=open_pr|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: open_pr)'
-        'DELIVERY=issue_create|::error::delivery issue_create is not implemented'
+        'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
+        'DELIVERY=open_pr|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: open_pr)'
+        'DELIVERY=issue_create FINALIZE_SCRIPT=x.sh FINALIZE_LABEL_ALLOWLIST=loop:x DETECT_PR_ENABLED=true|::error::delivery issue_create does not allow detect_pr_enabled true'
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
         'AGENT_UNCHANGED_VERDICT=|::error::agent_unchanged_verdict is required at L2 (APPROVE or REJECT)'
         'DETECT_BRANCH_MATCH=|::error::detect_branch_match or detect_pr_enabled true is required'

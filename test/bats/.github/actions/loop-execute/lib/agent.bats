@@ -354,6 +354,20 @@ STUB
     grep -qF -- "--allowedTools ${EXPECTED_ALLOW_BASELINE} Bash(gh issue view:*) Bash(gh label list:*) --disallowedTools " "${args_file}"
 }
 
+@test "run_agent claude appends the caller denylist after the fixed deny rules" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-denylist-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_TOOL_DENYLIST="$(printf '%s\n' 'Agent' '' 'Bash(rm:*)')"
+    run_agent "true" > /dev/null
+    grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} Agent Bash(rm:*) --max-turns 5" "${args_file}"
+    AGENT_TOOL_DENYLIST=""
+    : > "${args_file}"
+    run_agent "true" > /dev/null
+    grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} --max-turns 5" "${args_file}"
+}
+
 @test "run_agent claude checker session runs in dontAsk mode with the read baseline" {
     local args_file
 

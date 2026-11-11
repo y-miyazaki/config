@@ -29,12 +29,12 @@ Interactive runs resolve `agent_edit_allowed` from the request's intent: default
 
 Loop callers configure four independent planes. Skills branch only on planes 2–3 from `## Constraints`; they **must not** read `level` or `delivery`.
 
-| Plane     | Caller inputs                                                                                                                         | Visible to skill?         |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| Autonomy  | `level` (L1/L2/L3)                                                                                                                    | No — platform job routing |
-| Edit gate | `agent_edit_allowed` (derived from `level`; not a caller input)                                                                       | Yes                       |
-| Artifact  | `agent_edit_target` (`fix` \| `report`), `agent_report_file` when report                                                              | Yes                       |
-| Delivery  | `delivery` (`pr_create`, `pr_push`, `none`; `issue_comment`, `issue_create`, `pr_review` are reserved and rejected until implemented) | No — `loop-finalize` only |
+| Plane     | Caller inputs                                                                                                                                   | Visible to skill?         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| Autonomy  | `level` (L1/L2/L3)                                                                                                                              | No — platform job routing |
+| Edit gate | `agent_edit_allowed` (derived from `level`; not a caller input)                                                                                 | Yes                       |
+| Artifact  | `agent_edit_target` (`fix` \| `report`), `agent_report_file` when report                                                                        | Yes                       |
+| Delivery  | `delivery` (`pr_create`, `pr_push`, `none`, `issue_comment`, `issue_create`, `pr_review`; `issue_create` is L2/L3 and integration targets only) | No — `loop-finalize` only |
 
 Spec: [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). Caller reference: [loop-caller-inputs-reference.md](workflows/loop-caller-inputs-reference.md).
 

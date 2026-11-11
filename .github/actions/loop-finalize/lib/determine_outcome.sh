@@ -8,8 +8,10 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Decision order: failed agent push (error), override, failed agent (error),
-#   REJECT (rejected), message deliveries, then the has_changes rules
+# - Decision order: failed agent push (error), issue_create, override, failed agent
+#   (error), REJECT (rejected), message deliveries, then the has_changes rules
+# - issue_create ignores an outcome override (Credential Isolation): a failed agent is
+#   error, APPROVE is issue_created, REJECT is rejected, any other verdict is error
 # - A failed agent push (push_failed=true) is error, even over an outcome
 #   override: the branch never reached the remote
 # - An explicit outcome override wins over everything else
@@ -35,11 +37,11 @@
 #   $2 - Agent job result (success, skipped, failure, cancelled)
 #   $3 - has_changes flag (true/false)
 #   $4 - Verdict (APPROVE, REJECT, or empty)
-#   $5 - Delivery (pr_create, pr_push, none, issue_comment, pr_review)
+#   $5 - Delivery (pr_create, pr_push, none, issue_comment, issue_create, pr_review)
 #   $6 - push_failed flag (true when the agent push failed; optional, defaults to false)
 #
 # Outputs:
-#   Outcome to stdout (pr_created, pr_pushed, reported, issue_commented, pr_reviewed,
+#   Outcome to stdout (pr_created, pr_pushed, reported, issue_commented, issue_created, pr_reviewed,
 #   unchanged, rejected, error, or the override)
 #
 # Returns:
@@ -56,6 +58,16 @@ function determine_outcome {
 
     if [[ ${push_failed} == "true" ]]; then
         printf '%s\n' "error"
+    elif [[ ${delivery} == "issue_create" ]]; then
+        if [[ ${agent_result} != "success" && ${agent_result} != "skipped" ]]; then
+            printf '%s\n' "error"
+        elif [[ ${verdict} == "APPROVE" ]]; then
+            printf '%s\n' "issue_created"
+        elif [[ ${verdict} == "REJECT" ]]; then
+            printf '%s\n' "rejected"
+        else
+            printf '%s\n' "error"
+        fi
     elif [[ -n ${override} ]]; then
         printf '%s\n' "${override}"
     elif [[ ${agent_result} != "success" && ${agent_result} != "skipped" ]]; then

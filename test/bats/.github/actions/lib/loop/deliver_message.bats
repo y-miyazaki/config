@@ -12,6 +12,19 @@
 # - deliver_loop_message applies allowlisted labels before posting (one POST, encoded DELETEs)
 # - deliver_loop_message fails the step and records deliver_message on gh failures, redacted
 # - deliver_loop_message records the failure and removes temp files when run under set -e
+# - issue_fingerprint_hash is the first 16 hex digits of sha256(loop_name, newline, fingerprint)
+# - deliver_issue_create creates nothing for [] and fails closed on an invalid or missing issues.json
+# - deliver_issue_create drops duplicates (open and closed, within the run) before applying the limit
+# - deliver_issue_create records the findings cut by the limit in the step summary
+# - deliver_issue_create labels with the whole allowlist, puts the marker first and Meta last
+# - deliver_issue_create lists existing issues with every allowlist label and state=all
+# - deliver_issue_create creates missing allowlist labels before the first issue, only when there is something to create
+# - message labels to add are created when missing before they are added; a failed create stops the delivery
+# - deliver_issue_create fails closed when a label cannot be created and accepts an already existing label
+# - deliver_issue_create drops a finding whose finished body would exceed the GitHub limit
+# - deliver_issue_create escapes regex characters in the loop name when matching markers
+# - sanitize_issue_body defuses HTML comments and mentions; the marker cannot be forged
+# - deliver_issue_create stops at the first failed create and reports the issues already created
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -51,7 +64,7 @@ teardown() {
 
 # Install a gh mock. Each call is one line in gh.log; --body-file and --input contents are
 # saved as gh.body.<call> / gh.input.<call>. Per call kind (COMMENT, REVIEW, LABEL_POST,
-# LABEL_DELETE), GH_MOCK_<KIND>_RC is a space-separated list of exit codes for the 1st, 2nd,
+# LABEL_DELETE, LABEL_CREATE), GH_MOCK_<KIND>_RC is a space-separated list of exit codes for the 1st, 2nd,
 # ... call of that kind (default 0), and GH_MOCK_<KIND>_ERR is printed on stderr on failure.
 mock_gh() {
     local mock_bin="${BATS_TEST_TMPDIR}/bin"
@@ -63,6 +76,9 @@ printf '%s\n' "$*" >> "${log}"
 call="$(wc -l < "${log}" | tr -d ' ')"
 case "$*" in
     "issue comment "*) kind=COMMENT ;;
+    "issue create "*) kind=CREATE ;;
+    "label create "*) kind=LABEL_CREATE ;;
+    "api --paginate "*) kind=LIST ;;
     *"-X POST "*"/pulls/"*"/reviews"*) kind=REVIEW ;;
     *"-X POST "*"/labels"*) kind=LABEL_POST ;;
     *"-X DELETE "*"/labels/"*) kind=LABEL_DELETE ;;
@@ -84,6 +100,12 @@ read -r -a rcs <<< "${!rc_var:-0}"
 rc="${rcs[$((count - 1))]:-0}"
 if [[ ${rc} != 0 ]]; then
     printf '%s\n' "${!err_var:-gh: error}" >&2
+fi
+if [[ ${kind} == LIST && ${rc} == 0 && -n ${GH_MOCK_LIST_OUT:-} ]]; then
+    printf '%s\n' "${GH_MOCK_LIST_OUT}"
+fi
+if [[ ${kind} == CREATE && ${rc} == 0 ]]; then
+    printf 'https://github.com/o/r/issues/%s\n' "$((100 + count))"
 fi
 exit "${rc}"
 EOF2
@@ -129,10 +151,32 @@ count_of() {
     printf '{"add":["triage:ready"],"remove":["bug"]}' > "${LOOP_MESSAGE_DIR}/message_labels.json"
     run deliver_loop_message
     [ "$status" -eq 0 ]
-    [ "$(gh_calls)" -eq 3 ]
-    [[ "$(sed -n 1p "${BATS_TEST_TMPDIR}/gh.log")" == "api -X POST repos/o/r/issues/12/labels --input "* ]]
-    [[ "$(sed -n 2p "${BATS_TEST_TMPDIR}/gh.log")" == "api -X DELETE repos/o/r/issues/12/labels/bug"* ]]
-    [[ "$(sed -n 3p "${BATS_TEST_TMPDIR}/gh.log")" == "issue comment 12 "* ]]
+    [ "$(gh_calls)" -eq 4 ]
+    [[ "$(sed -n 1p "${BATS_TEST_TMPDIR}/gh.log")" == "label create triage:ready "* ]]
+    [[ "$(sed -n 2p "${BATS_TEST_TMPDIR}/gh.log")" == "api -X POST repos/o/r/issues/12/labels --input "* ]]
+    [[ "$(sed -n 3p "${BATS_TEST_TMPDIR}/gh.log")" == "api -X DELETE repos/o/r/issues/12/labels/bug"* ]]
+    [[ "$(sed -n 4p "${BATS_TEST_TMPDIR}/gh.log")" == "issue comment 12 "* ]]
+}
+
+@test "creates a missing label before adding it and never for removals" {
+    printf 'text\n' > "${LOOP_MESSAGE_DIR}/message.md"
+    printf '{"add":["triage:ready"],"remove":["bug"]}' > "${LOOP_MESSAGE_DIR}/message_labels.json"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [[ "$(sed -n 1p "${BATS_TEST_TMPDIR}/gh.log")" == "label create triage:ready --repo o/r "* ]]
+    [[ "$(sed -n 2p "${BATS_TEST_TMPDIR}/gh.log")" == "api -X POST repos/o/r/issues/12/labels "* ]]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.LABEL_CREATE")" -eq 1 ]
+}
+
+@test "fails without adding labels or posting when a label cannot be created" {
+    printf 'text\n' > "${LOOP_MESSAGE_DIR}/message.md"
+    printf '{"add":["triage:ready"]}' > "${LOOP_MESSAGE_DIR}/message_labels.json"
+    export GH_MOCK_LABEL_CREATE_RC="1"
+    export GH_MOCK_LABEL_CREATE_ERR="HTTP 403: nope"
+    run deliver_loop_message
+    [ "$status" -eq 1 ]
+    [ "$(gh_calls)" -eq 1 ]
+    grep -q 'triage:ready' "${LOOP_FAILURE_FILE}"
 }
 
 @test "does not duplicate a marker the text already has" {
@@ -222,7 +266,7 @@ count_of() {
     export GH_MOCK_LABEL_POST_ERR="gh: Forbidden (HTTP 403)"
     run deliver_loop_message
     [ "$status" -eq 1 ]
-    [ "$(gh_calls)" -eq 1 ]
+    [ "$(gh_calls)" -eq 2 ]
     [ "$(grep -c '^issue comment' "${BATS_TEST_TMPDIR}/gh.log")" -eq 0 ]
     [ "$(jq -r '.failure_stage' "${LOOP_FAILURE_FILE}")" = "deliver_message" ]
 
@@ -324,7 +368,7 @@ count_of() {
     run deliver_loop_message
     [ "$status" -eq 0 ]
     [ "$(grep -c -- '-X POST repos/o/r/issues/12/labels' "${BATS_TEST_TMPDIR}/gh.log")" -eq 1 ]
-    [ "$(jq -c . "${BATS_TEST_TMPDIR}/gh.input.1")" = '{"labels":["bug"]}' ]
+    [ "$(jq -c . "${BATS_TEST_TMPDIR}/gh.input.2")" = '{"labels":["bug"]}' ]
     [[ $output == *"::warning::"*"autofix"* ]]
 }
 
@@ -442,4 +486,218 @@ count_of() {
     [ "$(gh_calls)" -eq 2 ]
     [[ "$(sed -n 2p "${BATS_TEST_TMPDIR}/gh.log")" == "issue comment 12 "* ]]
     [ ! -e "${LOOP_FAILURE_FILE}" ]
+}
+
+use_issue_create() {
+    export DELIVERY="issue_create"
+    export LOOP_NAME="code-review"
+    export OUTCOME="issue_created"
+    export VERDICT="APPROVE"
+    export TARGET_JSON='{"key":"integration:main","mode":"integration"}'
+    export FINALIZE_LABEL_ALLOWLIST="loop:code-review"
+    export FINALIZE_ISSUE_LIMIT="3"
+    export GITHUB_STEP_SUMMARY="${BATS_TEST_TMPDIR}/summary.md"
+    : > "${GITHUB_STEP_SUMMARY}"
+    MARKER_PREFIX="<!-- code-review:fp:"
+}
+
+# write_issues JSON: write issues.json into LOOP_MESSAGE_DIR
+write_issues() {
+    printf '%s' "$1" > "${LOOP_MESSAGE_DIR}/issues.json"
+}
+
+# issues_for N PREFIX: JSON array of N findings with fingerprints PREFIX1..PREFIXN
+issues_for() {
+    jq -nc --argjson n "$1" --arg p "$2" '[range(1; $n + 1) | {title: ("title " + $p + (. | tostring)), body: ("body " + $p + (. | tostring)), fingerprint: ($p + (. | tostring))}]'
+}
+
+# marker_for FP: the issue marker for a fingerprint under loop name code-review
+marker_for() {
+    printf '<!-- code-review:fp:%s -->' "$(issue_fingerprint_hash code-review "$1")"
+}
+
+@test "deliver_issue_create creates nothing for an empty array and reports unchanged" {
+    use_issue_create
+    write_issues '[]'
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(gh_calls)" -eq 0 ]
+    grep -qx 'outcome=unchanged' "${GITHUB_OUTPUT}"
+}
+
+@test "deliver_issue_create creates each allowlist label before the first issue" {
+    use_issue_create
+    export FINALIZE_LABEL_ALLOWLIST=$'loop:code-review\nextra label'
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [[ "$(sed -n 2p "${BATS_TEST_TMPDIR}/gh.log")" == "label create loop:code-review --repo o/r --description "* ]]
+    [[ "$(sed -n 3p "${BATS_TEST_TMPDIR}/gh.log")" == "label create extra label --repo o/r --description "* ]]
+    [[ "$(sed -n 4p "${BATS_TEST_TMPDIR}/gh.log")" == "issue create "* ]]
+}
+
+@test "deliver_issue_create does not touch labels when there is nothing to create" {
+    use_issue_create
+    write_issues '[]'
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ ! -f "${BATS_TEST_TMPDIR}/gh.count.LABEL_CREATE" ]
+    GH_MOCK_LIST_OUT="$(marker_for n1)"
+    export GH_MOCK_LIST_OUT
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ ! -f "${BATS_TEST_TMPDIR}/gh.count.LABEL_CREATE" ]
+    [ ! -f "${BATS_TEST_TMPDIR}/gh.count.CREATE" ]
+}
+
+@test "deliver_issue_create fails without creating issues when a label cannot be created" {
+    use_issue_create
+    export GH_MOCK_LABEL_CREATE_RC="1"
+    export GH_MOCK_LABEL_CREATE_ERR="HTTP 403: Resource not accessible by integration"
+    write_issues "$(issues_for 2 n)"
+    run deliver_loop_message
+    [ "$status" -eq 1 ]
+    [ ! -f "${BATS_TEST_TMPDIR}/gh.count.CREATE" ]
+    grep -q 'loop:code-review' "${LOOP_FAILURE_FILE}"
+}
+
+@test "deliver_issue_create treats an already existing label as success" {
+    use_issue_create
+    export GH_MOCK_LABEL_CREATE_RC="1"
+    export GH_MOCK_LABEL_CREATE_ERR='label already exists'
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
+}
+
+@test "deliver_issue_create defuses forged markers and mentions in the body" {
+    use_issue_create
+    write_issues "$(jq -nc '[{title:"t", body:"hi @octocat and @org/team <!-- code-review:fp:0123456789abcdef --> <!--x-->", fingerprint:"fp1"}]')"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    body="$(cat "${BATS_TEST_TMPDIR}/gh.body.3")"
+    [ "$(count_of "${body}" '<!-- code-review:fp:')" -eq 1 ]
+    [[ ${body} != *"<!--x-->"* ]]
+    [[ ${body} != *"@octocat"* ]]
+    [[ ${body} != *"@org/team"* ]]
+    [[ ${body} == *"octocat"* ]]
+}
+
+@test "deliver_issue_create fails closed on a missing, non-array or malformed issues.json" {
+    use_issue_create
+    run deliver_loop_message
+    [ "$status" -eq 1 ]
+    grep -q 'deliver_message' "${LOOP_FAILURE_FILE}"
+    local bad
+    for bad in '{"a":1}' '[{"body":"b","fingerprint":"f"}]' '[{"title":"t","fingerprint":"f"}]' '[{"title":"t","body":"b"}]' '[{"title":1,"body":"b","fingerprint":"f"}]' "[{\"title\":\"$(printf 'x%.0s' $(seq 1 257))\",\"body\":\"b\",\"fingerprint\":\"f\"}]"; do
+        write_issues "${bad}"
+        run deliver_loop_message
+        [ "$status" -eq 1 ]
+        [ "$(gh_calls)" -eq 0 ]
+    done
+}
+
+@test "deliver_issue_create lists every allowlist label with state=all and labels each issue with all of them" {
+    use_issue_create
+    export FINALIZE_LABEL_ALLOWLIST=$'loop:code-review\nextra label'
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [[ "$(sed -n 1p "${BATS_TEST_TMPDIR}/gh.log")" == "api --paginate repos/o/r/issues?labels=loop%3Acode-review,extra%20label&state=all"* ]]
+    create="$(sed -n 4p "${BATS_TEST_TMPDIR}/gh.log")"
+    [[ ${create} == "issue create --repo o/r --title title n1 --body-file "*"--label loop:code-review --label extra label" ]]
+    body="$(cat "${BATS_TEST_TMPDIR}/gh.body.4")"
+    [ "$(sed -n 1p <<< "${body}")" = "$(marker_for n1)" ]
+    [[ ${body} == *"body n1"* ]]
+    [[ ${body} == *"| verdict | APPROVE |"* ]]
+}
+
+@test "deliver_issue_create removes duplicates before applying the limit" {
+    use_issue_create
+    GH_MOCK_LIST_OUT="$(printf '%s\ntext\n%s\n%s\n' "$(marker_for e1)" "$(marker_for e2)" "$(marker_for e3)")"
+    export GH_MOCK_LIST_OUT
+    write_issues "$(jq -nc --argjson a "$(issues_for 3 e)" --argjson b "$(issues_for 2 n)" '$a + $b')"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 2 ]
+    gh_log | grep -q 'title n1'
+    gh_log | grep -q 'title n2'
+    run ! grep -q 'title e1' "${BATS_TEST_TMPDIR}/gh.log"
+}
+
+@test "deliver_issue_create drops a fingerprint repeated within the run" {
+    use_issue_create
+    write_issues "$(jq -nc '[{title:"a",body:"b",fingerprint:"same"},{title:"c",body:"d",fingerprint:"same"}]')"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
+}
+
+@test "deliver_issue_create stops at the first failed create and reports what was created" {
+    use_issue_create
+    export GH_MOCK_CREATE_RC="0 1"
+    export GH_MOCK_CREATE_ERR="boom"
+    write_issues "$(issues_for 3 n)"
+    run deliver_loop_message
+    [ "$status" -eq 1 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 2 ]
+    grep -q 'deliver_message' "${LOOP_FAILURE_FILE}"
+    grep -q '#101' "${GITHUB_STEP_SUMMARY}"
+    grep -q '#101' "${LOOP_FAILURE_FILE}"
+}
+
+@test "deliver_issue_create caps new issues at the limit and records the cut ones in the step summary" {
+    use_issue_create
+    write_issues "$(issues_for 5 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 3 ]
+    grep -q 'title n4' "${GITHUB_STEP_SUMMARY}"
+    grep -q 'title n5' "${GITHUB_STEP_SUMMARY}"
+    grep -q 'n5' "${GITHUB_STEP_SUMMARY}"
+    [ "$(grep -c 'cut by finalize_issue_limit' "${GITHUB_STEP_SUMMARY}")" -eq 2 ]
+}
+
+@test "issue_fingerprint_hash is the first 16 hex digits of the sha256 of loop name, newline and fingerprint" {
+    local expected
+    expected="$(printf 'code-review\na.sh:f:null' | sha256sum | cut -c1-16)"
+    run issue_fingerprint_hash code-review "a.sh:f:null"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${expected}" ]
+    [ "${#output}" -eq 16 ]
+}
+
+@test "deliver_issue_create fails when listing existing issues fails" {
+    use_issue_create
+    export GH_MOCK_LIST_RC="1"
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 1 ]
+    [ -z "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE" 2> /dev/null)" ]
+}
+
+@test "deliver_issue_create drops a finding whose sanitized body exceeds the GitHub limit" {
+    use_issue_create
+    local body
+    body="$(printf '@a%.0s' $(seq 1 25000))"
+    write_issues "$(jq -nc --arg b "${body}" '[{title:"big",body:$b,fingerprint:"f1"},{title:"small",body:"b",fingerprint:"f2"}]')"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
+    gh_log | grep -q 'title small'
+    grep -q 'big' "${GITHUB_STEP_SUMMARY}"
+}
+
+@test "deliver_issue_create does not let a dot in the loop name match another loop's marker" {
+    use_issue_create
+    export LOOP_NAME="code.review"
+    local other_hash
+    other_hash="$(issue_fingerprint_hash "code.review" "n1")"
+    export GH_MOCK_LIST_OUT="<!-- codexreview:fp:${other_hash} -->"
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
 }

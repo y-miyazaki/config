@@ -13,7 +13,7 @@
 #   - The PR base and to_branch come from target_json.to.branch
 #   - base_branch is target_json.base.branch for a pull_request target and
 #     target_json.to.branch otherwise (empty allowed)
-#   - delivery must be implemented and allow the target kind (lib/loop/delivery.sh)
+#   - delivery must be a known value and allow the target kind (lib/loop/delivery.sh)
 #   - state_branch is required; checked here so no PR or push runs before Write State
 #   - Nothing is written to GITHUB_OUTPUT unless every check passes
 #
@@ -48,7 +48,7 @@ TARGET_JSON="${TARGET_JSON:-}"
 # main: Validate inputs and write target outputs
 #
 # Globals:
-#   DELIVERY - Declared delivery (pr_create, pr_push, none)
+#   DELIVERY - Declared delivery (issue_comment, issue_create, none, pr_create, pr_push, pr_review)
 #   GITHUB_OUTPUT - GitHub Actions output file
 #   STATE_BRANCH - Branch for .loop/* state (required)
 #   TARGET_JSON - Target descriptor JSON from the detect matrix cell

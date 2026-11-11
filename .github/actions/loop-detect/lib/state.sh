@@ -128,9 +128,11 @@ function target_consecutive_failures {
 # Arguments:
 #   $1 - Target state JSON
 #   $2 - Branch ref for git fallback
+#   $3 - verify_reachable (true | empty): when true, a stored sha that is not a
+#        commit in this checkout falls back like a missing sha, with a warning
 #
 # Outputs:
-#   Commit SHA on stdout
+#   Commit SHA on stdout; the unreachable-sha warning on stderr
 #
 # Returns:
 #   0 on success
@@ -139,12 +141,16 @@ function target_consecutive_failures {
 function target_last_sha {
     local target_state="$1"
     local branch_ref="$2"
+    local verify_reachable="${3:-}"
     local last_sha
 
     last_sha=$(jq -r '.last_sha // empty' <<< "${target_state}")
     if [[ -n ${last_sha} ]]; then
-        printf '%s' "${last_sha}"
-        return 0
+        if [[ ${verify_reachable} != "true" ]] || git cat-file -e "${last_sha}^{commit}" 2> /dev/null; then
+            printf '%s' "${last_sha}"
+            return 0
+        fi
+        echo "::warning::loop-detect: stored last_sha ${last_sha} is not reachable; falling back to HEAD~10" >&2
     fi
 
     git checkout -q "${branch_ref}" 2> /dev/null || true

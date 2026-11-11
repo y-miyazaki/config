@@ -1,5 +1,22 @@
-# Reusable workflow: SchemaSpy database documentation generation
-# Generates database schema documentation using SchemaSpy and uploads artifacts.
+#######################################
+# Description:
+#   Reusable workflow: SchemaSpy database documentation generation
+#   Generates database schema documentation using SchemaSpy and uploads artifacts.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-schemaspy.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-schemaspy
 
 on:
@@ -199,7 +216,7 @@ jobs:
 
       - name: Setup Parameters
         id: setup-parameters
-        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           db_host_input: ${{ secrets.DB_HOST }}
@@ -222,7 +239,7 @@ jobs:
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
         id: bastion-connect
-        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bastion_instance_id: ${{ inputs.bastion_instance_id }}
@@ -231,7 +248,7 @@ jobs:
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
@@ -384,7 +401,7 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           ssm_pid: ${{ steps.start-port-forward.outputs.ssm_pid }}
@@ -435,7 +452,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@53455d7f69e9baf9e4e708035321153bbec354e9 # v1.9.5
 
         with:
           artifacts: |

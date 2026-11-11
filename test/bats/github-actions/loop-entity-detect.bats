@@ -144,7 +144,7 @@ state_file"
         'LEVEL=|::error::level is required (L1, L2, or L3)'
         'DELIVERY=|::error::delivery must be none or issue_comment at L1 (got: empty)'
         'AGENT_EDIT_ALLOWLIST=**|::error::agent_edit_allowlist is not allowed at L1 (L1 is read-only)'
-        'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=** AGENT_UNCHANGED_VERDICT=REJECT DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
+        'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=** AGENT_UNCHANGED_VERDICT=REJECT DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
         'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_UNCHANGED_VERDICT=REJECT|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
         'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=**|::error::agent_unchanged_verdict is required at L2 (APPROVE or REJECT)'
         'LEVEL=L1 DELIVERY=issue_comment FINALIZE_SCRIPT=x.sh|::error::finalize_script is not allowed at L1'

@@ -7,7 +7,7 @@ bats_require_minimum_version 1.5.0
 
 # Use cases:
 # - validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE
-# - resolve_detect_script_path fails on empty or missing DETECT_SCRIPT
+# - resolve_detect_script_path leaves an empty DETECT_SCRIPT and fails on a missing one
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
 # - apply_scoped_pr_number_filter drops integration and keeps matching PR only
 # - apply_target_cap truncates candidates to fan-out cap
@@ -26,6 +26,10 @@ bats_require_minimum_version 1.5.0
 # - main exits 1 without skip outputs when input validation fails
 # - main skips pr_push without a PR number (empty or 0) with pr_number_missing and exit 0
 # - main yields no integration targets when detect_branch_match is empty (no state_branch fallback)
+# - an empty DETECT_SCRIPT uses the built-in range detect instead of a config_error
+# - the built-in range detect replaces an unreachable last_sha in the prompt Last SHA line
+# - a custom detect_script keeps the stored last_sha without a reachability check
+# - integration target_json carries from.since with the last_sha
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -375,11 +379,10 @@ EOF
     run require_scoped_head_for_workflow_run "feature/auth"
     [ "$status" -eq 0 ]
 }
-@test "resolve_detect_script_path fails when DETECT_SCRIPT is empty" {
+@test "resolve_detect_script_path leaves an empty DETECT_SCRIPT for the built-in range detect" {
     DETECT_SCRIPT=""
-    run resolve_detect_script_path
-    [ "$status" -eq 1 ]
-    [[ $output == *"DETECT_SCRIPT is empty"* ]]
+    resolve_detect_script_path > /dev/null
+    [ -z "${DETECT_SCRIPT}" ]
 }
 @test "resolve_detect_script_path fails when script file is missing" {
     DETECT_SCRIPT="${DETECT_TMP}/missing-detect.sh"
@@ -691,7 +694,7 @@ EOF
 @test "main exits 1 without skip outputs when input validation fails" {
     local -a cases=(
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
-        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
+        'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
         'LEVEL=|::error::level is required (L1, L2, or L3)'
         'DETECT_BRANCH_MATCH=main|::error::delivery pr_push does not allow detect_branch_match (got: main)'
     )
@@ -760,4 +763,71 @@ prompt="
     [ "$status" -eq 0 ]
     [ -s "${DETECT_TMP}/gh_calls" ]
     [ ! -s "${DETECT_TMP}/detect_calls" ]
+}
+
+# make_range_repo: repository whose state points at SINCE and whose HEAD changes src/a.sh
+make_range_repo() {
+    local state_sha="${1:-}"
+
+    RANGE_REPO="${DETECT_TMP}/repo"
+    mkdir -p "${RANGE_REPO}/.loop" "${RANGE_REPO}/src"
+    git init -q "${RANGE_REPO}"
+    git -C "${RANGE_REPO}" config user.email "test@example.com"
+    git -C "${RANGE_REPO}" config user.name "Test User"
+    printf 'one\n' > "${RANGE_REPO}/src/a.sh"
+    git -C "${RANGE_REPO}" add -A
+    git -C "${RANGE_REPO}" commit -q -m base
+    RANGE_SINCE="$(git -C "${RANGE_REPO}" rev-parse HEAD)"
+    printf 'two\n' >> "${RANGE_REPO}/src/a.sh"
+    git -C "${RANGE_REPO}" add -A
+    git -C "${RANGE_REPO}" commit -q -m change
+    printf '{"targets":{"integration:main":{"last_sha":"%s","consecutive_failures":0,"open_rejections":[]}}}\n' \
+        "${state_sha:-${RANGE_SINCE}}" > "${RANGE_REPO}/.loop/state-x.json"
+    STATE_FILE="${RANGE_REPO}/.loop/state-x.json"
+    RUN_LOG_FILE="${RANGE_REPO}/.loop/run-log.md"
+    STATE_BRANCH="main"
+    LEVEL="L2"
+    AGENT_EDIT_ALLOWLIST="*"
+    AGENT_MAKER_INSTRUCTIONS=""
+    AGENT_EDIT_TARGET="report"
+    AGENT_MAKER_SKILL_NAME="code-review"
+    stub_checkout_context "${RANGE_REPO}"
+}
+
+@test "append_detect_candidate builds the integration target with from.since" {
+    make_range_repo
+    DETECT_SCRIPT=""
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "${RANGE_SINCE}" ]
+}
+
+@test "append_detect_candidate keeps the stored last_sha for a custom detect_script" {
+    make_range_repo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    DETECT_SCRIPT="${DETECT_TMP}/detect-custom.sh"
+    printf '#!/usr/bin/env bash\nprintf %%s %s\n' "'{\"skip\":false,\"failures\":[]}'" > "${DETECT_SCRIPT}"
+    chmod +x "${DETECT_SCRIPT}"
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[0]}")" == *"Last SHA: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"* ]]
+}
+
+@test "append_detect_candidate range detect replaces an unreachable last_sha in the prompt" {
+    local fallback
+    make_range_repo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    fallback="$(git -C "${RANGE_REPO}" rev-list --max-parents=0 HEAD | head -1)"
+    DETECT_SCRIPT=""
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[0]}")" == *"Last SHA: ${fallback}"* ]]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "${fallback}" ]
+}
+
+@test "main does not report config_error for an empty DETECT_SCRIPT" {
+    export_main_env
+    export DETECT_SCRIPT=""
+    export DETECT_PR_NUMBER=""
+    run_detect_main
+    [ "$status" -eq 0 ]
+    grep -qx 'skip_reason=pr_number_missing' "${GITHUB_OUTPUT}"
 }

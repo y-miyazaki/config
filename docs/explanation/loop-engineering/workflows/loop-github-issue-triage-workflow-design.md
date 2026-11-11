@@ -47,7 +47,7 @@ Behaviors to know:
 
 Live `workflow_dispatch` dry-run requires repository secrets (`AGENT_TOKEN`, optional bot app). Treat end-to-end Actions dogfood as deferred until secrets are available; local verification is Bats + `actionlint`.
 
-Open dogfood check: whether GitHub creates a label that does not exist when `POST .../issues/<n>/labels` names it is unverified. The allowlist bounds the effect either way. Record the result here after the first live run.
+Labels that do not exist yet are created by the workflow before they are added (`ensure_repo_labels`), so the result of `POST .../issues/<n>/labels` naming a missing label no longer matters. The allowlist still bounds which labels can be created.
 
 ## Caller inputs
 
