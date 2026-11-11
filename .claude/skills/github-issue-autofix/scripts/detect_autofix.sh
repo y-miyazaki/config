@@ -16,15 +16,15 @@
 # - Scan mode qualifies Issues: open, not a PR, AUTOFIX_SOURCE_LABEL present, no autofix label,
 #   author user.type Bot, body contains AUTOFIX_SOURCE_MARKER
 # - Scan mode excludes Issues closed by an open PR, and handled Issues (closed autofix PR whose latest
-#   closedAt is not older than the latest human comment)
+#   closedAt is not older than the latest human comment; human = non-Bot user whose author_association is OWNER, MEMBER or COLLABORATOR)
 # - Scan mode skips when open autofix PRs (AUTOFIX_PR_LABEL + AUTOFIX_BRANCH_PREFIX head) reach
 #   AUTOFIX_MAX_OPEN_PRS; single-Issue mode ignores that limit
 # - Scan mode fails closed (status=error, exit 1) on any gh failure
 # - Items mode (AUTOFIX_ITEMS=true, single-Issue mode only): a non-skip result is
 #   result.items with exactly one element (key issue:<N>); skip results use result {}.
 #   Ignored when AUTOFIX_SCAN=true (scan output wins). Any other value keeps the legacy output
-# - PR list limits (AUTOFIX_PR_SCAN_LIMIT, default 1000) apply to both the closed-PR and the
-#   open-PR fetch in scan mode; a list that reaches the limit may be truncated, so fail closed
+# - PR list limits (AUTOFIX_PR_SCAN_LIMIT, default 1000) apply to the open-PR fetch in single-Issue
+#   mode and to both the closed-PR and the open-PR fetch in scan mode; a list that reaches the limit may be truncated, so fail closed
 # - Closed PRs are filtered client-side to head branches starting with AUTOFIX_BRANCH_PREFIX
 #   before Fixes #N matching and latest closedAt; empty prefix skips that filter
 # - jq -e exit status 1 means "no match"; any other non-zero status is a jq error and fails closed
@@ -49,7 +49,7 @@
 #   AUTOFIX_PR_LABEL          Scan mode (required): label identifying autofix PRs
 #   AUTOFIX_BRANCH_PREFIX     Scan mode: head branch prefix of autofix PRs (open-PR limit and closed-PR
 #                             filter; empty = no closed-PR prefix filter)
-#   AUTOFIX_PR_SCAN_LIMIT     Scan mode: positive integer, max PRs fetched per list (default 1000;
+#   AUTOFIX_PR_SCAN_LIMIT     Positive integer, max PRs fetched per list (default 1000;
 #                             leading zeros are decimal); reaching it fails closed
 #   AUTOFIX_ITEMS             "true" emits result.items (one element) in single-Issue mode
 #   AUTOFIX_MAX_OPEN_PRS      Scan mode: skip when open autofix PRs >= this integer (unset = no limit)
@@ -240,12 +240,43 @@ function ensure_pr_scan_prerequisites {
 }
 
 #######################################
+# validate_pr_scan_limit: Validate AUTOFIX_PR_SCAN_LIMIT and set PR_SCAN_LIMIT
+#
+# Globals:
+#   AUTOFIX_PR_SCAN_LIMIT
+#   PR_SCAN_LIMIT (set; decimal integer, default 1000)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (calls output_error when the value is not a positive integer)
+#
+# Usage:
+#   validate_pr_scan_limit
+#
+#######################################
+function validate_pr_scan_limit {
+    PR_SCAN_LIMIT=1000
+    if [[ -n ${AUTOFIX_PR_SCAN_LIMIT:-} ]]; then
+        if [[ ! ${AUTOFIX_PR_SCAN_LIMIT} =~ ^[0-9]+$ || $((10#${AUTOFIX_PR_SCAN_LIMIT})) -lt 1 ]]; then
+            output_error "github-issue-autofix: AUTOFIX_PR_SCAN_LIMIT must be a positive integer"
+        fi
+        PR_SCAN_LIMIT=$((10#${AUTOFIX_PR_SCAN_LIMIT}))
+    fi
+}
+
+#######################################
 # open_pr_fixes_issue: Return whether an open/draft PR closes the Issue
 #
 # Globals:
 #   GITHUB_REPOSITORY
 #   GH_TOKEN
 #   GITHUB_TOKEN
+#   PR_SCAN_LIMIT
 #
 # Arguments:
 #   $1 - Issue number
@@ -268,9 +299,10 @@ function open_pr_fixes_issue {
     export GH_TOKEN="${token}"
 
     if ! prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open \
-        --json number,title,body,isDraft 2> /dev/null)"; then
+        --limit "${PR_SCAN_LIMIT}" --json number,title,body,isDraft 2> /dev/null)"; then
         output_error "github-issue-autofix: failed to list open PRs"
     fi
+    scan_assert_below_limit "${prs}" "open"
 
     # GitHub closing keywords (tense variants) for same-repo #N
     pattern="(?i)\\b(fix(?:e[sd])?|close[sd]?|resolve[sd]?)\\s+#${issue_number}\\b"
@@ -398,13 +430,7 @@ function scan_validate_env {
         output_error "github-issue-autofix: AUTOFIX_MAX_OPEN_PRS must be a non-negative integer"
     fi
 
-    PR_SCAN_LIMIT=1000
-    if [[ -n ${AUTOFIX_PR_SCAN_LIMIT:-} ]]; then
-        if [[ ! ${AUTOFIX_PR_SCAN_LIMIT} =~ ^[0-9]+$ || $((10#${AUTOFIX_PR_SCAN_LIMIT})) -lt 1 ]]; then
-            output_error "github-issue-autofix: AUTOFIX_PR_SCAN_LIMIT must be a positive integer"
-        fi
-        PR_SCAN_LIMIT=$((10#${AUTOFIX_PR_SCAN_LIMIT}))
-    fi
+    validate_pr_scan_limit
 }
 
 #######################################
@@ -533,7 +559,7 @@ function scan_latest_closed_at {
 }
 
 #######################################
-# scan_has_newer_human_comment: Whether a human commented after closedAt
+# scan_has_newer_human_comment: Whether a trusted human (OWNER/MEMBER/COLLABORATOR, non-Bot) commented after closedAt
 #
 # Globals:
 #   GITHUB_REPOSITORY
@@ -560,7 +586,8 @@ function scan_has_newer_human_comment {
     local rc=0
     jq -s -e --arg closed "${2}" '
         [.[] | (if type == "array" then .[] else empty end)
-             | select((.user.type // "") != "Bot")
+             | select((.user.type // "") != "Bot"
+                      and ((.author_association // "") | IN("OWNER","MEMBER","COLLABORATOR")))
              | .created_at // ""] | any(. > $closed)
     ' <<< "${comments}" > /dev/null 2>&1 || rc=$?
     case "${rc}" in
@@ -778,6 +805,7 @@ function main {
     validate_issue_number "${ISSUE_NUMBER}"
 
     ensure_pr_scan_prerequisites
+    validate_pr_scan_limit
 
     if open_pr_fixes_issue "${ISSUE_NUMBER}"; then
         skip="true"

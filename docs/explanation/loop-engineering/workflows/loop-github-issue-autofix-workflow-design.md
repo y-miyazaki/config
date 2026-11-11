@@ -36,7 +36,7 @@ Scan mode selects an Issue when all of these hold:
 Scan mode then excludes an Issue in these cases:
 
 - An open PR references the Issue with a closing keyword.
-- The Issue is already handled: a closed PR with the PR label references the Issue, and no human comment is newer than the latest `closedAt` of such PRs. A human comment after that time makes the Issue eligible again. Closing a PR does not count as a failure.
+- The Issue is already handled: a closed PR with the PR label references the Issue, and no human comment is newer than the latest `closedAt` of such PRs. A human comment after that time makes the Issue eligible again. Closing a PR does not count as a failure. Human means a non-Bot user whose `author_association` is `OWNER`, `MEMBER` or `COLLABORATOR`; comments by other users (for example `CONTRIBUTOR` or `NONE` on a public repository) never make the Issue eligible again, and maker instructions treat Issue comments as untrusted data.
 
 Scan mode skips the whole run when the number of open PRs that carry the PR label and a head branch with the branch prefix reaches `AUTOFIX_MAX_OPEN_PRS`. This limit applies to scan mode only; the Webhook path is not limited. The script fetches closed PRs that carry the PR label and open PRs, each with the limit `AUTOFIX_PR_SCAN_LIMIT` (a positive integer, default 1000; `08` and `010` count as decimal). It keeps only closed PRs whose head branch starts with `AUTOFIX_BRANCH_PREFIX`, because the PR label is on the PRs of every loop. An empty prefix skips that filter. The script fails closed (`status: error`) when a fetched list reaches the limit, because the list may be cut off and a closed PR could be missed. It also fails closed when a `jq` check ends with an exit code other than 0 or 1, because exit code 1 means "no match" and any other code is a runtime error. It returns up to 50 Issues, oldest first, without cutting them to `detect_max_targets`. The platform orders the items by `last_run`, applies `detect_max_targets` and drops items that are pending or stopped by the circuit breaker. An `autofix` label added later moves the Issue to the Webhook path. If the schedule already picked the Issue up, both paths can run until the schedule run ends.
 
@@ -55,7 +55,15 @@ Not confirmed (未確認): the workflow has not run on GitHub since stage E. The
 
 - `detect_items` on the Webhook path.
 - Sharing of the pending state and the circuit breaker between the two paths.
-- A schedule run and a Webhook run on the same Issue at the same time. The two runs use different concurrency groups, so the second run is blocked by the pending state only after the first run has written it.
+- A schedule run and a Webhook run on the same Issue at the same time. The two runs use different concurrency groups, so the second run is blocked by the pending state only after the first run has written it. The window is wider than the run overlap: a run whose detect starts after another run for the same Issue has started but before its PR exists sees neither an open `Fixes #N` PR nor pending, so the window lasts maker plus checker time (up to about 90 minutes). Accepted residual risk; the Webhook and schedule paths can open duplicate PRs.
+
+### Residual risks
+
+- `Fixes #N` is enforced only by maker and checker rubric. If an approved PR lacks it, the open-PR exclusion and the closed-PR handled rule miss it. Matching `headRefName` ending `-issue-<N>-<hash8>` is a possible later hardening (deferred).
+- Starvation: the 50-item cap counts Issues that the platform later drops for an open circuit breaker, so 50 or more older breaker-stopped Issues can hide newer ones until the 30-day prune.
+- Budget is checked once in detect, so a tick starting at 9 of 10 runs can fan out to 12 runs.
+- `loop-state-main` is held for the whole scheduled L2 run (up to 3 cells, `agent-l2` timeout 90 minutes plus checker), so `on-loop-state-promote` and other scheduled loops queue behind it.
+- The old `integration:main` key stays in `.loop/state-github-issue-autofix.json` unread and unpruned (harmless).
 
 ### User actions
 
@@ -74,7 +82,7 @@ Each row is one action a person can take, the loop response, and what the person
 | Add `autofix` to an Issue that the schedule already picked up            | The schedule stops listing the Issue and the Webhook path handles it. Both can run until the schedule run ends        | If two PRs result, keep the first and close the other                               | A1         |
 | Open autofix PRs reach `AUTOFIX_MAX_OPEN_PRS`                            | The schedule skips the run. The Webhook path is not limited                                                           | Merge or close a PR; the next schedule run resumes                                  | -          |
 | The checker rejects the same Issue three times in a row                  | The Issue key is not picked up and the Webhook path stops too                                                         | Remove the key from `.loop/state-github-issue-autofix.json` by PR, or wait 30 days  | A5         |
-| The daily budget is used up                                              | The run is skipped (`skip_reason=budget`)                                                                             | The next day resumes. Change `budget_*` in the caller to raise the cap              | -          |
+| The daily budget is used up                                              | The run is skipped (`skip_reason=budget`)                                                                             | The next day resumes. Change `.loop/loop-budget.json` to raise the cap (it overrides caller `budget_*`)              | -          |
 
 ### Out of scope
 
@@ -100,6 +108,7 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 | `agent_checker_model`        | Checker model ID                                                                             | `claude-opus-5`                                                                                                                          |
 | `agent_checker_skill_name`   | Checker skill                                                                                | `loop-verifier`                                                                                                                          |
 | `agent_edit_allowlist`       | File edit allowlist (`**` = unrestricted)                                                    | `**`                                                                                                                                     |
+| `agent_edit_denylist` | Globs the maker must not edit. A non-empty value replaces the platform default, so it restates the default and adds `.github/workflows/**`: a workflow-file push is refused by `push_agent_branch.sh` and its `error` outcome never trips the circuit breaker, while a denylist hit is REJECT and counts | `**/.env,**/credentials*,**/secrets*,.github/workflows/**` |
 | `agent_edit_target`          | Agent artifact type                                                                          | `fix`                                                                                                                                    |
 | `agent_engine`               | AI engine                                                                                    | `claude`                                                                                                                                 |
 | `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                                      | `3`                                                                                                                                      |
@@ -110,8 +119,8 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 | `agent_maker_skill_name`     | Skill package                                                                                | `github-issue-autofix`                                                                                                                   |
 | `agent_tool_allowlist`       | Tool permission rules for the maker (read Issue, check existing PRs, run validation scripts) | `gh api -X GET`, `gh issue view`, `gh pr list`, `gh pr view`, `validate.sh` of github-actions, go, markdown, and shell-script validation |
 | `agent_unchanged_verdict`    | Verdict when no file diff                                                                    | `REJECT`                                                                                                                                 |
-| `budget_max_runs_per_day`    | Daily run cap                                                                                | `10`                                                                                                                                     |
-| `budget_max_tokens_per_day`  | Daily token cap                                                                              | `1000000`                                                                                                                                |
+| `budget_max_runs_per_day` | Daily run cap. `.loop/loop-budget.json` overrides it (effective 10 runs per day) | `10` |
+| `budget_max_tokens_per_day` | Daily token cap. `.loop/loop-budget.json` overrides it (effective 25000000 tokens and 35 USD per day, 2 attempts per run) | `1000000` |
 | `delivery`                   | Where the output is delivered                                                                | `pr_create`                                                                                                                              |
 | `detect_branch_match`        | Integration branch to fix against                                                            | `main`                                                                                                                                   |
 | `detect_script`              | Domain detect script                                                                         | `.agents/skills/github-issue-autofix/scripts/detect_autofix.sh`                                                                          |
@@ -123,7 +132,7 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 
 ### Scheduled job (`loop-scheduled`)
 
-The job passes the same keys as above except the following. Its maker and checker settings, `agent_edit_*`, `agent_unchanged_verdict`, `delivery` and `pr_draft` match the `loop` job.
+The job passes the same keys as above except the following. Its maker and checker settings, `agent_edit_*` (including `agent_edit_denylist`), `agent_unchanged_verdict`, `delivery` and `pr_draft` match the `loop` job.
 
 | Input / JSON key      | Dogfood value                                                         |
 | --------------------- | --------------------------------------------------------------------- |

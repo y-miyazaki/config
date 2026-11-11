@@ -271,12 +271,18 @@ overview の第2.2節を踏襲する。この spec で足す指標(計測は `gh
 - **triage の再試行の窓:** run-log の7日の窓の外の失敗は、再び拾われる(第5.4節)。
 - **`autofix` ラベルと定期実行の競合:** 第6.3節。窓は agent の実行時間。
 - **人間の選別なしの入力:** エージェントが書いた Issue が autofix の入力になる(ユーザーの意図どおり)。code-review 側で marker とメンションの無害化と根拠の再検証をしている。
-- **人間のコメントで再び拾われる:** コメントの内容は見ないので、修正と無関係なコメントでも再び拾われる(ユーザーの方針。止めたければ Issue を閉じる)。
+- **人間のコメントで再び拾われる:** 対象は `author_association` が `OWNER`、`MEMBER`、`COLLABORATOR` の非 Bot ユーザーのコメントだけ(外部の投稿者では再び拾われない)。コメントの内容は見ないので、修正と無関係なコメントでも再び拾われる(ユーザーの方針。止めたければ Issue を閉じる)。
 - **閉じた PR の窓:** 取得の上限は `AUTOFIX_PR_SCAN_LIMIT`(既定1000)。件数が上限に達すると、定期実行は fail closed で止まる(第6.5節)。上限内では、古い閉じた PR も参照できる。上限を超える PR が溜まったら、上限を上げる。第6.2節の「直近200件」は PR 3 までの旧仕様で、PR 4 で置き換えた。
 - **L1 の観察なしの L2 昇格:** 第2.2節の昇格の条件(overview)と第8節の Slow Down / Kill を、昇格前に観察していない。workflow は GitHub で実行しておらず、Webhook の経路の `detect_items`、pending と circuit breaker の共有、定期実行と Webhook の同時実行は未確認。
 - **`write_state` の再試行を使い切った場合:** state PR のフォールバックになり、並行する別の対象の state と食い違いうる。
 - **`AUTOFIX_MAX_OPEN_PRS`:** 定期実行と Webhook の間は soft。上限を超える分は `detect_max_targets - 1` 以下。
 - **定期実行(L2)と Webhook の日次予算の共有:** 予算は `loop_name`(`github-issue-autofix`、`.loop/loop-budget.json` で1日10 run)で数えるため、定期実行(L2)の1日1回の tick が最大3 run を使い、人間の `autofix` ラベルが以前より早く `skip_reason=budget` で断られうる。
+- **`Fixes #N` の強制:** `Fixes #N` を強制するのは maker と checker の rubric だけ。承認された PR に無いと、open PR の除外と閉じた PR の「対応済み」判定が見逃す。`headRefName` が `-issue-<N>-<hash8>` で終わるものを照合するのは後の強化案(見送り)。
+- **50件の上限による飢餓:** 50件の上限は、プラットフォームが後で circuit breaker の open で落とす Issue も数える。古い breaker 停止の Issue が50件以上あると、30日の prune まで新しい Issue を隠しうる。
+- **実効の予算:** 実効の予算は `.loop/loop-budget.json`(caller の `budget_*` を上書きする。autofix は1日10 run、25,000,000 tokens、35 USD、1 run 2 attempts)。予算は detect で1回だけ確認するので、9/10 で始まった tick は12 run まで広がりうる。
+- **`loop-state-main` の占有:** 定期実行(L2)は run の間ずっと `loop-state-main` を持つ(最大3セル、`agent-l2` の timeout 90分に checker を足した時間)。`on-loop-state-promote` と他の定期実行 loop はその後ろに並ぶ。
+- **定期実行と Webhook の PR 重複の窓:** 同じ Issue の別の run が始まった後、その PR ができる前に detect が始まる run は、open な `Fixes #N` の PR も pending も見ない。窓は maker と checker の時間(最大約90分)。許容する。
+- **古い state キー:** 古い `integration:main` のキーは `.loop/state-github-issue-autofix.json` に残り、読まれず prune もされない(無害)。
 - **`workflow_dispatch` と定期実行の重複:** 定期実行のセルが triage 中の Issue に `workflow_dispatch` すると、concurrency group が異なるため、triage のコメントが重複しうる(窓は小さく、許容する)。
 - **`unchanged` を失敗に数える:** triage の lister は `unchanged` を失敗に数えるので、正当に空の triage 結果の Issue は7日に3回で除外され、窓が明けると自然に戻る。
 - **GitHub Actions の仕様(未確認):** matrix の式の短絡評価、`list` が skipped のときの `fromJSON`、`loop-state-main` の `queue: max` の上限は、PR 2 の dogfood で確認する。
