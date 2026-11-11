@@ -239,7 +239,7 @@ function list_changed_files {
 #   None
 #
 # Returns:
-#   0 when the name is <prefix>/<skill>/YYYYMMDD-HHMMSS, is a valid ref, and
+#   0 when the name is <prefix>/<skill>/YYYYMMDD-HHMMSS[-slug], is a valid ref, and
 #   differs from to.branch and the state branch; 1 otherwise (also when the
 #   prefix or skill is empty)
 #######################################
@@ -256,7 +256,7 @@ function validate_agent_branch {
     head="${prefix}/${skill}/"
     [[ ${branch} == "${head}"* ]] || return 1
     suffix="${branch#"${head}"}"
-    [[ ${suffix} =~ ^[0-9]{8}-[0-9]{6}$ ]] || return 1
+    [[ ${suffix} =~ ^[0-9]{8}-[0-9]{6}(-[A-Za-z0-9._-]{1,48})?$ ]] || return 1
     [[ ${branch} != "${to_branch}" && ${branch} != "${state_branch}" ]] || return 1
     git check-ref-format "refs/heads/${branch}" || return 1
 }
@@ -325,7 +325,7 @@ function main {
     # 2. Branch name
     if ! validate_agent_branch "${AGENT_BRANCH}" "${AGENT_BRANCH_PREFIX}" "${AGENT_MAKER_SKILL_NAME}" "${TO_BRANCH}" "${STATE_BRANCH}"; then
         printf -v quoted '%q' "${AGENT_BRANCH}"
-        fail_push "invalid agent branch ${quoted}: expected ${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/YYYYMMDD-HHMMSS, different from to.branch and the state branch"
+        fail_push "invalid agent branch ${quoted}: expected ${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/YYYYMMDD-HHMMSS[-slug], different from to.branch and the state branch"
     fi
     branch="${AGENT_BRANCH}"
     VALIDATED_BRANCH="${branch}"

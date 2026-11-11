@@ -24,6 +24,10 @@ inputs:
   github_token:
     description: "Read-only GitHub token for fetch"
     required: true
+  target_key:
+    default: ""
+    description: "Target key (target_json.key); non-empty appends -<slug> to the generated branch name"
+    required: false
 outputs:
   branch:
     description: "Created branch name"
@@ -45,6 +49,7 @@ runs:
         FROM_BRANCH: ${{ inputs.from_branch }}
         FROM_REF: ${{ inputs.from_ref }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        TARGET_KEY: ${{ inputs.target_key }}
       run: |
         set -euo pipefail
 
@@ -84,6 +89,11 @@ runs:
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
           BRANCH="${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/${DATE}"
+          if [[ -n "${TARGET_KEY:-}" ]]; then
+            # shellcheck disable=SC1091
+            source "${GITHUB_ACTION_PATH}/../lib/loop/target_slug.sh"
+            BRANCH="${BRANCH}-$(target_slug "${TARGET_KEY}")"
+          fi
 
           if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
             echo "::error::Invalid branch name: ${BRANCH}"

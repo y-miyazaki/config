@@ -11,6 +11,7 @@
 #   to the --no-renames diff, including .loop/ paths and both sides of a rename
 # - an existing remote branch or a rejected push fails without force
 # - invalid agent branch names fail with branch= and invalid base branches fail
+# - validate_agent_branch accepts YYYYMMDD-HHMMSS with an optional -slug suffix (1-48 chars)
 # - an empty branch, a failed agent, or no changes push nothing and record nothing,
 #   except an empty branch with changes from a successful agent, which fails closed
 # - every failure records stage push, writes pushed=false failed=true, and exits 0
@@ -373,6 +374,35 @@ function assert_pushed {
         [[ ${FAILURE_MESSAGE} == *"invalid base branch"* ]]
         [ -z "$(origin_sha "${BRANCH}")" ]
     done
+}
+
+@test "validate_agent_branch accepts suffix with slug" {
+    BRANCH='loop/changelog/20261018-123456-issue-12-0a1b2c3d'
+    make_agent_branch
+    agent_commit docs/a.md
+    make_bundle
+    run_push
+    assert_pushed
+}
+
+@test "validate_agent_branch still accepts plain timestamp suffix" {
+    make_agent_branch
+    agent_commit docs/a.md
+    make_bundle
+    run_push
+    assert_pushed
+}
+
+@test "validate_agent_branch rejects suffix over 48 slug chars" {
+    local slug
+    slug="$(printf 'a%.0s' {1..49})"
+    T_BRANCH="loop/changelog/20261018-123456-${slug}"
+    run_push
+    assert_failed ""
+    [[ ${FAILURE_MESSAGE} == *"YYYYMMDD-HHMMSS[-slug]"* ]]
+    T_BRANCH='loop/changelog/20261018-123456-a/b'
+    run_push
+    assert_failed ""
 }
 
 @test "invalid branch names fail" {

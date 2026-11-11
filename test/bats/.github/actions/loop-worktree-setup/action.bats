@@ -7,6 +7,7 @@
 # - inputs are from_branch / from_ref / agent_branch_prefix (naming rule) in
 #   alphabetical order
 # - Setup Worktree passes FROM_BRANCH / FROM_REF / AGENT_BRANCH_PREFIX
+# - target_key (default empty) appends -<slug> to the generated branch name
 # - the inline script creates <agent_branch_prefix>/<skill>/<date> from
 #   origin/<from_branch> and ignores the legacy BASE_BRANCH / BASE_REF /
 #   BRANCH_PREFIX names
@@ -37,7 +38,7 @@ setup() {
     local expected
     expected="$(printf '%s\n' \
         agent_branch_prefix agent_maker_skill_name branch from_branch from_ref \
-        github_token)"
+        github_token target_key)"
     run action_yml_input_names "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [ "${output}" = "${expected}" ]
@@ -83,6 +84,39 @@ setup() {
     [ -f "${runner_temp}/worktree-changelog/release.txt" ]
 }
 
+@test "setup script appends the target slug to the branch when target_key is set" {
+    local remote work runner_temp output_file branch_line
+    remote="${BATS_TEST_TMPDIR}/remote-key"
+    work="${BATS_TEST_TMPDIR}/work-key"
+    runner_temp="${BATS_TEST_TMPDIR}/runner-key"
+    output_file="${BATS_TEST_TMPDIR}/github_output_key"
+    mkdir -p "${runner_temp}"
+    : > "${output_file}"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/base.txt"
+    bats_git_commit "${remote}" "base"
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+
+    run bash -c "cd '${work}' && env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+        AGENT_BRANCH_PREFIX='loop' \
+        AGENT_MAKER_SKILL_NAME='changelog' \
+        BRANCH='' \
+        FROM_BRANCH='main' \
+        FROM_REF='' \
+        GITHUB_ACTION_PATH='$(dirname "${ACTION_YML}")' \
+        GITHUB_OUTPUT='${output_file}' \
+        GITHUB_TOKEN='dummy-token' \
+        RUNNER_TEMP='${runner_temp}' \
+        TARGET_KEY='repo#issue:12' \
+        bash '${SETUP_SCRIPT}'"
+    [ "${status}" -eq 0 ]
+    branch_line="$(grep '^branch=' "${output_file}")"
+    [[ ${branch_line} =~ ^branch=loop/changelog/[0-9]{8}-[0-9]{6}-issue-12-[0-9a-f]{8}$ ]]
+}
+
 @test "setup script rejects an invalid from_ref" {
     local work
     work="${BATS_TEST_TMPDIR}/work-invalid"
@@ -112,7 +146,8 @@ setup() {
         'BRANCH: ${{ inputs.branch }}' \
         'FROM_BRANCH: ${{ inputs.from_branch }}' \
         'FROM_REF: ${{ inputs.from_ref }}' \
-        'GITHUB_TOKEN: ${{ inputs.github_token }}')"
+        'GITHUB_TOKEN: ${{ inputs.github_token }}' \
+        'TARGET_KEY: ${{ inputs.target_key }}')"
     run action_yml_step_env "${ACTION_YML}" "Setup Worktree"
     [ "${output}" = "${expected}" ]
 }
