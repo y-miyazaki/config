@@ -14,6 +14,9 @@
 # - integration persisted old pr-closed aged: cooldown same as pr_closed
 # - non-terminal outcomes (pr_created, old pr-created, unchanged) aged: keep
 # - missing last_run: keep
+# - per-target hash key (integration:<branch>#<key>) aged without pending: delete regardless of outcome
+# - per-target hash key with pending, within 30 days, or missing last_run: keep
+# - plain integration key aged: kept (cooldown only), aged terminal pull_request key still deleted
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -24,6 +27,90 @@ source "${_bats_support}/support/common.bash"
 
 setup() {
     bats_source_rel ".github/actions/loop-finalize/lib/prune_targets.sh"
+}
+
+@test "prune keeps hash key with missing last_run" {
+    local state
+    state="$(jq -nc '{
+      targets: {
+        "integration:main#issue:1": {outcome: "pr_created"}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '.targets | has("integration:main#issue:1")' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "prune keeps hash key with pending" {
+    local state old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT00:00:00Z)"
+    state="$(jq -nc --arg old "${old}" '{
+      targets: {
+        "integration:main#issue:1": {outcome: "pr_created", last_run: $old, pending: {sha: "def", pr: 1}}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main#issue:1"].pending.pr == 1' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "prune keeps hash key within 30 days" {
+    local state recent
+    recent="$(date -u -d '1 day ago' +%Y-%m-%dT00:00:00Z)"
+    state="$(jq -nc --arg recent "${recent}" '{
+      targets: {
+        "integration:main#issue:1": {outcome: "pr_created", last_run: $recent}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '.targets | has("integration:main#issue:1")' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "prune keeps plain integration key even when aged" {
+    local state old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT00:00:00Z)"
+    state="$(jq -nc --arg old "${old}" '{
+      targets: {
+        "integration:main": {outcome: "pr_created", last_run: $old, consecutive_failures: 1}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].outcome == "pr_created" and .targets["integration:main"].consecutive_failures == 1' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "prune removes hash key when no pending and older than 30 days regardless of outcome" {
+    local state old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT00:00:00Z)"
+    state="$(jq -nc --arg old "${old}" '{
+      targets: {
+        "integration:main#issue:1": {outcome: "pr_created", last_run: $old},
+        "integration:main": {outcome: "pr_created", last_run: $old}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '(.targets | has("integration:main#issue:1") | not) and (.targets | has("integration:main"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "prune still removes aged terminal pull_request key" {
+    local state old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT00:00:00Z)"
+    state="$(jq -nc --arg old "${old}" '{
+      targets: {
+        "pull_request:5": {outcome: "pr_closed", last_run: $old}
+      }
+    }')"
+    run prune_targets_json "${state}"
+    [ "$status" -eq 0 ]
+    run jq -e '.targets | has("pull_request:5") | not' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "prune_targets_json clears aged reject fields on integration key" {

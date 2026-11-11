@@ -10,7 +10,8 @@
 #   # or: prune_targets_json "$(cat state.json)" > out.json
 #
 # Design Rules:
-#   - Never delete non-pull_request keys (watch / integration:*)
+#   - Never delete non-pull_request keys (watch / integration:*), except per-target keys below
+#   - Delete keys containing '#' (integration:<branch>#<key>) when aged + no pending, regardless of outcome
 #   - Delete pull_request:* when terminal + aged + no pending
 #   - Cooldown watch reject fields after 30 days
 #   - Fail-safe: missing/invalid last_run → keep entry
@@ -128,6 +129,13 @@ function prune_targets_json {
       .targets |= with_entries(
         if (.value | has_pending) then
           .
+        elif (.key | contains("#")) then
+          # Per-target integration key (integration:<branch>#<key>): delete when aged, any outcome
+          if (.value | aged) then
+            empty
+          else
+            .
+          end
         elif (.key | startswith("pull_request:")) then
           if (.value | terminal) and (.value | aged) then
             empty
