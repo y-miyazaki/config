@@ -18,6 +18,8 @@
 # - deliver_issue_create records the findings cut by the limit in the step summary
 # - deliver_issue_create labels with the whole allowlist, puts the marker first and Meta last
 # - deliver_issue_create lists existing issues with every allowlist label and state=all
+# - deliver_issue_create drops a finding whose finished body would exceed the GitHub limit
+# - deliver_issue_create escapes regex characters in the loop name when matching markers
 # - sanitize_issue_body defuses HTML comments and mentions; the marker cannot be forged
 # - deliver_issue_create stops at the first failed create and reports the issues already created
 
@@ -600,4 +602,28 @@ marker_for() {
     run deliver_loop_message
     [ "$status" -eq 1 ]
     [ -z "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE" 2>/dev/null)" ]
+}
+
+@test "deliver_issue_create drops a finding whose sanitized body exceeds the GitHub limit" {
+    use_issue_create
+    local body
+    body="$(printf '@a%.0s' $(seq 1 25000))"
+    write_issues "$(jq -nc --arg b "${body}" '[{title:"big",body:$b,fingerprint:"f1"},{title:"small",body:"b",fingerprint:"f2"}]')"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
+    gh_log | grep -q 'title small'
+    grep -q 'big' "${GITHUB_STEP_SUMMARY}"
+}
+
+@test "deliver_issue_create does not let a dot in the loop name match another loop's marker" {
+    use_issue_create
+    export LOOP_NAME="code.review"
+    local other_hash
+    other_hash="$(issue_fingerprint_hash "code.review" "n1")"
+    export GH_MOCK_LIST_OUT="<!-- codexreview:fp:${other_hash} -->"
+    write_issues "$(issues_for 1 n)"
+    run deliver_loop_message
+    [ "$status" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/gh.count.CREATE")" -eq 1 ]
 }

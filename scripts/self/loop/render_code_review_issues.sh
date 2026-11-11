@@ -21,6 +21,10 @@
 #   - A finding is kept only when its evidence lines overlap lines added or changed by
 #     git diff since..ref in that file; the others are dropped and counted in the step summary
 #   - A finding whose title (256) or body (60000, with the evidence line) is too long is dropped
+#   - evidence.path must be a regular file at from.ref; a directory such as "." would match every
+#     changed line of the range, so such a finding is dropped
+#   - A stale issues.json in LOOP_MESSAGE_DIR is removed on APPROVE, so only verified findings
+#     can reach Deliver Message
 #   - issues.json is built in a temp file and moved into place (no partial file on failure)
 #
 # Output:
@@ -146,6 +150,7 @@ function main {
         echo "::error::render_code_review_issues: LOOP_MESSAGE_DIR is not set" >&2
         return 1
     fi
+    rm -f "${message_dir}/issues.json"
     if [[ ! ${branch} =~ ^[A-Za-z0-9/_.-]+$ || ${branch} == *..* ]]; then
         echo "::warning::render_code_review_issues: EXECUTE_BRANCH is missing or invalid; nothing to render"
         return 0
@@ -206,6 +211,11 @@ function main {
         if [[ ${#title} -gt ${MAX_TITLE} || ${#body} -gt ${MAX_BODY} ]]; then
             dropped=$((dropped + 1))
             reasons+=("- ${title:0:80}: title or body over the length limit")
+            continue
+        fi
+        if [[ "$(git cat-file -t "${ref}:${path}" 2> /dev/null || true)" != "blob" ]]; then
+            dropped=$((dropped + 1))
+            reasons+=("- ${title:0:80}: evidence path ${path} is not a file at the range head")
             continue
         fi
         ranges="$(changed_ranges "${since}" "${ref}" "${path}")" || {

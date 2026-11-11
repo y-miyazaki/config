@@ -13,6 +13,8 @@ bats_require_minimum_version 1.5.0
 # - dropped findings are counted with their reason in the step summary
 # - every finding dropped writes an empty array
 # - a range with only deleted lines in the file drops the finding without failing
+# - an evidence path that is a directory (. or src) drops the finding
+# - a stale issues.json in the message dir is removed on APPROVE
 # - the kept finding body carries the evidence path and lines, and over-long titles or bodies are dropped
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -171,4 +173,18 @@ run_render() {
     run_render APPROVE "$(jq -nc --arg s "$(git -C "${WORK}" rev-parse HEAD~1)" --arg r "${ref2}" '{from: {since: $s, ref: $r}}')"
     [ "$status" -eq 0 ]
     [ "$(cat "${MSG}/issues.json")" = "[]" ]
+}
+
+@test "drops a finding whose evidence path is a directory instead of a changed file" {
+    push_report "[$(finding dot . 1 99999),$(finding dir src 1 99999),$(finding real src/a.sh 11 11)]"
+    run_render
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '[.[].title] | join(",")' "${MSG}/issues.json")" = "real" ]
+}
+
+@test "removes a stale issues.json from the message dir on APPROVE before reading the report" {
+    printf '%s' '[{"title":"forged","body":"b","fingerprint":"f"}]' > "${MSG}/issues.json"
+    run_render
+    [ "$status" -eq 0 ]
+    [ ! -e "${MSG}/issues.json" ]
 }

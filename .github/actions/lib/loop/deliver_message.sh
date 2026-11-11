@@ -35,6 +35,9 @@
 #     of already-filed findings never crowds out new ones; findings cut by the limit
 #     are listed in the step summary and not carried over; creation stops at the first
 #     failure; the label set always comes from the caller allowlist, never the agent
+#   - A finding whose finished body (marker, sanitized text, Meta) would pass GitHub's
+#     65536-character limit is dropped and listed in the step summary, not failed: a
+#     failure would block the cursor and repeat every run
 #######################################
 
 _DELIVER_MESSAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -597,8 +600,9 @@ function deliver_issue_create {
     local limit="${FINALIZE_ISSUE_LIMIT:-5}"
     local loop_name="${LOOP_NAME:-}"
     local label labels_csv="" encoded existing err url meta_block body_file
-    local i title body fingerprint hash count created=0
-    local -a labels=() label_args=() created_numbers=() seen_hashes=()
+    local i title body fingerprint hash count created=0 name_re
+    local -A seen_hashes=()
+    local -a labels=() label_args=() created_numbers=()
     local -a new_titles=() new_bodies=() new_fingerprints=() new_hashes=()
 
     if [[ ! -f ${file} ]]; then
@@ -650,9 +654,10 @@ function deliver_issue_create {
         fail_loop_message "Failed to list existing issues: ${existing}"
         return 1
     fi
+    name_re="$(sed 's/[][\\.*^$/]/\\&/g' <<< "${loop_name}")"
     while IFS= read -r hash; do
-        [[ -n ${hash} ]] && seen_hashes+=("${hash}")
-    done < <(grep -o "<!-- ${loop_name}:fp:[0-9a-f]\{16\} -->" <<< "${existing}" | sed -E 's/.*:fp:([0-9a-f]{16}) -->/\1/' || true)
+        [[ -n ${hash} ]] && seen_hashes["${hash}"]=1
+    done < <(grep -o "<!-- ${name_re}:fp:[0-9a-f]\{16\} -->" <<< "${existing}" | sed -E 's/.*:fp:([0-9a-f]{16}) -->/\1/' || true)
 
     # Drop duplicates first, then cut to the limit.
     local dropped=0 skipped_dupes=0
@@ -661,14 +666,19 @@ function deliver_issue_create {
         body="$(jq -r --argjson i "${i}" '.[$i].body' "${file}")"
         fingerprint="$(jq -r --argjson i "${i}" '.[$i].fingerprint' "${file}")"
         hash="$(issue_fingerprint_hash "${loop_name}" "${fingerprint}")"
-        if printf '%s\n' "${seen_hashes[@]:-}" | grep -qx "${hash}"; then
+        if [[ -n ${seen_hashes[${hash}]:-} ]]; then
             skipped_dupes=$((skipped_dupes + 1))
             continue
         fi
-        seen_hashes+=("${hash}")
+        seen_hashes["${hash}"]=1
         if [[ ${#new_titles[@]} -ge ${limit} ]]; then
             dropped=$((dropped + 1))
             issue_create_summary "- cut by finalize_issue_limit=${limit}: ${title} (fingerprint: ${fingerprint})"
+            continue
+        fi
+        # 4096 bytes of headroom for the marker line and the Meta block; bytes over-count characters
+        if [[ $(($(sanitize_issue_body "${loop_name}" "${body}" | wc -c) + 4096)) -gt 65536 ]]; then
+            issue_create_summary "- dropped (body too long for a GitHub issue): ${title} (fingerprint: ${fingerprint})"
             continue
         fi
         new_titles+=("${title}")
