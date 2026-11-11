@@ -79,6 +79,7 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: docs-updater
+      agent_report_check: paths
       agent_tool_allowlist: |
         Bash(git remote get-url:*)
       agent_unchanged_verdict: REJECT

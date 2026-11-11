@@ -41,6 +41,10 @@ inputs:
   delivery:
     description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
     required: true
+  detect_env_json:
+    default: ""
+    description: "JSON object of environment variables exported to the detect script only (not to later steps). Keys must match ^[A-Z_][A-Z0-9_]*$; reserved names (GITHUB_*, RUNNER_*, GIT_*, GH_*, PATH, BASH_*, LD_*, ...) and names that are already set are rejected; values must be scalars without newlines"
+    required: false
   detect_script:
     description: Path to domain detect_*.sh script (must write result.entity.kind issue | pr when skip is false)
     required: true
@@ -124,6 +128,7 @@ runs:
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
+        DETECT_ENV_JSON: ${{ inputs.detect_env_json }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}

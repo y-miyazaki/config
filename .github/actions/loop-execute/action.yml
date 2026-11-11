@@ -64,6 +64,10 @@ inputs:
   agent_maker_skill_name:
     description: "Maker skill name (context only for the checker)"
     required: true
+  agent_report_check:
+    default: ""
+    description: 'Deterministic check applied to the maker report before the LLM checker: "paths" (### Changes lists repository paths), "commits" (### Changes lists commits; ### Skipped replaces ### Deferred), or empty to skip the check'
+    required: false
   agent_token:
     description: "Authentication token for the selected engine"
     required: true
@@ -221,6 +225,7 @@ runs:
         AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_REPORT_CHECK: ${{ inputs.agent_report_check }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
         AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
         AGENT_TOOL_DENYLIST: ${{ inputs.agent_tool_denylist }}

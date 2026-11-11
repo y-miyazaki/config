@@ -53,9 +53,9 @@ runs:
       run: |
         set -euo pipefail
 
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/git_auth.sh"
+        loop_git_configure_auth
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""

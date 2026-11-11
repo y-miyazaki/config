@@ -111,6 +111,11 @@ on:
         description: "Skill package name"
         required: true
         type: string
+      agent_report_check:
+        default: ""
+        description: 'Deterministic check applied to the maker report before the LLM checker: "paths" (### Changes lists repository paths), "commits" (### Changes lists commits; ### Skipped replaces ### Deferred), or empty to skip the check. Declared by the caller per skill'
+        required: false
+        type: string
       agent_tool_allowlist:
         default: ""
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). Caller-declared only — never derived from detect output. The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
@@ -322,39 +327,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Export Detect Domain Env
-        env:
-          DETECT_ENV_JSON: ${{ inputs.detect_env_json }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${DETECT_ENV_JSON}" && "${DETECT_ENV_JSON}" != "{}" ]]; then
-            if ! echo "${DETECT_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
-              echo "detect_env_json must be a JSON object" >&2
-              exit 1
-            fi
-            if ! echo "${DETECT_ENV_JSON}" | jq -e               'to_entries | map(.key) | all(test("^[A-Z_][A-Z0-9_]*$"))'               >/dev/null; then
-              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r                 'to_entries[] | select(.key | test("^[A-Z_][A-Z0-9_]*$") | not) | .key'                 | head -1)"
-              echo "detect_env_json keys must match ^[A-Z_][A-Z0-9_]*$ (invalid: ${bad_key})" >&2
-              exit 1
-            fi
-            if ! echo "${DETECT_ENV_JSON}" | jq -e \
-              '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
-              >/dev/null; then
-              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r \
-                'to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]"))) | .key' \
-                | head -1)"
-              echo "detect_env_json values must not contain newlines (key: ${bad_key})" >&2
-              exit 1
-            fi
-            while IFS= read -r -d '' entry; do
-              printf '%s\n' "${entry}" >> "${GITHUB_ENV}"
-            done < <(echo "${DETECT_ENV_JSON}" | jq -jr \
-              'to_entries[] | select(.value != "") | "\(.key)=\(.value)\u0000"')
-          fi
-
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -363,7 +338,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-detect@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/loop-detect@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
@@ -380,6 +355,7 @@ jobs:
           delivery: ${{ inputs.delivery }}
           detect_branch_match: ${{ inputs.detect_branch_match }}
           detect_branch_match_mode: ${{ inputs.detect_branch_match_mode }}
+          detect_env_json: ${{ inputs.detect_env_json }}
           detect_items: ${{ inputs.detect_items && 'true' || 'false' }}
           detect_max_targets: ${{ format('{0}', inputs.detect_max_targets) }}
           detect_pr_bot_allowlist: ${{ inputs.detect_pr_bot_allowlist }}
@@ -416,7 +392,7 @@ jobs:
     steps:
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -508,7 +484,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
     with:
       agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
@@ -528,6 +504,7 @@ jobs:
       agent_maker_max_turns: ${{ inputs.agent_maker_max_turns }}
       agent_maker_model: ${{ inputs.agent_maker_model }}
       agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
+      agent_report_check: ${{ inputs.agent_report_check }}
       agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
       agent_tool_denylist: ${{ inputs.agent_tool_denylist }}
       agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
@@ -582,7 +559,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -590,7 +567,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/loop-run-log@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}

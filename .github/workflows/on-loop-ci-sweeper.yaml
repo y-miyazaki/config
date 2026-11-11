@@ -118,6 +118,7 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: ci-sweeper
+      agent_report_check: paths
       # Sweeper reads failing workflow runs and job logs; it never writes to GitHub.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)

@@ -162,7 +162,6 @@ jobs:
             DISCOVERED_JSON=$(printf '%s\n' "${FILTERED_CLUSTERS[@]}" | jq -s .)
           fi
 
-          # echo "discovered_clusters=$DISCOVERED_JSON" >> "$GITHUB_OUTPUT"
           # Provide a base64-encoded form to avoid unsafe template expansion in downstream steps
           DISCOVERED_B64=$(printf '%s' "$DISCOVERED_JSON" | base64 -w0)
           echo "discovered_clusters_b64=$DISCOVERED_B64" >> "$GITHUB_OUTPUT"
@@ -182,7 +181,7 @@ jobs:
     steps:
       - name: Validate inputs
         id: validate-inputs
-        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@c9f65f197397cc4e7f797148381b3c5b53bf15bf # v1.9.7
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@7e42c75402917f9cff6a232046023528ffa4a088 # v1.9.5
 
         with:
           action: ${{ env.ACTION }}
