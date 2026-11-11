@@ -300,6 +300,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      issues: read
       pull-requests: read
     outputs:
       delivery: ${{ steps.detect.outputs.delivery }}

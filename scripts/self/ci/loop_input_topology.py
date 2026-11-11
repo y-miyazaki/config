@@ -106,6 +106,7 @@ DECISIONS: dict[str, tuple[str, str, str]] = {
     "finalize_label_allowlist": ("—", "全", "新設(投稿の配信 第5節)"),
     "finalize_outcome_override": ("outcome_override", "L2+", "改名"),
     "finalize_script": ("finalize_hook_script", "L2+", "改名(投稿の配信 第1節)"),
+    "handoff_artifact_suffix": ("—", "全", "新設(定期取り込み 第4.5節)。entity caller だけ"),
     "level": ("—", "全", "既定値を削除"),
     "loop_name": ("—", "全", "変更なし"),
     "pr_body": ("—", "L2+", "変更なし"),
