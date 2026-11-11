@@ -105,7 +105,17 @@ run_list() {
 
 # selected: print the selected issue numbers on one line
 selected() {
-    grep '^issues=' "${OUT}" | cut -d= -f2- | jq -r 'map(.number) | join(",")'
+    if ! grep -q '^issues=' "${OUT}"; then
+        printf 'NO_ISSUES_LINE'
+        return 1
+    fi
+    grep '^issues=' "${OUT}" | cut -d= -f2- | jq -r 'map(tostring) | join(",")'
+}
+
+# ok_count N: assert a successful run that wrote count=N
+ok_count() {
+    [ "$status" -eq 0 ]
+    grep -qx "count=$1" "${OUT}"
 }
 
 @test "calls the comments api at most once per issue" {
@@ -132,6 +142,7 @@ selected() {
     printf 'not json\n{broken\n{"run_id":"2026-11-10T00:00:00Z","loop_name":"github-issue-triage","outcome":"error"}\n' >> "${RUN_LOG}"
     run_list
     [ "$status" -eq 0 ]
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -140,6 +151,7 @@ selected() {
     rm -f "${RUN_LOG}"
     run_list
     [ "$status" -eq 0 ]
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -161,6 +173,7 @@ selected() {
     set_issues "$(issue 1 triage:ready)" "$(issue 2 triage:needs-info)" "$(issue 3 triage:failed)"
     run_list
     [ "$status" -eq 0 ]
+    ok_count 0
     [ "$(selected)" = "" ]
     for l in triage:ready triage:needs-info triage:failed; do
         run env ISSUE_NUMBER=9 ISSUE_TITLE="t" ISSUE_BODY="b" ISSUE_LABELS_JSON="[\"loop:code-review\",\"${l}\"]" \
@@ -175,6 +188,7 @@ selected() {
     local d
     for d in 08 09 10; do log_row "2026-11-${d}T00:00:00Z" skipped 1; done
     run_list
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -183,6 +197,7 @@ selected() {
     local d
     for d in 01 02 03; do log_row "2026-11-${d}T00:00:00Z" error 1; done
     run_list
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -190,6 +205,7 @@ selected() {
     set_issues "$(issue 1)"
     set_comments 1 "$(comment 2026-11-01T00:00:00Z Bot "${MARKER}")" "$(comment 2026-11-02T00:00:00Z Bot)"
     run_list
+    ok_count 0
     [ "$(selected)" = "" ]
 }
 
@@ -197,6 +213,7 @@ selected() {
     set_issues "$(issue 1)"
     set_comments 1 "$(comment 2026-10-30T00:00:00Z User)" "$(comment 2026-11-01T00:00:00Z Bot "${MARKER}")"
     run_list
+    ok_count 0
     [ "$(selected)" = "" ]
 }
 
@@ -204,6 +221,7 @@ selected() {
     set_issues "$(issue 1)"
     set_comments 1 "$(comment 2026-11-01T00:00:00Z Bot "${MARKER}")"
     run_list
+    ok_count 0
     [ "$(selected)" = "" ]
 }
 
@@ -211,12 +229,14 @@ selected() {
     set_issues "$(issue 1 '' User)" "$(issue 2 '' Bot '"no marker here"')" "$(issue 3 '' Bot null)"
     run_list
     [ "$status" -eq 0 ]
+    ok_count 0
     [ "$(selected)" = "" ]
 }
 
 @test "drops issues carrying a triage label" {
     set_issues "$(issue 1 triage:ready)" "$(issue 2 triage:needs-info)" "$(issue 3 triage:failed)" "$(issue 4)"
     run_list
+    ok_count 1
     [ "$(selected)" = "4" ]
 }
 
@@ -226,12 +246,21 @@ selected() {
     log_row 2026-11-09T00:00:00Z rejected 1
     log_row 2026-11-10T00:00:00Z error 1
     run_list
+    ok_count 0
     [ "$(selected)" = "" ]
+}
+
+@test "keeps running when a label name has a double quote and a backslash" {
+    set_issues "$(issue 1 'we"ird\\label')" "$(issue 2)"
+    run_list
+    ok_count 2
+    [ "$(selected)" = "1,2" ]
 }
 
 @test "drops pull requests" {
     set_issues "$(issue 1 | jq -c '. + {pull_request: {url: "x"}}')" "$(issue 2)"
     run_list
+    ok_count 1
     [ "$(selected)" = "2" ]
 }
 
@@ -255,6 +284,7 @@ selected() {
     log_row 2026-11-08T00:00:00Z error 1
     log_row 2026-11-09T00:00:00Z rejected 1
     run_list
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -262,6 +292,7 @@ selected() {
     set_issues "$(issue 1)"
     set_comments 1 "$(comment 2026-11-01T00:00:00Z Bot "${MARKER}")" "$(comment 2026-11-02T00:00:00Z User)"
     run_list
+    ok_count 1
     [ "$(selected)" = "1" ]
 }
 
@@ -272,6 +303,7 @@ selected() {
     log_row 2026-11-06T00:00:00Z skipped 4
     log_row 2026-11-07T00:00:00Z approved 4
     run_list TRIAGE_LIST_LIMIT=10
+    ok_count 4
     [ "$(selected)" = "3,2,4,1" ]
 }
 

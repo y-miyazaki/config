@@ -27,7 +27,7 @@
 #   - Any failing gh api call exits 1; an empty result is never produced by a failure
 #
 # Output:
-#   GITHUB_OUTPUT: issues=<compact JSON array [{number, labels}] in selection order>, count=<n>;
+#   GITHUB_OUTPUT: issues=<compact JSON array of Issue numbers in selection order, e.g. [7,12,3]>, count=<n>;
 #   "::notice" on stdout when nothing is selected
 #
 # Dependencies:
@@ -198,7 +198,7 @@ function recent_failure_count {
 #
 #######################################
 function main {
-    local issues candidates rows now cutoff number labels fails attempt selected="[]"
+    local issues candidates rows now cutoff number fails attempt selected="[]"
 
     : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
     : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
@@ -223,14 +223,14 @@ function main {
             and ((.body // "") | contains("<!-- code-review:fp:"))
             and (any(.labels[]?; .name == "loop:code-review"))
             and (any(.labels[]?; .name | startswith("triage:")) | not)
-        ) | {number, labels: [.labels[].name]}]
+        ) | {number}]
     ' <<< "${issues}")"
 
     rows="$(load_run_log_rows)"
     now="${TRIAGE_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
     cutoff="$(date -u -d "${now} - ${TRIAGE_FAIL_WINDOW_DAYS} days" +%Y-%m-%dT%H:%M:%SZ)"
 
-    while IFS=$'\t' read -r number labels; do
+    while IFS= read -r number; do
         [[ -z ${number} ]] && continue
         fails="$(recent_failure_count "${rows}" "${number}" "${cutoff}")"
         if [[ ${fails} -ge ${TRIAGE_FAIL_MAX} ]]; then
@@ -240,13 +240,13 @@ function main {
             continue
         fi
         attempt="$(last_attempt "${rows}" "${number}")"
-        selected="$(jq -c --argjson n "${number}" --argjson l "${labels}" --arg a "${attempt}" \
-            '. + [{number: $n, labels: $l, last_attempt: $a}]' <<< "${selected}")"
-    done < <(jq -r '.[] | [.number, (.labels | tojson)] | @tsv' <<< "${candidates}")
+        selected="$(jq -c --argjson n "${number}" --arg a "${attempt}" \
+            '. + [{number: $n, last_attempt: $a}]' <<< "${selected}")"
+    done < <(jq -r '.[].number' <<< "${candidates}")
 
     # Oldest last attempt first (no attempt = ""), stable so ties keep the API order
     selected="$(jq -c --argjson n "${TRIAGE_LIST_LIMIT}" \
-        'to_entries | sort_by([.value.last_attempt, .key]) | map(.value | {number, labels}) | .[:$n]' <<< "${selected}")"
+        'to_entries | sort_by([.value.last_attempt, .key]) | map(.value.number) | .[:$n]' <<< "${selected}")"
 
     {
         printf 'issues=%s\n' "${selected}"
@@ -255,7 +255,7 @@ function main {
     if [[ ${selected} == "[]" ]]; then
         echo "::notice::list_triage_issues: no Issue needs triage"
     else
-        echo "list_triage_issues: selected $(jq -r 'map(.number) | join(",")' <<< "${selected}")"
+        echo "list_triage_issues: selected $(jq -r 'map(tostring) | join(",")' <<< "${selected}")"
     fi
 }
 
