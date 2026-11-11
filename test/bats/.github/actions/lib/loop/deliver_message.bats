@@ -23,6 +23,9 @@
 # - deliver_issue_create fails closed when a label cannot be created and accepts an already existing label
 # - deliver_issue_create drops a finding whose finished body would exceed the GitHub limit
 # - deliver_issue_create escapes regex characters in the loop name when matching markers
+# - select_new_issue_findings writes one "<index><TAB><hash>" line per finding to keep and nothing for filed ones
+# - validate_issue_create_input rejects a missing file, a malformed array, and a non-numeric limit
+# - deliver_issue_create lives in deliver_issue_create.sh and is loaded by deliver_message.sh; these tests cover it through deliver_loop_message
 # - sanitize_issue_body defuses HTML comments and mentions; the marker cannot be forged
 # - deliver_issue_create stops at the first failed create and reports the issues already created
 
@@ -523,6 +526,32 @@ marker_for() {
     [ "$status" -eq 0 ]
     [ "$(gh_calls)" -eq 0 ]
     grep -qx 'outcome=unchanged' "${GITHUB_OUTPUT}"
+}
+
+@test "select_new_issue_findings writes one index and hash line per finding to keep" {
+    use_issue_create
+    write_issues "$(issues_for 3 n)"
+    GH_MOCK_LIST_OUT="$(marker_for n2)"
+    export GH_MOCK_LIST_OUT
+    run select_new_issue_findings "${LOOP_MESSAGE_DIR}/issues.json" 3 code-review "loop%3Acode-review" "${BATS_TEST_TMPDIR}/picks"
+    [ "$status" -eq 0 ]
+    [ "$(wc -l < "${BATS_TEST_TMPDIR}/picks")" -eq 2 ]
+    [ "$(cut -f1 "${BATS_TEST_TMPDIR}/picks" | paste -sd, -)" = "0,2" ]
+    [ "$(sed -n 1p "${BATS_TEST_TMPDIR}/picks" | cut -f2)" = "$(issue_fingerprint_hash code-review n1)" ]
+}
+
+@test "validate_issue_create_input rejects a missing file, a malformed array, and a non-numeric limit" {
+    use_issue_create
+    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    [ "$status" -eq 1 ]
+    write_issues '[{"title":"t"}]'
+    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    [ "$status" -eq 1 ]
+    write_issues "$(issues_for 1 n)"
+    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 0
+    [ "$status" -eq 1 ]
+    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    [ "$status" -eq 0 ]
 }
 
 @test "deliver_issue_create creates each allowlist label before the first issue" {
