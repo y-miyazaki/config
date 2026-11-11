@@ -24,6 +24,7 @@
 # - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
 # - Dogfood callers declare every command rule their skill needs; host .claude/settings.json allow rules are never active in CI
 # - reusable agent_tool_allowlist descriptions state host allow rules are not applied
+# - detect_items is an optional branch-caller boolean (default false) that reaches loop-detect as DETECT_ITEMS
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -1358,6 +1359,22 @@ LOOP_AGENT_CALLERS=(changelog code-review docs-updater refactor tech-debt test-g
     run ! grep -q agent_tool_denylist <(job_block "${AGENT}" agent-l1)
     workflow_inputs "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
     workflow_inputs "${AGENT}" | grep -qx agent_tool_denylist
+}
+
+@test "detect_items defaults to false in ci-loop-caller and loop-detect and reaches the detect env" {
+    local keys
+    input_block "${BRANCH_CALLER}" detect_items | grep -qx '        default: false'
+    input_block "${BRANCH_CALLER}" detect_items | grep -qx '        type: boolean'
+    [ -z "$(workflow_required_inputs "${BRANCH_CALLER}" | grep -x detect_items)" ]
+    action_inputs loop-detect | grep -qx detect_items
+    [ -z "$(action_required_inputs loop-detect | grep -x detect_items)" ]
+    awk '/^  detect_items:/ {f = 1; next} f && /^  [a-z]/ {exit} f' "${ACTIONS_DIR}/loop-detect/action.yml" \
+        | grep -qx '    default: "false"'
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' detect_items'
+    grep -qF "detect_items: \${{ inputs.detect_items && 'true' || 'false' }}" "${BRANCH_CALLER}"
+    grep -qF 'DETECT_ITEMS: ${{ inputs.detect_items }}' "${ACTIONS_DIR}/loop-detect/action.yml"
+    run ! grep -q detect_items "${ENTITY_CALLER}"
 }
 
 @test "detect_script is optional for the branch caller and loop-detect and required for the entity caller" {

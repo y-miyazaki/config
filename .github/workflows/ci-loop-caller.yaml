@@ -158,6 +158,11 @@ on:
         description: "JSON object of domain detect script environment variables"
         required: false
         type: string
+      detect_items:
+        default: false
+        description: "Declare items mode: the detect script returns result.items and each item becomes its own integration:<branch>#<key> target (requires one detect_branch_match branch and detect_pr_enabled false)"
+        required: false
+        type: boolean
       detect_max_targets:
         default: 3
         description: "Max targets per cron tick after filters"
@@ -374,6 +379,7 @@ jobs:
           delivery: ${{ inputs.delivery }}
           detect_branch_match: ${{ inputs.detect_branch_match }}
           detect_branch_match_mode: ${{ inputs.detect_branch_match_mode }}
+          detect_items: ${{ inputs.detect_items && 'true' || 'false' }}
           detect_max_targets: ${{ format('{0}', inputs.detect_max_targets) }}
           detect_pr_bot_allowlist: ${{ inputs.detect_pr_bot_allowlist }}
           detect_pr_denylist: ${{ inputs.detect_pr_denylist }}

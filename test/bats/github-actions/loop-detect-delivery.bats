@@ -7,7 +7,7 @@ bats_require_minimum_version 1.5.0
 #
 # Use cases:
 # - action.yml declares the renamed inputs and no removed inputs (may_edit, git_landing_*, loop_*)
-# - action.yml maps every renamed input to its uppercase environment variable
+# - action.yml maps every renamed input (and detect_items) to its uppercase environment variable
 # - action.yml has no default for delivery or level and exposes the pr_auto_merge output
 # - validate_detect_inputs fails on write-contract, delivery value, and detect-config errors
 # - validate_candidate_targets rejects target kinds the delivery does not allow
@@ -65,6 +65,7 @@ budget_max_tokens_per_day
 delivery
 detect_branch_match
 detect_branch_match_mode
+detect_items
 detect_max_targets
 detect_pr_bot_allowlist
 detect_pr_denylist
@@ -109,7 +110,7 @@ state_file"
 @test "action.yml maps every renamed input to its uppercase environment variable" {
     local name upper checked=0
     for name in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict \
-        delivery detect_branch_match detect_branch_match_mode detect_max_targets detect_pr_bot_allowlist \
+        delivery detect_branch_match detect_branch_match_mode detect_items detect_max_targets detect_pr_bot_allowlist \
         detect_pr_denylist detect_pr_enabled detect_pr_number detect_priority \
         finalize_label_allowlist finalize_script level state_branch; do
         upper="$(tr '[:lower:]' '[:upper:]' <<< "${name}")"
@@ -117,7 +118,7 @@ state_file"
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 17 ]
+    [ "${checked}" -eq 18 ]
 }
 
 @test "build_integration_target_json emits no finalize key" {

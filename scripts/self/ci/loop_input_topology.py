@@ -92,6 +92,7 @@ DECISIONS: dict[str, tuple[str, str, str]] = {
     "detect_branch_match": ("branch_match", "全", "改名。第7-3節"),
     "detect_branch_match_mode": ("branch_match_mode", "全", "改名"),
     "detect_env_json": ("detect_domain_env_json", "全", "改名"),
+    "detect_items": ("—", "全", "新設(定期取り込み 第4.1節)。branch caller だけ"),
     "detect_max_targets": ("max_targets_per_schedule", "全", "改名"),
     "detect_pr_bot_allowlist": ("pr_include_bots", "全", "改名"),
     "detect_pr_denylist": ("pr_exclude", "全", "改名"),

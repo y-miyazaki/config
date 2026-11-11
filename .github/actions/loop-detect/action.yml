@@ -56,6 +56,10 @@ inputs:
     default: "glob"
     description: "detect_branch_match pattern mode: list | glob | regex"
     required: false
+  detect_items:
+    default: "false"
+    description: "true = the detect script returns result.items and each item becomes its own integration:<branch>#<key> target (requires one detect_branch_match branch and detect_pr_enabled false)"
+    required: false
   detect_max_targets:
     default: "3"
     description: "Maximum targets per detect run (fan-out cap)"
@@ -185,6 +189,7 @@ runs:
         DELIVERY: ${{ inputs.delivery }}
         DETECT_BRANCH_MATCH: ${{ inputs.detect_branch_match }}
         DETECT_BRANCH_MATCH_MODE: ${{ inputs.detect_branch_match_mode }}
+        DETECT_ITEMS: ${{ inputs.detect_items }}
         DETECT_MAX_TARGETS: ${{ inputs.detect_max_targets }}
         DETECT_PRIORITY: ${{ inputs.detect_priority }}
         DETECT_PR_BOT_ALLOWLIST: ${{ inputs.detect_pr_bot_allowlist }}

@@ -48,6 +48,7 @@ source "${_loop_action_lib}/validate_loop_write_contract.sh"
 # Plumbing defaults only; decision inputs (DELIVERY, LEVEL) and the level-keyed
 # AGENT_* inputs have no default and are validated in detect.sh.
 DETECT_BRANCH_MATCH_MODE="${DETECT_BRANCH_MATCH_MODE:-glob}"
+DETECT_ITEMS="${DETECT_ITEMS:-false}"
 DETECT_MAX_TARGETS="${DETECT_MAX_TARGETS:-3}"
 DETECT_PRIORITY="${DETECT_PRIORITY:-integration,pull_request}"
 DETECT_PR_DENYLIST="${DETECT_PR_DENYLIST:-fork,draft,label:no-loop}"

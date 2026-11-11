@@ -16,6 +16,7 @@
 # - Every target kind must be allowed by delivery (validate_delivery_target)
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
+# - DETECT_ITEMS=true gates and orders result.items per item key; the branch key is not consulted
 # - Detect-script boundary: coupled only on the success-path interface (exit 0, valid JSON,
 #   skip flag, fields consumed for matrix/prompt). On non-zero exit, echo stdout verbatim and
 #   fail — do not interpret skill error JSON (status, message, schema). Multi-target scans
@@ -34,6 +35,7 @@
 #   AGENT_MAKER_INSTRUCTIONS
 #   DETECT_BRANCH_MATCH (empty = no integration targets), DETECT_BRANCH_MATCH_MODE, DETECT_PRIORITY
 #   DETECT_MAX_TARGETS, DETECT_PR_ENABLED, DETECT_PR_DENYLIST, DETECT_PR_BOT_ALLOWLIST, DETECT_PR_NUMBER
+#   DETECT_ITEMS - true: one integration:<branch>#<key> candidate per result.items element (single branch, no PR scan)
 #   BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
@@ -326,6 +328,35 @@ function build_integration_target_json {
 }
 
 #######################################
+# build_item_target_json: Build integration target JSON for one result.items element
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Item target key (integration:<branch>#<key>)
+#   $2 - branch name
+#   $3 - current SHA
+#   $4 - Entity JSON ({kind, number}; "null" or empty to omit)
+#
+# Outputs:
+#   Target JSON to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function build_item_target_json {
+    local target_key="$1"
+    local branch="$2"
+    local current_sha="$3"
+    local entity_json="${4:-null}"
+
+    build_integration_target_json "${target_key}" "${branch}" "${current_sha}" \
+        | jq -c --argjson entity "${entity_json:-null}" 'if $entity == null then . else .entity = $entity end'
+}
+
+#######################################
 # build_pull_request_target_json: Build target JSON for pull_request mode
 #
 # Globals:
@@ -465,6 +496,88 @@ function append_integration_candidate {
         "" \
         build_integration_target_json \
         "${branch}"
+}
+
+#######################################
+# append_items_candidates: Scan one integration branch in items mode (one candidate per result.items element)
+# Order: checkout -> detect script -> extract_items -> per-item state gate -> order by last_run
+# -> assemble_detect_candidate per item. The branch key integration:<branch> is never read.
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings appended per unblocked item
+#   CIRCUIT_BREAKER_BLOCKED, PENDING_PR_BLOCKED - Incremented per blocked item
+#   STATE_FILE, STATE_BRANCH, DETECT_SCRIPT - Read
+#
+# Arguments:
+#   $1 - Integration branch name
+#
+# Outputs:
+#   Warning/notice annotations; ::error:: on stderr when the detect result is not a valid items result
+#
+# Returns:
+#   0 on success or skip (including checkout failure); 1 when result.items is missing, invalid, or has
+#   duplicate keys; the detect script exit status when it fails (main then fails the job)
+#
+#######################################
+function append_items_candidates {
+    local branch="$1"
+    local detect_result items_json item_json key item_key item_state consecutive last_sha current_sha
+    local item_result verifier_context entity_json
+    local unblocked_json='[]'
+
+    checkout_context "${branch}" || return 0
+
+    # The branch key is not used in items mode: the detect script gets the HEAD~10 fallback range.
+    last_sha="$(target_last_sha '{}' "${branch}" "")"
+    current_sha="$(git rev-parse HEAD)"
+    export CI_SWEEPER_HEAD_BRANCH="${branch}"
+    export STATE_BRANCH
+    detect_result="$(invoke_detect_script "${last_sha}" "integration:${branch}")" || return
+
+    if detect_result_skip "${detect_result}"; then
+        log_detect_notice "skip" "integration:${branch}" "detect skip=true (items mode)"
+        return 0
+    fi
+
+    items_json="$(extract_items "$(jq -c '.result // {}' <<< "${detect_result}")")" || return 1
+    if [[ -z ${items_json} ]]; then
+        log_detect_error "detect_items is true but the detect result has no result.items (branch=${branch})"
+        return 1
+    fi
+    if [[ "$(jq 'length' <<< "${items_json}")" -eq 0 ]]; then
+        log_detect_notice "skip" "integration:${branch}" "result.items is empty (items mode)"
+        return 0
+    fi
+
+    while IFS= read -r item_json; do
+        key="$(jq -r '.key' <<< "${item_json}")"
+        item_key="$(item_target_key "${branch}" "${key}")"
+        item_state="$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")"
+        consecutive="$(target_consecutive_failures "${item_state}")"
+        if target_state_blocks_candidate "${item_key}" "${item_state}" "${consecutive}"; then
+            continue
+        fi
+        unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
+    done < <(jq -c '.[]' <<< "${items_json}")
+
+    unblocked_json="$(order_items_by_last_run "${STATE_FILE}" "${branch}" "${unblocked_json}")"
+
+    while IFS= read -r item_json; do
+        key="$(jq -r '.key' <<< "${item_json}")"
+        item_key="$(item_target_key "${branch}" "${key}")"
+        item_state="$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")"
+        consecutive="$(target_consecutive_failures "${item_state}")"
+        last_sha="$(target_last_sha "${item_state}" "${branch}" "")"
+        item_result="$(item_result_json "${item_json}")" || return 1
+        verifier_context="$(jq -r '.verifier_context // "" | strings' <<< "${item_json}")"
+        if [[ -z ${verifier_context} ]]; then
+            verifier_context="$(build_verifier_context_from_result "$(jq -c '.context // {}' <<< "${item_json}")")"
+        fi
+        entity_json="$(jq -c '.entity | if type == "object" then {kind, number} | with_entries(select(.value != null)) else null end' <<< "${item_json}")"
+        assemble_detect_candidate \
+            "${item_key}" "${branch}" "${current_sha}" "${last_sha}" "${item_state}" "${consecutive}" \
+            "${item_result}" "${verifier_context}" "" build_item_target_json "${entity_json}"
+    done < <(jq -c '.[]' <<< "${unblocked_json}")
 }
 
 #######################################
@@ -1062,7 +1175,7 @@ function validate_candidate_targets {
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT - Read
 #   AGENT_ENGINE, AGENT_TOOL_DENYLIST - Read (optional; denylist needs L2/L3 and claude)
 #   FINALIZE_SCRIPT, FINALIZE_LABEL_ALLOWLIST, FINALIZE_ISSUE_LIMIT - Read (optional)
-#   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH - Read
+#   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_ITEMS - Read
 #
 # Arguments:
 #   None
@@ -1083,6 +1196,55 @@ function validate_detect_inputs {
     validate_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
     validate_delivery_value "${DELIVERY:-}" || return 1
     validate_delivery_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
+    validate_detect_items_config || return 1
+    return 0
+}
+
+#######################################
+# validate_detect_items_config: Validate the detect_items preconditions
+# Items mode needs exactly one literal integration branch (list or glob mode, no comma,
+# newline, or pattern characters) and no PR head scan, so the detect script runs once.
+#
+# Globals:
+#   DETECT_ITEMS, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_PR_ENABLED - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when invalid
+#
+# Returns:
+#   0 when valid or items mode is off; 1 when invalid
+#
+#######################################
+function validate_detect_items_config {
+    local branch_match="${DETECT_BRANCH_MATCH:-}"
+    local trimmed
+
+    case "${DETECT_ITEMS:-}" in
+        "" | false) return 0 ;;
+        true) ;;
+        *)
+            echo "::error::detect_items must be true or false (got: ${DETECT_ITEMS})" >&2
+            return 1
+            ;;
+    esac
+
+    if [[ ${DETECT_PR_ENABLED:-} == "true" ]]; then
+        echo "::error::detect_items true requires detect_pr_enabled false" >&2
+        return 1
+    fi
+    if [[ ${DETECT_BRANCH_MATCH_MODE:-} != "list" && ${DETECT_BRANCH_MATCH_MODE:-} != "glob" ]]; then
+        echo "::error::detect_items true requires detect_branch_match_mode list or glob (got: ${DETECT_BRANCH_MATCH_MODE:-})" >&2
+        return 1
+    fi
+    trimmed="${branch_match#"${branch_match%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    if [[ ! ${trimmed} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+        echo "::error::detect_items true requires detect_branch_match to name exactly one branch (got: ${branch_match})" >&2
+        return 1
+    fi
     return 0
 }
 
@@ -1172,6 +1334,7 @@ function write_legacy_outputs {
 #
 # Globals:
 #   CANDIDATES_JSON, INTEGRATION_BRANCHES, OPEN_PRS_JSON - Populated during run
+#   DETECT_ITEMS - true routes integration branches through append_items_candidates
 #
 # Arguments:
 #   None
@@ -1180,7 +1343,8 @@ function write_legacy_outputs {
 #   None
 #
 # Returns:
-#   0 on success or skip; 1 when input or target validation fails
+#   0 on success or skip; 1 when input or target validation fails, or items mode
+#   gets a missing or invalid result.items
 #
 #######################################
 function main {
@@ -1259,7 +1423,14 @@ function main {
     fi
 
     for branch in "${INTEGRATION_BRANCHES[@]}"; do
-        append_integration_candidate "${branch}"
+        if [[ ${DETECT_ITEMS} == "true" ]]; then
+            # A missing or invalid result.items fails the job (items mode was declared).
+            if ! append_items_candidates "${branch}"; then
+                return 1
+            fi
+        else
+            append_integration_candidate "${branch}"
+        fi
     done
 
     for pr_json in "${OPEN_PRS_JSON[@]}"; do

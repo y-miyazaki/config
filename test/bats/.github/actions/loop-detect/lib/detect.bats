@@ -30,6 +30,13 @@ bats_require_minimum_version 1.5.0
 # - the built-in range detect replaces an unreachable last_sha in the prompt Last SHA line
 # - a custom detect_script keeps the stored last_sha without a reachability check
 # - integration target_json carries from.since with the last_sha
+# - detect_items false or unset keeps the branch path and ignores result.items
+# - detect_items true requires one literal branch and detect_pr_enabled false
+# - items mode builds one integration:<branch>#<key> candidate per item with only that item's context
+# - items mode gates each item by its own breaker / pending state, never the branch key
+# - items mode orders by last_run (no state first) before the detect_max_targets cap
+# - items mode falls back to HEAD~10 for from.since without item state
+# - items mode treats an empty items array as skip and a missing, invalid, or duplicate key as an error
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -830,4 +837,291 @@ make_range_repo() {
     run_detect_main
     [ "$status" -eq 0 ]
     grep -qx 'skip_reason=pr_number_missing' "${GITHUB_OUTPUT}"
+}
+
+# items_detect_json N...: detect JSON whose result.items holds one issue item per number
+items_detect_json() {
+    printf '%s\n' "$@" | jq -sc '{status: "ok", skip: false, result: {items: map({
+        key: ("issue:" + tostring),
+        entity: {kind: "issue", number: ., handoff_key: ("entity:issue:" + tostring)},
+        context: {issue_number: .},
+        verifier_context: ""
+    })}}'
+}
+
+# make_items_repo DETECT_JSON [STATE_TARGETS_JSON]: repo with 11 commits, a detect script
+# that prints DETECT_JSON, the state targets, and the environment for an items mode run.
+make_items_repo() {
+    local detect_json="$1"
+    local targets_json="${2:-}"
+    local i
+
+    [[ -n ${targets_json} ]] || targets_json='{}'
+    ITEMS_REPO="${DETECT_TMP}/items-repo"
+    mkdir -p "${ITEMS_REPO}/.loop"
+    git init -q "${ITEMS_REPO}"
+    git -C "${ITEMS_REPO}" config user.email "test@example.com"
+    git -C "${ITEMS_REPO}" config user.name "Test User"
+    for i in 0 1 2 3 4 5 6 7 8 9 10; do
+        git -C "${ITEMS_REPO}" commit -q --allow-empty -m "c${i}"
+    done
+    jq -nc --argjson t "${targets_json}" '{targets: $t}' > "${ITEMS_REPO}/.loop/state-items.json"
+    printf '%s\n' "${detect_json}" > "${DETECT_TMP}/items-detect.json"
+    : > "${DETECT_TMP}/detect_calls"
+    printf '#!/usr/bin/env bash\necho called >> %q\ncat %q\n' \
+        "${DETECT_TMP}/detect_calls" "${DETECT_TMP}/items-detect.json" > "${DETECT_TMP}/detect-items.sh"
+    chmod +x "${DETECT_TMP}/detect-items.sh"
+
+    export AGENT_EDIT_ALLOWLIST="**"
+    export AGENT_EDIT_DENYLIST=""
+    export AGENT_EDIT_TARGET="fix"
+    export AGENT_MAKER_INSTRUCTIONS=""
+    export AGENT_MAKER_SKILL_NAME="github-issue-autofix"
+    export AGENT_UNCHANGED_VERDICT="REJECT"
+    export BUDGET_FILE="${ITEMS_REPO}/.loop/loop-budget.json"
+    export DELIVERY="pr_create"
+    export DETECT_BRANCH_MATCH="main"
+    export DETECT_BRANCH_MATCH_MODE="list"
+    export DETECT_ITEMS="true"
+    export DETECT_MAX_TARGETS="3"
+    export DETECT_PR_ENABLED="false"
+    export DETECT_PR_NUMBER=""
+    export DETECT_SCRIPT="${DETECT_TMP}/detect-items.sh"
+    export GITHUB_OUTPUT="${DETECT_TMP}/github_output"
+    export GITHUB_TOKEN=""
+    export LEVEL="L2"
+    export LOOP_NAME="items"
+    export RUNNER_TEMP="${DETECT_TMP}"
+    export RUN_LOG_FILE="${ITEMS_REPO}/.loop/loop-run-log.md"
+    export STATE_BRANCH="main"
+    export STATE_FILE="${ITEMS_REPO}/.loop/state-items.json"
+    : > "${GITHUB_OUTPUT}"
+    unset CI_SWEEPER_WORKFLOW_RUN_ID LOOP_SCOPED_HEAD_BRANCH
+    stub_checkout_context "${ITEMS_REPO}"
+}
+
+# run_items_main runs detect.sh main with checkout_context entering ITEMS_REPO.
+run_items_main() {
+    run --separate-stderr bash -c "
+        source '$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh'
+        checkout_context() { cd '${ITEMS_REPO}' || return 1; }
+        main
+    "
+}
+
+# output_matrix_keys prints the comma-joined target keys of the target_matrix output.
+output_matrix_keys() {
+    awk '/^target_matrix<</ {f = 1; next} f && /^TARGET_MATRIX_/ {exit} f' "${GITHUB_OUTPUT}" \
+        | jq -r '[.[].target_json.key] | join(",")'
+}
+
+@test "items empty array behaves like skip" {
+    local detect_json
+
+    for detect_json in \
+        '{"status":"ok","skip":false,"result":{"items":[]}}' \
+        '{"status":"ok","skip":true}'; do
+        make_items_repo "${detect_json}"
+        run_items_main
+        [ "$status" -eq 0 ]
+        grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+        grep -qx 'skip_reason=no_changes' "${GITHUB_OUTPUT}"
+        rm -rf "${ITEMS_REPO}"
+    done
+}
+
+@test "items ignored when detect_items false" {
+    local detect_json value
+
+    detect_json="$(items_detect_json 1 2)"
+    for value in false ""; do
+        make_items_repo "${detect_json}"
+        export DETECT_ITEMS="${value}"
+        run_items_main
+        [ "$status" -eq 0 ]
+        [ "$(output_matrix_keys)" = "integration:main" ]
+        rm -rf "${ITEMS_REPO}"
+    done
+
+    make_items_repo "${detect_json}"
+    DETECT_ITEMS="false"
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[0]}")" = "${detect_json}" ]
+    [ "$(jq -r '.target_json.entity // "none"' <<< "${CANDIDATES_JSON[0]}")" = "none" ]
+}
+
+@test "items mode candidate result contains only that item's context" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1,"title":"one"},"verifier_context":"## Issue 1"},
+        {"key":"issue:2","context":{"issue_number":2}}]}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[0]}")" = '{"status":"ok","skip":false,"result":{"issue_number":1,"title":"one","key":"issue:1"}}' ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[1]}")" = '{"status":"ok","skip":false,"result":{"issue_number":2,"key":"issue:2"}}' ]
+    [ "$(jq -r '.verifier_context' <<< "${CANDIDATES_JSON[0]}")" = "## Issue 1" ]
+    [ "$(jq -r '.verifier_context' <<< "${CANDIDATES_JSON[1]}")" = "" ]
+}
+
+@test "items mode caps at detect_max_targets" {
+    make_items_repo "$(items_detect_json 1 2 3 4)"
+    export DETECT_MAX_TARGETS="3"
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'should_run=true' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=target_budget' "${GITHUB_OUTPUT}"
+    [ "$(output_matrix_keys)" = "integration:main#issue:1,integration:main#issue:2,integration:main#issue:3" ]
+    [ "$(wc -l < "${DETECT_TMP}/detect_calls")" -eq 1 ]
+}
+
+@test "items mode creates one candidate per item with per-item key" {
+    make_items_repo "$(items_detect_json 1 2)"
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(wc -l < "${DETECT_TMP}/detect_calls")" -eq 1 ]
+    run jq -c '.target_json | {mode, key, from: .from.branch, to: .to.branch, entity}' <<< "${CANDIDATES_JSON[0]}"
+    [ "$output" = '{"mode":"integration","key":"integration:main#issue:1","from":"main","to":"main","entity":{"kind":"issue","number":1}}' ]
+    run jq -c '.target_json | {mode, key, entity}' <<< "${CANDIDATES_JSON[1]}"
+    [ "$output" = '{"mode":"integration","key":"integration:main#issue:2","entity":{"kind":"issue","number":2}}' ]
+    [ "$(jq -r '.target_json.from.ref' <<< "${CANDIDATES_JSON[0]}")" = "$(git -C "${ITEMS_REPO}" rev-parse HEAD)" ]
+}
+
+@test "items mode exits the detect phase when the detect script fails" {
+    make_items_repo '{"status":"error","message":"items detect failed"}'
+    printf '#!/usr/bin/env bash\ncat %q\nexit 3\n' "${DETECT_TMP}/items-detect.json" > "${DETECT_SCRIPT}"
+    run_items_main
+    [ "$status" -ne 0 ]
+    [[ ${stderr} == *"items detect failed"* ]]
+    [[ ${stderr} == *"loop-detect: detect script failed"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode fails on invalid or duplicate item key" {
+    local entry expected
+
+    for entry in \
+        '{"status":"ok","skip":false,"result":{"items":[{"key":"issue:1"},{"key":"issue:1"}]}}|duplicate item key' \
+        '{"status":"ok","skip":false,"result":{"items":[{"key":"a b"}]}}|invalid item key'; do
+        expected="${entry#*|}"
+        make_items_repo "${entry%%|*}"
+        run_items_main
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"*"${expected}"* ]]
+        run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+        rm -rf "${ITEMS_REPO}"
+    done
+}
+
+@test "items mode ignores branch-level circuit breaker" {
+    make_items_repo "$(items_detect_json 1)" \
+        '{"integration:main":{"last_sha":"deadbeef","consecutive_failures":3,"pending":{"pr":7}}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:1" ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 0 ]
+    [ "${PENDING_PR_BLOCKED}" -eq 0 ]
+}
+
+@test "items mode missing items key is an error" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"issue_number":1}}'
+    run_items_main
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"::error::"*"items"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode orders by last_run oldest first before cap" {
+    make_items_repo "$(items_detect_json 1 2 3)" \
+        '{"integration:main#issue:1":{"last_run":"2026-11-10T00:00:00Z","consecutive_failures":0},
+          "integration:main#issue:2":{"last_run":"2026-11-01T00:00:00Z","consecutive_failures":0}}'
+    export DETECT_MAX_TARGETS="2"
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'skip_reason=target_budget' "${GITHUB_OUTPUT}"
+    [ "$(output_matrix_keys)" = "integration:main#issue:3,integration:main#issue:2" ]
+}
+
+@test "items mode requires single branch and detect_pr_enabled false" {
+    local -a cases=(
+        'DETECT_BRANCH_MATCH=main,develop'
+        $'DETECT_BRANCH_MATCH=main\ndevelop'
+        'DETECT_BRANCH_MATCH=release/*'
+        'DETECT_BRANCH_MATCH_MODE=regex'
+        'DETECT_PR_ENABLED=true'
+        'DETECT_ITEMS=yes'
+    )
+    local assignment checked=0
+
+    make_items_repo "$(items_detect_json 1)"
+    run validate_detect_inputs
+    [ "$status" -eq 0 ]
+    DETECT_BRANCH_MATCH_MODE="glob"
+    run validate_detect_inputs
+    [ "$status" -eq 0 ]
+    rm -rf "${ITEMS_REPO}"
+
+    for assignment in "${cases[@]}"; do
+        make_items_repo "$(items_detect_json 1)"
+        export "${assignment?}"
+        run --separate-stderr validate_detect_inputs
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"*"detect_items"* ]]
+        rm -rf "${ITEMS_REPO}"
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 6 ]
+
+    make_items_repo "$(items_detect_json 1)"
+    export DETECT_BRANCH_MATCH="main,develop"
+    run_items_main
+    [ "$status" -eq 1 ]
+    [ ! -s "${GITHUB_OUTPUT}" ]
+    [ ! -s "${DETECT_TMP}/detect_calls" ]
+}
+
+@test "items mode since falls back to HEAD~10 without state" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:2":{"last_sha":"cafebabecafebabecafebabecafebabecafebabe","consecutive_failures":0}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "$(git -C "${ITEMS_REPO}" rev-parse HEAD~10)" ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[1]}")" = "cafebabecafebabecafebabecafebabecafebabe" ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[1]}")" == *"Last SHA: cafebabecafebabecafebabecafebabecafebabe"* ]]
+}
+
+@test "items mode skips item with open breaker and reports circuit_breaker skip_reason when all blocked" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:1":{"consecutive_failures":3}}'
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:2" ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 1 ]
+    rm -rf "${ITEMS_REPO}"
+
+    make_items_repo "$(items_detect_json 1)" \
+        '{"integration:main#issue:1":{"consecutive_failures":3}}'
+    run_items_main
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::Circuit breaker open for integration:main#issue:1"* ]]
+    grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode skips item with pending pr" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:2":{"consecutive_failures":0,"pending":{"pr":42}}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:1" ]
+    [ "${PENDING_PR_BLOCKED}" -eq 1 ]
 }
