@@ -1,9 +1,10 @@
 #######################################
 # Description:
 #   Loop workflow: Issue triage (entity / L1)
+#   Daily schedule lists open triage candidates and fans out one run per Issue.
 #
 # Usage:
-#   Runs on: issues, issue_comment, workflow_dispatch
+#   Runs on: issues, issue_comment, schedule, workflow_dispatch
 #
 # Design Rules:
 #   None
@@ -17,13 +18,16 @@
 #######################################
 name: on-loop-github-issue-triage
 
-run-name: "${{ github.workflow }} #${{ github.event.issue.number || inputs.issue_number }}"
+run-name: "${{ github.workflow }} ${{ github.event.issue.number && format('#{0}', github.event.issue.number) || inputs.issue_number && format('#{0}', inputs.issue_number) || github.event_name }}"
 
 on:
   issues:
     types: [opened, reopened, labeled]
   issue_comment: # zizmor: ignore[dangerous-triggers]
     types: [created]
+  schedule:
+    - cron: "0 7 * * *"
+      timezone: Etc/UTC
   workflow_dispatch:
     inputs:
       issue_number:
@@ -40,10 +44,31 @@ permissions:
 
 concurrency:
   cancel-in-progress: false
-  group: loop-github-issue-triage-${{ github.event.issue.number || inputs.issue_number || github.run_id }}
+  group: ${{ github.event_name == 'schedule' && 'loop-state-main' || format('loop-github-issue-triage-{0}', github.event.issue.number || inputs.issue_number || github.run_id) }}
   queue: max
 
 jobs:
+  list:
+    if: github.event_name == 'schedule'
+    outputs:
+      count: ${{ steps.list.outputs.count }}
+      issues: ${{ steps.list.outputs.issues }}
+    permissions:
+      contents: read
+      issues: read
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: List triage Issues
+        id: list
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: bash scripts/self/loop/list_triage_issues.sh
   loop:
     # Intake gate mirrors detect_issue.sh should_skip_issue so loop-authored
     # side effects never re-enter the queue: finalize posts the comment and
@@ -55,52 +80,67 @@ jobs:
     # triage:ready (detect skips it, so admitting it only queues skipped runs).
     # autofix is owned by on-loop-github-issue-autofix.yaml and must not
     # double-intake here.
+    # loop:code-review Issues are findings filed by the code-review loop; the
+    # issues webhook refuses them so they are not triaged as user reports.
+    # Schedule intake is gated by the list job (count > 0), not by this mirror.
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      !cancelled() &&
+      (needs.list.result == 'success' || needs.list.result == 'skipped') &&
       (
-        github.event_name == 'issues' &&
-        github.event.sender.type != 'Bot' &&
-        !contains(github.event.issue.labels.*.name, 'triage:failed') &&
+        (github.event_name == 'schedule' && needs.list.outputs.count > 0) ||
+        github.event_name == 'workflow_dispatch' ||
         (
-          github.event.repository.private == true ||
+          github.event_name == 'issues' &&
+          github.event.sender.type != 'Bot' &&
+          !contains(github.event.issue.labels.*.name, 'triage:failed') &&
+          !contains(github.event.issue.labels.*.name, 'loop:code-review') &&
           (
-            contains(fromJSON('["opened","reopened"]'), github.event.action) &&
-            contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
-          ) ||
-          (
-            github.event.action == 'labeled' &&
+            github.event.repository.private == true ||
             (
-              github.event.sender.login == github.repository_owner ||
+              contains(fromJSON('["opened","reopened"]'), github.event.action) &&
+              contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
+            ) ||
+            (
+              github.event.action == 'labeled' &&
               (
-                github.event.sender.login == github.event.issue.user.login &&
-                contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
+                github.event.sender.login == github.repository_owner ||
+                (
+                  github.event.sender.login == github.event.issue.user.login &&
+                  contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
+                )
+              )
+            )
+          ) &&
+          (
+            contains(fromJSON('["opened","reopened"]'), github.event.action) ||
+            (
+              github.event.action == 'labeled' &&
+              contains(
+                fromJSON('["needs-triage","triage:needs-info"]'),
+                github.event.label.name
               )
             )
           )
-        ) &&
+        ) ||
         (
-          contains(fromJSON('["opened","reopened"]'), github.event.action) ||
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request == null &&
+          github.event.sender.type != 'Bot' &&
+          github.event.comment.user.type != 'Bot' &&
+          contains(github.event.issue.labels.*.name, 'triage:needs-info') &&
+          !contains(github.event.issue.labels.*.name, 'triage:failed') &&
           (
-            github.event.action == 'labeled' &&
-            contains(
-              fromJSON('["needs-triage","triage:needs-info"]'),
-              github.event.label.name
-            )
+            github.event.repository.private == true ||
+            contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
           )
         )
-      ) ||
-      (
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request == null &&
-        github.event.sender.type != 'Bot' &&
-        github.event.comment.user.type != 'Bot' &&
-        contains(github.event.issue.labels.*.name, 'triage:needs-info') &&
-        !contains(github.event.issue.labels.*.name, 'triage:failed') &&
-        (
-          github.event.repository.private == true ||
-          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
-        )
       )
+    needs: list
+    strategy:
+      fail-fast: false
+      matrix:
+        issue: ${{ fromJSON(needs.list.outputs.issues || format('[{0}]', github.event.issue.number || inputs.issue_number || 0)) }}
+      max-parallel: 3
     uses: ./.github/workflows/ci-loop-caller-entity.yaml
     with:
       agent_checker_effort: medium
@@ -147,7 +187,7 @@ jobs:
       budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
       delivery: issue_comment
-      detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
+      detect_env_json: ${{ github.event_name == 'schedule' && format('{{"ISSUE_EVENT_NAME":"schedule","ISSUE_NUMBER":{0}}}', toJSON(matrix.issue)) || github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(matrix.issue)) || '{}' }}
       detect_script: .agents/skills/github-issue-triage/scripts/detect_issue.sh
       finalize_label_allowlist: |
         needs-triage
@@ -158,6 +198,7 @@ jobs:
         triage:needs-info
         triage:ready
         triage:failed
+      handoff_artifact_suffix: -issue-${{ matrix.issue }}
       level: L1
       loop_name: github-issue-triage
       state_branch: main
