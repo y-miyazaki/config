@@ -42,6 +42,10 @@
 
 _DELIVER_MESSAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+_LOOP_DELIVER_MESSAGE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./ensure_labels.sh disable=SC1091
+source "${_LOOP_DELIVER_MESSAGE_LIB_DIR}/ensure_labels.sh"
+
 #######################################
 # apply_loop_message_labels: Add and remove the allowlisted labels on an Issue or PR
 #
@@ -70,7 +74,7 @@ function apply_loop_message_labels {
     local labels_file="$2"
     local allowlist="${3:-}"
     local requested filtered rejected add_file err encoded
-    local -a encoded_names=()
+    local -a add_names=() encoded_names=()
 
     if [[ ! -f ${labels_file} ]]; then
         return 0
@@ -98,6 +102,11 @@ function apply_loop_message_labels {
     fi
 
     if [[ $(jq -r '.add | length' <<< "${filtered}") -gt 0 ]]; then
+        mapfile -t add_names < <(jq -r '.add[]' <<< "${filtered}")
+        if ! err="$(ensure_repo_labels "${add_names[@]}" 2>&1)"; then
+            fail_loop_message "${err}"
+            return 1
+        fi
         add_file="$(mktemp)"
         jq -c '{labels: .add}' <<< "${filtered}" > "${add_file}"
         if ! err="$(gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${number}/labels" --input "${add_file}" 2>&1 > /dev/null)"; then
@@ -568,6 +577,8 @@ function issue_create_summary {
 
 #######################################
 # deliver_issue_create: Open one Issue per new finding in issues.json
+# Allowlist labels that do not exist yet are created first (needs issues: write); only when
+# at least one Issue will be filed.
 #
 # Globals:
 #   LOOP_MESSAGE_DIR - Directory holding issues.json
@@ -687,6 +698,12 @@ function deliver_issue_create {
         new_hashes+=("${hash}")
     done
     echo "::notice title=loop-deliver::findings=${count} duplicates=${skipped_dupes} cut_by_limit=${dropped} to_create=${#new_titles[@]}"
+
+    # Create missing labels only when an Issue will be filed.
+    if [[ ${#new_titles[@]} -gt 0 ]] && ! err="$(ensure_repo_labels "${labels[@]}" 2>&1)"; then
+        fail_loop_message "${err}"
+        return 1
+    fi
 
     loop_meta_reset
     meta_block="$(build_loop_meta_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
