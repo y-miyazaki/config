@@ -57,7 +57,7 @@ permissions:
 
 jobs:
   terraform-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-terraform.yaml@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+    uses: y-miyazaki/config/.github/workflows/ci-terraform.yaml@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
     with:
       modules_path: modules

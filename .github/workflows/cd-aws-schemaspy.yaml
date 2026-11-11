@@ -216,7 +216,7 @@ jobs:
 
       - name: Setup Parameters
         id: setup-parameters
-        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
         with:
           db_host_input: ${{ secrets.DB_HOST }}
@@ -239,7 +239,7 @@ jobs:
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
         id: bastion-connect
-        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
         with:
           bastion_instance_id: ${{ inputs.bastion_instance_id }}
@@ -248,7 +248,7 @@ jobs:
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
         with:
           bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
@@ -401,7 +401,7 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
         with:
           ssm_pid: ${{ steps.start-port-forward.outputs.ssm_pid }}
@@ -452,7 +452,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0df05252224eb807b24e04d4f7d1d883e9a6b312 # v1.9.7
+        uses: y-miyazaki/config/.github/actions/summary@8bc9aaf4012ede28f68eabe2edab4074566bc11f # v1.9.7
 
         with:
           artifacts: |
