@@ -1,5 +1,21 @@
-# CI workflow: Terraform lint on push/PR (no AWS credentials)
-# Copy to .github/workflows/on-ci-push-terraform.yaml in your repository.
+#######################################
+# Description:
+#   CI workflow: Terraform lint on push/PR (no AWS credentials)
+#   Copy to .github/workflows/on-ci-push-terraform.yaml in your repository.
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push, pull_request
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-terraform
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

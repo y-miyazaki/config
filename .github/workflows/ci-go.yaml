@@ -1,5 +1,22 @@
-# Reusable workflow: Go CI (test, lint, security)
-# Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#######################################
+# Description:
+#   Reusable workflow: Go CI (test, lint, security)
+#   Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-go.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-go
 
 on:

@@ -1,8 +1,24 @@
-# CI workflow: mise lockfile update on push
-# Usage: This workflow requires a GitHub App for auto-committing lockfile updates.
-# 1. Create a GitHub App with "Contents: Read & Write" repository permission.
-# 2. Install the App on the target repository (or organization).
-# 3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
+#######################################
+# Description:
+#   CI workflow: mise lockfile update on push
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push
+#   This workflow requires a GitHub App for auto-committing lockfile updates.
+#   1. Create a GitHub App with "Contents: Read & Write" repository permission.
+#   2. Install the App on the target repository (or organization).
+#   3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-mise-update-lock
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

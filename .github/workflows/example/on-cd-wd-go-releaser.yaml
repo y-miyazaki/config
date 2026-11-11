@@ -1,5 +1,21 @@
-# Manual workflow: Go application release with GoReleaser
-# Allows manual release creation by specifying a version.
+#######################################
+# Description:
+#   Manual workflow: Go application release with GoReleaser
+#   Allows manual release creation by specifying a version.
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-cd-wd-go-releaser
 
 run-name: "${{ github.workflow }} (${{ inputs.version }})"

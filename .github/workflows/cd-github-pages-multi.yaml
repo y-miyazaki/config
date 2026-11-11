@@ -1,5 +1,22 @@
-# Reusable workflow: Merge multiple artifacts and deploy to GitHub Pages
-# Downloads multiple artifacts, merges them into a single site with an index page, and deploys.
+#######################################
+# Description:
+#   Reusable workflow: Merge multiple artifacts and deploy to GitHub Pages
+#   Downloads multiple artifacts, merges them into a single site with an index page, and deploys.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-github-pages-multi.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-github-pages-multi
 
 on:

@@ -1,5 +1,22 @@
-# Reusable workflow: ECS CI/CD (verify and deploy ECS services)
-# Scans service directories, validates jsonnet formatting, and runs ecspresso verify/deploy.
+#######################################
+# Description:
+#   Reusable workflow: ECS CI/CD (verify and deploy ECS services)
+#   Scans service directories, validates jsonnet formatting, and runs ecspresso verify/deploy.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-ecs.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-ecs
 
 on:

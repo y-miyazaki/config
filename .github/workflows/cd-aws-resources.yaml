@@ -1,5 +1,22 @@
-# Reusable workflow: Generate AWS resources and upload as zip artifact
-# Generates AWS resource outputs and uploads them for downstream consumption.
+#######################################
+# Description:
+#   Reusable workflow: Generate AWS resources and upload as zip artifact
+#   Generates AWS resource outputs and uploads them for downstream consumption.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-resources.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-resources
 
 on:

@@ -1,5 +1,22 @@
-# Reusable workflow: APM install and audit
-# Installs the pinned APM CLI, runs apm install, and validates with apm audit.
+#######################################
+# Description:
+#   Reusable workflow: APM install and audit
+#   Installs the pinned APM CLI, runs apm install, and validates with apm audit.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-apm-audit
 
 on:

@@ -1,7 +1,20 @@
-# Loop workflow: Issue triage (entity / L1)
-# Design: docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
-# Spec: docs/superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md
-# Requires repository secret: AGENT_TOKEN (engine API key).
+#######################################
+# Description:
+#   Loop workflow: Issue triage (entity / L1)
+#
+# Usage:
+#   Runs on: issues, issue_comment, workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   - Requires repository secret: AGENT_TOKEN (engine API key).
+#
+# References:
+#   - Design: docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
+#   - Spec: docs/superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md
+#######################################
 name: on-loop-github-issue-triage
 
 run-name: "${{ github.workflow }} #${{ github.event.issue.number || inputs.issue_number }}"

@@ -1,5 +1,22 @@
-# Reusable workflow: SchemaSpy database documentation generation
-# Generates database schema documentation using SchemaSpy and uploads artifacts.
+#######################################
+# Description:
+#   Reusable workflow: SchemaSpy database documentation generation
+#   Generates database schema documentation using SchemaSpy and uploads artifacts.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-schemaspy.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-schemaspy
 
 on:

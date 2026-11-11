@@ -1,5 +1,22 @@
-# Reusable workflow: AWS service control (unified interface)
-# Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#######################################
+# Description:
+#   Reusable workflow: AWS service control (unified interface)
+#   Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-service-control.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-service-control
 
 on:

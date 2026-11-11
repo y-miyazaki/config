@@ -1,5 +1,22 @@
-# Reusable workflow: repository security (Trivy + SBOM + dependency review)
-# Runs Trivy filesystem scanning, CycloneDX SBOM generation, and PR dependency review.
+#######################################
+# Description:
+#   Reusable workflow: repository security (Trivy + SBOM + dependency review)
+#   Runs Trivy filesystem scanning, CycloneDX SBOM generation, and PR dependency review.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-security.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-security
 
 on:

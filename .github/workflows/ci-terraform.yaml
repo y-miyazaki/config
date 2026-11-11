@@ -1,5 +1,22 @@
-# Reusable workflow: Terraform CI (fmt, validate, tflint) without AWS credentials
-# For plan/apply with remote state, use ci-aws-terraform. For Trivy/SBOM, use ci-security.
+#######################################
+# Description:
+#   Reusable workflow: Terraform CI (fmt, validate, tflint) without AWS credentials
+#   For plan/apply with remote state, use ci-aws-terraform. For Trivy/SBOM, use ci-security.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-terraform.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-terraform
 
 on:

@@ -1,12 +1,23 @@
-# Loop workflow: Review merged code
-# Reviews the code merged since the last run with Claude Code's built-in code-review skill and files the
-# findings a checker approved as GitHub Issues (L2, delivery issue_create).
-# Design doc: docs/explanation/loop-engineering/workflows/loop-code-review-workflow-design.md
-# Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
-# Requires the repository label `loop:code-review` (applied to every created Issue; never remove it, the
-# duplicate check lists Issues by this label).
-# Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#######################################
+# Description:
+#   Loop workflow: Review merged code
+#   Reviews the code merged since the last run with Claude Code's built-in code-review skill and files the
+#   findings a checker approved as GitHub Issues (L2, delivery issue_create).
+#
+# Usage:
+#   Runs on: schedule, workflow_dispatch
+#
+# Design Rules:
+#   - The repository label `loop:code-review` is created on the first filed Issue if missing; it is applied to every created Issue. Never remove it: the duplicate check lists Issues by this label.
+#
+# Dependencies:
+#   - Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+#   - Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/workflows/loop-code-review-workflow-design.md
+#   - Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: on-loop-code-review
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

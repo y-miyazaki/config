@@ -1,4 +1,20 @@
-# CI workflow: Markdown lint on push/PR
+#######################################
+# Description:
+#   CI workflow: Markdown lint on push/PR
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push, pull_request
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-markdown
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

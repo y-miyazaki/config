@@ -1,10 +1,24 @@
-# Reusable workflow: Loop caller orchestration (branch/PR)
-# Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
-# Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
-# Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
-# Do not fan out resolved tokens via job outputs — see:
-#   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#######################################
+# Description:
+#   Reusable workflow: Loop caller orchestration (branch/PR)
+#   Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   - Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
+#   - Do not fan out resolved tokens via job outputs — see: docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#
+# Dependencies:
+#   None
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: ci-loop-caller
 
 on:

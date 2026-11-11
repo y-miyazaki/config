@@ -1,4 +1,19 @@
-# CD workflow: Build and deploy MkDocs to GitHub Pages
+#######################################
+# Description:
+#   CD workflow: Build and deploy MkDocs to GitHub Pages
+#
+# Usage:
+#   Runs on: push, workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-cd-mkdocs
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

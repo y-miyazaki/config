@@ -1,5 +1,22 @@
-# Reusable workflow: Go application release with GoReleaser
-# Builds cross-platform binaries and creates GitHub releases.
+#######################################
+# Description:
+#   Reusable workflow: Go application release with GoReleaser
+#   Builds cross-platform binaries and creates GitHub releases.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-go-releaser
 
 on:

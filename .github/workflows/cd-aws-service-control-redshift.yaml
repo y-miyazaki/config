@@ -1,5 +1,22 @@
-# Reusable workflow: Redshift cluster control (pause/resume)
-# Pauses or resumes Redshift clusters with automatic resource discovery.
+#######################################
+# Description:
+#   Reusable workflow: Redshift cluster control (pause/resume)
+#   Pauses or resumes Redshift clusters with automatic resource discovery.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-service-control-redshift
 
 on:

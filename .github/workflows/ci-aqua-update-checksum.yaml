@@ -1,6 +1,22 @@
-# Reusable workflow: Aqua checksum update
-# Updates aqua-checksums.json and auto-commits via GitHub App.
-# Requires: BOT_APP_PRIVATE_KEY and BOT_APP_CLIENT_ID secrets.
+#######################################
+# Description:
+#   Reusable workflow: Aqua checksum update
+#   Updates aqua-checksums.json and auto-commits via GitHub App.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   - Requires: BOT_APP_PRIVATE_KEY and BOT_APP_CLIENT_ID secrets.
+#
+# References:
+#   None
+#######################################
 name: ci-aqua-update-checksum
 
 on:

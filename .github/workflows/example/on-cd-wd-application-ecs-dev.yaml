@@ -1,4 +1,20 @@
-# Manual workflow: ECS deployment (application, dev)
+#######################################
+# Description:
+#   Manual workflow: ECS deployment (application, dev)
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-cd-wd-application-ecs-dev
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

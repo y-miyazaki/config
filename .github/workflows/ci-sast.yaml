@@ -1,5 +1,22 @@
-# Reusable workflow: static application security testing (SAST)
-# Runs CodeQL and Semgrep. Language-specific; keep govulncheck in ci-go.
+#######################################
+# Description:
+#   Reusable workflow: static application security testing (SAST)
+#   Runs CodeQL and Semgrep. Language-specific; keep govulncheck in ci-go.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-sast
 
 on:
