@@ -155,3 +155,15 @@ EXPECTED_PERMS="$(printf '%s\n' \
     run grep -q 'AUTOFIX_SCAN' <<<"$(job_block loop)"
     [ "$status" -ne 0 ]
 }
+
+@test "run-name has no literal # before the expression and formats numbers with event_name fallback" {
+    local line
+    line="$(grep '^run-name:' "${WF}")"
+    [ -n "${line}" ]
+    run grep -qE '#\$\{\{' <<<"${line}"
+    [ "$status" -ne 0 ]
+    grep -q "github.event.issue.number && format('#{0}', github.event.issue.number)" <<<"${line}"
+    grep -q "github.event.client_payload.issue_number && format('#{0}', github.event.client_payload.issue_number)" <<<"${line}"
+    grep -q "inputs.issue_number && format('#{0}', inputs.issue_number)" <<<"${line}"
+    grep -q '|| github.event_name }}"$' <<<"${line}"
+}

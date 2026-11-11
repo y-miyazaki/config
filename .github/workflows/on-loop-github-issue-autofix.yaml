@@ -21,7 +21,7 @@
 #######################################
 name: on-loop-github-issue-autofix
 
-run-name: "${{ github.workflow }} #${{ github.event.issue.number && format('#{0}', github.event.issue.number) || github.event.client_payload.issue_number && format('#{0}', github.event.client_payload.issue_number) || inputs.issue_number && format('#{0}', inputs.issue_number) || github.event_name }}"
+run-name: "${{ github.workflow }} ${{ github.event.issue.number && format('#{0}', github.event.issue.number) || github.event.client_payload.issue_number && format('#{0}', github.event.client_payload.issue_number) || inputs.issue_number && format('#{0}', inputs.issue_number) || github.event_name }}"
 
 on:
   issues:
