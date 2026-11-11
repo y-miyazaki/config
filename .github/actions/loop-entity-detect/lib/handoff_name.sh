@@ -27,6 +27,8 @@ set -euo pipefail
 #   0 on success; 1 on missing run id or invalid suffix
 #######################################
 function build_handoff_artifact_name {
+    # Pin the C locale so the character class is ASCII-only (not locale collation)
+    local LC_ALL=C
     local run_id="${1:-}"
     local suffix="${2:-}"
     if [[ -z ${run_id} ]]; then

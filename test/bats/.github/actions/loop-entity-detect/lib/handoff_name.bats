@@ -9,6 +9,7 @@ bats_require_minimum_version 1.5.0
 # - build_handoff_artifact_name appends the suffix to the run id
 # - build_handoff_artifact_name accepts letters, digits, dot, underscore, and hyphen
 # - build_handoff_artifact_name fails with ::error:: on characters outside the allowed set
+# - build_handoff_artifact_name rejects non-ASCII suffixes regardless of locale
 # - build_handoff_artifact_name fails without a run id
 # - main writes artifact_name to GITHUB_OUTPUT
 
@@ -46,6 +47,15 @@ setup() {
     local bad
     for bad in "a b" "a/b" 'a"b' "a:b" "a*b" $'a\nb'; do
         run --separate-stderr build_handoff_artifact_name 123 "${bad}"
+        [ "$status" -ne 0 ]
+        [[ ${stderr} == *"::error::"* ]]
+    done
+}
+
+@test "handoff artifact name rejects non-ASCII suffix even under a UTF-8 locale" {
+    local bad
+    for bad in "é" "ñ" "ａ"; do
+        LC_ALL=en_US.UTF-8 run --separate-stderr build_handoff_artifact_name 123 "${bad}"
         [ "$status" -ne 0 ]
         [[ ${stderr} == *"::error::"* ]]
     done
