@@ -20,6 +20,14 @@
 # - Scan mode skips when open autofix PRs (AUTOFIX_PR_LABEL + AUTOFIX_BRANCH_PREFIX head) reach
 #   AUTOFIX_MAX_OPEN_PRS; single-Issue mode ignores that limit
 # - Scan mode fails closed (status=error, exit 1) on any gh failure
+# - Items mode (AUTOFIX_ITEMS=true, single-Issue mode only): a non-skip result is
+#   result.items with exactly one element (key issue:<N>); skip results use result {}.
+#   Ignored when AUTOFIX_SCAN=true (scan output wins). Any other value keeps the legacy output
+# - PR list limits (AUTOFIX_PR_SCAN_LIMIT, default 1000) apply to both the closed-PR and the
+#   open-PR fetch in scan mode; a list that reaches the limit may be truncated, so fail closed
+# - Closed PRs are filtered client-side to head branches starting with AUTOFIX_BRANCH_PREFIX
+#   before Fixes #N matching and latest closedAt; empty prefix skips that filter
+# - jq -e exit status 1 means "no match"; any other non-zero status is a jq error and fails closed
 # - Fail closed when PR scan prerequisites (GITHUB_REPOSITORY, token, gh) are missing
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 on success; fatal errors emit status=error JSON and exit 1
@@ -39,7 +47,11 @@
 #   AUTOFIX_SOURCE_LABEL      Scan mode (required): label an Issue must carry
 #   AUTOFIX_SOURCE_MARKER     Scan mode (required): marker string the Issue body must contain
 #   AUTOFIX_PR_LABEL          Scan mode (required): label identifying autofix PRs
-#   AUTOFIX_BRANCH_PREFIX     Scan mode: head branch prefix of autofix PRs (open-PR limit)
+#   AUTOFIX_BRANCH_PREFIX     Scan mode: head branch prefix of autofix PRs (open-PR limit and closed-PR
+#                             filter; empty = no closed-PR prefix filter)
+#   AUTOFIX_PR_SCAN_LIMIT     Scan mode: positive integer, max PRs fetched per list (default 1000;
+#                             leading zeros are decimal); reaching it fails closed
+#   AUTOFIX_ITEMS             "true" emits result.items (one element) in single-Issue mode
 #   AUTOFIX_MAX_OPEN_PRS      Scan mode: skip when open autofix PRs >= this integer (unset = no limit)
 #######################################
 
@@ -242,7 +254,7 @@ function ensure_pr_scan_prerequisites {
 #   None
 #
 # Returns:
-#   0 when a matching open/draft PR exists; 1 when none
+#   0 when a matching open/draft PR exists; 1 when none (calls output_error on gh or jq failure)
 #
 # Usage:
 #   if open_pr_fixes_issue "${ISSUE_NUMBER}"; then skip="true"; fi
@@ -250,7 +262,7 @@ function ensure_pr_scan_prerequisites {
 #######################################
 function open_pr_fixes_issue {
     local issue_number="$1"
-    local prs pattern token
+    local prs pattern token rc=0
 
     token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
     export GH_TOKEN="${token}"
@@ -264,7 +276,12 @@ function open_pr_fixes_issue {
     pattern="(?i)\\b(fix(?:e[sd])?|close[sd]?|resolve[sd]?)\\s+#${issue_number}\\b"
     jq -e --arg re "${pattern}" '
         map(select((.title + "\n" + (.body // "")) | test($re))) | length > 0
-    ' <<< "${prs}" > /dev/null
+    ' <<< "${prs}" > /dev/null 2>&1 || rc=$?
+    case "${rc}" in
+        0) return 0 ;;
+        1) return 1 ;;
+        *) output_error "github-issue-autofix: failed to evaluate open PRs (jq exit ${rc})" ;;
+    esac
 }
 
 #######################################
@@ -295,6 +312,7 @@ function build_result_json {
 #
 # Globals:
 #   ISSUE_NUMBER
+#   AUTOFIX_ITEMS
 #
 # Arguments:
 #   $1 - skip flag (true|false)
@@ -324,7 +342,19 @@ function output_json {
         return 0
     fi
 
-    result_json="$(build_result_json)"
+    if [[ ${AUTOFIX_ITEMS:-} == "true" ]]; then
+        if [[ ${skip} == "true" ]]; then
+            result_json="{}"
+        else
+            result_json="$(jq -n -c --argjson n "${ISSUE_NUMBER}" '{items: [{
+                key: ("issue:" + ($n | tostring)),
+                entity: {kind: "issue", number: $n},
+                context: {issue_number: $n}
+            }]}')"
+        fi
+    else
+        result_json="$(build_result_json)"
+    fi
     json_object \
         status "ok" \
         skip "${skip}" \
@@ -340,6 +370,8 @@ function output_json {
 #   AUTOFIX_SOURCE_MARKER
 #   AUTOFIX_PR_LABEL
 #   AUTOFIX_MAX_OPEN_PRS
+#   AUTOFIX_PR_SCAN_LIMIT
+#   PR_SCAN_LIMIT (set; decimal integer, default 1000)
 #
 # Arguments:
 #   None
@@ -365,6 +397,14 @@ function scan_validate_env {
     if [[ -n ${AUTOFIX_MAX_OPEN_PRS:-} && ! ${AUTOFIX_MAX_OPEN_PRS} =~ ^[0-9]+$ ]]; then
         output_error "github-issue-autofix: AUTOFIX_MAX_OPEN_PRS must be a non-negative integer"
     fi
+
+    PR_SCAN_LIMIT=1000
+    if [[ -n ${AUTOFIX_PR_SCAN_LIMIT:-} ]]; then
+        if [[ ! ${AUTOFIX_PR_SCAN_LIMIT} =~ ^[0-9]+$ || $((10#${AUTOFIX_PR_SCAN_LIMIT})) -lt 1 ]]; then
+            output_error "github-issue-autofix: AUTOFIX_PR_SCAN_LIMIT must be a positive integer"
+        fi
+        PR_SCAN_LIMIT=$((10#${AUTOFIX_PR_SCAN_LIMIT}))
+    fi
 }
 
 #######################################
@@ -374,6 +414,7 @@ function scan_validate_env {
 #   GITHUB_REPOSITORY
 #   GH_TOKEN
 #   GITHUB_TOKEN
+#   PR_SCAN_LIMIT
 #
 # Arguments:
 #   None
@@ -390,7 +431,7 @@ function scan_validate_env {
 #######################################
 function scan_list_open_prs {
     export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-    gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 200 \
+    gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit "${PR_SCAN_LIMIT}" \
         --json number,title,body,headRefName,labels 2> /dev/null
 }
 
@@ -505,7 +546,7 @@ function scan_latest_closed_at {
 #   None
 #
 # Returns:
-#   0 when a newer human comment exists; 1 when none (calls output_error when gh fails)
+#   0 when a newer human comment exists; 1 when none (calls output_error when gh or jq fails)
 #
 # Usage:
 #   if scan_has_newer_human_comment 12 "${closed_at}"; then ...; fi
@@ -516,11 +557,47 @@ function scan_has_newer_human_comment {
     if ! comments="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${1}/comments?per_page=100" 2> /dev/null)"; then
         output_error "github-issue-autofix: failed to list comments for Issue #${1}"
     fi
+    local rc=0
     jq -s -e --arg closed "${2}" '
         [.[] | (if type == "array" then .[] else empty end)
              | select((.user.type // "") != "Bot")
              | .created_at // ""] | any(. > $closed)
-    ' <<< "${comments}" > /dev/null
+    ' <<< "${comments}" > /dev/null 2>&1 || rc=$?
+    case "${rc}" in
+        0) return 0 ;;
+        1) return 1 ;;
+        *) output_error "github-issue-autofix: failed to evaluate comments for Issue #${1} (jq exit ${rc})" ;;
+    esac
+}
+
+#######################################
+# scan_assert_below_limit: Fail closed when a PR list may have been truncated
+#
+# Globals:
+#   PR_SCAN_LIMIT
+#
+# Arguments:
+#   $1 - PR JSON array
+#   $2 - List name for the error message
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (calls output_error when the list is unreadable or reaches the limit)
+#
+# Usage:
+#   scan_assert_below_limit "${open_prs}" "open"
+#
+#######################################
+function scan_assert_below_limit {
+    local length
+    if ! length="$(jq -e 'length' <<< "$1" 2> /dev/null)"; then
+        output_error "github-issue-autofix: unreadable ${2} PR list"
+    fi
+    if [[ ${length} -ge ${PR_SCAN_LIMIT} ]]; then
+        output_error "github-issue-autofix: ${2} PR list reached AUTOFIX_PR_SCAN_LIMIT (${PR_SCAN_LIMIT}); results may be truncated"
+    fi
 }
 
 #######################################
@@ -529,6 +606,8 @@ function scan_has_newer_human_comment {
 # Globals:
 #   GITHUB_REPOSITORY
 #   AUTOFIX_PR_LABEL
+#   AUTOFIX_BRANCH_PREFIX
+#   PR_SCAN_LIMIT
 #   GH_TOKEN
 #   GITHUB_TOKEN
 #   SCAN_ITEMS (set)
@@ -549,24 +628,36 @@ function scan_has_newer_human_comment {
 #######################################
 function scan_build_items {
     local numbers="$1" open_prs="$2"
-    local closed_prs closed_at number pattern kept="[]" count=0
+    local closed_prs closed_at number pattern kept="[]" count=0 rc
     SCAN_ITEMS="[]"
 
     export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
     if ! closed_prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state closed \
-        --label "${AUTOFIX_PR_LABEL}" --limit 200 \
+        --label "${AUTOFIX_PR_LABEL}" --limit "${PR_SCAN_LIMIT}" \
         --json number,title,body,closedAt,headRefName 2> /dev/null)"; then
         output_error "github-issue-autofix: failed to list closed PRs"
+    fi
+    scan_assert_below_limit "${closed_prs}" "closed"
+    if [[ -n ${AUTOFIX_BRANCH_PREFIX:-} ]]; then
+        if ! closed_prs="$(jq -c --arg prefix "${AUTOFIX_BRANCH_PREFIX}" '
+            [.[] | select((.headRefName // "") | startswith($prefix))]
+        ' <<< "${closed_prs}")"; then
+            output_error "github-issue-autofix: failed to filter closed PRs"
+        fi
     fi
 
     while IFS= read -r number; do
         [[ -n ${number} ]] || continue
         pattern="(?i)\\b(fix(?:e[sd])?|close[sd]?|resolve[sd]?)\\s+#${number}\\b"
-        if jq -e --arg re "${pattern}" '
+        rc=0
+        jq -e --arg re "${pattern}" '
             any(.[]; ((.title // "") + "\n" + (.body // "")) | test($re))
-        ' <<< "${open_prs}" > /dev/null; then
-            continue
-        fi
+        ' <<< "${open_prs}" > /dev/null 2>&1 || rc=$?
+        case "${rc}" in
+            0) continue ;;
+            1) ;;
+            *) output_error "github-issue-autofix: failed to evaluate open PRs (jq exit ${rc})" ;;
+        esac
 
         closed_at="$(scan_latest_closed_at "${closed_prs}" "${number}")"
         if [[ -n ${closed_at} ]] && ! scan_has_newer_human_comment "${number}" "${closed_at}"; then
@@ -613,6 +704,7 @@ function scan_main {
     ensure_pr_scan_prerequisites
 
     open_prs="$(scan_list_open_prs)" || output_error "github-issue-autofix: failed to list open PRs"
+    scan_assert_below_limit "${open_prs}" "open"
     if [[ -n ${AUTOFIX_MAX_OPEN_PRS:-} ]]; then
         open_count="$(scan_open_pr_count "${open_prs}")"
         if [[ ${open_count} -ge $((10#${AUTOFIX_MAX_OPEN_PRS})) ]]; then

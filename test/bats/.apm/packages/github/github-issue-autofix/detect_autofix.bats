@@ -222,7 +222,7 @@ assert_jq() {
 @test "scan: closed autofix PR without human comment excludes Issue" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
     printf '%s' '[{"user":{"type":"Bot"},"created_at":"2026-01-01T00:00:00Z"}]' > "${FIX}/comments_20.json"
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
@@ -232,7 +232,7 @@ assert_jq() {
 @test "scan: human comment newer than closedAt re-includes Issue" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
     printf '%s' '[{"user":{"type":"User"},"created_at":"2026-01-03T00:00:00Z"}]' > "${FIX}/comments_20.json"
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
@@ -242,7 +242,7 @@ assert_jq() {
 @test "scan: human comment older than closedAt keeps Issue excluded" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
     printf '%s' '[{"user":{"type":"User"},"created_at":"2026-01-01T00:00:00Z"}]' > "${FIX}/comments_20.json"
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
@@ -252,7 +252,7 @@ assert_jq() {
 @test "scan: newer Bot comment does not re-include Issue" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
     printf '%s' '[{"user":{"type":"Bot"},"created_at":"2026-01-05T00:00:00Z"}]' > "${FIX}/comments_20.json"
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
@@ -262,7 +262,7 @@ assert_jq() {
 @test "scan: uses the latest closedAt among multiple closed PRs" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"},{"number":4,"body":"Resolves #20","closedAt":"2026-01-10T00:00:00Z","headRefName":"c"},{"number":5,"body":"Fixes #200","closedAt":"2026-02-01T00:00:00Z","headRefName":"d"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"},{"number":4,"body":"Resolves #20","closedAt":"2026-01-10T00:00:00Z","headRefName":"bot/autofix/c"},{"number":5,"body":"Fixes #200","closedAt":"2026-02-01T00:00:00Z","headRefName":"bot/autofix/d"}]' > "${FIX}/closed_prs.json"
     # human comment is after the first closedAt but before the latest one -> still handled
     printf '%s' '[{"user":{"type":"User"},"created_at":"2026-01-05T00:00:00Z"}]' > "${FIX}/comments_20.json"
     run bash "${DETECT_SCRIPT}"
@@ -273,7 +273,7 @@ assert_jq() {
 @test "scan: comments API is only called for Issues referenced by a closed autofix PR" {
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) <(mk_issue 21) <(mk_issue 22) > "${FIX}/issues.json"
-    printf '%s' '[{"number":3,"body":"Fixes #21","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '[{"number":3,"body":"Fixes #21","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     assert_jq '[.result.items[].key] == ["issue:20","issue:22"]'
@@ -360,7 +360,7 @@ EOF
         rm -rf "${BATS_TEST_TMPDIR}/fix"
         setup_scan_stub
         jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
-        printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"b"}]' > "${FIX}/closed_prs.json"
+        printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/b"}]' > "${FIX}/closed_prs.json"
         : > "${FIX}/fail_${f}"
         run bash "${DETECT_SCRIPT}"
         [ "$status" -eq 1 ]
@@ -376,4 +376,172 @@ EOF
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     assert_jq '[.result.items[].key] == ["issue:7"]'
+}
+
+# ---------------------------------------------------------------------------
+# AUTOFIX_ITEMS (single-Issue items output), PR list limits, jq error handling
+# ---------------------------------------------------------------------------
+
+@test "items: AUTOFIX_ITEMS with AUTOFIX_SCAN gives the scan output" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 5) > "${FIX}/issues.json"
+    AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == false and ([.result.items[].key] == ["issue:5"])'
+    assert_jq '.message | test("eligible")'
+}
+
+@test "items: AUTOFIX_ITEMS=true emits one item for a single Issue" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    ISSUE_NUMBER=7 AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == false and (.message | length) > 0'
+    assert_jq '.result == {items:[{key:"issue:7",entity:{kind:"issue",number:7},context:{issue_number:7}}]}'
+}
+
+@test "items: AUTOFIX_ITEMS=true skips with empty result when ISSUE_NUMBER is empty" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == true and .result == {}'
+}
+
+@test "items: AUTOFIX_ITEMS=true skips with empty result when an open PR fixes the Issue" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    printf '%s' '[{"number":1,"title":"t","body":"Fixes #7","isDraft":false}]' > "${FIX}/open_prs.json"
+    ISSUE_NUMBER=7 AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == true and .result == {}'
+}
+
+@test "items: output without AUTOFIX_ITEMS or with another value is unchanged" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+    ISSUE_NUMBER=7 AUTOFIX_ITEMS=false run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+}
+
+@test "items: single-issue open PR list with broken JSON yields status error" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    printf '%s' 'not json' > "${FIX}/open_prs.json"
+    ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+}
+
+@test "limit: AUTOFIX_PR_SCAN_LIMIT defaults to 1000 for open and closed fetches" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.skip == false'
+    [ "$(grep -c -- '--state open.*--limit 1000' "${FIX}/calls.log")" -eq 1 ]
+    [ "$(grep -c -- '--state closed.*--limit 1000' "${FIX}/calls.log")" -eq 1 ]
+}
+
+@test "limit: closed PR list reaching the limit fails closed" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    jq -n -c '[range(0;3) as $n | {number:$n,title:"t",body:"",closedAt:"2026-01-01T00:00:00Z",headRefName:"bot/autofix/x"}]' > "${FIX}/closed_prs.json"
+    AUTOFIX_PR_SCAN_LIMIT=3 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+    grep -q -- '--state closed.*--limit 3' "${FIX}/calls.log"
+}
+
+@test "limit: invalid AUTOFIX_PR_SCAN_LIMIT yields status error" {
+    setup_scan_stub
+    local v
+    for v in 0 abc -1 1.5 "1 2"; do
+        AUTOFIX_PR_SCAN_LIMIT="${v}" run bash "${DETECT_SCRIPT}"
+        [ "$status" -eq 1 ]
+        assert_jq '.status == "error" and .skip == true and (.message | test("AUTOFIX_PR_SCAN_LIMIT"))'
+    done
+}
+
+@test "limit: leading zeros are decimal" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    jq -n -c '[range(0;10) as $n | {number:$n,title:"t",body:"",closedAt:"2026-01-01T00:00:00Z",headRefName:"bot/autofix/x"}]' > "${FIX}/closed_prs.json"
+    AUTOFIX_PR_SCAN_LIMIT=010 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error"'
+    jq -n -c '[range(0;9) as $n | {number:$n,title:"t",body:"",closedAt:"2026-01-01T00:00:00Z",headRefName:"bot/autofix/x"}]' > "${FIX}/closed_prs.json"
+    AUTOFIX_PR_SCAN_LIMIT=010 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and ([.result.items[].key] == ["issue:20"])'
+}
+
+@test "limit: open PR list reaching the limit fails closed" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    jq -n -c '[range(0;3) as $n | {number:$n,title:"t",body:"",headRefName:"x",labels:[]}]' > "${FIX}/open_prs.json"
+    AUTOFIX_PR_SCAN_LIMIT=3 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+    grep -q -- '--state open.*--limit 3' "${FIX}/calls.log"
+}
+
+@test "limit: lists below the limit work normally" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    jq -n -c '[range(0;2) as $n | {number:$n,title:"t",body:"",headRefName:"x",labels:[]}]' > "${FIX}/open_prs.json"
+    jq -n -c '[range(0;2) as $n | {number:$n,title:"t",body:"",closedAt:"2026-01-01T00:00:00Z",headRefName:"bot/autofix/x"}]' > "${FIX}/closed_prs.json"
+    AUTOFIX_PR_SCAN_LIMIT=3 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == false and ([.result.items[].key] == ["issue:20"])'
+}
+
+@test "prefix: closed PRs outside AUTOFIX_BRANCH_PREFIX are ignored for matching" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) <(mk_issue 21) > "${FIX}/issues.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"other/loop/3"},{"number":4,"body":"Fixes #21","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/4"}]' > "${FIX}/closed_prs.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '[.result.items[].key] == ["issue:20"]'
+}
+
+@test "prefix: empty AUTOFIX_BRANCH_PREFIX skips the closed PR prefix filter" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"other/loop/3"}]' > "${FIX}/closed_prs.json"
+    AUTOFIX_BRANCH_PREFIX= run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.skip == true and .result == {}'
+}
+
+@test "jq errors: broken comments JSON yields status error" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"bot/autofix/3"}]' > "${FIX}/closed_prs.json"
+    printf '%s' '{{ not json' > "${FIX}/comments_20.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+}
+
+@test "jq errors: broken open PR JSON yields status error in scan mode" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    printf '%s' '{{ not json' > "${FIX}/open_prs.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+}
+
+@test "jq errors: open PR with non-string title yields status error in scan mode" {
+    setup_scan_stub
+    jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
+    printf '%s' '[{"number":1,"title":5,"body":"x","headRefName":"x","labels":[]}]' > "${FIX}/open_prs.json"
+    run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
 }
