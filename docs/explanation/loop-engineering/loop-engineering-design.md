@@ -332,7 +332,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 - State read is performed inline by `loop-detect` (`lib/state.sh`); writes are performed inline by `loop-finalize` (`lib/write_state.sh`)
 - `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, and token usage
 - `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
-- With `detect_items`, state targets are keyed `integration:<branch>#<key>`, one per item. `loop-finalize` removes a `#` key when it has no `pending` and `last_run` is older than 30 days, whatever the outcome. `write_state` retries the state push up to 3 times on `fetch first` / `non-fast-forward`
+- With `detect_items`, state targets are keyed `integration:<branch>#<key>`, one per item. `loop-finalize` removes a `#` key when it has no `pending` and `last_run` is older than 30 days, whatever the outcome. `write_state` retries the state push up to 3 times on `fetch first` / `non-fast-forward`, only when `finalize_commit_paths` is empty; a `[remote rejected]` ruleset rejection is not retried
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
 - On first run, `loop-detect` resolves `last_sha` with a default (`HEAD~10`) when the state file or target entry is absent (`lib/state.sh`)
 
@@ -594,13 +594,13 @@ Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream w
 
 ### Failure Mode Countermeasures
 
-| Symptom                                         | Cause                                                     | Countermeasure                                                           |
-| ----------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Same PR auto-fixed 5+ times                     | Weak checker (Infinite Fix Loop)                          | Retry limit of 3. Replace checker with a more powerful model             |
-| CI fails but checker approves                   | Test execution skipped (Checker Theater)                  | "Look for reasons to reject" framing. Make test output mandatory         |
+| Symptom                                         | Cause                                                     | Countermeasure                                                                                      |
+| ----------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Same PR auto-fixed 5+ times                     | Weak checker (Infinite Fix Loop)                          | Retry limit of 3. Replace checker with a more powerful model                                        |
+| CI fails but checker approves                   | Test execution skipped (Checker Theater)                  | "Look for reasons to reject" framing. Make test output mandatory                                    |
 | Closed items accumulate in `.loop/state-*.json` | No pruning (State Rot)                                    | 30-day prune of terminal `pull_request:*` keys and aged per-item `#` keys; one file per `loop_name` |
-| Team cannot understand change intent            | Auto-merge expansion (Comprehension Debt Spiral)          | Mandatory weekly digest. Route medium-risk to human gate                 |
-| Quality degrades due to context bloat           | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls                        |
+| Team cannot understand change intent            | Auto-merge expansion (Comprehension Debt Spiral)          | Mandatory weekly digest. Route medium-risk to human gate                                            |
+| Quality degrades due to context bloat           | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls                                                   |
 
 ### Design Invariants
 
@@ -651,7 +651,7 @@ Key indicators for evaluating loop health. Measurement infrastructure is not req
 
 Defines how a loop behaves when an execution fails or is rejected. This section covers **detect cursor** (`targets[key].last_sha`) and **outcome metadata** — not the merge-gated `pending` block written at L2 fix-PR creation (see [State cursor (general rule)](#state-cursor-general-rule) under Finalize).
 
-**Retry scope**: Retry occurs across cron executions, not within a single Workflow run. A single run either succeeds or fails — it does not self-retry.
+**Retry scope**: Retry occurs across cron executions, not within a single Workflow run. A single run either succeeds or fails — it does not self-retry. The only exception is the state push race retry described under [STATE Files](#state-files).
 
 **State Transition Diagram:**
 

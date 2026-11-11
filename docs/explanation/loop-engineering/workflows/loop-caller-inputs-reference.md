@@ -192,7 +192,7 @@ pull_request mode (ci-sweeper, detect_pr_enabled: true)
 
 With `detect_items: true`, a detect script may return `result.items[]`, each `{key, entity: {kind, number}, context, verifier_context}`. `loop-detect` turns every item into its own target and keeps state per item under `integration:<branch>#<key>`.
 
-- Requires exactly one literal branch in `detect_branch_match` and `detect_pr_enabled: false`.
+- Requires `detect_pr_enabled: false`, `detect_branch_match_mode` `list` or `glob` (`regex` is rejected), and a `detect_branch_match` that is exactly one literal branch name matching `^[a-zA-Z0-9/_.-]+$` (no comma or glob characters).
 - The branch-level `integration:<branch>` circuit breaker is not consulted. The per-item breaker and `pending` state apply instead.
 - Items are ordered by state `last_run`, oldest first, then capped by `detect_max_targets`.
 - Each execute cell passes `target_key` to the run log and to `loop-worktree-setup`, which names the agent branch `<prefix>/<skill>/<YYYYMMDD-HHMMSS>-<slug>-<hash8>`.
@@ -273,7 +273,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `detect_branch_match`       | string  | Comma-separated integration branch patterns to watch. Empty = no integration watch; rejected with `pr_push`                                                                                                                                                                                                                                                                                                                                         | `main` (pr-revise: unset)                                    |
 | `detect_branch_match_mode`  | string  | How to interpret `detect_branch_match`: `list`, `glob`, or `regex`                                                                                                                                                                                                                                                                                                                                                                                  | `glob`                                                       |
 | `detect_env_json`           | string  | JSON object of domain detect-script environment variables (see [Domain detect environment](#domain-detect-environment-detect_env_json))                                                                                                                                                                                                                                                                                                             | `{}`                                                         |
-| `detect_items` | boolean | Per-target mode. The detect script's `result.items[]` becomes one target per item, keyed `integration:<branch>#<key>`. Requires exactly one literal `detect_branch_match` and `detect_pr_enabled: false`; see [Per-target items](#per-target-items-detect_items) | `false` |
+| `detect_items`              | boolean | Per-target mode. The detect script's `result.items[]` becomes one target per item, keyed `integration:<branch>#<key>`. Requires `detect_pr_enabled: false`, mode `list` or `glob`, and one literal branch name in `detect_branch_match`; see [Per-target items](#per-target-items-detect_items)                                                                                                                                                     | `false`                                                      |
 | `detect_max_targets`        | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                                                                                                                                                    | `3`                                                          |
 | `detect_pr_bot_allowlist`   | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots. The bot-author heuristic is a scanning filter only: when `detect_pr_number` names a PR, author provenance never excludes it, while `detect_pr_denylist` tokens (`fork`, `draft`, `wip_title`, `label:*`) still apply                                                                                                                                             | `""`                                                         |
 | `detect_pr_denylist`        | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                                                                                                                                                   | `fork,draft,label:no-loop` (pr-revise: `fork,label:no-loop`) |
@@ -387,11 +387,11 @@ An empty `detect_script` on `ci-loop-caller.yaml` (or `loop-detect`) makes `loop
 
 See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller-reusable-design.md#detect-permissions). Branch/PR thin callers `uses:` **`ci-loop-caller.yaml`**; entity-event callers `uses:` **`ci-loop-caller-entity.yaml`**.
 
-| Job / scope                      | Permissions                                               |
-| -------------------------------- | --------------------------------------------------------- |
+| Job / scope                      | Permissions                                                               |
+| -------------------------------- | ------------------------------------------------------------------------- |
 | `ci-loop-caller` `detect`        | `actions: write`, `contents: read`, `issues: read`, `pull-requests: read` |
-| `ci-loop-caller-entity` `detect` | `actions: write`, `contents: read`, `issues: read`        |
-| Thin caller workflow             | execute baseline + `actions: write`                       |
+| `ci-loop-caller-entity` `detect` | `actions: write`, `contents: read`, `issues: read`                        |
+| Thin caller workflow             | execute baseline + `actions: write`                                       |
 
 Loop behavior (git-only vs `detect_pr_enabled` vs `gh run list`) is selected by caller `with:` (`detect_script`, `detect_pr_enabled`, `detect_env_json`) — not by choosing a different reusable workflow file.
 
