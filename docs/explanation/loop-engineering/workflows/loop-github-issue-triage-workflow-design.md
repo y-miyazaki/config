@@ -41,7 +41,7 @@ The lister selects an Issue when all of these hold:
 - The Issue has no label that starts with `triage:`.
 - The author is a Bot and the body contains `<!-- code-review:fp:`.
 - The Issue is not already handled: a comment with `<!-- github-issue-triage:v1 -->` exists and no human comment is newer than the latest such comment.
-- The run-log holds fewer than 3 `error` or `rejected` rows for `target_key` `entity:issue:<N>` within the last 7 days.
+- The run-log holds fewer than 3 failure rows for `target_key` `entity:issue:<N>` within the last 7 days. A failure row has `outcome` `error`, `rejected` or `unchanged` (for triage: `message.md` is empty or `message_labels.json` is invalid, so nothing was delivered); `skipped` is not counted.
 
 The lister reads at most 200 Issues, orders the remainder by oldest last attempt (never-attempted Issues first), and returns at most 3. `detect_issue.sh` still decides each Issue: for `ISSUE_EVENT_NAME=schedule` it skips any Issue with a `triage:*` label, and it hydrates title, body and labels from the API when `ISSUE_NUMBER` is set and those fields are empty.
 
@@ -55,7 +55,7 @@ Each row is one action a person can take, the loop response, and what the person
 | Add `needs-triage` or `triage:needs-info`                            | The Webhook path re-triages the Issue                                                                           | Labels and the comment are updated                                                                      | -          |
 | Answer the question on a `triage:needs-info` Issue with a comment    | The Webhook path (`issue_comment`) re-triages the Issue. This also applies to `loop:code-review` Issues         | Labels are updated                                                                                      | T2         |
 | Do nothing (Issue filed by code-review)                              | The daily schedule triages up to 3 Issues that match the conditions in [Intake paths](#intake-paths)                                      | Labels and a comment are applied. The Issue does not become an autofix input                            | T0         |
-| Comment on a low-confidence code-review Issue                        | The next schedule run re-triages it when a human comment is newer than the marker comment                    | The comment is updated. The Issue is not triaged again until you comment                                | T4         |
+| Comment on a low-confidence code-review Issue                        | The next schedule run re-triages it when a human comment is newer than the marker comment                    | A new triage comment is posted. The Issue is not triaged again until you comment                                | T4         |
 | Add `needs-triage` by hand to a `loop:code-review` Issue             | Nothing runs immediately, because the Webhook `issues` branch rejects the label `loop:code-review`            | To run now, start `workflow_dispatch` with the Issue number                                             | -          |
 | Start `workflow_dispatch` with an Issue number                       | The workflow triages that Issue                                                                                 | Same as above                                                                                           | -          |
 | Keep a `triage:failed` Issue                                         | Neither the Webhook path nor the schedule picks it up                                                           | After you fix the cause, remove the label and start `workflow_dispatch`                                 | T3         |
@@ -73,6 +73,8 @@ Each row is one action a person can take, the loop response, and what the person
 ### Deferred dogfood
 
 Live `workflow_dispatch` dry-run requires repository secrets (`AGENT_TOKEN`, optional bot app). Treat end-to-end Actions dogfood as deferred until secrets are available; local verification is Bats + `actionlint`.
+
+The schedule path and the matrix-based Webhook / `workflow_dispatch` path have not been verified on GitHub because the workflows are not run until `AGENT_TOKEN` is refreshed. When they first run, check that `fromJSON` works when the `list` job is skipped, that the matrix expression resolves for each event, that the `loop` job `if` is evaluated before an empty matrix is expanded, and that the `loop-state-main` concurrency group with `queue: max` queues as expected.
 
 Labels that do not exist yet are created by the workflow before they are added (`ensure_repo_labels`), so the result of `POST .../issues/<n>/labels` naming a missing label no longer matters. The allowlist still bounds which labels can be created.
 
@@ -123,7 +125,7 @@ on-loop-github-issue-triage.yaml
   loop → matrix over Issue numbers (fail-fast: false, max-parallel: 3); uses ci-loop-caller-entity.yaml
            detect  → loop-entity-detect
                        (detect_issue.sh reads GITHUB_EVENT_PATH;
-                        workflow_dispatch may pass ISSUE_NUMBER via detect_env_json)
+                        workflow_dispatch / schedule pass ISSUE_NUMBER (schedule also ISSUE_EVENT_NAME) via detect_env_json)
            execute → ci-loop-agent (agent-l1 reads only; finalize-l1 has issues: write and runs loop-finalize (Deliver Message) and the run-log; L1 has no finalize-l2, so no PR)
            record-skip → budget | circuit_breaker
 ```

@@ -73,6 +73,23 @@ if_branch() {
     grep -q 'scripts/self/loop/list_triage_issues.sh' <<<"${block}"
 }
 
+@test "workflow-level permissions are empty and the loop job holds the caller write block" {
+    grep -qx 'permissions: {}' "${WF}"
+    local perms
+    perms="$(job_block loop | awk '/^    permissions:/ {f=1; next} f && /^    [a-z]/ {exit} f' | sed 's/^ *//')"
+    [ "${perms}" = "$(printf '%s\n' \
+        'actions: write' \
+        'contents: write' \
+        'copilot-requests: write # zizmor: ignore[excessive-permissions]' \
+        'issues: write' \
+        'pull-requests: write')" ]
+}
+
+@test "list job does not pass GITHUB_REPOSITORY explicitly" {
+    run grep -q 'GITHUB_REPOSITORY' <<<"$(job_block list)"
+    [ "$status" -ne 0 ]
+}
+
 @test "loop job needs list and gates with !cancelled(), list result and a schedule branch" {
     local block iff
     block="$(job_block loop)"

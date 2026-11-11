@@ -10,8 +10,8 @@ bats_require_minimum_version 1.5.0
 #   fingerprint marker and Issues with a null body are left out
 # - an Issue whose triage comment is not followed by a newer human comment stays out; a newer
 #   human comment brings it back, while Bot comments and older human comments do not
-# - three error or rejected run-log rows inside the window leave an Issue out; two rows, rows older
-#   than the window and skipped rows do not
+# - three error, rejected or unchanged run-log rows inside the window leave an Issue out; two rows,
+#   rows older than the window and skipped rows do not
 # - exclusions are applied before the limit, and Issues are ordered by oldest last attempt first
 # - a missing run-log, non-JSON lines and rows without target_key do not stop the run
 # - nothing selected writes issues=[] and a notice; a failing gh api exits 1
@@ -277,6 +277,27 @@ ok_count() {
     run_list
     [ "$status" -eq 1 ]
     ! grep -q '^issues=' "${OUT}"
+}
+
+@test "drops issues with three recent unchanged rows" {
+    set_issues "$(issue 1)"
+    log_row 2026-11-08T00:00:00Z unchanged 1
+    log_row 2026-11-09T00:00:00Z unchanged 1
+    log_row 2026-11-10T00:00:00Z unchanged 1
+    run_list
+    ok_count 0
+    [ "$(selected)" = "" ]
+}
+
+@test "keeps an issue with two unchanged rows and any number of skipped rows" {
+    set_issues "$(issue 1)"
+    log_row 2026-11-08T00:00:00Z unchanged 1
+    log_row 2026-11-09T00:00:00Z unchanged 1
+    log_row 2026-11-09T01:00:00Z skipped 1
+    log_row 2026-11-10T00:00:00Z skipped 1
+    run_list
+    ok_count 1
+    [ "$(selected)" = "1" ]
 }
 
 @test "keeps an issue with two recent failures" {

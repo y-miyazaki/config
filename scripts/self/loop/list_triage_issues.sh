@@ -19,7 +19,7 @@
 #   - The comments API is called at most once per Issue, and only for Issues that pass the cheap
 #     filters (labels, author, marker, run-log failure count)
 #   - Failure count = run-log rows of this loop and Issue (target_key entity:issue:<N>) inside the
-#     last TRIAGE_FAIL_WINDOW_DAYS days with outcome error or rejected; >= TRIAGE_FAIL_MAX excludes
+#     last TRIAGE_FAIL_WINDOW_DAYS days with outcome error, rejected or unchanged (skipped is not counted); >= TRIAGE_FAIL_MAX excludes
 #   - Order after all exclusions: last attempt (max run_id with outcome != skipped) ascending, Issues
 #     with no attempt first, ties keep the API order (oldest created first); then TRIAGE_LIST_LIMIT
 #   - A missing or unreadable run-log, non-JSON lines and rows without target_key never stop the run
@@ -156,7 +156,7 @@ function load_run_log_rows {
 }
 
 #######################################
-# recent_failure_count: Print the error or rejected rows of an Issue since the cutoff
+# recent_failure_count: Print the error, rejected or unchanged rows of an Issue since the cutoff
 #
 # Globals:
 #   LOOP_NAME
@@ -176,7 +176,7 @@ function load_run_log_rows {
 function recent_failure_count {
     jq -r --arg loop "${LOOP_NAME}" --arg key "entity:issue:$2" --arg cutoff "$3" '
         [.[] | select(.loop_name == $loop and .target_key == $key
-            and (.outcome == "error" or .outcome == "rejected")
+            and (.outcome == "error" or .outcome == "rejected" or .outcome == "unchanged")
             and ((.run_id // "") >= $cutoff))] | length
     ' <<< "$1"
 }

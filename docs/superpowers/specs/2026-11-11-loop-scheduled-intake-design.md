@@ -151,14 +151,14 @@ overview の第5.1節は、triage を branch の caller の対象ごとのター
 
 - コメントは REST(`gh api repos/{repo}/issues/{N}/comments --paginate`)で取り、`user.type != "Bot"` で人間を判定する(GraphQL の `gh issue view --json comments` は `author.login` しか返さず、Bot の見分けが曖昧になる)。基準は `created_at`(`updated_at` は使わない。triage は新規コメントを作り、PATCH しない)。
 
-**再試行の上限(Failure Mode の「再試行は3回」):** L1 は state を書かないので、run-log を使う。`loop-run-log` に記録される `target_key`(`entity:issue:<N>`、第4.5節)で、**直近7日に triage の実行が失敗した記録が3回以上ある Issue を、一覧から外す**(3日の窓だと、毎日実行では古い記録が窓から出て、4日おきに再び拾われる)。さらに、**run-log の最終試行が古い Issue(記録のない Issue が先)から並べる**。失敗が続く Issue が先頭3件を占めて、ほかの Issue が拾われなくなる飢餓を防ぐ。
+**再試行の上限(Failure Mode の「再試行は3回」):** L1 は state を書かないので、run-log を使う。`loop-run-log` に記録される `target_key`(`entity:issue:<N>`、第4.5節)で、**直近7日に triage の実行が失敗した記録が3回以上ある Issue を、一覧から外す**(7日の窓だと、毎日実行では古い記録が窓から出て、4日おきに再び拾われる)。さらに、**run-log の最終試行が古い Issue(記録のない Issue が先)から並べる**。失敗が続く Issue が先頭3件を占めて、ほかの Issue が拾われなくなる飢餓を防ぐ。
 
-- **「失敗」の定義:** その `target_key`(`entity:issue:<N>`)の run-log の行で `outcome` が `error` または `rejected`。`skipped`(予算の skip など)は数えない。Webhook 経由の再 triage の失敗も同じキーで数える(意図どおり)。detect ジョブ自体の失敗は run-log に残らないので数えられない。
+- **「失敗」の定義:** その `target_key`(`entity:issue:<N>`)の run-log の行で `outcome` が `error`、`rejected`、または `unchanged`(triage では message.md が空、または message_labels.json が不正で何も届けられなかった場合)。`skipped`(予算の skip など)は数えない。Webhook 経由の再 triage の失敗も同じキーで数える(意図どおり)。detect ジョブ自体の失敗は run-log に残らないので数えられない。
 - **fail-open:** run-log が読めないとき、外さずに進む。run-log の push は3回失敗すると記録を捨てるため、並行する実行が重なると失敗が過小に数えられうる(残るリスク)。読み方は `budget_exceeded` と同じ(JSONL を1行ずつ `jq` で読む)。
 
 **切り詰めの順序:** スクリプトは、古い順に `gh` で最大200件まで読み(ページ送りを含む)、上のすべての除外をかけた後で、先頭3件を返す(除外の前に3件で切ると、除外される Issue が窓を埋める)。200件を読んでも3件に満たなければ、満たした分だけ返す。件数とコメント API の呼び出し回数(Issue ごとに最大1回)の上限を、スクリプトの header に書く。
 
-**残るリスク:** run-log の窓の外(3日より前)に失敗した Issue は、再び拾われる。歯止めは、1回の件数(3)、1日の予算、1日1回の間隔。
+**残るリスク:** run-log の窓の外(7日より前)に失敗した Issue は、再び拾われる。歯止めは、1回の件数(3)、1日の予算、1日1回の間隔。
 
 ### 5.5 `detect_issue.sh` の hydrate と `schedule`(M-4)
 
@@ -261,13 +261,15 @@ overview の第2.2節を踏襲する。この spec で足す指標(計測は `gh
 ## 11. 残るリスク
 
 - **反映の遅れ:** 定期実行の間隔ぶん遅れる。
-- **triage の再試行の窓:** run-log の3日の窓の外の失敗は、再び拾われる(第5.4節)。
+- **triage の再試行の窓:** run-log の7日の窓の外の失敗は、再び拾われる(第5.4節)。
 - **`autofix` ラベルと定期実行の競合:** 第6.3節。窓は agent の実行時間。
 - **人間の選別なしの入力:** エージェントが書いた Issue が autofix の入力になる(ユーザーの意図どおり)。code-review 側で marker とメンションの無害化と根拠の再検証をしている。
 - **人間のコメントで再び拾われる:** コメントの内容は見ないので、修正と無関係なコメントでも再び拾われる(ユーザーの方針。止めたければ Issue を閉じる)。
 - **直近200件の閉じた PR の窓:** それより古い閉じた autofix の PR は参照できず、その Issue が再び拾われうる(第6.2節)。
 - **`write_state` の再試行を使い切った場合:** state PR のフォールバックになり、並行する別の対象の state と食い違いうる。
 - **`AUTOFIX_MAX_OPEN_PRS`:** 定期実行と Webhook の間は soft。上限を超える分は `detect_max_targets - 1` 以下。
+- **`workflow_dispatch` と定期実行の重複:** 定期実行のセルが triage 中の Issue に `workflow_dispatch` すると、concurrency group が異なるため、triage のコメントが重複しうる(窓は小さく、許容する)。
+- **`unchanged` を失敗に数える:** triage の lister は `unchanged` を失敗に数えるので、正当に空の triage 結果の Issue は7日に3回で除外され、窓が明けると自然に戻る。
 - **GitHub Actions の仕様(未確認):** matrix の式の短絡評価、`list` が skipped のときの `fromJSON`、`loop-state-main` の `queue: max` の上限は、PR 2 の dogfood で確認する。
 
 ## 12. ドキュメントの更新
