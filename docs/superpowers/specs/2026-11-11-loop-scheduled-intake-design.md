@@ -276,7 +276,7 @@ overview の第2.2節を踏襲する。この spec で足す指標(計測は `gh
 - **L1 の観察なしの L2 昇格:** 第2.2節の昇格の条件(overview)と第8節の Slow Down / Kill を、昇格前に観察していない。workflow は GitHub で実行しておらず、Webhook の経路の `detect_items`、pending と circuit breaker の共有、定期実行と Webhook の同時実行は未確認。
 - **`write_state` の再試行を使い切った場合:** state PR のフォールバックになり、並行する別の対象の state と食い違いうる。
 - **`AUTOFIX_MAX_OPEN_PRS`:** 定期実行と Webhook の間は soft。上限を超える分は `detect_max_targets - 1` 以下。
-- **L1 と Webhook の日次予算の共有:** 予算は `loop_name`(`github-issue-autofix`、`.loop/loop-budget.json` で1日10 run)で数えるため、L1 の1日1回の tick が最大3 run を使い、人間の `autofix` ラベルが以前より早く `skip_reason=budget` で断られうる。
+- **定期実行(L2)と Webhook の日次予算の共有:** 予算は `loop_name`(`github-issue-autofix`、`.loop/loop-budget.json` で1日10 run)で数えるため、定期実行(L2)の1日1回の tick が最大3 run を使い、人間の `autofix` ラベルが以前より早く `skip_reason=budget` で断られうる。
 - **`workflow_dispatch` と定期実行の重複:** 定期実行のセルが triage 中の Issue に `workflow_dispatch` すると、concurrency group が異なるため、triage のコメントが重複しうる(窓は小さく、許容する)。
 - **`unchanged` を失敗に数える:** triage の lister は `unchanged` を失敗に数えるので、正当に空の triage 結果の Issue は7日に3回で除外され、窓が明けると自然に戻る。
 - **GitHub Actions の仕様(未確認):** matrix の式の短絡評価、`list` が skipped のときの `fromJSON`、`loop-state-main` の `queue: max` の上限は、PR 2 の dogfood で確認する。
