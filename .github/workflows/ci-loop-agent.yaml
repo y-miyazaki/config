@@ -474,7 +474,7 @@ jobs:
           from_branch: ${{ steps.target.outputs.from_branch }}
           from_ref: ${{ steps.target.outputs.from_ref }}
           github_token: ${{ github.token }}
-          target_key: ${{ steps.target.outputs.key }}
+          target_key: ${{ fromJSON(inputs.target_json).key }}
 
       - name: Execute Bounded Loop
         id: execute
@@ -662,7 +662,7 @@ jobs:
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}
-          target_key: ${{ fromJSON(inputs.target_json).key }}
+          target_key: ${{ steps.target.outputs.key }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
