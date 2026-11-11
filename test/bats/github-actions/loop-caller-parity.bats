@@ -1351,3 +1351,11 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
     workflow_inputs "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
     workflow_inputs "${AGENT}" | grep -qx agent_tool_denylist
 }
+
+@test "detect_script is optional for the branch caller and loop-detect and required for the entity caller" {
+    [ -z "$(workflow_required_inputs "${BRANCH_CALLER}" | grep -x detect_script)" ]
+    [ -z "$(action_required_inputs loop-detect | grep -x detect_script)" ]
+    workflow_required_inputs "${ENTITY_CALLER}" | grep -qx detect_script
+    input_block "${BRANCH_CALLER}" detect_script | grep -qF 'default: ""'
+    input_block "${BRANCH_CALLER}" detect_script | grep -qi 'built-in'
+}

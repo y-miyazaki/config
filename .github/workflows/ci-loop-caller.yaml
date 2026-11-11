@@ -174,8 +174,9 @@ on:
         required: false
         type: string
       detect_script:
-        description: "Path to domain detect_*.sh script"
-        required: true
+        default: ""
+        description: "Path to domain detect_*.sh script. Empty (default) uses the built-in range detect: it runs when files changed between the stored last_sha and HEAD, ignoring .loop/, the state file and the run log"
+        required: false
         type: string
       environment:
         default: default

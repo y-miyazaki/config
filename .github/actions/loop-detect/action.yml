@@ -81,8 +81,9 @@ inputs:
     description: "Target mode priority order (comma-separated)"
     required: false
   detect_script:
-    description: "Path to domain detect script (bash)"
-    required: true
+    default: ""
+    description: "Path to domain detect script (bash). Empty uses the built-in range detect (changed files between last_sha and HEAD, excluding .loop/, the state file and the run log)"
+    required: false
   finalize_label_allowlist:
     default: ""
     description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"

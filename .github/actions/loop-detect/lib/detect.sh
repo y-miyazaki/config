@@ -69,7 +69,7 @@ STATE_FILE="${STATE_FILE-}"
 # against the watched branch worktree (stale PR heads can ship older detect logic).
 #
 # Globals:
-#   DETECT_SCRIPT - Updated in place to an absolute path
+#   DETECT_SCRIPT - Updated in place to an absolute path; empty is left empty (built-in range detect)
 #
 # Arguments:
 #   None
@@ -85,8 +85,8 @@ function resolve_detect_script_path {
     local resolved
 
     if [[ -z ${DETECT_SCRIPT} ]]; then
-        log_detect_error "DETECT_SCRIPT is empty"
-        return 1
+        log_detect_notice "detect-script" "builtin" "range detect (detect_script omitted)"
+        return 0
     fi
 
     if [[ ${DETECT_SCRIPT} == /* ]]; then
@@ -405,6 +405,7 @@ function append_detect_candidate {
     shift 5
     local builder_args=("$@")
     local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive pending_pr
+    local verify_reachable=""
     local target_json candidate
 
     if [[ -n $checkout_ref ]]; then
@@ -428,7 +429,9 @@ function append_detect_candidate {
         return 0
     fi
 
-    last_sha="$(target_last_sha "${target_state}" "${head_branch}")"
+    # Only the built-in range detect needs a reachable last_sha; custom detect scripts keep theirs.
+    [[ -z ${DETECT_SCRIPT} ]] && verify_reachable="true"
+    last_sha="$(target_last_sha "${target_state}" "${head_branch}" "${verify_reachable}")"
     current_sha="$(git rev-parse HEAD)"
     export CI_SWEEPER_HEAD_BRANCH="${head_branch}"
     export STATE_BRANCH
@@ -444,6 +447,7 @@ function append_detect_candidate {
     verifier_context="$(build_verifier_context_from_result "${detect_result}")"
 
     target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
+    target_json="$(jq -c --arg since "${last_sha}" 'if .mode == "integration" then .from.since = $since else . end' <<< "${target_json}")"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
 
     prompt_text="$(build_prompt_text \
@@ -801,7 +805,8 @@ function enrich_target_json_with_ci_context {
 # invoke_detect_script: Run DETECT_SCRIPT; fatal failures exit the detect phase
 #
 # Globals:
-#   DETECT_SCRIPT - Detect script path
+#   DETECT_SCRIPT - Detect script path; empty runs the built-in range_detect
+#   STATE_FILE, RUN_LOG_FILE - Excluded from the built-in range detect
 #
 # Arguments:
 #   $1 - since ref for --scope range
@@ -820,7 +825,11 @@ function invoke_detect_script {
     local detect_status=0
     local detect_result
 
-    detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+    if [[ -z ${DETECT_SCRIPT} ]]; then
+        detect_result="$(range_detect "${last_sha}" "$(git rev-parse HEAD)" "${STATE_FILE}" "${RUN_LOG_FILE:-}")" || detect_status=$?
+    else
+        detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+    fi
     # set -e: without ||, a non-zero detect exit aborts before we can log context or echo stdout to stderr.
 
     if [[ ${detect_status} -ne 0 ]]; then
@@ -1096,7 +1105,6 @@ function write_legacy_outputs {
 #
 #######################################
 function main {
-    : "${DETECT_SCRIPT:?}"
     : "${STATE_FILE:?}"
     : "${LOOP_NAME:?}"
     : "${STATE_BRANCH:?}"
