@@ -173,6 +173,11 @@ on:
         description: "Bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
         required: false
         type: string
+      handoff_artifact_suffix:
+        default: ""
+        description: "Optional suffix for the handoff artifact name loop-handoff-<run_id> (^[A-Za-z0-9._-]*$); set it when this workflow is called several times in one run (matrix) to avoid upload name conflicts"
+        required: false
+        type: string
       level:
         description: "Autonomy: L1 | L2 | L3 (required; no default)"
         required: true
@@ -320,6 +325,7 @@ jobs:
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          handoff_artifact_suffix: ${{ inputs.handoff_artifact_suffix }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           run_log_file: ${{ inputs.run_log_file }}

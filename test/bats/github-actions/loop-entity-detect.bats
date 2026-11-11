@@ -95,6 +95,7 @@ detect_script
 finalize_label_allowlist
 finalize_script
 github_token
+handoff_artifact_suffix
 level
 loop_name
 run_log_file

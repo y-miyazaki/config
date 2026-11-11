@@ -55,6 +55,10 @@ inputs:
   github_token:
     description: Resolved GitHub token for detect scripts and API calls
     required: true
+  handoff_artifact_suffix:
+    default: ""
+    description: "Optional suffix appended to the handoff artifact name loop-handoff-<run_id> (^[A-Za-z0-9._-]*$); set per matrix call to avoid upload name conflicts"
+    required: false
   level:
     description: "Autonomy level: L1 | L2 | L3 (no default; empty fails)"
     required: true
@@ -133,12 +137,14 @@ runs:
       id: handoff
       if: steps.detect.outputs.should_run == 'true'
       shell: bash
-      run: echo "artifact_name=loop-handoff-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+      env:
+        HANDOFF_ARTIFACT_SUFFIX: ${{ inputs.handoff_artifact_suffix }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/handoff_name.sh"
 
     - name: Upload Loop Handoff Artifact
       if: steps.detect.outputs.should_run == 'true'
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: loop-handoff-${{ github.run_id }}
+        name: ${{ steps.handoff.outputs.artifact_name }}
         path: ${{ runner.temp }}/loop-handoff
         retention-days: 1
