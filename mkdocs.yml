@@ -77,6 +77,7 @@ nav:
               - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
               - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
               - Loop-Capable Skills: explanation/loop-engineering/loop-capable-skills.md
+              - Loop Issue Handoff: explanation/loop-engineering/loop-issue-handoff.md
           - Per-loop workflows:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md

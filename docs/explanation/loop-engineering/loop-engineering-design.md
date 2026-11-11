@@ -581,12 +581,16 @@ Layer drift is the one that hurts. Detect refusals are correct but late: workflo
 
 | Caller                         | Intake                                            | `if` gate                                                                                                                        |
 | ------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment` | Non-bot sender; no `triage:failed`; labels limited to `needs-triage` / `triage:needs-info`; comments require `triage:needs-info` |
+| `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment`, `schedule` (daily), dispatch | Webhook `issues`: non-bot sender; no `triage:failed`; no `loop:code-review`; labels limited to `needs-triage` / `triage:needs-info`. `issue_comment`: requires `triage:needs-info`. `schedule`: runs only when the `list` job returns at least one Issue |
 | `on-loop-github-issue-autofix` | `issues` labeled, dispatch                        | `label.name == 'autofix'`                                                                                                        |
 | `on-loop-github-pr-revise`     | comment webhooks, dispatch                        | Non-bot comment author; `@loop` mention; PR-attached comments only                                                               |
 | `on-loop-ci-sweeper`           | `workflow_run` completed                          | Same-repository head; `failure` / `startup_failure` only                                                                         |
 | `on-loop-state-promote`        | `pull_request_target` closed                      | `loop-automation` label                                                                                                          |
 | `on-loop-code-review`          | `schedule`, dispatch (no Webhook intake)          | None needed; the created Issues carry only `loop:code-review`, which no loop listens to (invariant 10)                           |
+
+**Schedule path and Webhook path.** A caller that adds a `schedule` intake keeps the two paths on disjoint Issues. In `on-loop-github-issue-triage`, the Webhook `issues` branch rejects Issues labeled `loop:code-review`, so the Issues that the code-review loop filed are handled only by the schedule path. The `issue_comment` branch is unchanged. Schedule runs use the `loop-state-main` concurrency group because the run-log is pushed to `main`.
+
+**Lister script (third layer).** The schedule path adds a layer between the `if` gate and detect: a lister script (`scripts/self/loop/list_triage_issues.sh`) that builds the set of candidate Issues for a matrix. The lister builds a set only. Detect still judges each Issue (invariant 6 stays: the caller never invokes a second detect script, and the lister output is not a detect result). The `loop` job's `if` for `schedule` is gated by the lister count, not by a mirror of detect.
 
 Classification labels a triage agent applies itself (`bug`, `feature`, `question`, `documentation`) must stay out of its own intake allowlist, and so must `triage:ready`: detect skips an Issue that carries it, so admitting the event only queues runs that end in a skip.
 
@@ -600,6 +604,7 @@ Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream w
 | CI fails but checker approves                   | Test execution skipped (Checker Theater)                  | "Look for reasons to reject" framing. Make test output mandatory                                    |
 | Closed items accumulate in `.loop/state-*.json` | No pruning (State Rot)                                    | 30-day prune of terminal `pull_request:*` keys and aged per-item `#` keys; one file per `loop_name` |
 | Team cannot understand change intent            | Auto-merge expansion (Comprehension Debt Spiral)          | Mandatory weekly digest. Route medium-risk to human gate                                            |
+| Triage keeps retrying the same Issue           | Agent failures leave no label, so the Issue stays eligible | The lister excludes an Issue with 3 or more `error` / `rejected` run-log rows (`target_key` `entity:issue:<N>`) in the last 7 days, and orders by oldest last attempt so failing Issues do not starve others |
 | Quality degrades due to context bloat           | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls                                                   |
 
 ### Design Invariants

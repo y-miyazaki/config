@@ -10,13 +10,13 @@ Workflow and domain design for the `github-issue-triage` entity loop.
 | Boundaries   | [Entity Caller Responsibility Separation](../../../superpowers/specs/2026-08-11-entity-caller-responsibility-separation-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                                           |
 
-**Artifacts:** `on-loop-github-issue-triage.yaml` · skill `github-issue-triage` · `detect_issue.sh` · `ci-loop-caller-entity.yaml`
+**Artifacts:** `on-loop-github-issue-triage.yaml` · skill `github-issue-triage` · `detect_issue.sh` · `scripts/self/loop/list_triage_issues.sh` · `ci-loop-caller-entity.yaml`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md) (entity subset).
 
 ## Purpose
 
-On Issue / issue_comment events, classify the Issue when confident, apply allowlisted triage labels, and post analysis or clarifying questions as comments (L1). Does not open PRs.
+On Issue / issue_comment events, and on a daily schedule for Issues filed by the code-review loop, classify the Issue when confident, apply allowlisted triage labels, and post analysis or clarifying questions as comments (L1). Does not open PRs.
 
 The agent does not write to GitHub. It writes the comment to `message.md` and the label changes (`{"add": [...], "remove": [...]}`) to `message_labels.json` in `LOOP_MESSAGE_DIR`; `loop-agent-once` creates that directory, names it at the end of the prompt, and passes the files to `finalize-l1` as the job output `message_json`. `loop-finalize` (Deliver Message) then adds or removes the labels that are in `finalize_label_allowlist`, and posts the comment once as one Issue comment with the Marker, Meta block and footer. No later step edits the posted comment.
 
@@ -28,13 +28,40 @@ Behaviors to know:
 - A delivery failure (label or post) fails the finalize step and records `failure_stage` `deliver_message`; an agent failure is recorded as `agent_execute`.
 - The delivery outcome is `issue_commented`, or `unchanged` when the message is missing or blank.
 
-### Supported use cases
+### Intake paths
 
-- `issues` opened/reopened/labeled → entity detect + L1 agent (label removal does not re-trigger triage)
-  - `labeled` intake is limited to `needs-triage` and `triage:needs-info`. Classification labels the agent applies itself and `triage:ready` (detect skips it) stay out, and `autofix` belongs to [Autofix Design](loop-github-issue-autofix-workflow-design.md)
-  - Bot senders are refused in the job `if`, so agent-applied labels never re-enter the queue (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention))
-- `issue_comment` created by a non-bot author while `triage:needs-info` is present (human answers while awaiting info)
-- `workflow_dispatch` with `issue_number` for manual re-triage
+Two paths start this workflow, and each handles a different set of Issues. [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention) holds the gating rules.
+
+- **Webhook path** (`issues`, `issue_comment`, `workflow_dispatch`): handles Issues that humans create or comment on. The `issues` branch of the job `if` rejects Issues labeled `loop:code-review`. The `issue_comment` branch is unchanged, so a human answer on a `loop:code-review` Issue that carries `triage:needs-info` still re-triages it.
+- **Schedule path** (`schedule`, daily at 07:00 UTC): handles Issues that the code-review loop filed. The `list` job runs `scripts/self/loop/list_triage_issues.sh` and outputs `issues` (a JSON array of Issue numbers) and `count`. The `loop` job is a matrix over those numbers (`fail-fast: false`, `max-parallel: 3`) and passes `handoff_artifact_suffix: -issue-<N>`. Schedule runs share the `loop-state-main` concurrency group; other events keep one group per Issue.
+
+The lister selects an Issue when all of these hold:
+
+- The Issue is open, is not a pull request, and carries the label `loop:code-review`.
+- The Issue has no label that starts with `triage:`.
+- The author is a Bot and the body contains `<!-- code-review:fp:`.
+- The Issue is not already handled: a comment with `<!-- github-issue-triage:v1 -->` exists and no human comment is newer than the latest such comment.
+- The run-log holds fewer than 3 `error` or `rejected` rows for `target_key` `entity:issue:<N>` within the last 7 days.
+
+The lister reads at most 200 Issues, orders the remainder by oldest last attempt (never-attempted Issues first), and returns at most 3. `detect_issue.sh` still decides each Issue: for `ISSUE_EVENT_NAME=schedule` it skips any Issue with a `triage:*` label, and it hydrates title, body and labels from the API when `ISSUE_NUMBER` is set and those fields are empty.
+
+### User actions
+
+Each row is one action a person can take, the loop response, and what the person sees next. The Transition column references [Loop Issue Handoff](../loop-issue-handoff.md#triage-states).
+
+| User action                                                          | Loop response                                                                                                   | Result and next action                                                                                  | Transition |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------- |
+| Create an Issue (human with MEMBER, OWNER or COLLABORATOR role)      | The Webhook path triages the Issue and applies labels and a comment (L1)                                        | `triage:ready` or `triage:needs-info` is applied. To have a `bug` fixed automatically, add `autofix`    | -          |
+| Add `needs-triage` or `triage:needs-info`                            | The Webhook path re-triages the Issue                                                                           | Labels and the comment are updated                                                                      | -          |
+| Answer the question on a `triage:needs-info` Issue with a comment    | The Webhook path (`issue_comment`) re-triages the Issue. This also applies to `loop:code-review` Issues         | Labels are updated                                                                                      | T2         |
+| Do nothing (Issue filed by code-review)                              | The daily schedule triages up to 3 Issues that match the lister conditions                                      | Labels and a comment are applied. The Issue does not become an autofix input                            | T0         |
+| Comment on a low-confidence code-review Issue                        | The next schedule run re-triages it because a human comment is newer than the marker comment                    | The comment is updated. The Issue is not triaged again until you comment                                | T4         |
+| Add `needs-triage` by hand to a `loop:code-review` Issue             | Nothing runs immediately, because the Webhook `issues` branch rejects the label `loop:code-review`            | To run now, start `workflow_dispatch` with the Issue number                                             | -          |
+| Start `workflow_dispatch` with an Issue number                       | The workflow triages that Issue                                                                                 | Same as above                                                                                           | -          |
+| Keep a `triage:failed` Issue                                         | Neither the Webhook path nor the schedule picks it up                                                           | After you fix the cause, remove the label and start `workflow_dispatch`                                 | T3         |
+| Remove `triage:ready` from an Issue                                  | Nothing runs, because no human comment is newer than the marker comment                                         | To re-triage, comment on the Issue                                                                      | T1 / T0    |
+| Add only the label `loop:code-review` to a human-created Issue       | The schedule does not pick it up, because only Bot-authored Issues with the code-review marker qualify          | To triage by hand, start `workflow_dispatch` with the Issue number                                      | -          |
+| Wait after an agent failure (no label or comment is applied)         | The next schedule run picks the Issue up again. After 3 failures in 7 days the lister excludes it               | Fix the cause. The Issue returns to the schedule when failures leave the 7-day window                   | T0         |
 
 ### Out of scope
 
@@ -80,10 +107,10 @@ Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-ca
 
 ### Domain detect environment (`detect_env_json`)
 
-`{}` on webhook paths. `workflow_dispatch` may pass `ISSUE_NUMBER`:
+`{}` on webhook paths. `workflow_dispatch` passes `ISSUE_NUMBER`, and the schedule path passes `ISSUE_EVENT_NAME` and `ISSUE_NUMBER` for each matrix Issue. The caller sets it as follows:
 
 ```yaml
-detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
+detect_env_json: ${{ github.event_name == 'schedule' && format('{{"ISSUE_EVENT_NAME":"schedule","ISSUE_NUMBER":{0}}}', toJSON(matrix.issue)) || github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(matrix.issue)) || '{}' }}
 ```
 
 Detect script env (explicit or hydrated from `GITHUB_EVENT_PATH`): `ISSUE_NUMBER`, `ISSUE_TITLE`, `ISSUE_BODY`, `ISSUE_LABELS_JSON`, `ISSUE_EVENT_NAME`, `ISSUE_EVENT_ACTION`, `ISSUE_COMMENT_ID`, `ISSUE_ACTOR`, `ISSUE_ACTOR_TYPE`, `ISSUE_COMMENT_USER_TYPE`.
@@ -92,7 +119,8 @@ Detect script env (explicit or hydrated from `GITHUB_EVENT_PATH`): `ISSUE_NUMBER
 
 ```text
 on-loop-github-issue-triage.yaml
-  loop → uses ci-loop-caller-entity.yaml
+  list → list_triage_issues.sh (schedule only; outputs issues, count)
+  loop → matrix over Issue numbers (fail-fast: false, max-parallel: 3); uses ci-loop-caller-entity.yaml
            detect  → loop-entity-detect
                        (detect_issue.sh reads GITHUB_EVENT_PATH;
                         workflow_dispatch may pass ISSUE_NUMBER via detect_env_json)
@@ -104,7 +132,7 @@ No caller `prepare` job — event mapping lives in the skill detect script (E17)
 
 ## Detect contract
 
-Skip when actor or comment author is Bot, or when `triage:failed` is present (E7). When skip=false, emit `result.handoff_key` = `entity:issue:<N>` (S1).
+Skip when actor or comment author is Bot, or when `triage:failed` is present (E7). For `ISSUE_EVENT_NAME=schedule`, skip any Issue that carries a `triage:*` label. When skip=false, emit `result.handoff_key` = `entity:issue:<N>` (S1).
 
 ## Skill contract
 

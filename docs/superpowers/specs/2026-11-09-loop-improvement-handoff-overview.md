@@ -190,6 +190,7 @@
   - Webhook の経路と対象を分ける: `autofix` ラベルの付いた Issue は Webhook の経路だけが扱う。
 - 段階 D(L1)では、エージェントは修正方針を出すだけで PR を作らない。選ばれた Issue と方針の妥当性を観察する。段階 E で L2 にする。
 - 人間が作った Issue も、triage で `triage:ready` と `bug` になれば拾われる(ユーザー決定)。`feature` などは拾われない。
+  - **取り下げ(2026-11-11):** autofix は triage の出力を入力にしない。人間が作った Issue は、今までどおり人間が `autofix` ラベルを付ける。詳細は [定期実行での取り込み(対象ごとのターゲット、triage / autofix の定期実行)](2026-11-11-loop-scheduled-intake-design.md) の第0節。
 - triage skill の文書の「`triage:ready` のときは人間に `autofix` を付けるよう伝える」を、portable に「caller が定期実行の取り込みを設定していれば、`bug` で `triage:ready` の Issue は自動で拾われる。そうでなければ人間に `autofix` を付けるよう伝える」に改める(`SKILL.md`、`references/category-fsm.md`、`references/category-prompt-rules.md`、`evals/tasks/`)。
 
 ## 6. 止まり方(Design Stop Conditions First)
