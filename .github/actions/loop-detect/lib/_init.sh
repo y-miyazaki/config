@@ -30,6 +30,8 @@ source "${LIB_DIR}/guards.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/state.sh"
 # shellcheck disable=SC1091
+source "${LIB_DIR}/items.sh"
+# shellcheck disable=SC1091
 source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
