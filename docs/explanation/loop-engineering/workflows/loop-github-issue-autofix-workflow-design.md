@@ -16,16 +16,16 @@ Single intake for Issue→PR autofix: `labeled(autofix)` + `repository_dispatch`
 
 Detect skips when an open/draft PR already references the Issue with a closing keyword (`Fixes #N`, etc.). PR draft/open is controlled by caller `pr_draft` (**default open**).
 
-A daily `schedule` also runs the L1 observation job `loop-scheduled`. See [Intake paths](#intake-paths) for what it picks up, [Scheduled job](#scheduled-job-loop-scheduled) for its settings, and [Stage E](#stage-e-not-implemented) for what is not implemented.
+A daily `schedule` also runs the L2 job `loop-scheduled`. See [Intake paths](#intake-paths) for what it picks up, [Scheduled job](#scheduled-job-loop-scheduled) for its settings, and [Stage E](#stage-e-implemented-not-yet-run) for the promotion and what is not yet confirmed.
 
 ### Intake paths
 
 Two paths start this workflow, and each handles a different set of Issues. [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention) holds the gating rules.
 
-- **Webhook path** (`issues` labeled `autofix`, `repository_dispatch`, `workflow_dispatch`): the `loop` job runs at L2 for the one Issue that a human named. It makes a `Fixes #N` PR. `repository_dispatch` carries `client_payload.issue_number` from an external or manual entry; nothing in this repository sends it. `workflow_dispatch` takes `issue_number` and an optional `pr_draft`.
-- **Schedule path** (`schedule`, daily at 12:00 UTC): the `loop-scheduled` job handles Issues that the code-review loop filed. Its settings are in [Scheduled job](#scheduled-job-loop-scheduled). The `loop` job is skipped for `schedule`. Schedule runs share the `loop-state-main` concurrency group; other events keep one group per Issue.
+- **Webhook path** (`issues` labeled `autofix`, `repository_dispatch`, `workflow_dispatch`): the `loop` job runs at L2 for the one Issue that a human named. It makes a `Fixes #N` PR and returns that Issue as one item, so it keeps state under the same per-Issue key as the schedule path. `repository_dispatch` carries `client_payload.issue_number` from an external or manual entry; nothing in this repository sends it. `workflow_dispatch` takes `issue_number` and an optional `pr_draft`.
+- **Schedule path** (`schedule`, daily at 12:00 UTC): the `loop-scheduled` job runs at L2 and handles Issues that the code-review loop filed. Its settings are in [Scheduled job](#scheduled-job-loop-scheduled). The `loop` job is skipped for `schedule`. Schedule runs share the `loop-state-main` concurrency group; other events keep one group per Issue.
 
-`detect_autofix.sh` runs in scan mode (`AUTOFIX_SCAN=true`) on the schedule path and returns the qualifying Issues as `result.items`, one item per Issue with key `issue:<N>`. The platform keeps state per item under `integration:main#issue:<N>`. The script reads these environment variables from `detect_env_json`: `AUTOFIX_SOURCE_LABEL`, `AUTOFIX_SOURCE_MARKER`, `AUTOFIX_PR_LABEL`, `AUTOFIX_BRANCH_PREFIX` and `AUTOFIX_MAX_OPEN_PRS`. Their values are in [Scheduled job](#scheduled-job-loop-scheduled).
+`detect_autofix.sh` runs in scan mode (`AUTOFIX_SCAN=true`) on the schedule path and returns the qualifying Issues as `result.items`, one item per Issue with key `issue:<N>`. On the Webhook path it runs in single-Issue mode with `AUTOFIX_ITEMS=true` and returns `result.items` with one element for the named Issue, with the same key. The platform keeps state per item under `integration:main#issue:<N>`, so both paths share the pending state and the circuit breaker of an Issue. The script reads these environment variables from `detect_env_json`: `AUTOFIX_SOURCE_LABEL`, `AUTOFIX_SOURCE_MARKER`, `AUTOFIX_PR_LABEL`, `AUTOFIX_BRANCH_PREFIX`, `AUTOFIX_MAX_OPEN_PRS` and `AUTOFIX_PR_SCAN_LIMIT`. Their values are in [Scheduled job](#scheduled-job-loop-scheduled).
 
 Scan mode selects an Issue when all of these hold:
 
@@ -38,24 +38,34 @@ Scan mode then excludes an Issue in these cases:
 - An open PR references the Issue with a closing keyword.
 - The Issue is already handled: a closed PR with the PR label references the Issue, and no human comment is newer than the latest `closedAt` of such PRs. A human comment after that time makes the Issue eligible again. Closing a PR does not count as a failure.
 
-Scan mode skips the whole run when the number of open PRs that carry the PR label and a head branch with the branch prefix reaches `AUTOFIX_MAX_OPEN_PRS`. This limit applies to scan mode only; the Webhook path is not limited. The script reads the 200 most recent closed PRs that carry the PR label, so an older closed PR is not seen. It returns up to 50 Issues, oldest first, without cutting them to `detect_max_targets`. The platform orders the items by `last_run`, applies `detect_max_targets` and drops items that are pending or stopped by the circuit breaker. An `autofix` label added later moves the Issue to the Webhook path. If the schedule already picked the Issue up, both paths can run until the schedule run ends.
+Scan mode skips the whole run when the number of open PRs that carry the PR label and a head branch with the branch prefix reaches `AUTOFIX_MAX_OPEN_PRS`. This limit applies to scan mode only; the Webhook path is not limited. The script fetches closed PRs that carry the PR label and open PRs, each with the limit `AUTOFIX_PR_SCAN_LIMIT` (a positive integer, default 1000; `08` and `010` count as decimal). It keeps only closed PRs whose head branch starts with `AUTOFIX_BRANCH_PREFIX`, because the PR label is on the PRs of every loop. An empty prefix skips that filter. The script fails closed (`status: error`) when a fetched list reaches the limit, because the list may be cut off and a closed PR could be missed. It also fails closed when a `jq` check ends with an exit code other than 0 or 1, because exit code 1 means "no match" and any other code is a runtime error. It returns up to 50 Issues, oldest first, without cutting them to `detect_max_targets`. The platform orders the items by `last_run`, applies `detect_max_targets` and drops items that are pending or stopped by the circuit breaker. An `autofix` label added later moves the Issue to the Webhook path. If the schedule already picked the Issue up, both paths can run until the schedule run ends.
 
-L1 writes no state, so `last_run` ordering does not advance and each run tends to see the same oldest Issues. The L1 plan appears only in the log of the `agent-l1` job. The caller still passes the checker inputs, because `ci-loop-caller.yaml` requires `agent_checker_instructions`.
+L2 writes state per item, so `last_run` ordering advances and a pending PR or a stopped Issue is not picked up again. The Webhook path ignores `AUTOFIX_MAX_OPEN_PRS` and the closed-PR rules above, because a human named the Issue.
 
-### Stage E (not implemented)
+### Stage E (implemented, not yet run)
 
-Stage E is planned after at least two weeks of L1 observation. It would promote `loop-scheduled` to L2 with `delivery: pr_create`, and would make the Webhook path return one item per Issue so that both paths share the per-Issue key for pending state and the circuit breaker. None of this exists today. Until then, the Webhook path keeps its existing key, and the circuit breaker of the schedule path does not stop the Webhook path.
+Stage E promotes `loop-scheduled` to L2 with `delivery: pr_create` and makes the Webhook path return one item per Issue. Both changes are in `on-loop-github-issue-autofix.yaml`. The Webhook key changed from its previous key to `integration:main#issue:<N>`, so an Issue's pending state and circuit breaker now apply to both paths. A circuit breaker stop on the schedule path also stops the Webhook path.
+
+The promotion happened without the two weeks of L1 observation that section 8 of [定期実行での取り込み(対象ごとのターゲット、triage / autofix の定期実行)](../../../superpowers/specs/2026-11-11-loop-scheduled-intake-design.md#8-昇格と減速の条件) calls for. These conditions were not observed before enabling L2. Check them after promotion:
+
+- Slow Down: more than 50% of the fix PRs close without a merge. Lower `detect_max_targets` to 1 or return `loop-scheduled` to L1.
+- Kill: two consecutive weeks with zero merged fix PRs and the budget used up.
+
+Not confirmed (未確認): the workflow has not run on GitHub since stage E. These behaviors rest on code and bats tests only:
+
+- `detect_items` on the Webhook path.
+- Sharing of the pending state and the circuit breaker between the two paths.
+- A schedule run and a Webhook run on the same Issue at the same time. The two runs use different concurrency groups, so the second run is blocked by the pending state only after the first run has written it.
 
 ### User actions
 
-Each row is one action a person can take, the loop response, and what the person sees next. The Transition column references [Loop Issue Handoff](../loop-issue-handoff.md#autofix-states). Rows that depend on stage E say so.
+Each row is one action a person can take, the loop response, and what the person sees next. The Transition column references [Loop Issue Handoff](../loop-issue-handoff.md#autofix-states).
 
 | User action                                                              | Loop response                                                                                                         | Result and next action                                                              | Transition |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------- |
 | Add the `autofix` label to an Issue (human)                              | The Webhook path implements the fix and creates a `Fixes #N` PR (L2)                                                  | Review and merge the PR                                                             | A3         |
 | Start `workflow_dispatch` or `repository_dispatch` with an Issue number  | Same as above                                                                                                         | Same as above                                                                       | A3         |
-| Do nothing (Issue filed by code-review)                                  | The daily schedule picks up Issues that match [Intake paths](#intake-paths), up to `detect_max_targets`, and logs a fix plan (L1) | Read the plan in the `agent-l1` job log. To get a PR now, add `autofix`             | A1, A2     |
-| Do nothing (Issue filed by code-review), after stage E                   | The schedule creates a PR (L2). Not implemented                                                                       | Review and merge the PR                                                             | A2, A3     |
+| Do nothing (Issue filed by code-review)                                  | The daily schedule picks up Issues that match [Intake paths](#intake-paths), up to `detect_max_targets`, and creates a `Fixes #N` PR (L2) | Review and merge the PR                                                             | A1, A2, A3 |
 | Merge an autofix PR                                                      | `Fixes #N` closes the Issue                                                                                           | -                                                                                   | A6         |
 | Close an autofix PR without merging (Issue stays open)                   | The schedule does not pick up the Issue until a human comments (see [Intake paths](#intake-paths))                    | To retry, comment on the Issue. To drop it, close the Issue                         | A4         |
 | Comment on the Issue after closing the PR                                | The next schedule run picks up the Issue again                                                                        | Write the direction of the fix in the comment so the agent can read it              | A1         |
@@ -63,7 +73,7 @@ Each row is one action a person can take, the loop response, and what the person
 | Remove `loop:code-review` from an Issue                                  | The schedule no longer picks up the Issue. The code-review loop can file the finding again                            | To stop it, close the Issue instead of removing the label                           | -          |
 | Add `autofix` to an Issue that the schedule already picked up            | The schedule stops listing the Issue and the Webhook path handles it. Both can run until the schedule run ends        | If two PRs result, keep the first and close the other                               | A1         |
 | Open autofix PRs reach `AUTOFIX_MAX_OPEN_PRS`                            | The schedule skips the run. The Webhook path is not limited                                                           | Merge or close a PR; the next schedule run resumes                                  | -          |
-| The checker rejects the same Issue three times in a row (stage E)        | The Issue key is not picked up and the Webhook path stops too. Not implemented                                        | Remove the key from `.loop/state-github-issue-autofix.json` by PR, or wait 30 days  | A5         |
+| The checker rejects the same Issue three times in a row                  | The Issue key is not picked up and the Webhook path stops too                                                         | Remove the key from `.loop/state-github-issue-autofix.json` by PR, or wait 30 days  | A5         |
 | The daily budget is used up                                              | The run is skipped (`skip_reason=budget`)                                                                             | The next day resumes. Change `budget_*` in the caller to raise the cap              | -          |
 
 ### Out of scope
@@ -71,7 +81,7 @@ Each row is one action a person can take, the loop response, and what the person
 - Issue triage / label classification (axis 1 — see [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md))
 - PR revision from review feedback (axis 3 — see [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md))
 - L3 auto-merge on the fix PR
-- Automatic autofix without the `autofix` label: the scheduled L1 observation creates no PR, and scheduled L2 autofix is later (see [Stage E](#stage-e-not-implemented)). `repository_dispatch` / `workflow_dispatch` remain explicit human paths
+- Automatic autofix without the `autofix` label: the scheduled L2 job picks up only Issues that match [Intake paths](#intake-paths). `repository_dispatch` / `workflow_dispatch` remain explicit human paths
 - Agent-initiated `repository_dispatch`
 - PR head mode (`detect_pr_enabled` default off) — fixes target the integration branch via `pr_create`
 - Second fix PR when an open/draft PR already references the Issue with a closing keyword (`Fixes #N`, etc.)
@@ -113,19 +123,17 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 
 ### Scheduled job (`loop-scheduled`)
 
-The job passes the same keys as above except the following. It has no `agent_edit_*`, `delivery: pr_create` or `pr_draft`, and its maker and checker instructions ask for a plan only.
+The job passes the same keys as above except the following. Its maker and checker settings, `agent_edit_*`, `agent_unchanged_verdict`, `delivery` and `pr_draft` match the `loop` job.
 
 | Input / JSON key      | Dogfood value                                                         |
 | --------------------- | --------------------------------------------------------------------- |
-| `agent_tool_allowlist` | `gh api -X GET`, `gh issue view`, `gh pr list`, `gh pr view` (no validation scripts) |
-| `delivery`            | `none`                                                                |
 | `detect_branch_match` | `main`                                                                |
 | `detect_items`        | `true`                                                                |
-| `detect_env_json`     | `AUTOFIX_SCAN` `true`; `AUTOFIX_SOURCE_LABEL` `loop:code-review`; `AUTOFIX_SOURCE_MARKER` `<!-- code-review:fp:`; `AUTOFIX_PR_LABEL` `loop-automation`; `AUTOFIX_BRANCH_PREFIX` `loop/github-issue-autofix/`; `AUTOFIX_MAX_OPEN_PRS` `3` |
+| `detect_env_json`     | `AUTOFIX_SCAN` `true`; `AUTOFIX_SOURCE_LABEL` `loop:code-review`; `AUTOFIX_SOURCE_MARKER` `<!-- code-review:fp:`; `AUTOFIX_PR_LABEL` `loop-automation`; `AUTOFIX_BRANCH_PREFIX` `loop/github-issue-autofix/`; `AUTOFIX_MAX_OPEN_PRS` `3`; `AUTOFIX_PR_SCAN_LIMIT` `1000` |
 | `detect_max_targets`  | `3`                                                                   |
-| `level`               | `L1`                                                                  |
+| `level`               | `L2`                                                                  |
 
-The L1 job and the Webhook L2 job share one daily budget because the budget counts runs by `loop_name` (`github-issue-autofix`, capped at 10 runs per day in `.loop/loop-budget.json`) and each daily L1 tick can spend up to 3, so a human `autofix` label can be refused with `skip_reason=budget` earlier than before.
+The scheduled job and the Webhook job share one daily budget because the budget counts runs by `loop_name` (`github-issue-autofix`, capped at 10 runs per day in `.loop/loop-budget.json`) and each daily scheduled tick can spend up to 3, so a human `autofix` label can be refused with `skip_reason=budget` earlier than before.
 
 ### Domain detect environment (`detect_env_json`)
 
@@ -133,22 +141,23 @@ The L1 job and the Webhook L2 job share one daily budget because the budget coun
 detect_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
 ```
 
-| JSON key / env var | Description         | Notes               |
-| ------------------ | ------------------- | ------------------- |
-| `ISSUE_NUMBER`     | Target Issue number | Required to proceed |
+| JSON key / env var | Description                                             | Notes               |
+| ------------------ | ------------------------------------------------------- | ------------------- |
+| `AUTOFIX_ITEMS`    | `true` returns one item for the Issue (key `issue:<N>`) | Set to `"true"`     |
+| `ISSUE_NUMBER`     | Target Issue number                                     | Required to proceed |
 
 ## Caller shape
 
 ```text
 on-loop-github-issue-autofix.yaml
   loop → uses ci-loop-caller.yaml (not schedule)
-           detect  → detect_autofix.sh
+           detect  → detect_autofix.sh (AUTOFIX_ITEMS; result.items with one element)
            execute → ci-loop-agent (level L2)
            finalize → pr_create (pr_draft from inputs)
   loop-scheduled → uses ci-loop-caller.yaml (schedule only)
            detect  → detect_autofix.sh (scan mode; result.items)
-           execute → ci-loop-agent (level L1; plan in the agent-l1 job log)
-           finalize → delivery none
+           execute → ci-loop-agent (level L2)
+           finalize → pr_create (pr_draft from inputs)
 ```
 
 Concurrency: `loop-state-main` for `schedule`; otherwise `loop-github-issue-autofix-${issue_number || run_id}`. Workflow-level `permissions` is `{}`; each job declares its own.

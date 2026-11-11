@@ -1,6 +1,6 @@
 # 定期実行での取り込み(対象ごとのターゲット、triage / autofix の定期実行)
 
-**Status:** Draft(第3版。独立レビュー第3回までの High・Medium を反映し、第4回で High・Medium なし(矛盾1件と古い記述を修正済み))
+**Status:** Draft(第3版。独立レビュー第3回までの High・Medium を反映し、第4回で High・Medium なし(矛盾1件と古い記述を修正済み))。段階 A'〜E は実装済み。workflow の実行(dispatch)と dogfood は未実施
 **Date:** 2026-11-11
 **Related:** [全体構想と論点](2026-11-09-loop-improvement-handoff-overview.md)(第3.2、3.3、3.5、5節の具体化)、[code-review loop](2026-11-09-loop-code-review-design.md)(段階 B・C。実装済み)、[Loop Engineering Design — Design Principles](../../explanation/loop-engineering/loop-engineering-design.md#design-principles)、[Issue triage / autofix の entity loop](2026-08-11-issue-triage-entity-loops-design.md)
 
@@ -184,7 +184,7 @@ overview の第5.1節は、triage を branch の caller の対象ごとのター
   - `Fixes #N` の PR が開いている Issue(既存の `open_pr_fixes_issue`)。
   - **対応済みの Issue(M3):** その Issue を `Fixes #N` で参照する、閉じた autofix の PR(マージ済みも含む。`loop-automation` ラベルで絞る)があり、その `closedAt` が、人間(`user.type != "Bot"`)の最新のコメントの時刻より新しい Issue は、人間の新しいコメントがあるまで拾わない。PR を人間が閉じても、`consecutive_failures` には数えない。
   - 要素のキーの state で pending か circuit breaker(連続失敗3回)に当たるもの(platform が判定する。第4.1節)。
-- **取得の方法:** 閉じた PR は `gh pr list --state closed --label loop-automation --limit 200 --json number,body,closedAt,headRefName` で1回だけ取り、`Fixes #N` との照合は `\b` つきの正規表現でクライアント側(jq)で行う(既存の `open_pr_fixes_issue` と同じ方式。Issue ごとの検索は API が増える)。コメントは Issue ごとに REST で取る。直近200件より古い閉じた PR は参照できず、その Issue が再び拾われうる(残るリスク)。
+- **取得の方法:** 閉じた PR は `gh pr list --state closed --label loop-automation --limit <AUTOFIX_PR_SCAN_LIMIT> --json number,body,closedAt,headRefName` で1回だけ取り、`Fixes #N` との照合は `\b` つきの正規表現でクライアント側(jq)で行う(既存の `open_pr_fixes_issue` と同じ方式。Issue ごとの検索は API が増える)。コメントは Issue ごとに REST で取る。取得件数が `AUTOFIX_PR_SCAN_LIMIT` に達したら fail closed にする(第6.5節)。
 - **切り詰めない:** スクリプトは、除外をかけた対象を**最大50件まで、上限で切らずに**返す。切るのは platform の `detect_max_targets` と `last_run` の並べ替えの仕事(スクリプトが先に3件に絞ると、platform が breaker で落とした後に何も残らず、4件目以降が拾われない)。
 
 ### 6.3 経路の分離と二重起動
@@ -203,9 +203,13 @@ overview の第5.1節は、triage を branch の caller の対象ごとのター
 
 - **D:** `loop-scheduled` は L1、`delivery: none`。エージェントは修正方針を出すだけで PR を作らない(ログに出る)。拾う対象の選び方と方針の妥当性を2週間以上観察する。L1 は state を書かないので `last_run` による並べ替えが働かず、毎回、古い順の同じ3件を見る(標本が増えにくいことを受け入れる)。**Webhook の経路は変えない。**
 - **E(L2):** `loop-scheduled` を L2、`delivery: pr_create`(既存の Webhook と同じ設定)に上げる。checker が APPROVE した修正 PR だけを作る。人間のマージ承認は変えない。**この段階で Webhook の経路も `detect_items: true`、`result.items` に1件だけを返す形にする**(定期実行と同じ per-Issue のキーで pending と breaker を共有するため。既存の L2 のキーが変わる挙動変更を、L1 の観察の後に入れる)。
-- **段階 E の前提(PR 3 の最終レビュー):**
-  - 直近200件の閉じた PR の窓は fail open で、`loop-automation` は全 loop の PR(state PR を含む)に付く。L2 の前に、返った件数が上限と等しいときに fail closed にするか、一覧を autofix の head ブランチに絞る(GitHub 検索の `head:` が前方一致かは、頼る前に確認する)。
-  - open PR の `any()` 判定と `scan_has_newer_human_comment` で `jq -e` の終了コードが混ざっている。終了コード1とそれ以外を区別し、jq の実行時エラーで fail closed にする。どちらも L2 では PR の重複を生む。
+- **段階 E の前提(PR 3 の最終レビュー。解決済み):** PR 4 で次の方針を実装した。
+  - 閉じた PR と開いている PR の取得は、`AUTOFIX_PR_SCAN_LIMIT`(正の整数、既定1000。`08` や `010` は10進として扱う)を上限にし、返った件数が上限に達したら、一覧が途中で切れた可能性があるので fail closed(`status: error`)にする。
+  - 閉じた PR は、head ブランチが `AUTOFIX_BRANCH_PREFIX` で始まるものにクライアント側で絞る(`loop-automation` は全 loop の PR に付くため)。GitHub 検索の `head:` には頼らない。空の prefix は絞り込みをしない。
+  - `jq -e` の終了コード1は「一致なし」、それ以外は jq の実行時エラーとして fail closed にする。
+  - Webhook の経路は `AUTOFIX_ITEMS=true` で `result.items` に1件を返し、per-Issue のキーを定期実行と揃えた。
+  - 実装は `detect_autofix.sh` の header と、各 workflow の設計書の「Intake paths」を正とする。
+- **L2 への昇格は、L1 の2週間以上の観察なしで行った**(ユーザーが明示的に指示した)。第8節の条件(Slow Down と Kill)は、昇格前に確認していない。昇格後に確認する条件として第8節に残す。
 - 「triage を経由する構成」は取らない(第0節)。`github-issue-triage` の skill の文書の変更は不要。
 
 ## 7. 論点の扱い(overview の H1〜Low)
@@ -268,7 +272,8 @@ overview の第2.2節を踏襲する。この spec で足す指標(計測は `gh
 - **`autofix` ラベルと定期実行の競合:** 第6.3節。窓は agent の実行時間。
 - **人間の選別なしの入力:** エージェントが書いた Issue が autofix の入力になる(ユーザーの意図どおり)。code-review 側で marker とメンションの無害化と根拠の再検証をしている。
 - **人間のコメントで再び拾われる:** コメントの内容は見ないので、修正と無関係なコメントでも再び拾われる(ユーザーの方針。止めたければ Issue を閉じる)。
-- **直近200件の閉じた PR の窓:** それより古い閉じた autofix の PR は参照できず、その Issue が再び拾われうる(第6.2節)。
+- **閉じた PR の窓:** 取得の上限は `AUTOFIX_PR_SCAN_LIMIT`(既定1000)。件数が上限に達すると、定期実行は fail closed で止まる(第6.5節)。上限内では、古い閉じた PR も参照できる。上限を超える PR が溜まったら、上限を上げる。第6.2節の「直近200件」は PR 3 までの旧仕様で、PR 4 で置き換えた。
+- **L1 の観察なしの L2 昇格:** 第2.2節の昇格の条件(overview)と第8節の Slow Down / Kill を、昇格前に観察していない。workflow は GitHub で実行しておらず、Webhook の経路の `detect_items`、pending と circuit breaker の共有、定期実行と Webhook の同時実行は未確認。
 - **`write_state` の再試行を使い切った場合:** state PR のフォールバックになり、並行する別の対象の state と食い違いうる。
 - **`AUTOFIX_MAX_OPEN_PRS`:** 定期実行と Webhook の間は soft。上限を超える分は `detect_max_targets - 1` 以下。
 - **L1 と Webhook の日次予算の共有:** 予算は `loop_name`(`github-issue-autofix`、`.loop/loop-budget.json` で1日10 run)で数えるため、L1 の1日1回の tick が最大3 run を使い、人間の `autofix` ラベルが以前より早く `skip_reason=budget` で断られうる。
