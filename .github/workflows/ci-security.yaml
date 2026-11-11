@@ -90,7 +90,7 @@ jobs:
     steps:
       - name: Detect SARIF Upload Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@9d3bb68e1197eaf412730e5eea4478592a294cd2 # v1.9.4
 
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -166,7 +166,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@692397176eb84f691ce3a5eb0ba3acb38125adf8 # v1.9.3
+        uses: y-miyazaki/config/.github/actions/summary@9d3bb68e1197eaf412730e5eea4478592a294cd2 # v1.9.4
 
         with:
           artifacts: |
