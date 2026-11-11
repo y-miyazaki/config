@@ -371,6 +371,7 @@ function build_pull_request_target_json {
 
 #######################################
 # append_detect_candidate: Shared detect/checkout/circuit/pending candidate pipeline
+# Order: checkout -> target state gate -> detect script -> assemble_detect_candidate.
 #
 # Globals:
 #   CANDIDATES_JSON - Candidate JSON strings appended on success
@@ -404,9 +405,8 @@ function append_detect_candidate {
     local target_json_builder="$5"
     shift 5
     local builder_args=("$@")
-    local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive pending_pr
+    local target_state last_sha current_sha detect_result verifier_context consecutive
     local verify_reachable=""
-    local target_json candidate
 
     if [[ -n $checkout_ref ]]; then
         checkout_context "${head_branch}" "${checkout_ref}" || return 0
@@ -416,16 +416,7 @@ function append_detect_candidate {
 
     target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
-    if target_circuit_breaker_open "${consecutive}"; then
-        echo "::warning::Circuit breaker open for ${target_key}"
-        CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
-        return 0
-    fi
-
-    if target_pending_blocks_detect "${target_state}"; then
-        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
-        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
-        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
+    if target_state_blocks_candidate "${target_key}" "${target_state}" "${consecutive}"; then
         return 0
     fi
 
@@ -443,30 +434,10 @@ function append_detect_candidate {
         return 0
     fi
 
-    open_prompt="$(target_open_rejections_prompt "${target_state}")"
     verifier_context="$(build_verifier_context_from_result "${detect_result}")"
-
-    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
-    target_json="$(jq -c --arg since "${last_sha}" 'if .mode == "integration" then .from.since = $since else . end' <<< "${target_json}")"
-    target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
-
-    prompt_text="$(build_prompt_text \
-        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
-        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
-        "${AGENT_EDIT_TARGET:-}" "")"
-
-    candidate="$(build_loop_candidate_json \
-        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
-        || return 0
-
-    if [[ -n $accept_log_extra ]]; then
-        log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
-    else
-        log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
-    fi
-    CANDIDATES_JSON+=("${candidate}")
+    assemble_detect_candidate \
+        "${target_key}" "${head_branch}" "${current_sha}" "${last_sha}" "${target_state}" "${consecutive}" \
+        "${detect_result}" "${verifier_context}" "${accept_log_extra}" "${target_json_builder}" "${builder_args[@]}"
 }
 
 #######################################
@@ -560,6 +531,73 @@ function apply_target_cap {
         capped+=("${CANDIDATES_JSON[$i]}")
     done
     CANDIDATES_JSON=("${capped[@]}")
+}
+
+#######################################
+# assemble_detect_candidate: Build one candidate from a detect result and append it
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings appended on success
+#   AGENT_MAKER_SKILL_NAME, LEVEL, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_TARGET, AGENT_MAKER_INSTRUCTIONS - Prompt inputs
+#
+# Arguments:
+#   $1 - Target key
+#   $2 - Head branch name
+#   $3 - Current SHA
+#   $4 - Last SHA (prompt Last SHA and integration from.since)
+#   $5 - Target state JSON (open rejections)
+#   $6 - Consecutive failure count
+#   $7 - Detect result JSON stored as the candidate result
+#   $8 - Verifier context markdown
+#   $9 - Optional accept-log extra text
+#   $10 - Target JSON builder function name
+#   $11+ - Extra args forwarded to the builder after common args
+#
+# Outputs:
+#   Notice annotations via helper loggers
+#
+# Returns:
+#   0 (a candidate that fails assembly is dropped)
+#
+#######################################
+function assemble_detect_candidate {
+    local target_key="$1"
+    local head_branch="$2"
+    local current_sha="$3"
+    local last_sha="$4"
+    local target_state="$5"
+    local consecutive="$6"
+    local detect_result="$7"
+    local verifier_context="$8"
+    local accept_log_extra="${9:-}"
+    local target_json_builder="${10}"
+    shift 10
+    local builder_args=("$@")
+    local prompt_text open_prompt target_json candidate
+
+    open_prompt="$(target_open_rejections_prompt "${target_state}")"
+
+    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
+    target_json="$(jq -c --arg since "${last_sha}" 'if .mode == "integration" then .from.since = $since else . end' <<< "${target_json}")"
+    target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
+
+    prompt_text="$(build_prompt_text \
+        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
+        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
+        "${AGENT_EDIT_TARGET:-}" "")"
+
+    candidate="$(build_loop_candidate_json \
+        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
+        || return 0
+
+    if [[ -n $accept_log_extra ]]; then
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
+    else
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
+    fi
+    CANDIDATES_JSON+=("${candidate}")
 }
 
 #######################################
@@ -921,6 +959,46 @@ function log_detect_notice {
     local scope="$2"
     local detail="$3"
     echo "::notice title=loop-detect/${stage}::${scope}: ${detail}" >&2
+}
+
+#######################################
+# target_state_blocks_candidate: Return 0 when circuit breaker or pending PR blocks a target
+#
+# Globals:
+#   CIRCUIT_BREAKER_BLOCKED - Incremented when circuit breaker is open
+#   PENDING_PR_BLOCKED - Incremented when pending PR blocks detect
+#
+# Arguments:
+#   $1 - Target key (for warnings)
+#   $2 - Target state JSON
+#   $3 - Consecutive failure count
+#
+# Outputs:
+#   Warning annotations on stdout
+#
+# Returns:
+#   0 when the target is blocked, 1 otherwise
+#
+#######################################
+function target_state_blocks_candidate {
+    local target_key="$1"
+    local target_state="$2"
+    local consecutive="$3"
+    local pending_pr
+
+    if target_circuit_breaker_open "${consecutive}"; then
+        echo "::warning::Circuit breaker open for ${target_key}"
+        CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
+        return 0
+    fi
+
+    if target_pending_blocks_detect "${target_state}"; then
+        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
+        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
+        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
+        return 0
+    fi
+    return 1
 }
 
 #######################################
