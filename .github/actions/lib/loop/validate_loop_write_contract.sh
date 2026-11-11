@@ -65,6 +65,35 @@ function validate_finalize_label_allowlist {
 }
 
 #######################################
+# validate_finalize_issue_limit: Validate finalize_issue_limit for delivery issue_create
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - delivery
+#   $2 - finalize_issue_limit (positive integer | empty for the default)
+#
+# Outputs:
+#   STDERR: ::error:: annotation for an invalid value
+#
+# Returns:
+#   0 when delivery is not issue_create, or the value is empty or a positive integer; 1 otherwise
+#
+#######################################
+function validate_finalize_issue_limit {
+    local delivery="${1:-}"
+    local finalize_issue_limit="${2:-}"
+
+    [[ ${delivery} != "issue_create" || -z ${finalize_issue_limit} ]] && return 0
+    if ! [[ ${finalize_issue_limit} =~ ^[1-9][0-9]*$ ]]; then
+        echo "::error::finalize_issue_limit must be a positive integer (got: ${finalize_issue_limit})" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
 # validate_agent_tool_denylist: Validate agent_tool_denylist against the level and engine
 #
 # Globals:

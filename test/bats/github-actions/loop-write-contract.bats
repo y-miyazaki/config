@@ -316,3 +316,18 @@ setup() {
     run validate_agent_tool_denylist L2 codex ""
     [ "$status" -eq 0 ]
 }
+
+@test "validate_finalize_issue_limit accepts a positive integer or empty and rejects other values for issue_create" {
+    run validate_finalize_issue_limit issue_create "3"
+    [ "$status" -eq 0 ]
+    run validate_finalize_issue_limit issue_create ""
+    [ "$status" -eq 0 ]
+    local bad
+    for bad in 0 -1 abc 1.5; do
+        run validate_finalize_issue_limit issue_create "${bad}"
+        [ "$status" -eq 1 ]
+        [[ $output == *"finalize_issue_limit must be a positive integer"* ]]
+    done
+    run validate_finalize_issue_limit pr_create "abc"
+    [ "$status" -eq 0 ]
+}

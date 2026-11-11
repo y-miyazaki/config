@@ -52,6 +52,10 @@ inputs:
     default: ""
     description: "Comma-separated paths to commit with state after the finalize hook"
     required: false
+  finalize_issue_limit:
+    default: "5"
+    description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+    required: false
   finalize_label_allowlist:
     default: ""
     description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
@@ -283,6 +287,7 @@ runs:
       env:
         AGENT_ENGINE: ${{ inputs.agent_engine }}
         DELIVERY: ${{ inputs.delivery }}
+        FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}

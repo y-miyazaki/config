@@ -101,7 +101,7 @@ step_run() {
     expected="$(printf '%s\n' \
         agent_branch_prefix agent_bundle_dir agent_edit_allowlist agent_edit_denylist agent_engine \
         agent_failure_message agent_failure_stage agent_maker_skill_name agent_result branch current_sha delivery \
-        finalize_commit_paths finalize_label_allowlist finalize_outcome_override \
+        finalize_commit_paths finalize_issue_limit finalize_label_allowlist finalize_outcome_override \
         finalize_script github_token handoff_dir handoff_key has_changes level \
         loop_name message_json notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
         pr_labels pr_title reject_reason skip_reason state_branch state_file \
@@ -202,6 +202,7 @@ step_run() {
         cat << 'EOF2'
 AGENT_ENGINE: ${{ inputs.agent_engine }}
 DELIVERY: ${{ inputs.delivery }}
+FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
 FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
 GH_TOKEN: ${{ inputs.github_token }}
 GITHUB_REPOSITORY: ${{ github.repository }}

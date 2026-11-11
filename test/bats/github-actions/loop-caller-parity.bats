@@ -1359,3 +1359,16 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
     input_block "${BRANCH_CALLER}" detect_script | grep -qF 'default: ""'
     input_block "${BRANCH_CALLER}" detect_script | grep -qi 'built-in'
 }
+
+@test "finalize_issue_limit defaults to 5 and reaches loop-detect and both finalize steps" {
+    local keys
+    input_block "${BRANCH_CALLER}" finalize_issue_limit | grep -q 'default: 5'
+    input_block "${AGENT}" finalize_issue_limit | grep -q 'default: 5'
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' finalize_issue_limit'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx finalize_issue_limit
+    [ "$(grep -c 'finalize_issue_limit: ${{ format' "${AGENT}")" -eq 2 ]
+    action_inputs loop-finalize | grep -qx finalize_issue_limit
+    action_inputs loop-detect | grep -qx finalize_issue_limit
+    run ! grep -q finalize_issue_limit "${ENTITY_CALLER}"
+}

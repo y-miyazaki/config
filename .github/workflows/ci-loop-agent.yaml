@@ -130,6 +130,11 @@ on:
         description: "Comma-separated paths to commit with state after the finalize hook"
         required: false
         type: string
+      finalize_issue_limit:
+        default: 5
+        description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+        required: false
+        type: number
       finalize_label_allowlist:
         default: ""
         description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
@@ -354,6 +359,7 @@ jobs:
           branch: ""
           current_sha: ""
           delivery: ${{ inputs.delivery }}
+          finalize_issue_limit: ${{ format('{0}', inputs.finalize_issue_limit) }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           level: ${{ inputs.level }}
@@ -599,6 +605,7 @@ jobs:
           current_sha: ${{ steps.target.outputs.from_ref }}
           delivery: ${{ inputs.delivery }}
           finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+          finalize_issue_limit: ${{ format('{0}', inputs.finalize_issue_limit) }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_outcome_override: ${{ inputs.finalize_outcome_override != '' && inputs.finalize_outcome_override || needs.agent-l2.outputs.finalize_outcome_override }}
           finalize_script: ${{ inputs.finalize_script }}

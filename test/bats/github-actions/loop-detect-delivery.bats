@@ -72,6 +72,7 @@ detect_pr_enabled
 detect_pr_number
 detect_priority
 detect_script
+finalize_issue_limit
 finalize_label_allowlist
 finalize_script
 github_token

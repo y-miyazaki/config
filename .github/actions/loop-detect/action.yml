@@ -84,6 +84,10 @@ inputs:
     default: ""
     description: "Path to domain detect script (bash). Empty uses the built-in range detect (changed files between last_sha and HEAD, excluding .loop/, the state file and the run log)"
     required: false
+  finalize_issue_limit:
+    default: "5"
+    description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+    required: false
   finalize_label_allowlist:
     default: ""
     description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
@@ -188,6 +192,7 @@ runs:
         DETECT_PR_ENABLED: ${{ inputs.detect_pr_enabled }}
         DETECT_PR_NUMBER: ${{ inputs.detect_pr_number }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
+        FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
         GITHUB_TOKEN: ${{ inputs.github_token }}

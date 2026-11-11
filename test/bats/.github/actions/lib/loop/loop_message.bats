@@ -11,6 +11,7 @@
 # - loop_message_from_json writes message.md and message_labels.json
 # - loop_message_from_json writes nothing for empty input and fails on invalid JSON
 # - a message round trip keeps the body byte-identical
+# - issues.json travels as {"issues": [...]} and is written back by loop_message_from_json
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -105,4 +106,22 @@ teardown() {
     loop_message_from_json "${json}" "${out}"
     cmp "${MSG_DIR}/message.md" "${out}/message.md"
     [ "$(jq -c . "${out}/message_labels.json")" = '{"add":["bug"],"remove":[]}' ]
+}
+
+@test "issues.json travels in message_json and is restored" {
+    local out="${BATS_TEST_TMPDIR}/out/issues"
+    printf '%s' '[{"title":"t","body":"b","fingerprint":"f"}]' > "${MSG_DIR}/issues.json"
+    run loop_message_to_json "${MSG_DIR}"
+    [ "$status" -eq 0 ]
+    [ "$(jq -c '.issues' <<< "$output")" = '[{"title":"t","body":"b","fingerprint":"f"}]' ]
+    run loop_message_from_json "$output" "${out}"
+    [ "$status" -eq 0 ]
+    [ "$(jq -c . "${out}/issues.json")" = '[{"title":"t","body":"b","fingerprint":"f"}]' ]
+}
+
+@test "loop_message_to_json ignores an issues.json that is not an array" {
+    printf '%s' '{"a":1}' > "${MSG_DIR}/issues.json"
+    run loop_message_to_json "${MSG_DIR}"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }
