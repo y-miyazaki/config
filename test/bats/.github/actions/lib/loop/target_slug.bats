@@ -11,6 +11,8 @@
 # - target_slug strips leading and trailing dots
 # - target_slug collapses double dots and rewrites a .lock ending
 # - target_slug empty key prints nothing
+# - target_slug uses the whole key when it has no '#'
+# - target_slug output is ASCII-only and ref-safe under a UTF-8 locale
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -69,4 +71,21 @@ setup() {
     run target_slug ""
     [ "$status" -eq 0 ]
     [ -z "${output}" ]
+}
+
+@test "target_slug uses the whole key when it has no hash" {
+    run target_slug "integration:main"
+    [ "$status" -eq 0 ]
+    [[ ${output} =~ ^integration-main-[0-9a-f]{8}$ ]]
+}
+
+@test "target_slug output is ASCII-only and ref-safe under a UTF-8 locale" {
+    local key
+    for key in 'a#あいう' 'a#é-ü_ñ' 'a#ÀÉ'; do
+        run env LC_ALL=en_US.UTF-8 bash -c "source '$(bats_workspace_root)/.github/actions/lib/loop/target_slug.sh'; target_slug '${key}'"
+        [ "$status" -eq 0 ]
+        [[ ${output} =~ ^[A-Za-z0-9._-]+$ ]]
+        LC_ALL=C grep -qv '[^ -~]' <<< "${output}"
+        git check-ref-format "refs/heads/loop/skill/20261018-123456-${output}"
+    done
 }

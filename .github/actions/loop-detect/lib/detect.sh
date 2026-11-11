@@ -560,7 +560,7 @@ function append_items_candidates {
         unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
     done < <(jq -c '.[]' <<< "${items_json}")
 
-    unblocked_json="$(order_items_by_last_run "${STATE_FILE}" "${branch}" "${unblocked_json}")"
+    unblocked_json="$(order_items_by_last_run "${STATE_FILE}" "${branch}" "${unblocked_json}")" || return 1
 
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
@@ -1206,7 +1206,7 @@ function validate_detect_inputs {
 # newline, or pattern characters) and no PR head scan, so the detect script runs once.
 #
 # Globals:
-#   DETECT_ITEMS, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_PR_ENABLED - Read
+#   DETECT_ITEMS, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_PR_ENABLED, DETECT_SCRIPT - Read
 #
 # Arguments:
 #   None
@@ -1231,6 +1231,10 @@ function validate_detect_items_config {
             ;;
     esac
 
+    if [[ -z ${DETECT_SCRIPT:-} ]]; then
+        echo "::error::detect_items true requires detect_script (the built-in range detect never emits result.items)" >&2
+        return 1
+    fi
     if [[ ${DETECT_PR_ENABLED:-} == "true" ]]; then
         echo "::error::detect_items true requires detect_pr_enabled false" >&2
         return 1
@@ -1425,9 +1429,7 @@ function main {
     for branch in "${INTEGRATION_BRANCHES[@]}"; do
         if [[ ${DETECT_ITEMS} == "true" ]]; then
             # A missing or invalid result.items fails the job (items mode was declared).
-            if ! append_items_candidates "${branch}"; then
-                return 1
-            fi
+            append_items_candidates "${branch}" || return 1
         else
             append_integration_candidate "${branch}"
         fi

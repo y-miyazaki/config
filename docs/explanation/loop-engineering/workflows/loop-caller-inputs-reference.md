@@ -195,7 +195,7 @@ With `detect_items: true`, a detect script may return `result.items[]`, each `{k
 - Requires `detect_pr_enabled: false`, `detect_branch_match_mode` `list` or `glob` (`regex` is rejected), and a `detect_branch_match` that is exactly one literal branch name matching `^[a-zA-Z0-9/_.-]+$` (no comma or glob characters).
 - The branch-level `integration:<branch>` circuit breaker is not consulted. The per-item breaker and `pending` state apply instead.
 - Items are ordered by state `last_run`, oldest first, then capped by `detect_max_targets`.
-- Each execute cell passes `target_key` to the run log and to `loop-worktree-setup`, which names the agent branch `<prefix>/<skill>/<YYYYMMDD-HHMMSS>-<slug>-<hash8>`.
+- Each execute cell passes `target_key` to the run log and to `loop-worktree-setup`, which names the agent branch `<prefix>/<skill>/<YYYYMMDD-HHMMSS>`; the `-<slug>-<hash8>` suffix is appended only for per-item keys (containing `#`), and other keys keep the plain name.
 - The `detect` job has `issues: read` so detect scripts can read Issue data.
 
 ### Branch-related inputs (complete)

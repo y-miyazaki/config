@@ -7,7 +7,8 @@
 # - inputs are from_branch / from_ref / agent_branch_prefix (naming rule) in
 #   alphabetical order
 # - Setup Worktree passes FROM_BRANCH / FROM_REF / AGENT_BRANCH_PREFIX
-# - target_key (default empty) appends -<slug> to the generated branch name
+# - target_key (default empty) appends -<slug> to the generated branch name only
+#   for per-item keys (containing '#'); other keys keep the plain name
 # - the inline script creates <agent_branch_prefix>/<skill>/<date> from
 #   origin/<from_branch> and ignores the legacy BASE_BRANCH / BASE_REF /
 #   BRANCH_PREFIX names
@@ -84,14 +85,15 @@ setup() {
     [ -f "${runner_temp}/worktree-changelog/release.txt" ]
 }
 
-@test "setup script appends the target slug to the branch when target_key is set" {
-    local remote work runner_temp output_file branch_line
+# run_setup_with_key runs the setup script in a fresh clone with TARGET_KEY=$1.
+run_setup_with_key() {
+    local key="$1" remote work runner_temp
     remote="${BATS_TEST_TMPDIR}/remote-key"
     work="${BATS_TEST_TMPDIR}/work-key"
     runner_temp="${BATS_TEST_TMPDIR}/runner-key"
-    output_file="${BATS_TEST_TMPDIR}/github_output_key"
+    OUTPUT_FILE="${BATS_TEST_TMPDIR}/github_output_key"
     mkdir -p "${runner_temp}"
-    : > "${output_file}"
+    : > "${OUTPUT_FILE}"
 
     bats_git_fresh_repo "${remote}"
     bats_git_cmd -C "${remote}" checkout -q -b main
@@ -107,14 +109,27 @@ setup() {
         FROM_BRANCH='main' \
         FROM_REF='' \
         GITHUB_ACTION_PATH='$(dirname "${ACTION_YML}")' \
-        GITHUB_OUTPUT='${output_file}' \
+        GITHUB_OUTPUT='${OUTPUT_FILE}' \
         GITHUB_TOKEN='dummy-token' \
         RUNNER_TEMP='${runner_temp}' \
-        TARGET_KEY='repo#issue:12' \
+        TARGET_KEY='${key}' \
         bash '${SETUP_SCRIPT}'"
+}
+
+@test "setup script appends the target slug to the branch for a per-item key" {
+    local branch_line
+    run_setup_with_key 'integration:main#issue:1'
     [ "${status}" -eq 0 ]
-    branch_line="$(grep '^branch=' "${output_file}")"
-    [[ ${branch_line} =~ ^branch=loop/changelog/[0-9]{8}-[0-9]{6}-issue-12-[0-9a-f]{8}$ ]]
+    branch_line="$(grep '^branch=' "${OUTPUT_FILE}")"
+    [[ ${branch_line} =~ ^branch=loop/changelog/[0-9]{8}-[0-9]{6}-issue-1-[0-9a-f]{8}$ ]]
+}
+
+@test "setup script keeps the plain branch name for a key without hash" {
+    local branch_line
+    run_setup_with_key 'integration:main'
+    [ "${status}" -eq 0 ]
+    branch_line="$(grep '^branch=' "${OUTPUT_FILE}")"
+    [[ ${branch_line} =~ ^branch=loop/changelog/[0-9]{8}-[0-9]{6}$ ]]
 }
 
 @test "setup script rejects an invalid from_ref" {

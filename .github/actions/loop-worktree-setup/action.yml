@@ -26,7 +26,7 @@ inputs:
     required: true
   target_key:
     default: ""
-    description: "Target key (target_json.key); non-empty appends -<slug> to the generated branch name"
+    description: "Target key (target_json.key); per-item keys (containing #) append -<slug>-<hash8> to the generated branch name"
     required: false
 outputs:
   branch:
@@ -89,7 +89,8 @@ runs:
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
           BRANCH="${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/${DATE}"
-          if [[ -n "${TARGET_KEY:-}" ]]; then
+          # Only per-item keys (containing '#') get a slug suffix; other keys keep the plain name.
+          if [[ ${TARGET_KEY:-} == *"#"* ]]; then
             # shellcheck disable=SC1091
             source "${GITHUB_ACTION_PATH}/../lib/loop/target_slug.sh"
             BRANCH="${BRANCH}-$(target_slug "${TARGET_KEY}")"

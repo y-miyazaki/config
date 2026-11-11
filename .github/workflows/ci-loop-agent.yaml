@@ -398,7 +398,7 @@ jobs:
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}
-          target_key: ${{ inputs.target_json != '' && fromJSON(inputs.target_json).key || '' }}
+          target_key: ${{ fromJSON(inputs.target_json || '{}').key || '' }}
           usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
 
   agent-l2:

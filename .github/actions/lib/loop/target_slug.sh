@@ -38,6 +38,7 @@
 #   0 always
 #######################################
 function target_slug {
+    local LC_ALL=C
     local key="${1:-}"
     local hash slug
 

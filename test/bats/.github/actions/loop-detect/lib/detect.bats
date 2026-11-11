@@ -1085,6 +1085,27 @@ output_matrix_keys() {
     [ ! -s "${DETECT_TMP}/detect_calls" ]
 }
 
+@test "items mode fails the job when order_items_by_last_run fails" {
+    make_items_repo "$(items_detect_json 1 2)"
+    run --separate-stderr bash -c "
+        source '$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh'
+        checkout_context() { cd '${ITEMS_REPO}' || return 1; }
+        order_items_by_last_run() { echo 'ordering broke' >&2; return 1; }
+        main
+    "
+    [ "$status" -ne 0 ]
+    [[ ${stderr} == *"ordering broke"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode requires a non-empty detect_script" {
+    make_items_repo "$(items_detect_json 1)"
+    export DETECT_SCRIPT=""
+    run --separate-stderr validate_detect_inputs
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"::error::"*"detect_items"*"detect_script"* ]]
+}
+
 @test "items mode since falls back to HEAD~10 without state" {
     make_items_repo "$(items_detect_json 1 2)" \
         '{"integration:main#issue:2":{"last_sha":"cafebabecafebabecafebabecafebabecafebabe","consecutive_failures":0}}'
