@@ -17,22 +17,35 @@ Current behavior. The triage loop is described in [Issue Triage Workflow Design]
 | T4  | Low confidence (still `needs-triage`, marker present) | A human comments after the marker comment                          | T0                       |
 |     | The agent failed (no label or comment applied)  | The next run (the retry limit in [Intake paths](workflows/loop-github-issue-triage-workflow-design.md#intake-paths) can exclude the Issue)    | T0                       |
 
-## Autofix states (stage D and later, not implemented)
+## Autofix states
 
-The autofix scheduled intake is not implemented. This table records the planned behavior so that the triage states and the autofix states stay consistent. Do not treat it as current behavior.
+The conditions for A1 are in [Issue Autofix Workflow Design](workflows/loop-github-issue-autofix-workflow-design.md#intake-paths). The table is split by what exists today.
 
-| ID  | State                                       | Trigger                                                       | Next state                                              |
-| --- | ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------- |
-| A0  | Filed                                       | The code-review (L2) checker approves and re-verification passes | A1                                                   |
-| A1  | Eligible                                    | The schedule picks it up (next run if over the limit)         | A2                                                      |
-| A2  | Running                                     | (L1) the agent logs a fix plan                                | A1                                                      |
-|     |                                             | (L2) the checker approves and a PR is created                 | A3                                                      |
-|     |                                             | (L2) the checker rejects                                      | A1 (failure count +1 for the Issue; 3 failures lead to A5) |
-| A3  | PR open (pending)                           | A human merges                                                | A6                                                      |
-|     |                                             | A human closes the PR                                         | A4                                                      |
-| A4  | Idle (PR closed, Issue open)                | A human comments on the Issue                                 | A1                                                      |
-|     |                                             | A human closes the Issue                                      | A6                                                      |
-| A5  | Stopped (circuit breaker)                   | State expires after 30 days, or a PR removes the state key    | A1                                                      |
-| A6  | Done (Issue closed)                         | A human reopens the Issue                                     | A1 (when the eligibility conditions hold)               |
+### Stage D (L1): current behavior
+
+The scheduled `loop-scheduled` job runs at L1 and does not write state. It moves an Issue only between A0, A1 and A2.
+
+| ID  | State    | Trigger                                                                                                          | Next state |
+| --- | -------- | ---------------------------------------------------------------------------------------------------------------- | ---------- |
+| A0  | Filed    | The code-review (L2) checker approves and re-verification passes                                                 | A1         |
+| A1  | Eligible | The schedule picks it up (next run if over `detect_max_targets`)                                                  | A2         |
+| A2  | Running  | (L1) The agent logs a fix plan in the `agent-l1` job log. No PR is created and no state is written              | A1         |
+
+### Stage E and later (not implemented)
+
+Stage E promotes the schedule to L2 and aligns the Webhook key with the schedule key (see [Stage E](workflows/loop-github-issue-autofix-workflow-design.md#stage-e-not-implemented)). The states below are planned for the scheduled path. Do not treat them as current behavior for the schedule.
+
+The Webhook path with the `autofix` label already creates PRs today, but it uses a different key. A person can move such an Issue through A3, A4 and A6 now, and the PR rules apply. The per-key circuit breaker (A5) and the A2 to A3 move by the schedule are not implemented.
+
+| ID  | State                        | Trigger                                                       | Next state                                                 |
+| --- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------- |
+| A2  | Running                      | (L2) The checker approves and a PR is created                 | A3                                                         |
+|     |                              | (L2) The checker rejects                                      | A1 (failure count +1 for the Issue; 3 failures lead to A5) |
+| A3  | PR open (pending)            | A human merges                                                | A6                                                         |
+|     |                              | A human closes the PR                                         | A4                                                         |
+| A4  | Idle (PR closed, Issue open) | A human comments on the Issue                                 | A1                                                         |
+|     |                              | A human closes the Issue                                      | A6                                                         |
+| A5  | Stopped (circuit breaker)    | State expires after 30 days, or a PR removes the state key    | A1                                                         |
+| A6  | Done (Issue closed)          | A human reopens the Issue                                     | A1 (when the eligibility conditions hold)                  |
 
 When an Issue is in A1 and carries the `autofix` label, the Webhook path handles it and the schedule no longer picks it up.

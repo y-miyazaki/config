@@ -332,7 +332,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 - State read is performed inline by `loop-detect` (`lib/state.sh`); writes are performed inline by `loop-finalize` (`lib/write_state.sh`)
 - `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, and token usage
 - `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
-- With `detect_items`, state targets are keyed `integration:<branch>#<key>`, one per item. `loop-finalize` removes a `#` key when it has no `pending` and `last_run` is older than 30 days, whatever the outcome. `write_state` retries the state push up to 3 times on `fetch first` / `non-fast-forward`, only when `finalize_commit_paths` is empty; a `[remote rejected]` ruleset rejection is not retried
+- With `detect_items`, state targets are keyed `integration:<branch>#<key>`, one per item. The scheduled autofix job uses `integration:main#issue:<N>`, and it is L1 so it writes no state yet. `loop-finalize` removes a `#` key when it has no `pending` and `last_run` is older than 30 days, whatever the outcome. `write_state` retries the state push up to 3 times on `fetch first` / `non-fast-forward`, only when `finalize_commit_paths` is empty; a `[remote rejected]` ruleset rejection is not retried
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
 - On first run, `loop-detect` resolves `last_sha` with a default (`HEAD~10`) when the state file or target entry is absent (`lib/state.sh`)
 
@@ -554,7 +554,7 @@ Per-tier permissions:
 
 5 principles when multiple loops operate on the same repository:
 
-1. **Shared workflow concurrency**: Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<state_branch>` so detect sees fresh state before execute; entity-event callers key the group per Issue / PR for responsiveness
+1. **Shared workflow concurrency**: Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<state_branch>` so detect sees fresh state before execute; entity-event callers key the group per Issue / PR for responsiveness. The `schedule` runs of `on-loop-github-issue-autofix` and `on-loop-github-issue-triage` also use `loop-state-main`, so scheduled autofix and triage serialize with each other
 2. **State file separation**: Each loop has its own JSON state file (`.loop/state-<loop_name>.json`); metadata commits land on `state_branch`, not fix-PR heads
 3. **Role separation**: Loops share platform actions but use distinct `loop_name`, budgets, and detect scripts — autonomy level (`L1`–`L3`) is per caller, not per loop category
 4. **Unified denylist**: All loops share the same path denylist defaults
@@ -582,13 +582,15 @@ Layer drift is the one that hurts. Detect refusals are correct but late: workflo
 | Caller                         | Intake                                            | `if` gate                                                                                                                        |
 | ------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment`, `schedule` (daily), dispatch | Webhook `issues`: non-bot sender; no `triage:failed`; no `loop:code-review`; labels limited to `needs-triage` / `triage:needs-info`. `issue_comment`: Issue (not a PR) with `triage:needs-info` and without `triage:failed`; non-bot sender and comment author; comment author is MEMBER / OWNER / COLLABORATOR, or the repository is private. `schedule`: runs only when the `list` job returns at least one Issue |
-| `on-loop-github-issue-autofix` | `issues` labeled, dispatch                        | `label.name == 'autofix'`                                                                                                        |
+| `on-loop-github-issue-autofix` | `issues` labeled, dispatch, `schedule` (daily)    | `loop` job: not `schedule`; `issues` only when `label.name == 'autofix'`. `loop-scheduled` job: `schedule` only                  |
 | `on-loop-github-pr-revise`     | comment webhooks, dispatch                        | Non-bot comment author; `@loop` mention; PR-attached comments only                                                               |
 | `on-loop-ci-sweeper`           | `workflow_run` completed                          | Same-repository head; `failure` / `startup_failure` only                                                                         |
 | `on-loop-state-promote`        | `pull_request_target` closed                      | `loop-automation` label                                                                                                          |
 | `on-loop-code-review`          | `schedule`, dispatch (no Webhook intake)          | None needed; the created Issues carry only `loop:code-review`, which no loop listens to (invariant 10)                           |
 
 **Schedule path and Webhook path.** A caller that adds a `schedule` intake keeps the two paths on disjoint Issues: the `if` gate in the table above rejects `loop:code-review` Issues on the Webhook `issues` branch, so only the schedule path handles them. The `issue_comment` branch intentionally does not reject them, so a human answer on a `triage:needs-info` Issue still re-triages it. Schedule runs use the `loop-state-main` concurrency group because the run-log is pushed to `main`.
+
+For autofix, the `autofix` label separates the paths: the scan mode of the autofix detect script excludes Issues that carry `autofix`, so the Webhook path handles them, and the `loop-scheduled` job (L1) handles the rest. The scan lists a set of Issues and decides nothing about a fix; each item is still checked by detect and by the platform (state, circuit breaker). See [Issue Autofix Workflow Design](workflows/loop-github-issue-autofix-workflow-design.md#intake-paths).
 
 **Lister script (third layer).** The schedule path adds a layer between the `if` gate and detect: a lister script (`scripts/self/loop/list_triage_issues.sh`) that builds the set of candidate Issues for a matrix. The lister builds a set only. Detect still judges each Issue (see invariant 6). The `loop` job's `if` for `schedule` is gated by the lister count, not by a mirror of detect.
 
