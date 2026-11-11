@@ -135,7 +135,7 @@ jobs:
           echo "✅ Version format is valid: $VERSION"
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@2f129ecfc80a380d46f9bb143bfbf3db15a483bc # v1.9.5
+        uses: y-miyazaki/config/.github/actions/git-auth@3c1bdb67df989ccea821dec229858075a5146a66 # v1.9.5
 
         with:
           github_token: ${{ github.token }}
@@ -165,7 +165,7 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@2f129ecfc80a380d46f9bb143bfbf3db15a483bc # v1.9.5
+        uses: y-miyazaki/config/.github/actions/git-auth@3c1bdb67df989ccea821dec229858075a5146a66 # v1.9.5
 
         with:
           github_token: ${{ github.token }}
@@ -264,7 +264,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@2f129ecfc80a380d46f9bb143bfbf3db15a483bc # v1.9.5
+        uses: y-miyazaki/config/.github/actions/summary@3c1bdb67df989ccea821dec229858075a5146a66 # v1.9.5
 
         with:
           artifacts: |
