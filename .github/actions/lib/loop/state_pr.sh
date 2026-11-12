@@ -5,7 +5,7 @@
 #
 # Usage:
 #   source state_pr.sh
-#   loop_open_state_pr BASE_BRANCH BRANCH_PREFIX TITLE BODY LABEL
+#   state_pr_open BASE_BRANCH BRANCH_PREFIX TITLE BODY LABEL
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -17,7 +17,7 @@
 #######################################
 
 #######################################
-# loop_open_state_pr: Push the current HEAD to a new branch and open a state PR
+# state_pr_open: Push the current HEAD to a new branch and open a state PR
 #
 # Globals:
 #   GITHUB_REPOSITORY - owner/repo for gh pr create (read)
@@ -38,7 +38,7 @@
 #   0 on success; exits 1 when the state branch push or PR creation fails
 #
 #######################################
-function loop_open_state_pr {
+function state_pr_open {
     local base_branch="$1"
     local branch_prefix="$2"
     local title="$3"

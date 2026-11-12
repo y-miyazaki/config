@@ -216,7 +216,7 @@ function open_state_pr_fallback {
     local push_branch="$1"
 
     echo "Direct push blocked; opening state promote PR."
-    loop_open_state_pr "${push_branch}" "loop/state-promote" \
+    state_pr_open "${push_branch}" "loop/state-promote" \
         "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
         "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed." \
         "State promote PR"

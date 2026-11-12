@@ -222,7 +222,7 @@ function commit_and_push_state {
 #######################################
 function open_state_pr_fallback {
     echo "Direct push blocked; opening state PR."
-    loop_open_state_pr "${READ_BRANCH}" "loop/state" \
+    state_pr_open "${READ_BRANCH}" "loop/state" \
         "chore(loop): update state [skip ci]" \
         "Automated loop state update (mode: ${STATE_WRITE_MODE}, outcome: ${OUTCOME}, sha: ${SHA})." \
         "State PR"
