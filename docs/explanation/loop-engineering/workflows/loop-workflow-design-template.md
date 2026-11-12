@@ -15,17 +15,21 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 
 ## How to use this template
 
+This section and the family section that does not apply are template-only; delete both in a copy.
+
 - Keep the H2 names and order in the table. `R` means required; `O` means optional and is omitted when it does not apply, never stubbed with `None`.
 - Write one-line guidance as content, not prose padding. Prefer tables for operations, states, and failures.
 - State IDs and rule bodies live in one place. Reference them; do not copy them.
 - When the document and the workflow YAML, entry skill, or scripts disagree, the implementation wins. Correct the document. For every such difference, also judge whether the implementation itself is wrong (a missing guard, a stuck state, a silent failure, or paths that behave inconsistently); when it is, record it under `Unhandled cases` as `Follow-up` with a one-line reason.
+- Header shape: the caller shell link is per family. Scheduled loops link [Loop Caller Workflows Design](../loop-caller-workflows-design.md); event loops link [Loop Caller Reusable Workflow Design](../loop-caller-reusable-design.md). Add the `Spec` row only when a design spec exists; the scheduled documents have none.
+- Document a loop that has not yet run on GitHub from its implementation, and flag each unconfirmed behavior `unverified on GitHub` (see the Source of truth section of `docs/superpowers/specs/2026-11-12-loop-workflow-design-doc-format-design.md`).
 - Put loop-specific subsections (for example a rollout stage or deferred checks) as H3 under the nearest template H2, and keep their anchors.
 
 ### Section order
 
 | #   | Section (H2)                                                                                                                                     | R/O | Content                                                                                        |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ---------------------------------------------------------------------------------------------- |
-| 0   | Title (H1), one-line summary, Layer table, `Artifacts:` line, shared-keys link                                                                   | R   | Same header shape in every document                                                            |
+| 0   | Title (H1), one-line summary, Layer table, `Artifacts:` line, shared-keys link                                                                   | R   | Same header shape in every document; header rules are in How to use this template |
 | 1   | `Purpose`                                                                                                                                        | R   | What the loop does, the level (L1 / L2), what it never does; behaviors to know as a short list |
 | 2   | `Use cases`                                                                                                                                      | R   | Each row: use case, trigger, outcome, Transition (state ID)                                    |
 | 3   | `Out of scope`                                                                                                                                   | R   | Exact heading text                                                                             |
@@ -36,7 +40,7 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 | 8   | `Failure and recovery`                                                                                                                           | R   | Per failure kind: how it is recorded, who acts, what they do, how the loop resumes             |
 | 9   | `Caller inputs` (+ `Domain detect environment`)                                                                                                  | R   | Keys and defaults; shared keys link to the inputs reference                                    |
 | 10  | Mechanics: `Detect` / `Execute` / `Finalize` (scheduled), or `Caller shape` / `Detect contract` / `Skill contract` / `Delivery contract` (event) | R   | Same names within a family                                                                     |
-| 11  | `State delivery` / `Ledger` / `Operations`                                                                                                       | O   | Where state is stored, retry limits, circuit breaker, concurrency                              |
+| 11  | One or more of `State delivery`, `Ledger`, `Operations` (`<name> and status` allowed for `Operations`) | O   | Where state is stored, retry limits, circuit breaker, concurrency                              |
 | 12  | `Implementation Checklist`                                                                                                                       | R   | Loop-specific items                                                                            |
 | 13  | `References`                                                                                                                                     | R   | Links by document title                                                                        |
 
@@ -45,7 +49,7 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 | Family                               | Documents                                                                                     | Mechanics headings                                                                       |
 | ------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Human-triggered / event entity loops | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-review`         | `Intake paths`, `Caller shape`, `Detect contract`, `Skill contract`, `Delivery contract` |
-| Scheduled detect loops               | `changelog`, `ci-sweeper`, `code-review`, `docs-updater`, `refactor`, `tech-debt`, `test-gap` | `Detect`, `Execute`, `Finalize`, `State`                                                 |
+| Scheduled detect loops               | `changelog`, `ci-sweeper`, `code-review`, `docs-updater`, `refactor`, `tech-debt`, `test-gap` | `Detect`, `Execute`, `Finalize`, one or more of `State delivery`, `Ledger`, `Operations` |
 
 ## Purpose
 
@@ -76,7 +80,7 @@ Omit this section for scheduled loops. For each path, state the events, the gati
 List the state IDs this loop uses and where they are defined. Do not copy rule bodies.
 
 - Issue loops (triage, autofix): reuse the IDs in [Loop Issue Handoff](../loop-issue-handoff.md) (`T0`-`T4`, `A0`-`A6`).
-- Scheduled loops: link to [Scheduled loop states](#scheduled-loop-states) and add only loop-specific rows with the suffix `S2a`, `S3a`, and so on.
+- Scheduled loops: link to [Scheduled loop states](#scheduled-loop-states) and add only loop-specific rows with the suffix `S2a`, `S3a`, and so on. Add a "Values in this loop" table (State / Values in this loop) that lists the concrete state, label, and run-log values each shared state takes in this loop.
 - Event loops without Issue state: define a table with the columns ID / State / Trigger / Next state, using prefix `V` (pr-revise) or `W` (pr-review).
 
 Transition is a real state change from one of these tables, never a free-text label. A row that changes no state uses `-`. A Transition may span several states (`A0 -> A1 -> A2 -> A3`) or branch (`T2 -> T1 / T2 / T3`). In Issue loops, rows for Issues that the handoff table does not track use `-`, and `State model` says why.
