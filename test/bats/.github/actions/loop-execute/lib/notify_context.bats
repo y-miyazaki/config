@@ -250,7 +250,7 @@ EOF
     handoff_dir="${BATS_TEST_TMPDIR}/loop-handoff-notify"
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[{"job_name":"lint","workflow_name":"on-ci-push"}]}}'
     bats_source_rel ".github/actions/lib/loop/handoff.sh"
-    loop_handoff_write_bundle "${handoff_dir}" "${candidate}"
+    handoff_write_bundle "${handoff_dir}" "${candidate}"
 
     GITHUB_OUTPUT="$(mktemp)"
     run env \

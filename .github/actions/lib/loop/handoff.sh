@@ -51,7 +51,7 @@ function handoff_emit_result_section {
 }
 
 #######################################
-# loop_handoff_init_bundle: Create an empty handoff bundle directory
+# handoff_init_bundle: Create an empty handoff bundle directory
 #
 # Globals:
 #   None
@@ -66,7 +66,7 @@ function handoff_emit_result_section {
 #   0 on success
 #
 #######################################
-function loop_handoff_init_bundle {
+function handoff_init_bundle {
     local handoff_dir="$1"
 
     if [[ -z ${handoff_dir} ]]; then
@@ -88,7 +88,7 @@ function loop_handoff_init_bundle {
 }
 
 #######################################
-# loop_handoff_payload_path: Resolve payload file path for a target key
+# handoff_payload_path: Resolve payload file path for a target key
 #
 # Globals:
 #   None
@@ -104,14 +104,14 @@ function loop_handoff_init_bundle {
 #   0 on success
 #
 #######################################
-function loop_handoff_payload_path {
+function handoff_payload_path {
     local handoff_dir="$1"
     local handoff_key="$2"
-    printf '%s/payloads/%s.json' "${handoff_dir}" "$(loop_handoff_sanitize_key "${handoff_key}")"
+    printf '%s/payloads/%s.json' "${handoff_dir}" "$(handoff_sanitize_key "${handoff_key}")"
 }
 
 #######################################
-# loop_handoff_read_detect_result: Read detect result JSON from a payload
+# handoff_read_detect_result: Read detect result JSON from a payload
 #
 # Globals:
 #   None
@@ -127,17 +127,17 @@ function loop_handoff_payload_path {
 #   0 on success
 #
 #######################################
-function loop_handoff_read_detect_result {
+function handoff_read_detect_result {
     local handoff_dir="$1"
     local handoff_key="$2"
     local payload
 
-    payload="$(loop_handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
+    payload="$(handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
     jq -c '.result // {}' <<< "${payload}"
 }
 
 #######################################
-# loop_handoff_read_payload: Read raw payload JSON for a target key
+# handoff_read_payload: Read raw payload JSON for a target key
 #
 # Globals:
 #   None
@@ -153,12 +153,12 @@ function loop_handoff_read_detect_result {
 #   0 on success
 #
 #######################################
-function loop_handoff_read_payload {
+function handoff_read_payload {
     local handoff_dir="$1"
     local handoff_key="$2"
     local payload_file
 
-    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${handoff_key}")"
+    payload_file="$(handoff_payload_path "${handoff_dir}" "${handoff_key}")"
     if [[ ! -f ${payload_file} ]]; then
         return 1
     fi
@@ -169,7 +169,7 @@ function loop_handoff_read_payload {
 }
 
 #######################################
-# loop_handoff_read_verifier_context: Read checker markdown from a payload
+# handoff_read_verifier_context: Read checker markdown from a payload
 #
 # Globals:
 #   None
@@ -185,17 +185,17 @@ function loop_handoff_read_payload {
 #   0 on success
 #
 #######################################
-function loop_handoff_read_verifier_context {
+function handoff_read_verifier_context {
     local handoff_dir="$1"
     local handoff_key="$2"
     local payload
 
-    payload="$(loop_handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
+    payload="$(handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
     jq -r '.verifier_context // ""' <<< "${payload}"
 }
 
 #######################################
-# loop_handoff_resolve_detect_result_json: Resolve detect JSON from env
+# handoff_resolve_detect_result_json: Resolve detect JSON from env
 #
 # Globals:
 #   DETECT_RESULT_JSON - Inline detect JSON from workflow input (read)
@@ -212,7 +212,7 @@ function loop_handoff_read_verifier_context {
 #   0 on success
 #
 #######################################
-function loop_handoff_resolve_detect_result_json {
+function handoff_resolve_detect_result_json {
     local inline="${DETECT_RESULT_JSON:-"{}"}"
 
     if [[ -n ${inline} && ${inline} != "{}" ]] && jq -e . <<< "${inline}" > /dev/null 2>&1; then
@@ -221,14 +221,14 @@ function loop_handoff_resolve_detect_result_json {
     fi
 
     if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
-        loop_handoff_read_detect_result "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" && return 0
+        handoff_read_detect_result "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" && return 0
     fi
 
     printf '%s' '{}'
 }
 
 #######################################
-# loop_handoff_sanitize_key: Map target key to a safe filename stem
+# handoff_sanitize_key: Map target key to a safe filename stem
 #
 # Globals:
 #   None
@@ -243,13 +243,13 @@ function loop_handoff_resolve_detect_result_json {
 #   0 on success
 #
 #######################################
-function loop_handoff_sanitize_key {
+function handoff_sanitize_key {
     local handoff_key="$1"
     printf '%s' "${handoff_key}" | base64 -w0 | tr '+/' '-_' | tr -d '='
 }
 
 #######################################
-# loop_handoff_write_bundle: Write manifest and payloads for all candidates
+# handoff_write_bundle: Write manifest and payloads for all candidates
 #
 # Globals:
 #   LOOP_HANDOFF_VERSION - Manifest schema version (read)
@@ -265,20 +265,20 @@ function loop_handoff_sanitize_key {
 #   0 on success
 #
 #######################################
-function loop_handoff_write_bundle {
+function handoff_write_bundle {
     local handoff_dir="$1"
     shift
     local -a candidates=("$@")
     local candidate handoff_key
     local -a keys=()
 
-    loop_handoff_init_bundle "${handoff_dir}" > /dev/null
+    handoff_init_bundle "${handoff_dir}" > /dev/null
 
     for candidate in "${candidates[@]}"; do
         [[ -z ${candidate} ]] && continue
         handoff_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
         [[ -z ${handoff_key} ]] && continue
-        if ! loop_handoff_write_candidate_payload "${handoff_dir}" "${candidate}"; then
+        if ! handoff_write_candidate_payload "${handoff_dir}" "${candidate}"; then
             echo "::error::loop-handoff: failed to write payload for ${handoff_key}" >&2
             return 1
         fi
@@ -293,7 +293,7 @@ function loop_handoff_write_bundle {
 }
 
 #######################################
-# loop_handoff_write_candidate_payload: Write one candidate payload file
+# handoff_write_candidate_payload: Write one candidate payload file
 #
 # Globals:
 #   None
@@ -309,7 +309,7 @@ function loop_handoff_write_bundle {
 #   0 on success, non-zero on invalid candidate
 #
 #######################################
-function loop_handoff_write_candidate_payload {
+function handoff_write_candidate_payload {
     local handoff_dir="$1"
     local candidate="$2"
     local handoff_key payload_file result_file jq_stderr verifier_context
@@ -323,7 +323,7 @@ function loop_handoff_write_candidate_payload {
         return 1
     fi
 
-    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${handoff_key}")"
+    payload_file="$(handoff_payload_path "${handoff_dir}" "${handoff_key}")"
     result_file="$(mktemp)"
     jq_stderr="$(mktemp)"
     jq -c '.result // {}' <<< "${candidate}" > "${result_file}"

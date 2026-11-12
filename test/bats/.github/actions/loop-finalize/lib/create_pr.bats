@@ -74,7 +74,7 @@ EOF
 
     bats_source_rel ".github/actions/lib/loop/handoff.sh"
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[]}}'
-    loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+    handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
 }
 
 teardown() {
@@ -332,7 +332,7 @@ teardown() {
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     body_file="${BATS_TEST_TMPDIR}/gh_body"
     candidate='{"target_json":{"key":"pull_request:7"},"prompt":"p","verifier_context":"","result":{"failures":[{"workflow_name":"ci","job_name":"unit","failure_type":"test","reason":"handoff-boom"}]}}'
-    loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+    handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
     unset DETECT_RESULT_JSON
     export GH_BODY_CAPTURE_FILE="${body_file}"
     export AGENT_BRANCH="loop/test-branch"

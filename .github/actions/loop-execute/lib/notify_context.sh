@@ -300,7 +300,7 @@ function main {
         exit 1
     fi
 
-    detect_json="$(loop_handoff_resolve_detect_result_json)"
+    detect_json="$(handoff_resolve_detect_result_json)"
 
     validate_required_inputs
 

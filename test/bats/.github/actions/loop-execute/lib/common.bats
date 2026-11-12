@@ -59,7 +59,7 @@ EOF
     local candidate
 
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"stored","result":{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"from artifact"}]}}' # pragma: allowlist secret
-    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+    handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
 
     PROMPT_TEXT=$'Run skill\n\n## Change Detection Result\n__LOOP_DETECT_RESULT_JSON__\n'
     DETECT_RESULT_JSON="{}"
@@ -82,7 +82,7 @@ EOF
 
     # Entity shape: the handoff result is the whole detect JSON (status, skip, result.*).
     candidate='{"target_json":{"key":"entity:issue:9"},"prompt":"p","verifier_context":"Issue #9","result":{"status":"ok","skip":false,"result":{"issue_number":9,"comments":[{"body":"hello"}]}}}'
-    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+    handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
 
     PROMPT_TEXT="$(handoff_emit_result_section)"
     DETECT_RESULT_JSON="{}"
@@ -126,7 +126,7 @@ EOF
     local candidate detect_file
 
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"from artifact"}]}}' # pragma: allowlist secret
-    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+    handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
 
     PROMPT_TEXT="Run skill"
     DETECT_RESULT_JSON="{}"

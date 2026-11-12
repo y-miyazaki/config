@@ -134,7 +134,7 @@ function materialize_matrix_handoff_context {
         fi
     fi
 
-    detect_json="$(loop_handoff_resolve_detect_result_json)"
+    detect_json="$(handoff_resolve_detect_result_json)"
 
     if [[ ${artifact_required} == true ]]; then
         if [[ -z ${detect_json} || ${detect_json} == "{}" ]]; then
@@ -164,7 +164,7 @@ function materialize_matrix_handoff_context {
 
     if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
         if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
-            VERIFIER_CONTEXT="$(loop_handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
+            VERIFIER_CONTEXT="$(handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
         fi
         if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
             _loop_action_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../lib/loop" && pwd)"

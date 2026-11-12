@@ -266,9 +266,9 @@ function main {
             "$(jq -r '.detail' <<< "${verdict}")"
     fi
 
-    loop_handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
+    handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
     candidate="$(jq -c '.[0]' <<< "${full_matrix}")"
-    if ! loop_handoff_write_candidate_payload "${HANDOFF_DIR}" "${candidate}"; then
+    if ! handoff_write_candidate_payload "${HANDOFF_DIR}" "${candidate}"; then
         echo "::error::failed to write entity handoff payload" >&2
         exit 1
     fi

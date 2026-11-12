@@ -1582,7 +1582,7 @@ function main {
     local -a slim_candidates=()
 
     full_matrix_json="$(printf '%s\n' "${CANDIDATES_JSON[@]}" | jq -sc '.')"
-    loop_handoff_write_bundle "${handoff_dir}" "${CANDIDATES_JSON[@]}"
+    handoff_write_bundle "${handoff_dir}" "${CANDIDATES_JSON[@]}"
 
     for candidate in "${CANDIDATES_JSON[@]}"; do
         slim_candidate="$(shrink_matrix_candidate_for_output "${candidate}")"

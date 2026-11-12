@@ -113,7 +113,7 @@ function main {
     notify_json_path="$(mktemp "${work_dir}/tmp.XXXXXX")"
     body_path="$(mktemp "${work_dir}/tmp.XXXXXX")"
 
-    loop_handoff_resolve_detect_result_json > "${detect_json_path}"
+    handoff_resolve_detect_result_json > "${detect_json_path}"
     printf '%s' "${NOTIFY_CONTEXT_JSON}" > "${notify_json_path}"
 
     body_args=(
