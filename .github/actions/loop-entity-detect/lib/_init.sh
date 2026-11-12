@@ -27,6 +27,10 @@ LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/../../lib/loop/admission.sh"
 # shellcheck disable=SC1091
+source "${LIB_DIR}/../../lib/loop/check_names.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/../../lib/loop/state_snapshot.sh"
+# shellcheck disable=SC1091
 source "${LIB_DIR}/outputs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/entity_target.sh"

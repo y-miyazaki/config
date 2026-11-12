@@ -1005,6 +1005,7 @@ run_items_main() {
     run --separate-stderr bash -c "
         source '$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh'
         checkout_context() { cd '${ITEMS_REPO}' || return 1; }
+        cd '${ITEMS_REPO}'
         main
     "
 }

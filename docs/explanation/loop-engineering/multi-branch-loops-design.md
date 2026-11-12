@@ -84,7 +84,7 @@ Defined here only. Other docs link to this section.
 ```text
 loop-detect
   1. Read LOOP_* + state (targets map)
-  2. Pin DETECT_SCRIPT to an absolute path (state_branch / job checkout) BEFORE any target checkout, then snapshot the state file, run log and budget from `origin/<state_branch>` (see [Trusted ref](#trusted-ref))
+  2. Pin DETECT_SCRIPT to an absolute path (state_branch / job checkout) BEFORE any target checkout, then snapshot the state file and run log from `origin/<state_branch>` (see [Trusted ref](#trusted-ref))
   3. Resolve integration branch list (glob/regex)
   4. Optionally enumerate open PRs (LOOP_PULL_REQUESTS)
   5. Apply trigger scope (LOOP_SCOPED_HEAD_BRANCH / LOOP_SCOPED_PR_NUMBER / workflow_run event head) → drop non-matching targets
@@ -103,9 +103,9 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 
 ### Trusted ref
 
-A job that holds a write token and runs repository scripts (both `detect` jobs, `finalize-l1`, `finalize-l2`) must not run code that a PR author controls. On a `pull_request*` event the default checkout is the PR merge ref, so these jobs check out `inputs.state_branch` instead (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`). Other events keep their default ref, which is already the default branch or a ref a maintainer chose. The read-only agent jobs keep the event ref because the maker edits it.
+A job that holds a write token (both `detect` jobs, both `record-skip` jobs, `finalize-l1`, `finalize-l2`) must not run code that a PR author controls. On a `pull_request*` event the default checkout is the PR merge ref, so these jobs check out `inputs.state_branch` instead (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`). Other events keep their default ref, which is already the default branch or a ref a maintainer chose. The read-only agent jobs keep the event ref because the maker edits it.
 
-Authoritative data follows the same rule: `loop-detect` snapshots the state file, the run log and the budget file from `origin/<state_branch>` before any target checkout and reads the snapshot (`snapshot_state_from_branch` in `loop-detect/lib/state.sh`), and `loop-run-log` checks out the state branch tip before it appends and pushes. Branch names and the state file path are validated by one definition, `lib/loop/check_names.sh`.
+State data follows the same rule: `loop-detect` and `loop-entity-detect` snapshot the state file and the run log from `origin/<state_branch>` before any target checkout and read the snapshot (`state_snapshot_from_branch` in `lib/loop/state_snapshot.sh`), and `loop-run-log` checks out the state branch tip before it appends and pushes. The budget file is policy configuration, so it is read from the trusted checkout, not from the snapshot. Branch names, the loop name and the state file path are validated by one definition, `lib/loop/check_names.sh`.
 
 ## Target Model (from / to)
 

@@ -5,6 +5,7 @@
 # Use cases:
 # - check_names_branch accepts ordinary branch names, loop agent branches and PR head names
 # - check_names_branch rejects empty names, a leading dash, "..", spaces and shell metacharacters
+# - check_names_loop_name accepts loop names and rejects separators, spaces and a leading dash
 # - check_names_state_file accepts .loop/state-<name>.json and rejects every other shape
 # - check_names_state_file rejects ".." and path separators inside the name
 # - every action that validates a branch or state file path sources check_names.sh and keeps no regex of its own
@@ -36,6 +37,18 @@ setup() {
     done
 }
 
+@test "check_names_loop_name accepts loop names and rejects separators, spaces and a leading dash" {
+    local name
+    for name in changelog github-pr-revise ci-sweeper docs_updater a.b 1x; do
+        run check_names_loop_name "${name}"
+        [ "$status" -eq 0 ]
+    done
+    for name in "" "-x" "a/b" "a b" "a;b" ".hidden"; do
+        run check_names_loop_name "${name}"
+        [ "$status" -eq 1 ]
+    done
+}
+
 @test "check_names_state_file accepts .loop/state-<name>.json" {
     local path
     for path in .loop/state-changelog.json .loop/state-ci-sweeper-run-ledger.json .loop/state-a_b.c.json; do
@@ -55,6 +68,6 @@ setup() {
 @test "no action keeps its own branch-name or state-path regex outside check_names.sh" {
     local root hits
     root="$(bats_workspace_root)/.github"
-    hits="$(grep -rnE 'a-zA-Z0-9/_\.-\]|a-zA-Z0-9_\./\]|\\\.loop/state-\[' "${root}/actions" "${root}/workflows" | grep -v 'lib/loop/check_names.sh' | grep -v 'check_names.sh:' || true)"
+    hits="$(grep -rnE '\[(a-zA-Z|A-Za-z)0-9(/_\.-|_\./)\]|\[-?(a-zA-Z|A-Za-z)0-9_\.-?\]\*\$|\\\.loop/state-\[' "${root}/actions" "${root}/workflows" | grep -v 'lib/loop/check_names.sh' | grep -v 'check_names.sh:' || true)"
     [ -z "${hits}" ]
 }

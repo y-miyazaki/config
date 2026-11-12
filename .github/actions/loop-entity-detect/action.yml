@@ -94,6 +94,9 @@ inputs:
     default: .loop/loop-run-log.md
     description: Path to loop run log
     required: false
+  state_branch:
+    description: Branch that stores .loop/* state; the state file and run log are read from it, not from the checked-out tree
+    required: true
   state_file:
     default: ""
     description: Optional state file path override
@@ -160,6 +163,7 @@ runs:
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
         STATE_FILE: ${{ steps.paths.outputs.state_file }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 

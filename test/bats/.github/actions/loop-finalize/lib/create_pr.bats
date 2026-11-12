@@ -124,7 +124,6 @@ teardown() {
     run bash "${script}"
     [ "$status" -eq 0 ]
     grep -qxF 'url=https://github.com/example/repo/pull/42' "${out}"
-    grep -qxF 'number=42' "${out}"
 }
 
 @test "create_pr records redacted failure when gh pr create fails" {

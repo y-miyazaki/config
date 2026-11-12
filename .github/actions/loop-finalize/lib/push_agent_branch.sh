@@ -72,6 +72,8 @@ umask 027
 export LC_ALL=C.UTF-8
 
 _LOOP_PUSH_AGENT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh disable=SC1091
+source "${_LOOP_PUSH_AGENT_LIB_DIR}/check_names.sh"
 # shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
 source "${_LOOP_PUSH_AGENT_LIB_DIR}/edit_paths.sh"
 # shellcheck source=../../lib/loop/failure_record.sh disable=SC1091
@@ -234,7 +236,7 @@ function validate_agent_branch {
     local head suffix
 
     [[ -n ${branch} && -n ${prefix} && -n ${skill} ]] || return 1
-    [[ ${branch} =~ ^[A-Za-z0-9/_.-]+$ && ${branch} != -* ]] || return 1
+    check_names_branch "${branch}" || return 1
     head="${prefix}/${skill}/"
     [[ ${branch} == "${head}"* ]] || return 1
     suffix="${branch#"${head}"}"
@@ -326,7 +328,7 @@ function main {
     if [[ -z ${BASE_BRANCH} ]]; then
         fail_push "base branch is empty"
     fi
-    if ! [[ ${BASE_BRANCH} =~ ^[A-Za-z0-9/_.-]+$ ]] || [[ ${BASE_BRANCH} == -* ]]; then
+    if ! check_names_branch "${BASE_BRANCH}"; then
         printf -v quoted '%q' "${BASE_BRANCH}"
         fail_push "invalid base branch ${quoted}"
     fi
@@ -353,7 +355,7 @@ function main {
         fail_push "target_json is not valid JSON: ${from_ref}"
     fi
     if [[ -n ${from_ref} ]]; then
-        if ! [[ ${from_ref} =~ ^[A-Za-z0-9/_.-]+$ ]] || [[ ${from_ref} == -* ]]; then
+        if ! check_names_branch "${from_ref}"; then
             printf -v quoted '%q' "${from_ref}"
             fail_push "invalid from.ref ${quoted}"
         fi

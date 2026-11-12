@@ -18,6 +18,7 @@
 # - pr_excluded fork token excludes a cross-repository PR whose fork was deleted
 # - pr_excluded excludes label match
 # - pr_excluded excludes wip_title when token is set
+# - list_open_prs warns when gh pr list fails instead of failing silently
 # - pr_excluded wip_title matches wip as a word in any case and not words that start with wip
 # - list_open_prs fails when gh missing and detect_pr_enabled is true
 
@@ -139,6 +140,19 @@ pr_json_with_labels() {
         run pr_excluded "${pr}" "wip_title" ""
         [ "$status" -eq 1 ]
     done
+}
+
+@test "list_open_prs warns when gh pr list fails instead of failing silently" {
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\nexit 1\n' > "${mock_bin}/gh"
+    chmod +x "${mock_bin}/gh"
+    run env PATH="${mock_bin}:${PATH}" DETECT_PR_ENABLED=true bash -c '
+        set -euo pipefail
+        source "'"$(bats_workspace_root)"'/.github/actions/loop-detect/lib/_init.sh"
+        list_open_prs "" "" "tok"
+    '
+    [[ $output == *"gh pr list failed"* ]]
 }
 
 @test "list_open_prs fails when gh missing and detect_pr_enabled is true" {

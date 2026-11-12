@@ -74,8 +74,11 @@ function list_open_prs {
         return 0
     fi
 
-    prs_json="$(gh pr list --state open --limit 50 --json \
-        number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
+    if ! prs_json="$(gh pr list --state open --limit 50 --json \
+        number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null)"; then
+        echo "::warning::loop-detect/prs: gh pr list failed; no pull requests were scanned this run"
+        prs_json='[]'
+    fi
 
     while IFS= read -r pr_line; do
         [[ -z ${pr_line} ]] && continue

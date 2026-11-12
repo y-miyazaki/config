@@ -42,7 +42,7 @@ function resolve_state_file {
     if [[ -n ${STATE_FILE_INPUT:-} ]]; then
         state_file="${STATE_FILE_INPUT}"
     elif [[ -n ${LOOP_NAME:-} ]]; then
-        if ! [[ ${LOOP_NAME} =~ ^[a-zA-Z0-9][-a-zA-Z0-9_.]*$ ]]; then
+        if ! check_names_loop_name "${LOOP_NAME}"; then
             echo "::error::loop_name contains invalid characters" >&2
             return 1
         fi

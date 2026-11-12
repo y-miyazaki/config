@@ -58,10 +58,10 @@ HANDOFF_DIR="${RUNNER_TEMP:-/tmp}/loop-handoff"
 DETECT_OUT="${RUNNER_TEMP:-/tmp}/entity-detect.json"
 
 #######################################
-# read_entity_target_state: Read one target's state from the checked-out state file
+# read_entity_target_state: Read one target's state from a state file snapshot
 #
 # Description:
-#   Reads the state file of the working tree only. A missing file, an unreadable file or a missing
+#   Reads the given file (the state-branch snapshot made by main). A missing file, an unreadable file or a missing
 #   target gives {} (no state), so the circuit breaker is not open for a target without history.
 #
 # Globals:
@@ -166,6 +166,7 @@ function write_entity_skip_outputs {
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
 #   GITHUB_TOKEN
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
+#   STATE_BRANCH, STATE_FILE - The state file and run log are read from origin/<STATE_BRANCH>
 #   HANDOFF_DIR, DETECT_OUT
 #
 # Arguments:
@@ -209,8 +210,21 @@ function main {
         exit 1
     fi
 
+    # Snapshot the state and the run log from the state branch; the budget file is policy and stays on the trusted checkout.
+    local state_read_file run_log_read_file
+    local -a snapshot_pairs=("${RUN_LOG_FILE:-.loop/loop-run-log.md}" "")
+    state_read_file="$(mktemp)"
+    run_log_read_file="$(mktemp)"
+    snapshot_pairs[1]="${run_log_read_file}"
+    if [[ -n ${STATE_FILE:-} ]]; then
+        snapshot_pairs+=("${STATE_FILE}" "${state_read_file}")
+    fi
+    if ! state_snapshot_from_branch "${STATE_BRANCH:?STATE_BRANCH is required}" "${snapshot_pairs[@]}"; then
+        exit 1
+    fi
+
     if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
-        "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+        "${run_log_read_file}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_entity_skip_outputs "budget"
     fi
@@ -246,7 +260,7 @@ function main {
 
     handoff_key="$(jq -r '.[0].target_json.key' <<< "${full_matrix}")"
     verdict="$(admission_evaluate "$(jq -c '.result.gate // null' "${DETECT_OUT}")" \
-        "$(read_entity_target_state "${STATE_FILE:-}" "${handoff_key}")")"
+        "$(read_entity_target_state "${state_read_file}" "${handoff_key}")")"
     if [[ $(jq -r '.admit' <<< "${verdict}") != "true" ]]; then
         write_entity_skip_outputs "$(jq -r '.skip_reason' <<< "${verdict}")" \
             "$(jq -r '.detail' <<< "${verdict}")"

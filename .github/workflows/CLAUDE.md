@@ -10,11 +10,11 @@ Design background: [GitHub Workflows Design](../../docs/explanation/github-workf
 
 Before changing code here, find the docs that describe it and update them in the same change (see Document sync in `AGENTS.md`).
 
-| Changed code                                               | Docs to find and update                                                                                                                                                         |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.github/workflows/*.yaml`                                 | Paths in the file's header `# References:`                                                                                                                                      |
-| `.github/actions/<name>/` (action.yml and its `lib/`)      | Paths in that `action.yml` header `# References:`                                                                                                                               |
-| `.github/actions/lib/loop/` (shared, no header of its own) | `docs/explanation/loop-engineering/loop-engineering-design.md` and the `References` of every `loop-*` action that sources it; see `docs/explanation/loop-engineering/CLAUDE.md` |
+| Changed code                                               | Docs to find and update                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/*.yaml`                                 | Paths in the file's header `# References:`                                                                                                                                                                                                                       |
+| `.github/actions/<name>/` (action.yml and its `lib/`)      | Paths in that `action.yml` header `# References:`                                                                                                                                                                                                                |
+| `.github/actions/lib/loop/` (shared, no header of its own) | `docs/explanation/loop-engineering/loop-engineering-design.md`, `docs/explanation/loop-engineering/multi-branch-loops-design.md` (trusted ref, state snapshot) and the `References` of every `loop-*` action that sources it; rules: `.github/actions/CLAUDE.md` |
 
 When a change alters what the header states (called-by workflows, design rules, dependencies, references), update the header in the same change.
 
@@ -167,10 +167,6 @@ When a loop step records failure metadata for run logs or action outputs:
 | Action → action via `env.*` from prior action `GITHUB_ENV`        | Hidden contract — use `steps.<id>.outputs.*`             |
 | Force-push over `to.branch` on `pr_push`                          | Drops commits from earlier serialized runs (#684)        |
 | `cancel-in-progress: true` on pr-revise concurrency               | Kills in-flight work; use queue + merge landing          |
-| `[skip ci]` in a commit that lands on a PR head (`pr_push`)       | Suppresses the PR's required checks on the new head      |
-| One derived value computed in two jobs (artifact name, key)       | Drifts, and `GITHUB_RUN_ATTEMPT` differs after a re-run  |
-| Best-effort step ahead of Write State without a failure guard     | A failure skips Write State and loses the pending cursor |
-| One validation pattern defined in several actions that disagree   | A value passes one action and is invisible to the next   |
 | Assigning a global inside a function called via `$(...)`          | The subshell drops the assignment                        |
 
 ---
@@ -191,19 +187,19 @@ Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engin
 
 ## Loop judgements (MUST)
 
-Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../../docs/explanation/loop-engineering/CLAUDE.md#loop-judgements-go-through-the-gate-must). Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger filters; actor trust, mention and repository visibility checks belong to the gate.
+Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../actions/CLAUDE.md#loop-judgements-go-through-the-gate-must), which also owns the shared name validators and the state-branch read rule. Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger filters; actor trust, mention and repository visibility checks belong to the gate.
 
-## Cross-job values and best-effort steps (MUST)
+## Cross-job values, landing commits, and trusted ref (MUST)
 
 - A value that two jobs must agree on (artifact name, target key) is computed once and passed as a job output (`needs.<job>.outputs.*`). Do not recompute it in the second job: `GITHUB_RUN_ATTEMPT` changes when only failed jobs are re-run.
 - A commit that lands on a PR head (`pr_push` merge commit) **MUST NOT** carry `[skip ci]`. Only state, ledger, and run-log commits on `state_branch` do.
 - A step that is not critical (for example Enable Auto-Merge) and runs before `Write State` **MUST** handle its own failure (warn and continue). A failure there would skip `Write State` and lose the pending PR cursor.
-- Branch names and the state file path are validated only through `.github/actions/lib/loop/check_names.sh` (`check_names_branch`, `check_names_state_file`). **MUST NOT** add a regex of your own; the Bats case in `test/bats/.github/actions/lib/loop/check_names.bats` fails on a copy. Any other pattern that several actions validate gets the same treatment: one shared definition, every copy replaced in the same change.
-- A job that holds a write token and runs repository scripts (`detect`, `finalize-l1`, `finalize-l2`) **MUST** check out `inputs.state_branch` on `pull_request*` events (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`), so PR-controlled code never runs with that token. Read authoritative data (state file, run log, budget) from `origin/<state_branch>`, not from the checked-out tree.
+- A job that holds a write token (`detect`, `record-skip`, `finalize-l1`, `finalize-l2`) **MUST** check out `inputs.state_branch` on `pull_request*` events (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`), so PR-controlled code never runs with that token. The read-only agent jobs keep the event ref. `test/bats/github-actions/loop-caller-parity.bats` pins the list.
+- Shared name validators and where state data is read from: see [Loop judgements go through the gate](../actions/CLAUDE.md#loop-judgements-go-through-the-gate-must). Do not restate them here.
 
 ## Verification
 
-Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00). `pr_push` landing changes **MUST** include `test/bats/.github/actions/loop-finalize/lib/push_target.bats`.
+Paired Bats when behavior changes (TEST-00): workflow files under `test/bats/github-actions/`, action code under `test/bats/.github/actions/<action>/lib/` and `test/bats/.github/actions/lib/loop/` (mirroring the source path). `pr_push` landing changes **MUST** include `test/bats/.github/actions/loop-finalize/lib/push_target.bats`.
 
 ---
 

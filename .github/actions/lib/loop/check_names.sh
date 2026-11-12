@@ -2,7 +2,7 @@
 #######################################
 # Description:
 #   The one definition of the names loop actions accept before they reach git, gh or a file path:
-#   branch names and the state file path. Every action sources this file; none keeps its own regex.
+#   branch names, the loop name and the state file path. Every action sources this file; none keeps its own regex.
 #
 # Usage:
 #   source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
@@ -16,6 +16,7 @@
 #   - Functions only return a status; callers print their own error with their own context
 #   - A branch name starts with an alphanumeric, "_", "." or "/", never "-", so git never reads it as an option
 #   - A branch name and a state file path never contain ".." (git refuses it in a ref name too)
+#   - The loop name starts with an alphanumeric and holds only alphanumerics, "_", "." and "-"
 #   - The state file path is .loop/state-<name>.json, the pattern loop-state-promote lists
 #   - Change a rule here and add a Bats case in test/bats/.github/actions/lib/loop/check_names.bats
 #######################################
@@ -40,6 +41,28 @@ function check_names_branch {
     local name="${1:-}"
 
     [[ ${name} =~ ^[A-Za-z0-9_./][A-Za-z0-9/_.-]*$ ]] && [[ ${name} != *".."* ]]
+}
+
+#######################################
+# check_names_loop_name: Check a loop name used to derive the state file path and branch names
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Loop name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the name is accepted; 1 otherwise
+#
+#######################################
+function check_names_loop_name {
+    local name="${1:-}"
+
+    [[ ${name} =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]
 }
 
 #######################################

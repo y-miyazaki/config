@@ -7,6 +7,7 @@
 # - run.sh rejects missing loop_name
 # - run.sh rejects missing state_branch
 # - run.sh pushes the run log from the state branch even when HEAD is on another branch
+# - run.sh still writes the entry when the working tree is dirty and skips an invalid state branch
 # - run.sh appends entry, commits, and writes entry_json output
 # - run.sh computes duration when duration input is empty
 
@@ -119,6 +120,35 @@ setup() {
     [[ $output != *"pr-only.txt"* ]]
     run git -C "${RUN_LOG_BARE}" show refs/heads/main:.loop/loop-run-log.md
     [[ $output == *'"outcome":"error"'* ]]
+}
+
+@test "run.sh still writes the entry when the working tree is dirty and skips an invalid state branch" {
+    git -C "${RUN_LOG_WORK}" checkout -q -b feature/pr-head
+    printf 'leftover\n' >> "${RUN_LOG_WORK}/.loop/loop-run-log.md"
+
+    run_log_run \
+        GITHUB_TOKEN='test-token' \
+        LOOP_NAME='docs-updater' \
+        OUTCOME='error' \
+        RUN_LOG_FILE='.loop/loop-run-log.md' \
+        STATE_BRANCH='main' \
+        LOOP_RUN_ID='42' \
+        DURATION_S_INPUT='1' \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Run log pushed to main on attempt 1."* ]]
+
+    run_log_run \
+        GITHUB_TOKEN='test-token' \
+        LOOP_NAME='docs-updater' \
+        OUTCOME='error' \
+        RUN_LOG_FILE='.loop/loop-run-log.md' \
+        STATE_BRANCH='--upload-pack=x' \
+        LOOP_RUN_ID='43' \
+        DURATION_S_INPUT='1' \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"invalid state branch"* ]]
 }
 
 @test "run.sh computes duration when duration input is empty" {

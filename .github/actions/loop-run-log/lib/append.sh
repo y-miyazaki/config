@@ -23,6 +23,9 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/check_names.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/git_auth.sh"
@@ -271,11 +274,18 @@ function loop_run_log_checkout_state_branch {
     local base_branch="${1:?base_branch required}"
     local token="${2:?token required}"
 
+    if ! check_names_branch "${base_branch}"; then
+        echo "::warning::loop-run-log: invalid state branch ${base_branch}; the run log entry is not written"
+        return 1
+    fi
     export GITHUB_TOKEN="${token}"
     loop_git_configure_auth
-    if git fetch origin "${base_branch}" > /dev/null 2>&1 \
-        && git checkout -q -B "${base_branch}" "origin/${base_branch}"; then
-        return 0
+    if git fetch origin "${base_branch}" > /dev/null 2>&1; then
+        # Finalize leftovers in the tree must not drop the entry: retry once discarding them (last step of the job).
+        if git checkout -q -B "${base_branch}" "origin/${base_branch}" 2> /dev/null \
+            || git checkout -q -f -B "${base_branch}" "origin/${base_branch}"; then
+            return 0
+        fi
     fi
     echo "::warning::loop-run-log: could not check out ${base_branch}; the run log entry is not written"
     return 1
