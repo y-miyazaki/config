@@ -826,7 +826,7 @@ function validate_state_file_path {
 #
 #######################################
 function main {
-    local now consecutive
+    local now consecutive pre_prune_consecutive
 
     : "${STATE_FILE:?}"
 
