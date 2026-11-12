@@ -133,7 +133,7 @@ function apply_loop_message_labels {
 # Arguments:
 #   $1 - Message text (already trimmed)
 #   $2 - Loop marker (<!-- <loop_name>:v1 -->)
-#   $3 - Meta block from build_loop_meta_block
+#   $3 - Meta block from loop_meta_build_block
 #
 # Outputs:
 #   The body on stdout
@@ -301,7 +301,7 @@ function deliver_loop_message {
     fi
 
     loop_meta_reset
-    meta_block="$(build_loop_meta_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
+    meta_block="$(loop_meta_build_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
 
     if ! apply_loop_message_labels "${number}" "${labels_file}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         return 1

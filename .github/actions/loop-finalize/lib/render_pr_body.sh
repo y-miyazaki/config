@@ -553,14 +553,14 @@ function render_run_metadata {
     local usage_json="${5:-}"
     local block
 
-    # Shape comes from build_loop_meta_block so the PR body, PR comment,
+    # Shape comes from loop_meta_build_block so the PR body, PR comment,
     # trigger reply, and entity Issue comment all carry the same meta block.
     loop_meta_reset
     [[ -n ${level} ]] && loop_meta_row "Level" "$(escape_markdown_table_cell "${level}")"
     [[ -n ${target_key} ]] && loop_meta_row "Target" "$(escape_markdown_table_cell "${target_key}")"
     [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
 
-    block="$(build_loop_meta_block "${OUTCOME:-}" "${VERDICT:-}" "" "${engine}" "${usage_json}" "")"
+    block="$(loop_meta_build_block "${OUTCOME:-}" "${VERDICT:-}" "" "${engine}" "${usage_json}" "")"
     printf '%s\n\n' "${block}"
 }
 

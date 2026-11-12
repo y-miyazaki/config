@@ -326,7 +326,7 @@ function deliver_issue_create {
     fi
 
     loop_meta_reset
-    meta_block="$(build_loop_meta_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
+    meta_block="$(loop_meta_build_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
     for pick in "${picks[@]}"; do
         i="${pick%%$'\t'*}"
         hash="${pick#*$'\t'}"

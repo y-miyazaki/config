@@ -308,7 +308,7 @@ EOF
     loop_meta_row "Branch" "${branch_display}"
     loop_meta_row "Commit" "${commit_display}"
     loop_meta_row "Attempt" "${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—}"
-    printf '\n%s\n' "$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
+    printf '\n%s\n' "$(loop_meta_build_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
 }
 
 #######################################

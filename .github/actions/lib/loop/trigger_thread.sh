@@ -266,9 +266,9 @@ function build_done_reply_body {
         fi
 
         # Everything below is about the loop run itself, not about the change.
-        # Shape comes from build_loop_meta_block so PR bodies, PR comments,
+        # Shape comes from loop_meta_build_block so PR bodies, PR comments,
         # trigger replies, and entity Issue comments all read the same.
-        build_loop_meta_block "${outcome}" "${verdict}" "${detail_reason}" \
+        loop_meta_build_block "${outcome}" "${verdict}" "${detail_reason}" \
             "${engine}" "${usage_json}" "${loop_run_url}"
     }
 }

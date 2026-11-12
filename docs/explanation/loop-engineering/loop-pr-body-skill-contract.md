@@ -20,7 +20,7 @@ Loop PR bodies follow the same separation as [microsoft/apm `triage-panel`](http
 | Skill (`apm-triage-panel/SKILL.md`)            | `loop-*` skill (`SKILL.md` + references)                                  |
 | Verdict template (`assets/triage-template.md`) | `assets/pr-body-template.md` per loop skill                               |
 | Workflow posts comment                         | `loop-finalize` composes PR body; `loop-notify-pr` posts human PR comment |
-| Mechanical footer (ratification)               | `LOOP_META_FOOTER` via `build_loop_meta_block()`                          |
+| Mechanical footer (ratification)               | `LOOP_META_FOOTER` via `loop_meta_build_block()`                          |
 
 ### What the skill owns
 

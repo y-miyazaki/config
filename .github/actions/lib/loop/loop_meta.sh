@@ -11,7 +11,7 @@
 #   source loop_meta.sh   (sources outcome.sh itself)
 #   loop_meta_reset
 #   loop_meta_row "Level" "L2"
-#   build_loop_meta_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
+#   loop_meta_build_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -39,7 +39,7 @@ LOOP_META_FOOTER="<sub>Written by Loop Engineering (LE), an automation — not b
 LOOP_META_ROWS=()
 
 #######################################
-# build_loop_meta_block: Render the collapsed loop meta block
+# loop_meta_build_block: Render the collapsed loop meta block
 #
 # Globals:
 #   LOOP_META_MARKER - Idempotency marker emitted as the first line
@@ -60,11 +60,11 @@ LOOP_META_ROWS=()
 #   0 on success
 #
 # Usage:
-#   block="$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "${REASON}" \
+#   block="$(loop_meta_build_block "${OUTCOME}" "${VERDICT}" "${REASON}" \
 #       "${ENGINE}" "${USAGE_JSON}" "${run_url}")"
 #
 #######################################
-function build_loop_meta_block {
+function loop_meta_build_block {
     local outcome="${1:-}"
     local verdict="${2:-}"
     local reason="${3:-}"
