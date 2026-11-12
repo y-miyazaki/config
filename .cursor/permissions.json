@@ -39,6 +39,7 @@
     "git fetch",
     "git grep",
     "git log",
+    "git rebase",
     "git remote -v",
     "git remote show",
     "git rev-parse",
@@ -99,7 +100,7 @@
       "Prioritize lean-ctx and fetch MCP. Avoid heavy terminal outputs."
     ],
     "block_instructions": [
-      "git commit, push, checkout, rebase, reset --hard, clean -f, and branch -D require approval.",
+      "git commit, checkout, reset --hard, clean -f, and branch -D require approval; git push --force and git push -f stay blocked unless the user asks for them.",
       "Do not read or write .env files, credentials, secrets/, private keys, or cloud credential paths.",
       "Do not dump environment variables (env, printenv); they carry tokens.",
       "Do not write to dotfiles or dot-directories under the home directory (e.g. ~/.ssh, ~/.aws).",
