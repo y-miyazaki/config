@@ -81,7 +81,7 @@ function main {
         exit 1
     fi
 
-    loop_git_configure_auth
+    git_auth_configure
 
     git fetch origin "${AGENT_BRANCH}" "${TO_BRANCH}" --prune
     git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"

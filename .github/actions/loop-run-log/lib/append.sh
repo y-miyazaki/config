@@ -282,7 +282,7 @@ function loop_run_log_checkout_state_branch {
         return 1
     fi
     export GITHUB_TOKEN="${token}"
-    loop_git_configure_auth
+    git_auth_configure
     if git fetch origin "${base_branch}" > /dev/null 2>&1; then
         # Finalize leftovers in the tree must not drop the entry: retry once discarding them (last step of the job).
         if git checkout -q -B "${base_branch}" "origin/${base_branch}" 2> /dev/null \
@@ -327,7 +327,7 @@ function loop_run_log_commit_and_push {
     local attempt push_error=""
 
     export GITHUB_TOKEN="${token}"
-    loop_git_configure_auth
+    git_auth_configure
 
     for attempt in 1 2 3; do
         if [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then

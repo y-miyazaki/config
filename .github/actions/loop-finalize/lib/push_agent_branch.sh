@@ -337,7 +337,7 @@ function main {
     fi
 
     # 5. Fetch base, verify the bundle, import only the agent branch
-    if ! loop_git_configure_auth; then
+    if ! git_auth_configure; then
         fail_push "git auth configuration failed"
     fi
     if ! err="$(git fetch --no-tags origin "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}" 2>&1)"; then

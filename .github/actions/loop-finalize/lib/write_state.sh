@@ -939,7 +939,7 @@ function main {
 
     validate_state_file_path || exit 1
 
-    loop_git_configure_auth
+    git_auth_configure
 
     if [[ -z ${STATE_BRANCH} ]]; then
         echo "::error::state_branch is required"

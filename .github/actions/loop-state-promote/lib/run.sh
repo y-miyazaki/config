@@ -369,7 +369,7 @@ function process_state_push_branch {
 function main {
     : "${STATE_BRANCH:?STATE_BRANCH is required}"
 
-    loop_git_configure_auth
+    git_auth_configure
 
     if [[ ${MERGED} == "true" ]]; then
         OUTCOME="pr_merged"

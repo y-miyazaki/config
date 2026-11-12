@@ -4,8 +4,8 @@
 # Tests for .github/actions/lib/loop/git_auth.sh
 #
 # Use cases:
-# - loop_git_configure_auth sets identity and the auth header in the local git config
-# - loop_git_configure_auth fails without writing config when GITHUB_TOKEN is empty
+# - git_auth_configure sets identity and the auth header in the local git config
+# - git_auth_configure fails without writing config when GITHUB_TOKEN is empty
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -21,16 +21,16 @@ setup() {
     cd "${REPO}" || return 1
 }
 
-@test "loop_git_configure_auth fails without writing config when GITHUB_TOKEN is empty" {
-    GITHUB_TOKEN="" run loop_git_configure_auth
+@test "git_auth_configure fails without writing config when GITHUB_TOKEN is empty" {
+    GITHUB_TOKEN="" run git_auth_configure
     [ "$status" -eq 1 ]
     [[ $output == *"GITHUB_TOKEN is required"* ]]
     run git config --local --get user.name
     [ "$status" -ne 0 ]
 }
 
-@test "loop_git_configure_auth sets identity and the auth header in the local git config" {
-    GITHUB_TOKEN="placeholder-token" run loop_git_configure_auth
+@test "git_auth_configure sets identity and the auth header in the local git config" {
+    GITHUB_TOKEN="placeholder-token" run git_auth_configure
     [ "$status" -eq 0 ]
     [ "$(git config --local user.name)" = "github-actions[bot]" ]
     [ "$(git config --local user.email)" = "github-actions[bot]@users.noreply.github.com" ]

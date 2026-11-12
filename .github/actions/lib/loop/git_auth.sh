@@ -5,7 +5,7 @@
 #
 # Usage:
 #   source git_auth.sh
-#   GITHUB_TOKEN=... loop_git_configure_auth
+#   GITHUB_TOKEN=... git_auth_configure
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -17,7 +17,7 @@
 #######################################
 
 #######################################
-# loop_git_configure_auth: Set commit identity and the GitHub auth header
+# git_auth_configure: Set commit identity and the GitHub auth header
 #
 # Globals:
 #   GITHUB_TOKEN - Token used for fetch and push (read)
@@ -32,7 +32,7 @@
 #   0 on success; 1 when GITHUB_TOKEN is empty or git config fails
 #
 #######################################
-function loop_git_configure_auth {
+function git_auth_configure {
     if [[ -z ${GITHUB_TOKEN:-} ]]; then
         echo "::error::GITHUB_TOKEN is required" >&2
         return 1

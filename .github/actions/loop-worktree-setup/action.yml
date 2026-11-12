@@ -78,7 +78,7 @@ runs:
         source "${GITHUB_ACTION_PATH}/../lib/loop/git_auth.sh"
         # shellcheck disable=SC1091
         source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
-        loop_git_configure_auth
+        git_auth_configure
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""
