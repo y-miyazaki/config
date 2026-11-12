@@ -30,7 +30,7 @@
 #######################################
 
 #######################################
-# issue_fingerprint_hash: Hash a finding fingerprint for the Issue marker
+# deliver_issue_create_fingerprint_hash: Hash a finding fingerprint for the Issue marker
 #
 # Globals:
 #   None
@@ -46,10 +46,10 @@
 #   0 always
 #
 # Usage:
-#   hash="$(issue_fingerprint_hash code-review "a.sh:f:null")"
+#   hash="$(deliver_issue_create_fingerprint_hash code-review "a.sh:f:null")"
 #
 #######################################
-function issue_fingerprint_hash {
+function deliver_issue_create_fingerprint_hash {
     local loop_name="$1"
     local fingerprint="$2"
 
@@ -57,7 +57,7 @@ function issue_fingerprint_hash {
 }
 
 #######################################
-# sanitize_issue_body: Defuse text an agent could use to forge markers or notify people
+# deliver_issue_create_sanitize_body: Defuse text an agent could use to forge markers or notify people
 #
 # Description:
 #   Every HTML comment opener becomes "&lt;!--" (so no marker, including the loop's own
@@ -78,10 +78,10 @@ function issue_fingerprint_hash {
 #   0 always
 #
 # Usage:
-#   body="$(sanitize_issue_body code-review "${raw_body}")"
+#   body="$(deliver_issue_create_sanitize_body code-review "${raw_body}")"
 #
 #######################################
-function sanitize_issue_body {
+function deliver_issue_create_sanitize_body {
     local zwsp=$'\xe2\x80\x8b'
     local body="$2"
 
@@ -90,7 +90,7 @@ function sanitize_issue_body {
 }
 
 #######################################
-# issue_create_summary: Append one line to the step summary when it is available
+# deliver_issue_create_summary: Append one line to the step summary when it is available
 #
 # Globals:
 #   GITHUB_STEP_SUMMARY - Step summary file (skipped when unset)
@@ -105,7 +105,7 @@ function sanitize_issue_body {
 #   0 always
 #
 #######################################
-function issue_create_summary {
+function deliver_issue_create_summary {
     if [[ -n ${GITHUB_STEP_SUMMARY:-} ]]; then
         printf '%s\n' "$1" >> "${GITHUB_STEP_SUMMARY}"
     fi
@@ -113,7 +113,7 @@ function issue_create_summary {
 }
 
 #######################################
-# mark_issue_create_unchanged: Report that nothing was filed and set outcome=unchanged
+# deliver_issue_create_mark_unchanged: Report that nothing was filed and set outcome=unchanged
 #
 # Globals:
 #   GITHUB_OUTPUT - Receives outcome=unchanged when set
@@ -128,7 +128,7 @@ function issue_create_summary {
 #   0 always
 #
 #######################################
-function mark_issue_create_unchanged {
+function deliver_issue_create_mark_unchanged {
     echo "::notice title=loop-deliver::$1"
     if [[ -n ${GITHUB_OUTPUT:-} ]]; then
         echo "outcome=unchanged" >> "${GITHUB_OUTPUT}"
@@ -137,7 +137,7 @@ function mark_issue_create_unchanged {
 }
 
 #######################################
-# validate_issue_create_input: Check issues.json and the Issue limit (fail closed)
+# deliver_issue_create_validate_input: Check issues.json and the Issue limit (fail closed)
 #
 # Globals:
 #   None
@@ -153,7 +153,7 @@ function mark_issue_create_unchanged {
 #   0 when valid; 1 on failure (recorded)
 #
 #######################################
-function validate_issue_create_input {
+function deliver_issue_create_validate_input {
     local file="$1"
     local limit="$2"
 
@@ -179,7 +179,7 @@ function validate_issue_create_input {
 }
 
 #######################################
-# select_new_issue_findings: Pick the findings that still need an Issue
+# deliver_issue_create_select_new_findings: Pick the findings that still need an Issue
 #
 # Description:
 #   Drops findings already filed (open or closed Issues with every label) or repeated within
@@ -205,7 +205,7 @@ function validate_issue_create_input {
 #   0 on success (the output file may be empty); 1 when listing Issues fails (recorded)
 #
 #######################################
-function select_new_issue_findings {
+function deliver_issue_create_select_new_findings {
     local file="$1"
     local limit="$2"
     local loop_name="$3"
@@ -234,7 +234,7 @@ function select_new_issue_findings {
         title="$(jq -r --argjson i "${i}" '.[$i].title' "${file}")"
         body="$(jq -r --argjson i "${i}" '.[$i].body' "${file}")"
         fingerprint="$(jq -r --argjson i "${i}" '.[$i].fingerprint' "${file}")"
-        hash="$(issue_fingerprint_hash "${loop_name}" "${fingerprint}")"
+        hash="$(deliver_issue_create_fingerprint_hash "${loop_name}" "${fingerprint}")"
         if [[ -n ${seen_hashes[${hash}]:-} ]]; then
             skipped_dupes=$((skipped_dupes + 1))
             continue
@@ -242,12 +242,12 @@ function select_new_issue_findings {
         seen_hashes["${hash}"]=1
         if [[ ${kept} -ge ${limit} ]]; then
             dropped=$((dropped + 1))
-            issue_create_summary "- cut by finalize_issue_limit=${limit}: ${title} (fingerprint: ${fingerprint})"
+            deliver_issue_create_summary "- cut by finalize_issue_limit=${limit}: ${title} (fingerprint: ${fingerprint})"
             continue
         fi
         # 4096 bytes of headroom for the marker line and the Meta block; bytes over-count characters
-        if [[ $(($(sanitize_issue_body "${loop_name}" "${body}" | wc -c) + 4096)) -gt 65536 ]]; then
-            issue_create_summary "- dropped (body too long for a GitHub issue): ${title} (fingerprint: ${fingerprint})"
+        if [[ $(($(deliver_issue_create_sanitize_body "${loop_name}" "${body}" | wc -c) + 4096)) -gt 65536 ]]; then
+            deliver_issue_create_summary "- dropped (body too long for a GitHub issue): ${title} (fingerprint: ${fingerprint})"
             continue
         fi
         printf '%s\t%s\n' "${i}" "${hash}" >> "${out_file}"
@@ -294,9 +294,9 @@ function deliver_issue_create {
     local label encoded labels_csv="" err url meta_block body_file picks_file pick i hash title created=0
     local -a labels=() label_args=() picks=() created_numbers=()
 
-    validate_issue_create_input "${file}" "${limit}" || return 1
+    deliver_issue_create_validate_input "${file}" "${limit}" || return 1
     if [[ $(jq -r 'length' "${file}") -eq 0 ]]; then
-        mark_issue_create_unchanged "No findings to file; outcome is unchanged"
+        deliver_issue_create_mark_unchanged "No findings to file; outcome is unchanged"
         return 0
     fi
 
@@ -312,7 +312,7 @@ function deliver_issue_create {
     done
 
     picks_file="$(mktemp)"
-    if ! select_new_issue_findings "${file}" "${limit}" "${loop_name}" "${labels_csv}" "${picks_file}"; then
+    if ! deliver_issue_create_select_new_findings "${file}" "${limit}" "${loop_name}" "${labels_csv}" "${picks_file}"; then
         rm -f "${picks_file}"
         return 1
     fi
@@ -334,23 +334,23 @@ function deliver_issue_create {
         body_file="$(mktemp)"
         {
             printf '<!-- %s:fp:%s -->\n' "${loop_name}" "${hash}"
-            printf '%s\n\n%s\n' "$(sanitize_issue_body "${loop_name}" "$(jq -r --argjson i "${i}" '.[$i].body' "${file}")")" "${meta_block}"
+            printf '%s\n\n%s\n' "$(deliver_issue_create_sanitize_body "${loop_name}" "$(jq -r --argjson i "${i}" '.[$i].body' "${file}")")" "${meta_block}"
         } > "${body_file}"
         if ! url="$(gh issue create --repo "${GITHUB_REPOSITORY}" --title "${title}" --body-file "${body_file}" "${label_args[@]}" 2>&1)"; then
             err="${url}"
             rm -f "${body_file}"
-            issue_create_summary "- failed creating \"${title}\" after ${created} created: ${created_numbers[*]:-none}"
+            deliver_issue_create_summary "- failed creating \"${title}\" after ${created} created: ${created_numbers[*]:-none}"
             deliver_message_fail "Failed to create an issue after ${created} created (${created_numbers[*]:-none}): ${err}"
             return 1
         fi
         rm -f "${body_file}"
         created=$((created + 1))
         created_numbers+=("#${url##*/}")
-        issue_create_summary "- created #${url##*/}: ${title}"
+        deliver_issue_create_summary "- created #${url##*/}: ${title}"
     done
 
     if [[ ${created} -eq 0 ]]; then
-        mark_issue_create_unchanged "No new findings to file; outcome is unchanged"
+        deliver_issue_create_mark_unchanged "No new findings to file; outcome is unchanged"
         return 0
     fi
     echo "::notice title=loop-deliver::Created ${created} issue(s): ${created_numbers[*]}"

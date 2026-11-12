@@ -12,7 +12,7 @@
 # - deliver_message_send applies allowlisted labels before posting (one POST, encoded DELETEs)
 # - deliver_message_send fails the step and records deliver_message on gh failures, redacted
 # - deliver_message_send records the failure and removes temp files when run under set -e
-# - issue_fingerprint_hash is the first 16 hex digits of sha256(loop_name, newline, fingerprint)
+# - deliver_issue_create_fingerprint_hash is the first 16 hex digits of sha256(loop_name, newline, fingerprint)
 # - deliver_issue_create creates nothing for [] and fails closed on an invalid or missing issues.json
 # - deliver_issue_create drops duplicates (open and closed, within the run) before applying the limit
 # - deliver_issue_create records the findings cut by the limit in the step summary
@@ -23,10 +23,10 @@
 # - deliver_issue_create fails closed when a label cannot be created and accepts an already existing label
 # - deliver_issue_create drops a finding whose finished body would exceed the GitHub limit
 # - deliver_issue_create escapes regex characters in the loop name when matching markers
-# - select_new_issue_findings writes one "<index><TAB><hash>" line per finding to keep and nothing for filed ones
-# - validate_issue_create_input rejects a missing file, a malformed array, and a non-numeric limit
+# - deliver_issue_create_select_new_findings writes one "<index><TAB><hash>" line per finding to keep and nothing for filed ones
+# - deliver_issue_create_validate_input rejects a missing file, a malformed array, and a non-numeric limit
 # - deliver_issue_create lives in deliver_issue_create.sh and is loaded by deliver_message.sh; these tests cover it through deliver_message_send
-# - sanitize_issue_body defuses HTML comments and mentions; the marker cannot be forged
+# - deliver_issue_create_sanitize_body defuses HTML comments and mentions; the marker cannot be forged
 # - deliver_issue_create stops at the first failed create and reports the issues already created
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -516,7 +516,7 @@ issues_for() {
 
 # marker_for FP: the issue marker for a fingerprint under loop name code-review
 marker_for() {
-    printf '<!-- code-review:fp:%s -->' "$(issue_fingerprint_hash code-review "$1")"
+    printf '<!-- code-review:fp:%s -->' "$(deliver_issue_create_fingerprint_hash code-review "$1")"
 }
 
 @test "deliver_issue_create creates nothing for an empty array and reports unchanged" {
@@ -528,29 +528,29 @@ marker_for() {
     grep -qx 'outcome=unchanged' "${GITHUB_OUTPUT}"
 }
 
-@test "select_new_issue_findings writes one index and hash line per finding to keep" {
+@test "deliver_issue_create_select_new_findings writes one index and hash line per finding to keep" {
     use_issue_create
     write_issues "$(issues_for 3 n)"
     GH_MOCK_LIST_OUT="$(marker_for n2)"
     export GH_MOCK_LIST_OUT
-    run select_new_issue_findings "${LOOP_MESSAGE_DIR}/issues.json" 3 code-review "loop%3Acode-review" "${BATS_TEST_TMPDIR}/picks"
+    run deliver_issue_create_select_new_findings "${LOOP_MESSAGE_DIR}/issues.json" 3 code-review "loop%3Acode-review" "${BATS_TEST_TMPDIR}/picks"
     [ "$status" -eq 0 ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/picks")" -eq 2 ]
     [ "$(cut -f1 "${BATS_TEST_TMPDIR}/picks" | paste -sd, -)" = "0,2" ]
-    [ "$(sed -n 1p "${BATS_TEST_TMPDIR}/picks" | cut -f2)" = "$(issue_fingerprint_hash code-review n1)" ]
+    [ "$(sed -n 1p "${BATS_TEST_TMPDIR}/picks" | cut -f2)" = "$(deliver_issue_create_fingerprint_hash code-review n1)" ]
 }
 
-@test "validate_issue_create_input rejects a missing file, a malformed array, and a non-numeric limit" {
+@test "deliver_issue_create_validate_input rejects a missing file, a malformed array, and a non-numeric limit" {
     use_issue_create
-    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    run deliver_issue_create_validate_input "${LOOP_MESSAGE_DIR}/issues.json" 3
     [ "$status" -eq 1 ]
     write_issues '[{"title":"t"}]'
-    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    run deliver_issue_create_validate_input "${LOOP_MESSAGE_DIR}/issues.json" 3
     [ "$status" -eq 1 ]
     write_issues "$(issues_for 1 n)"
-    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 0
+    run deliver_issue_create_validate_input "${LOOP_MESSAGE_DIR}/issues.json" 0
     [ "$status" -eq 1 ]
-    run validate_issue_create_input "${LOOP_MESSAGE_DIR}/issues.json" 3
+    run deliver_issue_create_validate_input "${LOOP_MESSAGE_DIR}/issues.json" 3
     [ "$status" -eq 0 ]
 }
 
@@ -689,10 +689,10 @@ marker_for() {
     [ "$(grep -c 'cut by finalize_issue_limit' "${GITHUB_STEP_SUMMARY}")" -eq 2 ]
 }
 
-@test "issue_fingerprint_hash is the first 16 hex digits of the sha256 of loop name, newline and fingerprint" {
+@test "deliver_issue_create_fingerprint_hash is the first 16 hex digits of the sha256 of loop name, newline and fingerprint" {
     local expected
     expected="$(printf 'code-review\na.sh:f:null' | sha256sum | cut -c1-16)"
-    run issue_fingerprint_hash code-review "a.sh:f:null"
+    run deliver_issue_create_fingerprint_hash code-review "a.sh:f:null"
     [ "$status" -eq 0 ]
     [ "$output" = "${expected}" ]
     [ "${#output}" -eq 16 ]
@@ -723,7 +723,7 @@ marker_for() {
     use_issue_create
     export LOOP_NAME="code.review"
     local other_hash
-    other_hash="$(issue_fingerprint_hash "code.review" "n1")"
+    other_hash="$(deliver_issue_create_fingerprint_hash "code.review" "n1")"
     export GH_MOCK_LIST_OUT="<!-- codexreview:fp:${other_hash} -->"
     write_issues "$(issues_for 1 n)"
     run deliver_message_send
