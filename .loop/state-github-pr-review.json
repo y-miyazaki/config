@@ -83,6 +83,13 @@
       "consecutive_failures": 1,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "entity:pr:1223": {
+      "last_run": "2026-11-12T02:59:59Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }

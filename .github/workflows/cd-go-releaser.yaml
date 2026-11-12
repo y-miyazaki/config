@@ -136,7 +136,6 @@ jobs:
 
       - name: Configure git auth
         uses: y-miyazaki/config/.github/actions/git-auth@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -166,7 +165,6 @@ jobs:
       - name: Clear git auth
         if: always()
         uses: y-miyazaki/config/.github/actions/git-auth@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           github_token: ${{ github.token }}
           operation: clear
@@ -213,7 +211,7 @@ jobs:
           echo "✅ Dependencies downloaded"
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       - name: Install syft
         uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
@@ -265,7 +263,6 @@ jobs:
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           artifacts: |
             goreleaser-dist-${{ env.COMPONENT }}-${{ steps.check-tag.outputs.version }}

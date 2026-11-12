@@ -39,7 +39,7 @@ uvx = true # Install uv/uvx via pipx for better isolation and performance.
 #   - npm:awsp: shell functions (_awsp), no executable to shim
 
 # A Runtime tools
-aqua = "v2.66.0"
+aqua = "v2.66.1"
 node = "24.22.2"
 pnpm = { version = "11.28.10", depends = ["node"] }
 python = "3.15.2"
@@ -58,12 +58,12 @@ claude = { version = "2.1.318", lazy = true, lazy_bins = ["claude"] }           
 "github:microsoft/waza" = { version = "v0.40.0", lazy = true, lazy_bins = ["waza"] }                              # agent skill evaluator
 
 # AWS related tools
-"aqua:aws/aws-cli" = { version = "2.39.3", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
+"aqua:aws/aws-cli" = { version = "2.39.4", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
 "aqua:aws/aws-sam-cli" = { version = "1.171.0", lazy = true, lazy_bins = ["sam"] }                                 # SAM CLI tool
 "npm:awsp" = { version = "0.2.0", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
-"aqua:kayac/ecspresso" = { version = "2.8.7", lazy = true, lazy_bins = ["ecspresso"] }                             # ECS deployment tool
+"aqua:kayac/ecspresso" = { version = "2.8.8", lazy = true, lazy_bins = ["ecspresso"] }                             # ECS deployment tool
 "aqua:Songmu/ecschedule" = { version = "0.21.1", lazy = true, lazy_bins = ["ecschedule"] }                        # ECS scheduled tasks deployment tool
 "pipx:aws-mfa" = { version = "0.0.12", depends = ["python"], lazy = true, lazy_bins = ["aws-mfa"] }               # AWS MFA helper
 

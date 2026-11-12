@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload Trivy image SARIF to GitHub Security
         if: always() && env.TRIVY_IMAGE_SCAN == 'true' && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-image.sarif') != ''
-        uses: github/codeql-action/upload-sarif@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4.39.2
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: trivy-image
           sarif_file: security/trivy-image.sarif
@@ -217,7 +217,6 @@ jobs:
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           artifacts: |
             trivy-image-${{ env.COMPONENT }}

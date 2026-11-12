@@ -47,7 +47,7 @@ on:
         required: false
         type: string
       ecspresso_version:
-        default: "v2.8.7"
+        default: "v2.8.8"
         description: "ecspresso version (e.g. v2.7.1)"
         required: false
         type: string
@@ -191,7 +191,6 @@ jobs:
       - name: Setup jsonnetfmt
         timeout-minutes: 5
         uses: y-miyazaki/config/.github/actions/install-github-release@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnetfmt
@@ -228,7 +227,6 @@ jobs:
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           artifacts: |
             (none)
@@ -270,7 +268,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@aff803a87548687aa8e6aa0fdc45ea8f00b6fbef # v2.8.7
+        uses: kayac/ecspresso@a695f3b95f6460a89995299ba049bc8177131759 # v2.8.8
         with:
           version: ${{ inputs.ecspresso_version }}
 
@@ -300,7 +298,6 @@ jobs:
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           artifacts: |
             (none)
@@ -344,7 +341,6 @@ jobs:
       - name: Setup jsonnet
         timeout-minutes: 5
         uses: y-miyazaki/config/.github/actions/install-github-release@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnet
@@ -354,7 +350,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@aff803a87548687aa8e6aa0fdc45ea8f00b6fbef # v2.8.7
+        uses: kayac/ecspresso@a695f3b95f6460a89995299ba049bc8177131759 # v2.8.8
         with:
           version: ${{ inputs.ecspresso_version }}
 
@@ -413,7 +409,6 @@ jobs:
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
-
         with:
           artifacts: |
             (none)
