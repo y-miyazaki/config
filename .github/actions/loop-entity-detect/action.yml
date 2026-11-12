@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: detect loop work per entity
+#   Runs the detect script for Issue or PR entities and builds target_matrix.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-entity-detect@<commit SHA>
+#   Called by: ci-loop-caller-entity.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs loop_name, level, delivery, agent_maker_skill_name, detect_script, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#   - docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-github-pr-review-workflow-design.md
+#######################################
 name: loop-entity-detect
 description: >-
   Run one entity detect_script, apply light budget check, build single-target

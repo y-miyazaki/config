@@ -1,3 +1,23 @@
+#######################################
+# Description:
+#   Composite action: append the loop run log
+#   Appends one JSONL entry to .loop/loop-run-log.md, prunes entries older than 30 days, and commits to the state branch.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-run-log@<commit SHA>
+#   Called by: ci-loop-caller.yaml, ci-loop-caller-entity.yaml, ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs loop_name, outcome, state_branch, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#######################################
 name: loop-run-log
 description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the state branch."
 

@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: validate AWS service control input
+#   Validates the action and resolves the target resource JSON from discovery or manual input.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/aws-service-control-validate@<commit SHA>
+#   Called by: cd-aws-service-control-*.yaml (ecs-service, ecs-scheduled-task, rds-cluster, batch, redshift, ec2)
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Runs the AWS CLI; credentials come from the calling job
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#   - docs/reference/specification.md
+#######################################
 name: aws-service-control-validate
 description: "Validate AWS service control action and resolve target resource JSON from discovery or manual input."
 

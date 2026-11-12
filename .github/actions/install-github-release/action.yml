@@ -1,7 +1,24 @@
-# Composite action to install a binary from a GitHub release
-# - Downloads from GitHub releases with checksum verification
-# - Caches the binary for future runs
-# - Adds binary to PATH via GITHUB_PATH
+#######################################
+# Description:
+#   Composite action: install a binary from a GitHub release
+#   Downloads the release asset, verifies its checksum, caches the binary for later runs, and adds it to PATH via GITHUB_PATH.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/install-github-release@<commit SHA>
+#   Called by: ci-aws-terraform.yaml, ci-aws-ecs.yaml, ci-shell-script.yaml, ci-github-actions-workflow.yaml, cd-aws-ecs.yaml, cd-aws-resources.yaml, cd-aws-batch-schedules.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - Checksum is required; an unverified download must fail
+#
+# Dependencies:
+#   - Required inputs repo, version, binary, checksum
+#   - curl and actions/cache
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#   - docs/reference/specification.md
+#######################################
 name: "Install GitHub Release"
 description: "Download and install a binary from a GitHub release with caching and checksum verification"
 

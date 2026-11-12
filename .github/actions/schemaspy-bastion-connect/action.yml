@@ -1,3 +1,21 @@
+#######################################
+# Description:
+#   Composite action: SchemaSpy bastion connect
+#   Installs the Session Manager plugin and resolves the EC2 bastion instance for SchemaSpy port forwarding.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@<commit SHA>
+#   Called by: cd-aws-schemaspy.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - AWS CLI with credentials from the calling job
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#######################################
 name: schemaspy-bastion-connect
 description: "Install Session Manager plugin and resolve EC2 bastion instance for SchemaSpy port forwarding."
 

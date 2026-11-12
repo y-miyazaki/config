@@ -1,3 +1,23 @@
+#######################################
+# Description:
+#   Composite action: install an AI agent CLI
+#   Installs the agent CLI (claude, copilot, codex, cursor) once for later loop actions.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-install-cli@<commit SHA>
+#   Called by: loop-execute and loop-agent-once, through the sibling script lib/install.sh
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required input agent_engine
+#   - Node.js, uv, npm
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/reference/specification.md
+#######################################
 name: loop-install-cli
 description: "Install an AI agent CLI (claude/copilot/codex/cursor) once for subsequent loop actions."
 

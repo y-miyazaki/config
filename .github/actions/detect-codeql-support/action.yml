@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: detect CodeQL support
+#   Detects whether CodeQL should run for the repository.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/detect-codeql-support@<commit SHA>
+#   Called by: ci-sast.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Input github_token (read access to the repository API)
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#   - docs/reference/specification.md
+#######################################
 name: detect-codeql-support
 description: Detect whether workflow CodeQL should run for the repository.
 

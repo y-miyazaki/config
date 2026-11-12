@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: detect SARIF upload support
+#   Detects whether SARIF upload to GitHub Security is supported for the repository.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@<commit SHA>
+#   Called by: ci-sast.yaml, ci-security.yaml, cd-aws-go-registry.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Input github_token (read access to the repository API)
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#   - docs/reference/specification.md
+#######################################
 name: detect-sarif-upload-support
 description: Detect whether SARIF upload to GitHub Security is supported for the repository.
 
