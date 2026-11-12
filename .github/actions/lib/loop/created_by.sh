@@ -5,21 +5,21 @@
 #
 # Usage:
 #   source created_by.sh
-#   render_created_by_line ENGINE USAGE_JSON
+#   created_by_render_line ENGINE USAGE_JSON
 #
 # Output:
 #   None (library file, sourced by other scripts)
 #
 # Design Rules:
 #   - Omit the line entirely when engine, model, and tokens are all absent
-#   - Numeric K/M compaction matches statusline format_compact_tokens; statusline
+#   - Numeric K/M compaction matches statusline created_by_format_compact_tokens; statusline
 #     prints em dash for empty/null input while this helper returns exit 1 (callers
 #     substitute em dash only in In/Out slots)
 #   - usage_json may be empty or invalid; treat as no measured usage
 #######################################
 
 #######################################
-# format_compact_tokens: Compact integer token count for display
+# created_by_format_compact_tokens: Compact integer token count for display
 #
 # Globals:
 #   None
@@ -34,7 +34,7 @@
 #   0 on success; 1 when input is not a non-negative integer
 #
 #######################################
-function format_compact_tokens {
+function created_by_format_compact_tokens {
     local n="${1:-}"
 
     if [[ -z ${n} || ${n} == "null" || ! ${n} =~ ^[0-9]+$ ]]; then
@@ -50,7 +50,7 @@ function format_compact_tokens {
 }
 
 #######################################
-# render_created_by_line: Emit Created By engine/model/token footer
+# created_by_render_line: Emit Created By engine/model/token footer
 #
 # Description:
 #   Prints one line: Created By {engine} {model} In/Out: {in}/{out}
@@ -70,13 +70,13 @@ function format_compact_tokens {
 #   0 on success
 #
 #######################################
-function render_created_by_line {
+function created_by_render_line {
     local engine="${1:-}"
     local usage_json="${2:-}"
     local model tokens line=""
 
-    model="$(usage_model_label "${usage_json}")"
-    tokens="$(usage_tokens_label "${usage_json}")"
+    model="$(created_by_usage_model_label "${usage_json}")"
+    tokens="$(created_by_usage_tokens_label "${usage_json}")"
 
     if [[ -z ${engine}${model}${tokens} ]]; then
         return 0
@@ -91,7 +91,7 @@ function render_created_by_line {
 }
 
 #######################################
-# usage_cache_label: Resolve the prompt-cache label for a run
+# created_by_usage_cache_label: Resolve the prompt-cache label for a run
 #
 # Description:
 #   In/Out totals exclude cache traffic, so a cached run shows a tiny In figure.
@@ -110,10 +110,10 @@ function render_created_by_line {
 #   0 on success
 #
 # Usage:
-#   cache="$(usage_cache_label "${USAGE_JSON}")"
+#   cache="$(created_by_usage_cache_label "${USAGE_JSON}")"
 #
 #######################################
-function usage_cache_label {
+function created_by_usage_cache_label {
     local usage_json="${1:-}"
     local read="" write=""
 
@@ -127,11 +127,11 @@ function usage_cache_label {
     if ((read == 0 && write == 0)); then
         return 0
     fi
-    printf 'read %s, write %s' "$(format_compact_tokens "${read}")" "$(format_compact_tokens "${write}")"
+    printf 'read %s, write %s' "$(created_by_format_compact_tokens "${read}")" "$(created_by_format_compact_tokens "${write}")"
 }
 
 #######################################
-# usage_model_label: Resolve a display label for the models a run used
+# created_by_usage_model_label: Resolve a display label for the models a run used
 #
 # Globals:
 #   None
@@ -147,10 +147,10 @@ function usage_cache_label {
 #   0 on success
 #
 # Usage:
-#   label="$(usage_model_label "${USAGE_JSON}")"
+#   label="$(created_by_usage_model_label "${USAGE_JSON}")"
 #
 #######################################
-function usage_model_label {
+function created_by_usage_model_label {
     local usage_json="${1:-}"
 
     if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
@@ -178,7 +178,7 @@ function usage_model_label {
 }
 
 #######################################
-# usage_rounds_label: Resolve the maker/checker round counts for a run
+# created_by_usage_rounds_label: Resolve the maker/checker round counts for a run
 #
 # Description:
 #   Counts maker and checker sessions. A checker session that did not end the run
@@ -200,10 +200,10 @@ function usage_model_label {
 #   0 on success
 #
 # Usage:
-#   rounds="$(usage_rounds_label "${USAGE_JSON}" "${VERDICT}")"
+#   rounds="$(created_by_usage_rounds_label "${USAGE_JSON}" "${VERDICT}")"
 #
 #######################################
-function usage_rounds_label {
+function created_by_usage_rounds_label {
     local usage_json="${1:-}"
     local verdict="${2:-}"
     local makers checkers rejected
@@ -224,7 +224,7 @@ function usage_rounds_label {
 }
 
 #######################################
-# usage_tokens_label: Resolve the In/Out token label for a run
+# created_by_usage_tokens_label: Resolve the In/Out token label for a run
 #
 # Globals:
 #   None
@@ -239,10 +239,10 @@ function usage_rounds_label {
 #   0 on success
 #
 # Usage:
-#   tokens="$(usage_tokens_label "${USAGE_JSON}")"
+#   tokens="$(created_by_usage_tokens_label "${USAGE_JSON}")"
 #
 #######################################
-function usage_tokens_label {
+function created_by_usage_tokens_label {
     local usage_json="${1:-}"
     local input="" output="" in_fmt="" out_fmt=""
 
@@ -256,12 +256,12 @@ function usage_tokens_label {
     fi
 
     if [[ ${input} =~ ^[0-9]+$ ]]; then
-        in_fmt="$(format_compact_tokens "${input}")"
+        in_fmt="$(created_by_format_compact_tokens "${input}")"
     else
         in_fmt="—"
     fi
     if [[ ${output} =~ ^[0-9]+$ ]]; then
-        out_fmt="$(format_compact_tokens "${output}")"
+        out_fmt="$(created_by_format_compact_tokens "${output}")"
     else
         out_fmt="—"
     fi

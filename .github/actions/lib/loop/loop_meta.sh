@@ -84,19 +84,19 @@ function loop_meta_build_block {
 
     model=""
     tokens=""
-    if declare -F usage_model_label > /dev/null 2>&1; then
-        model="$(usage_model_label "${usage_json}")"
+    if declare -F created_by_usage_model_label > /dev/null 2>&1; then
+        model="$(created_by_usage_model_label "${usage_json}")"
     fi
-    if declare -F usage_tokens_label > /dev/null 2>&1; then
-        tokens="$(usage_tokens_label "${usage_json}")"
+    if declare -F created_by_usage_tokens_label > /dev/null 2>&1; then
+        tokens="$(created_by_usage_tokens_label "${usage_json}")"
     fi
 
     [[ -n ${engine} ]] && rows+=("| engine | ${engine} |")
     [[ -n ${model} ]] && rows+=("| model | ${model} |")
     if [[ -n ${tokens} ]]; then
         cache=""
-        if declare -F usage_cache_label > /dev/null 2>&1; then
-            cache="$(usage_cache_label "${usage_json}")"
+        if declare -F created_by_usage_cache_label > /dev/null 2>&1; then
+            cache="$(created_by_usage_cache_label "${usage_json}")"
         fi
         if [[ -n ${cache} ]]; then
             rows+=("| tokens | In/Out ${tokens} (cache ${cache}) |")
@@ -104,8 +104,8 @@ function loop_meta_build_block {
             rows+=("| tokens | In/Out ${tokens} |")
         fi
     fi
-    if declare -F usage_rounds_label > /dev/null 2>&1; then
-        rounds="$(usage_rounds_label "${usage_json}" "${verdict}")"
+    if declare -F created_by_usage_rounds_label > /dev/null 2>&1; then
+        rounds="$(created_by_usage_rounds_label "${usage_json}" "${verdict}")"
         [[ -n ${rounds} ]] && rows+=("| rounds | ${rounds} |")
     fi
     if [[ -n ${run_url} && ${run_url} != "-" ]]; then
