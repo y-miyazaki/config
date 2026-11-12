@@ -8,8 +8,9 @@
 # - advance mode: last_sha + outcome; reset consecutive_failures on pr_created
 # - issue_commented and pr_reviewed reset consecutive_failures
 # - rejected, pr_closed, and persisted old pr-closed outcomes increment consecutive_failures
-# - a rejected run on an aged terminal target keeps counting from the stored value (the
-#   30-day prune cooldown does not erase it), and an approved run still resets it
+# - a rejected run on an aged terminal target at 3 or more keeps counting from the stored
+#   value (the 30-day prune cooldown does not erase it); an approved or error run, and a
+#   rejected run on a target below 3, still get the cooldown reset
 # - finalize_commit_paths are committed with the state file
 # - no-op when unchanged
 # - metadata mode: outcome without advancing last_sha
@@ -332,6 +333,52 @@ setup() {
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
     run jq -e '.targets["integration:main"].consecutive_failures == 0' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "run.sh gives an error probe and a target below the trip point the cooldown reset" {
+    local old
+    old="$(date -u -d '40 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-40d +%Y-%m-%dT%H:%M:%SZ)"
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='error' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='4' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 0' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+
+    printf '{"targets":{"integration:main":{"consecutive_failures":2,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='rejected' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='5' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 1' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
 }

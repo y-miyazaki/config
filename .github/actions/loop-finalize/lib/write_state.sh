@@ -333,6 +333,46 @@ function resolve_consecutive_failures {
 }
 
 #######################################
+# resolve_consecutive_with_probe: Compute consecutive_failures after the retention prune
+#
+# Description:
+#   The prune cooldown resets an aged terminal target to 0. A rejected or pr_closed
+#   run on a target that was already at 3 or more is the probe detect lets through once
+#   its circuit breaker is 30 days old: it must keep counting from the stored value so
+#   the breaker reopens (3 to 4), not restart at 1. Every other case uses the value
+#   computed after the prune, so the cooldown still resets error, watch and approved
+#   runs and targets below the trip point.
+#
+# Globals:
+#   OUTCOME - Run outcome (read)
+#   STATE_TMP - Pruned state JSON temp file (read)
+#   TARGET_KEY - Target key in state file (read)
+#
+# Arguments:
+#   $1 - Count resolved before the prune (rejected and pr_closed give stored + 1)
+#
+# Outputs:
+#   Consecutive failure count on stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function resolve_consecutive_with_probe {
+    local pre_prune="$1"
+
+    case "$(normalize_outcome "${OUTCOME}")" in
+        rejected | pr_closed)
+            if [[ ${pre_prune} =~ ^[0-9]+$ && ${pre_prune} -ge 4 ]]; then
+                echo "${pre_prune}"
+                return 0
+            fi
+            ;;
+    esac
+    resolve_consecutive_failures
+}
+
+#######################################
 # retry_state_write: Rebuild the state write on the latest remote and push again
 #
 # Globals:
@@ -355,7 +395,7 @@ function resolve_consecutive_failures {
 #
 #######################################
 function retry_state_write {
-    local attempt consecutive now push_err
+    local attempt consecutive now push_err pre_prune_consecutive
 
     for ((attempt = 1; attempt <= WRITE_STATE_MAX_RETRIES; attempt++)); do
         echo "Push race detected; retry ${attempt}/${WRITE_STATE_MAX_RETRIES}"
@@ -363,13 +403,14 @@ function retry_state_write {
         git reset --hard "origin/${PUSH_BRANCH}"
         rm -f "${STATE_TMP}" "${STATE_TMP}.next"
         load_state_tmp
-        consecutive=""
+        pre_prune_consecutive=""
         if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
-            consecutive="$(resolve_consecutive_failures)"
+            pre_prune_consecutive="$(resolve_consecutive_failures)"
         fi
         prune_targets_by_retention "${STATE_TMP}"
         now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+            consecutive="$(resolve_consecutive_with_probe "${pre_prune_consecutive}")"
             write_target_state "${now}" "${consecutive}"
         fi
 
@@ -804,17 +845,18 @@ function main {
     validate_required_inputs
 
     load_state_tmp
-    # Count before pruning: the 30-day cooldown in prune_targets resets an aged terminal
-    # target to 0, which would erase the failures of the run detect let through after
-    # the breaker cooldown (a rejected probe must reopen the breaker, not restart at 1)
-    consecutive=""
+    # Count before pruning too: the 30-day cooldown in prune_targets resets an aged
+    # terminal target to 0, which would erase the failures of the run detect let through
+    # after the breaker cooldown (see resolve_consecutive_with_probe)
+    pre_prune_consecutive=""
     if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
-        consecutive="$(resolve_consecutive_failures)"
+        pre_prune_consecutive="$(resolve_consecutive_failures)"
     fi
     prune_targets_by_retention "${STATE_TMP}"
     now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+        consecutive="$(resolve_consecutive_with_probe "${pre_prune_consecutive}")"
         write_target_state "${now}" "${consecutive}"
     fi
 

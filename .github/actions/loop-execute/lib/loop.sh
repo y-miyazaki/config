@@ -175,6 +175,30 @@ function promote_has_changes_after_attempt {
 }
 
 #######################################
+# usage_is_measured: Return 0 when token usage is recorded for the engine
+#
+# Description:
+#   Only the claude and cursor wrappers fill the USAGE_* counters; for copilot and
+#   codex a token delta of 0 means "unknown", not "nothing spent".
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Engine name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 for claude and cursor, 1 otherwise
+#
+#######################################
+function usage_is_measured {
+    [[ $1 == "claude" || $1 == "cursor" ]]
+}
+
+#######################################
 # usage_tokens_total: Run-wide token total recorded so far
 #
 # Globals:
@@ -375,11 +399,13 @@ function run_bounded_loop {
             else
                 VERDICT="${AGENT_UNCHANGED_VERDICT}"
                 REASON="No file changes produced$(permission_denial_note "${attempt_dir}/agent-output.txt")"
-                if [[ ${MAKER_EXIT_NONZERO} == "true" && ${MAKER_TOKENS_SPENT} -le 0 ]]; then
+                if [[ ${MAKER_EXIT_NONZERO} == "true" && ${MAKER_TOKENS_SPENT} -le 0 ]] \
+                    && usage_is_measured "${AGENT_ENGINE:-}"; then
                     # A maker that failed before spending any tokens (engine or credential
                     # failure) is a bug, not wasted work: error is not counted toward the
                     # circuit breaker. A non-zero exit after spending tokens (turn limit,
-                    # timeout) is wasted cost and stays rejected
+                    # timeout) is wasted cost and stays rejected, and so does any exit on
+                    # an engine whose usage is not measured (the zero would mean "unknown")
                     FINALIZE_OUTCOME_OVERRIDE="error"
                     REASON="${REASON}; maker agent exited non-zero without spending tokens"
                 fi

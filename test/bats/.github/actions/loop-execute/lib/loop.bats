@@ -21,6 +21,7 @@
 #   non-zero without spending tokens, with no diff and no watch outcome (a zero exit, a
 #   diff, spent tokens, or a watch outcome keeps the override empty)
 # - usage_tokens_total sums the four usage counters and treats unset counters as 0
+# - usage_is_measured is true for claude and cursor only; an unmeasured engine keeps rejected
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -225,6 +226,7 @@ prepare_no_change_loop() {
 
 @test "run_bounded_loop sets the error override when the maker exits non-zero with no diff" {
     prepare_no_change_loop 1
+    AGENT_ENGINE="claude"
     function run_agent_capture {
         : > "$1"
         return 1
@@ -238,6 +240,7 @@ prepare_no_change_loop() {
 
 @test "run_bounded_loop keeps the override empty when the maker exits non-zero after spending tokens" {
     prepare_no_change_loop 1
+    AGENT_ENGINE="claude"
     USAGE_OUTPUT_TOTAL=0
     function run_agent_capture {
         : > "$1"
@@ -249,6 +252,18 @@ prepare_no_change_loop() {
     [ "${VERDICT}" = "REJECT" ]
     [ -z "${FINALIZE_OUTCOME_OVERRIDE}" ]
     [ "${MAKER_TOKENS_SPENT}" -eq 500 ]
+}
+
+@test "run_bounded_loop keeps the override empty for an engine whose usage is not measured" {
+    prepare_no_change_loop 1
+    AGENT_ENGINE="codex"
+    function run_agent_capture {
+        : > "$1"
+        return 1
+    }
+
+    run_bounded_loop > /dev/null
+    [ -z "${FINALIZE_OUTCOME_OVERRIDE}" ]
 }
 
 @test "run_bounded_loop keeps the watch override when the maker exits non-zero with a watch outcome" {
@@ -291,6 +306,19 @@ prepare_no_change_loop() {
     run_bounded_loop > /dev/null
     [ "${VERDICT}" = "APPROVE" ]
     [ "${REASON}" = "No file changes produced; 1 tool call(s) denied by permission settings" ]
+}
+
+@test "usage_is_measured is true for claude and cursor only" {
+    run usage_is_measured claude
+    [ "$status" -eq 0 ]
+    run usage_is_measured cursor
+    [ "$status" -eq 0 ]
+    run usage_is_measured copilot
+    [ "$status" -eq 1 ]
+    run usage_is_measured codex
+    [ "$status" -eq 1 ]
+    run usage_is_measured ""
+    [ "$status" -eq 1 ]
 }
 
 @test "usage_tokens_total sums the four usage counters and treats unset counters as 0" {
