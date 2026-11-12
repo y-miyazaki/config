@@ -19,6 +19,36 @@
 # Global variables
 #######################################
 LOOP_HANDOFF_VERSION=1
+# The maker prompt carries this marker instead of the detect JSON; loop-execute replaces it with a runner-local file path
+# (materialize_matrix_handoff_context). The one definition for every producer and for the consumer.
+LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
+
+#######################################
+# handoff_emit_result_section: Print the "Change Detection Result" prompt section with the marker
+#
+# Description:
+#   Keeps the detect JSON out of the prompt, so the prompt (and the target_matrix job output that carries
+#   it) stays small however many comments or files the detect result holds. The JSON itself travels in
+#   the handoff artifact.
+#
+# Globals:
+#   LOOP_DETECT_RESULT_MARKER - Marker line (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   STDOUT: the section heading, the marker and a one-line explanation
+#
+# Returns:
+#   0 always
+#
+#######################################
+function handoff_emit_result_section {
+    echo "## Change Detection Result"
+    echo "${LOOP_DETECT_RESULT_MARKER}"
+    echo "At execute time this is replaced with a runner-local JSON file path (not inlined JSON)."
+}
 
 #######################################
 # loop_handoff_init_bundle: Create an empty handoff bundle directory

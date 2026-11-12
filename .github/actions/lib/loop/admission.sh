@@ -301,7 +301,7 @@ function admission_evaluate {
     local gate="${1:-}"
     local target_state="${2:-}"
     local state source type login association mention_required mention_present open_pr
-    local consecutive last_run domain_skip domain_reason
+    local domain_skip domain_reason breaker_verdict
 
     [[ -n ${target_state} ]] || target_state='{}'
     if [[ -z ${gate} || ${gate} == "null" ]] || ! jq -e 'type == "object"' <<< "${gate}" > /dev/null 2>&1; then
@@ -355,10 +355,8 @@ function admission_evaluate {
         return 0
     fi
 
-    consecutive="$(jq -r '.consecutive_failures // 0' <<< "${target_state}")"
-    last_run="$(jq -r '.last_run // ""' <<< "${target_state}")"
-    if [[ ${consecutive} =~ ^[0-9]+$ ]] && admission_circuit_breaker_open "${consecutive}" "${last_run}"; then
-        admission_result false "circuit_breaker" "consecutive_failures ${consecutive}"
+    if breaker_verdict="$(admission_circuit_breaker_verdict "${target_state}")"; then
+        printf '%s\n' "${breaker_verdict}"
         return 0
     fi
 
@@ -372,6 +370,122 @@ function admission_evaluate {
         return 0
     fi
 
+    admission_result true "" ""
+}
+
+#######################################
+# admission_circuit_breaker_verdict: Print the refusal when the target's circuit breaker is open
+#
+# Description:
+#   The one place that reads consecutive_failures and last_run from a target state and applies
+#   admission_circuit_breaker_open. admission_evaluate and admission_evaluate_target both use it.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - target state JSON ({} when the target has no state)
+#
+# Outputs:
+#   STDOUT: the refusal result object when the breaker is open; nothing otherwise
+#
+# Returns:
+#   0 when the breaker is open (refusal printed); 1 otherwise
+#
+#######################################
+function admission_circuit_breaker_verdict {
+    local target_state="${1:-}"
+    local consecutive last_run
+
+    [[ -n ${target_state} ]] || target_state='{}'
+    consecutive="$(jq -r '.consecutive_failures // 0' <<< "${target_state}")"
+    last_run="$(jq -r '.last_run // ""' <<< "${target_state}")"
+    if [[ ${consecutive} =~ ^[0-9]+$ ]] && admission_circuit_breaker_open "${consecutive}" "${last_run}"; then
+        admission_result false "circuit_breaker" "consecutive_failures ${consecutive}"
+        return 0
+    fi
+    return 1
+}
+
+#######################################
+# admission_evaluate_delivery: Decide whether the delivery has what it needs to run
+#
+# Description:
+#   pr_push lands on an existing PR head, so a run without a PR number has nothing to land on.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
+#   $2 - detect_pr_number (PR number | empty | 0)
+#
+# Outputs:
+#   STDOUT: {"admit":bool,"skip_reason":string,"detail":string}
+#
+# Returns:
+#   0 always
+#
+#######################################
+function admission_evaluate_delivery {
+    local delivery="${1:-}"
+    local detect_pr_number="${2:-}"
+
+    if [[ ${delivery} == "pr_push" && (-z ${detect_pr_number} || ${detect_pr_number} == "0") ]]; then
+        admission_result false "pr_number_missing" "delivery pr_push without detect_pr_number"
+        return 0
+    fi
+    admission_result true "" ""
+}
+
+#######################################
+# admission_evaluate_target: Decide from the target state and the pending PR state, before the detect script runs
+#
+# Description:
+#   Detect gathers the facts (the stored target state and the live state of the pending PR) and this
+#   function decides. Order: circuit breaker, then pending PR. A pending PR blocks while it is OPEN or
+#   its state could not be resolved (fail closed); a CLOSED or MERGED pending PR is a stale cursor
+#   that does not block.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - target state JSON ({} when the target has no state)
+#   $2 - pending PR state fact: none | OPEN | CLOSED | MERGED | unknown
+#
+# Outputs:
+#   STDOUT: {"admit":bool,"skip_reason":string,"detail":string}
+#
+# Returns:
+#   0 always
+#
+#######################################
+function admission_evaluate_target {
+    local target_state="${1:-}"
+    local pending_pr_state="${2:-none}"
+    local breaker_verdict pending_pr
+
+    [[ -n ${target_state} ]] || target_state='{}'
+    if breaker_verdict="$(admission_circuit_breaker_verdict "${target_state}")"; then
+        printf '%s\n' "${breaker_verdict}"
+        return 0
+    fi
+
+    pending_pr="$(jq -r 'if (.pending.pr | type) == "number" then .pending.pr else empty end' <<< "${target_state}")"
+    if [[ -n ${pending_pr} ]]; then
+        case "${pending_pr_state}" in
+            CLOSED | MERGED) ;;
+            OPEN)
+                admission_result false "pending_pr" "pending PR #${pending_pr} is open"
+                return 0
+                ;;
+            *)
+                admission_result false "pending_pr" "pending PR #${pending_pr} state is unresolved (${pending_pr_state})"
+                return 0
+                ;;
+        esac
+    fi
     admission_result true "" ""
 }
 

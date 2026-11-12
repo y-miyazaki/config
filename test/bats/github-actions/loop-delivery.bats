@@ -7,7 +7,6 @@
 # - derive_pr_auto_merge over level x delivery
 # - validate_delivery_value accepts implemented values (incl. issue_comment, pr_review) and rejects the rest
 # - validate_delivery_detect_config rules for branch callers
-# - delivery_requires_pr_number_skip for pr_push
 # - validate_delivery_target per target kind
 # - golden table frozen from the pre-delivery implementation
 
@@ -38,31 +37,6 @@ GOLDEN_ROWS=(
     "open_pr push open_pr push open_pr"
     "open_pr push push_head push push_head"
 )
-
-@test "delivery_requires_pr_number_skip: pr_create empty does not skip" {
-    run delivery_requires_pr_number_skip pr_create ""
-    [ "$status" -eq 1 ]
-}
-
-@test "delivery_requires_pr_number_skip: pr_push empty skips" {
-    run delivery_requires_pr_number_skip pr_push ""
-    [ "$status" -eq 0 ]
-}
-
-@test "delivery_requires_pr_number_skip: pr_push with number does not skip" {
-    run delivery_requires_pr_number_skip pr_push 12
-    [ "$status" -eq 1 ]
-}
-
-@test "delivery_requires_pr_number_skip: pr_push zero skips" {
-    run delivery_requires_pr_number_skip pr_push 0
-    [ "$status" -eq 0 ]
-}
-
-@test "delivery_requires_pr_number_skip: unknown delivery does not skip" {
-    run delivery_requires_pr_number_skip bogus ""
-    [ "$status" -eq 1 ]
-}
 
 @test "derive_pr_auto_merge: empty and unknown input is false" {
     [ "$(derive_pr_auto_merge "" "")" = "false" ]

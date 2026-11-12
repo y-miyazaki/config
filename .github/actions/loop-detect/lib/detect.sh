@@ -69,6 +69,55 @@ STATE_FILE="${STATE_FILE-}"
 STATE_READ_FILE="${STATE_READ_FILE-}"
 
 #######################################
+# record_admission_refusal: Record an admission verdict that refuses a target
+#
+# Description:
+#   Effect only: the decision is the verdict from admission.sh (admission_evaluate_target or
+#   admission_evaluate). A refusal is counted by reason class and its detail is kept for the skip
+#   output. When no candidate remains, write_empty_candidates_outputs picks the skip_reason in the
+#   order circuit_breaker, pending_pr, then the first other reason.
+#
+# Globals:
+#   CIRCUIT_BREAKER_BLOCKED, PENDING_PR_BLOCKED, GATE_BLOCKED - Incremented by reason class
+#   GATE_BLOCK_REASON - Set to the first reason that is neither circuit_breaker nor pending_pr
+#
+# Arguments:
+#   $1 - Target key (for the log line)
+#   $2 - Verdict JSON {"admit":bool,"skip_reason":string,"detail":string}
+#
+# Outputs:
+#   ::warning:: line on a refusal
+#
+# Returns:
+#   0 when the verdict refuses (recorded), 1 when it admits
+#
+#######################################
+function record_admission_refusal {
+    local target_key="$1"
+    local verdict="$2"
+    local reason detail
+
+    if [[ $(jq -r '.admit' <<< "${verdict}") == "true" ]]; then
+        return 1
+    fi
+    reason="$(jq -r '.skip_reason' <<< "${verdict}")"
+    detail="$(jq -r '.detail' <<< "${verdict}")"
+    echo "::warning::admission refused ${target_key}: ${reason} (${detail})"
+    case "${reason}" in
+        circuit_breaker) CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1)) ;;
+        pending_pr) PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1)) ;;
+        *)
+            GATE_BLOCKED=$((GATE_BLOCKED + 1))
+            if [[ -z ${GATE_BLOCK_REASON} ]]; then
+                GATE_BLOCK_REASON="${reason}"
+            fi
+            ;;
+    esac
+    record_skip_detail "${target_key}: ${detail}"
+    return 0
+}
+
+#######################################
 # record_skip_detail: Keep the first skip detail of the run for the run log
 #
 # Globals:
@@ -471,9 +520,10 @@ function append_detect_candidate {
         checkout_context "${head_branch}" || return 0
     fi
 
-    target_state="$(target_state_apply_merged_pending "$(read_target_state "$(state_read_path)" "${target_key}" "${STATE_BRANCH}")")"
+    load_target_state "${target_key}"
+    target_state="${TARGET_STATE_JSON}"
     consecutive="$(target_consecutive_failures "${target_state}")"
-    if target_state_blocks_candidate "${target_key}" "${target_state}" "${consecutive}"; then
+    if record_admission_refusal "${target_key}" "$(admission_evaluate_target "${target_state}" "${TARGET_PENDING_PR_STATE}")"; then
         return 0
     fi
 
@@ -492,7 +542,7 @@ function append_detect_candidate {
         return 0
     fi
 
-    if gate_blocks_candidate "${target_key}" "$(jq -c '.result.gate // null' <<< "${detect_result}")" "${target_state}"; then
+    if record_admission_refusal "${target_key}" "$(admission_evaluate "$(jq -c '.result.gate // null' <<< "${detect_result}")" "${target_state}")"; then
         return 0
     fi
 
@@ -581,15 +631,17 @@ function append_items_candidates {
         return 0
     fi
 
+    local -A item_states=()
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(target_state_apply_merged_pending "$(read_target_state "$(state_read_path)" "${item_key}" "${STATE_BRANCH}")")"
-        consecutive="$(target_consecutive_failures "${item_state}")"
-        if target_state_blocks_candidate "${item_key}" "${item_state}" "${consecutive}"; then
+        load_target_state "${item_key}"
+        item_state="${TARGET_STATE_JSON}"
+        item_states["${item_key}"]="${item_state}"
+        if record_admission_refusal "${item_key}" "$(admission_evaluate_target "${item_state}" "${TARGET_PENDING_PR_STATE}")"; then
             continue
         fi
-        if gate_blocks_candidate "${item_key}" "$(jq -c '.gate // null' <<< "${item_json}")" "${item_state}"; then
+        if record_admission_refusal "${item_key}" "$(admission_evaluate "$(jq -c '.gate // null' <<< "${item_json}")" "${item_state}")"; then
             continue
         fi
         unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
@@ -600,7 +652,7 @@ function append_items_candidates {
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(target_state_apply_merged_pending "$(read_target_state "$(state_read_path)" "${item_key}" "${STATE_BRANCH}")")"
+        item_state="${item_states[${item_key}]}"
         consecutive="$(target_consecutive_failures "${item_state}")"
         last_sha="$(target_last_sha "${item_state}" "${branch}" "")"
         item_result="$(item_result_json "${item_json}")" || return 1
@@ -1034,6 +1086,38 @@ function invoke_detect_script {
 }
 
 #######################################
+# load_target_state: Gather the facts about one target (stored state and the pending PR's live state)
+#
+# Description:
+#   Facts only. TARGET_STATE_JSON is the stored state with a MERGED pending PR already promoted
+#   in memory; TARGET_PENDING_PR_STATE is the live state of the pending PR as stored. The
+#   decision whether either blocks the run is admission_evaluate_target's.
+#
+# Globals:
+#   TARGET_STATE_JSON - Set to the target state JSON
+#   TARGET_PENDING_PR_STATE - Set to none | OPEN | CLOSED | MERGED | unknown
+#   STATE_BRANCH - Read
+#
+# Arguments:
+#   $1 - Target key
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 always
+#
+#######################################
+function load_target_state {
+    local target_key="$1"
+    local stored
+
+    stored="$(read_target_state "$(state_read_path)" "${target_key}" "${STATE_BRANCH}")"
+    TARGET_PENDING_PR_STATE="$(target_pending_pr_state "${stored}")"
+    TARGET_STATE_JSON="$(target_state_apply_merged_pending "${stored}" "${TARGET_PENDING_PR_STATE}")"
+}
+
+#######################################
 # log_detect_error: Emit a GitHub Actions error annotation
 #
 # Globals:
@@ -1110,53 +1194,6 @@ function log_detect_notice {
 }
 
 #######################################
-# gate_blocks_candidate: Return 0 when the admission gate refuses the facts of a detect result
-#
-# Description:
-#   A detect result without a gate is not evaluated. A refusal is counted per candidate and the
-#   first refusal reason becomes the skip_reason when no candidate remains.
-#
-# Globals:
-#   GATE_BLOCKED - Incremented on a refusal
-#   GATE_BLOCK_REASON - Set to the first refusal reason
-#
-# Arguments:
-#   $1 - Target key (for the log line)
-#   $2 - Gate JSON (the detect result gate object; empty or null for none)
-#   $3 - Target state JSON
-#
-# Outputs:
-#   ::notice:: line on a refusal
-#
-# Returns:
-#   0 when the gate refuses, 1 when it admits or there is no gate
-#
-#######################################
-function gate_blocks_candidate {
-    local target_key="$1"
-    local gate_json="${2:-}"
-    local target_state="${3:-}"
-    local verdict reason detail
-
-    if [[ -z ${gate_json} || ${gate_json} == "null" ]]; then
-        return 1
-    fi
-    verdict="$(admission_evaluate "${gate_json}" "${target_state}")"
-    if [[ $(jq -r '.admit' <<< "${verdict}") == "true" ]]; then
-        return 1
-    fi
-    reason="$(jq -r '.skip_reason' <<< "${verdict}")"
-    detail="$(jq -r '.detail' <<< "${verdict}")"
-    echo "::notice::admission refused ${target_key}: ${reason} (${detail})"
-    GATE_BLOCKED=$((GATE_BLOCKED + 1))
-    if [[ -z ${GATE_BLOCK_REASON} ]]; then
-        GATE_BLOCK_REASON="${reason}"
-    fi
-    record_skip_detail "${target_key}: ${detail}"
-    return 0
-}
-
-#######################################
 # state_read_path: Path the per-target state is read from
 #
 # Globals:
@@ -1175,46 +1212,6 @@ function gate_blocks_candidate {
 #######################################
 function state_read_path {
     printf '%s' "${STATE_READ_FILE:-${STATE_FILE}}"
-}
-
-#######################################
-# target_state_blocks_candidate: Return 0 when circuit breaker or pending PR blocks a target
-#
-# Globals:
-#   CIRCUIT_BREAKER_BLOCKED - Incremented when circuit breaker is open
-#   PENDING_PR_BLOCKED - Incremented when pending PR blocks detect
-#
-# Arguments:
-#   $1 - Target key (for warnings)
-#   $2 - Target state JSON
-#   $3 - Consecutive failure count
-#
-# Outputs:
-#   Warning annotations on stdout
-#
-# Returns:
-#   0 when the target is blocked, 1 otherwise
-#
-#######################################
-function target_state_blocks_candidate {
-    local target_key="$1"
-    local target_state="$2"
-    local consecutive="$3"
-    local pending_pr
-
-    if admission_circuit_breaker_open "${consecutive}" "$(jq -r '.last_run // empty' <<< "${target_state}")"; then
-        echo "::warning::Circuit breaker open for ${target_key}"
-        CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
-        return 0
-    fi
-
-    if target_pending_blocks_detect "${target_state}"; then
-        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
-        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
-        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
-        return 0
-    fi
-    return 1
 }
 
 #######################################
@@ -1478,9 +1475,10 @@ function main {
     if [[ ${DETECT_PR_NUMBER:-} == "0" ]]; then
         DETECT_PR_NUMBER=""
     fi
-    if delivery_requires_pr_number_skip "${DELIVERY}" "${DETECT_PR_NUMBER:-}"; then
-        log_detect_notice "skip" "${LOOP_NAME}" "delivery=pr_push without detect_pr_number"
-        write_detect_outputs "false" "pr_number_missing" "[]"
+    delivery_verdict="$(admission_evaluate_delivery "${DELIVERY}" "${DETECT_PR_NUMBER:-}")"
+    if [[ $(jq -r '.admit' <<< "${delivery_verdict}") != "true" ]]; then
+        log_detect_notice "skip" "${LOOP_NAME}" "$(jq -r '.detail' <<< "${delivery_verdict}")"
+        write_detect_outputs "false" "$(jq -r '.skip_reason' <<< "${delivery_verdict}")" "[]"
         write_legacy_outputs "[]"
         return 0
     fi
@@ -1490,7 +1488,7 @@ function main {
     local target_matrix_json="[]"
     local branch pr_json github_token="${GITHUB_TOKEN:-}"
     local pre_cap_count
-    local scoped_head
+    local scoped_head delivery_verdict
     CHECKOUT_FAILED=0
 
     # Pin detect script before any target checkout (stale PR trees must not supply it).

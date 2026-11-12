@@ -13,11 +13,18 @@
 # - skip=false requires result.handoff_key and result.entity.kind (issue | pr)
 # - target_json.entity is {handoff_key} merged with result.entity; no finalize key
 # - The matrix row carries the key only in target_json.key (no duplicate handoff_key)
+# - The prompt carries the handoff marker, never the detect JSON; the matrix row result is the full detect JSON (status, skip, result.*) that
+#   the handoff artifact stores and loop-execute materializes as a file
+# - The detect JSON reaches jq by --slurpfile, never as an argument (one argument is capped near 128 KiB)
 # - Action-local only; not part of scripts/lib skill sync
 #######################################
 
 _ENTITY_TARGET_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _entity_loop_action_lib="$(cd "${_ENTITY_TARGET_LIB_DIR}/../../lib/loop" && pwd)"
+if ! declare -f handoff_emit_result_section > /dev/null 2>&1; then
+    # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
+    source "${_entity_loop_action_lib}/handoff.sh"
+fi
 if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
     source "${_entity_loop_action_lib}/build_constraints.sh"
@@ -34,9 +41,8 @@ fi
 #   $2 - Prompt instructions
 #   $3 - Level (L1 | L2 | L3; agent_edit_allowed is derived from it)
 #   $4 - Delivery (none | pr_create | pr_push)
-#   $5 - Detect result JSON string
-#   $6 - agent_edit_target (fix | report; empty at L1)
-#   $7 - agent_edit_allowlist csv (empty at L1; ** = unrestricted)
+#   $5 - agent_edit_target (fix | report; empty at L1)
+#   $6 - agent_edit_allowlist csv (empty at L1; ** = unrestricted)
 #
 # Outputs:
 #   Prompt text on stdout
@@ -50,15 +56,13 @@ function build_entity_target_prompt {
     local agent_maker_instructions="$2"
     local level="$3"
     local delivery="$4"
-    local detect_result="$5"
-    local agent_edit_target="$6"
-    local agent_edit_allowlist="$7"
+    local agent_edit_target="$5"
+    local agent_edit_allowlist="$6"
 
     {
         echo "Run the ${agent_maker_skill_name} skill."
         echo ""
-        echo "## Change Detection Result"
-        echo "${detect_result}"
+        handoff_emit_result_section
         if [[ -n ${agent_maker_instructions} ]]; then
             echo ""
             echo "## Instructions"
@@ -151,7 +155,6 @@ function build_entity_target_matrix {
         "${agent_maker_instructions}" \
         "${level}" \
         "${delivery}" \
-        "${detect_json}" \
         "${agent_edit_target}" \
         "${agent_edit_allowlist}")" || return 1
 
@@ -186,12 +189,12 @@ function build_entity_target_matrix {
             --arg prompt "${prompt_text}" \
             --arg verifier_context "${verifier_context}" \
             --argjson target_json "${target_json}" \
-            --argjson result "$(jq -c '.result // {}' <<< "${detect_json}")" \
+            --slurpfile result "${detect_path}" \
             '{
               prompt: $prompt,
               target_json: $target_json,
               verifier_context: $verifier_context,
-              result: $result
+              result: $result[0]
             } | [.]'
     )" || return 1
 

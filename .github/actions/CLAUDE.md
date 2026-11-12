@@ -48,16 +48,19 @@ Rules:
 - A function in a shared `lib/loop/<stem>.sh` file starts with `<stem>_`. `main` is the only exception. A new or renamed function that does not follow this is rejected in review.
 - A run or skip decision outside `admission.sh` is a defect (see Loop judgements go through the gate). A function named `admission_*` is the only kind of function that returns an admit or skip decision.
 - Facts are named for what they read (`detect_*`, `read_*`), decisions for what they refuse (`admission_*`), effects for what they write (`write_*`, `deliver_*`).
-- Not yet renamed (rename when the file is next changed, one file per change): `build_constraints.sh`, `created_by.sh`, `deliver_*.sh`, `edit_paths.sh`, `ensure_labels.sh`, `handoff.sh`, `loop_message.sh`, `loop_meta.sh`, `redact.sh`, `target_slug.sh`, `text.sh`, `trigger_thread.sh`, `validate_loop_write_contract.sh`, `verifier_context.sh`.
+- Not yet renamed (rename when the file is next changed, one file per change): `build_constraints.sh`, `created_by.sh`, `deliver_*.sh`, `delivery.sh`, `detect_env.sh`, `edit_paths.sh`, `ensure_labels.sh`, `git_auth.sh`, `handoff.sh`, `loop_message.sh`, `loop_meta.sh`, `redact.sh`, `target_slug.sh`, `text.sh`, `trigger_thread.sh`, `validate_loop_write_contract.sh`, `verifier_context.sh`.
 
 Gate map (`.github/actions/lib/loop/admission.sh`):
 
-| Function                                                           | Decides                                                                |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `admission_evaluate`                                               | Run admission from `result.gate`, in one fixed order (the entry point) |
-| `admission_actor_is_bot`                                           | The one bot definition                                                 |
-| `admission_actor_trusted`                                          | Trusted author association, on every repository                        |
-| `admission_budget_exceeded`                                        | Daily run and token budget                                             |
-| `admission_circuit_breaker_open`                                   | Circuit breaker with the 30-day half-open window                       |
-| `admission_read_budget_limits`, `admission_read_budget_cost_limit` | Budget caps read for the budget check                                  |
-| `admission_result`                                                 | Builds the `{admit, skip_reason, detail}` object                       |
+| Function                                                           | Decides                                                                                                               |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `admission_evaluate`                                               | Run admission from `result.gate`, in one fixed order (the entry point)                                                |
+| `admission_evaluate_target`                                        | Circuit breaker, then pending PR, from the target state and the pending PR state fact (before the detect script runs) |
+| `admission_evaluate_delivery`                                      | A delivery that needs a PR number (`pr_push`) has one                                                                 |
+| `admission_circuit_breaker_verdict`                                | The one place that reads a target state and applies the breaker                                                       |
+| `admission_actor_is_bot`                                           | The one bot definition                                                                                                |
+| `admission_actor_trusted`                                          | Trusted author association, on every repository                                                                       |
+| `admission_budget_exceeded`                                        | Daily run and token budget                                                                                            |
+| `admission_circuit_breaker_open`                                   | Circuit breaker with the 30-day half-open window                                                                      |
+| `admission_read_budget_limits`, `admission_read_budget_cost_limit` | Budget caps read for the budget check                                                                                 |
+| `admission_result`                                                 | Builds the `{admit, skip_reason, detail}` object                                                                      |

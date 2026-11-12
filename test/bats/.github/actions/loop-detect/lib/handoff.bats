@@ -4,6 +4,8 @@
 # Tests for .github/actions/lib/loop/handoff.sh
 #
 # Use cases:
+# - handoff_emit_result_section prints the heading, the one marker and the explanation
+# - the detect result marker has one definition, in handoff.sh
 # - loop_handoff_write_bundle writes manifest and per-target payload files
 # - loop_handoff_read_detect_result and loop_handoff_read_verifier_context load payloads
 # - loop_handoff_resolve_detect_result_json prefers inline JSON over artifact files
@@ -25,6 +27,21 @@ source "${_bats_support}/support/common.bash"
 setup() {
     bats_source_rel ".github/actions/lib/loop/handoff.sh"
     HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
+}
+
+@test "handoff_emit_result_section prints the heading, the one marker and the explanation" {
+    run handoff_emit_result_section
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "## Change Detection Result" ]
+    [ "${lines[1]}" = "${LOOP_DETECT_RESULT_MARKER}" ]
+    [ "${LOOP_DETECT_RESULT_MARKER}" = "__LOOP_DETECT_RESULT_JSON__" ]
+}
+
+@test "the detect result marker has one definition, in handoff.sh" {
+    local root hits
+    root="$(bats_workspace_root)/.github/actions"
+    hits="$(grep -rn "__LOOP_DETECT_RESULT_JSON__" "${root}" | grep -v "lib/loop/handoff.sh" || true)"
+    [ -z "${hits}" ]
 }
 
 @test "loop_handoff_init_bundle rejects empty handoff_dir" {

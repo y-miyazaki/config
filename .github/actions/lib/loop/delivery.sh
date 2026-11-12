@@ -23,33 +23,6 @@
 #######################################
 
 #######################################
-# delivery_requires_pr_number_skip: Decide whether the run must skip for a missing PR number
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - delivery (issue_comment | issue_create | none | pr_create | pr_push | pr_review)
-#   $2 - detect_pr_number (PR number | empty | 0)
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 when the run must skip (pr_push without a PR number); 1 otherwise
-#
-#######################################
-function delivery_requires_pr_number_skip {
-    local delivery="${1:-}"
-    local detect_pr_number="${2:-}"
-
-    if [[ ${delivery} == "pr_push" && (-z ${detect_pr_number} || ${detect_pr_number} == "0") ]]; then
-        return 0
-    fi
-    return 1
-}
-
-#######################################
 # derive_pr_auto_merge: Derive whether the opened PR is auto-merged
 #
 # Globals:

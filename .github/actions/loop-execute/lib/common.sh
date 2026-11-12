@@ -155,11 +155,11 @@ function materialize_matrix_handoff_context {
         return 1
     fi
 
-    if [[ ${PROMPT_TEXT} == *'__LOOP_DETECT_RESULT_JSON__'* ]]; then
+    if [[ ${PROMPT_TEXT} == *"${LOOP_DETECT_RESULT_MARKER}"* ]]; then
         : "${STATUS_DIR:?}"
         DETECT_JSON_FILE="$(mktemp "${STATUS_DIR}/tmp.XXXXXX")"
         printf '%s' "${detect_json}" > "${DETECT_JSON_FILE}"
-        PROMPT_TEXT="${PROMPT_TEXT//__LOOP_DETECT_RESULT_JSON__/Structured detect JSON path: ${DETECT_JSON_FILE}}"
+        PROMPT_TEXT="${PROMPT_TEXT//${LOOP_DETECT_RESULT_MARKER}/Structured detect JSON path: ${DETECT_JSON_FILE}}"
     fi
 
     if [[ -z ${VERIFIER_CONTEXT:-} ]]; then

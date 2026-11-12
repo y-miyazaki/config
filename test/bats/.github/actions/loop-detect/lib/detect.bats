@@ -38,7 +38,8 @@ bats_require_minimum_version 1.5.0
 # - items mode orders by last_run (no state first) before the detect_max_targets cap
 # - items mode falls back to HEAD~10 for from.since without item state
 # - items mode treats an empty items array as skip and a missing, invalid, or duplicate key as an error
-# - gate_blocks_candidate ignores a missing gate and refuses a closed entity, keeping the first reason
+# - record_admission_refusal ignores an admit and counts a refusal by reason class, keeping the first other reason
+# - load_target_state gathers the stored state and promotes a MERGED pending PR in memory
 # - append_detect_candidate drops a candidate whose detect result carries a closed gate
 # - items mode drops an item whose gate refuses it and reports the gate reason when none remains
 # - record_skip_detail keeps the first detail on one redacted line
@@ -448,19 +449,43 @@ EOF
     run grep -Fx 'skip_reason=checkout_failed' "${github_output}"
     [ "$status" -eq 0 ]
 }
-@test "gate_blocks_candidate ignores a missing gate and refuses a closed entity keeping the first reason" {
+@test "record_admission_refusal ignores an admit and counts a refusal by reason class keeping the first other reason" {
+    local admit='{"admit":true,"skip_reason":"","detail":""}'
+    CIRCUIT_BREAKER_BLOCKED=0
+    PENDING_PR_BLOCKED=0
     GATE_BLOCKED=0
     GATE_BLOCK_REASON=""
-    run gate_blocks_candidate "k" "" '{}'
+    run record_admission_refusal "k" "${admit}"
     [ "$status" -eq 1 ]
-    run gate_blocks_candidate "k" "null" '{}'
-    [ "$status" -eq 1 ]
-    gate_blocks_candidate "k1" '{"entity":{"kind":"issue","state":"closed"}}' '{}'
-    gate_blocks_candidate "k2" '{"entity":{"kind":"issue","state":"weird"}}' '{}'
+
+    record_admission_refusal "k1" '{"admit":false,"skip_reason":"circuit_breaker","detail":"consecutive_failures 3"}'
+    record_admission_refusal "k2" '{"admit":false,"skip_reason":"pending_pr","detail":"pending PR #4 is open"}'
+    record_admission_refusal "k3" '{"admit":false,"skip_reason":"entity_closed","detail":"entity state is closed"}'
+    record_admission_refusal "k4" '{"admit":false,"skip_reason":"fact_missing","detail":"entity.state is unknown"}'
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 1 ]
+    [ "${PENDING_PR_BLOCKED}" -eq 1 ]
     [ "${GATE_BLOCKED}" -eq 2 ]
     [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
-    run gate_blocks_candidate "k3" '{"entity":{"kind":"issue","state":"open"}}' '{}'
-    [ "$status" -eq 1 ]
+}
+
+@test "load_target_state gathers the stored state and promotes a MERGED pending PR in memory" {
+    local state_file="${DETECT_TMP}/state-load.json"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"old","pending":{"pr":42,"sha":"new"}}}}' > "${state_file}"
+    STATE_FILE="${state_file}"
+    STATE_READ_FILE=""
+    STATE_BRANCH="main"
+    export GITHUB_TOKEN="test-token"
+    local mock_bin="${DETECT_TMP}/bin"
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\necho MERGED\n' > "${mock_bin}/gh"
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
+
+    load_target_state "integration:main"
+
+    [ "${TARGET_PENDING_PR_STATE}" = "MERGED" ]
+    [ "$(jq -r '.last_sha' <<< "${TARGET_STATE_JSON}")" = "new" ]
+    [ "$(jq -r 'has("pending")' <<< "${TARGET_STATE_JSON}")" = "false" ]
 }
 
 @test "append_detect_candidate drops a candidate whose detect result carries a closed gate" {
@@ -1232,7 +1257,7 @@ output_matrix_keys() {
         '{"integration:main#issue:1":{"consecutive_failures":3}}'
     run_items_main
     [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::Circuit breaker open for integration:main#issue:1"* ]]
+    [[ ${output} == *"::warning::admission refused integration:main#issue:1: circuit_breaker"* ]]
     grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
     grep -qx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
 }

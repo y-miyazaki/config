@@ -23,6 +23,7 @@ bats_require_minimum_version 1.5.0
 # - main applies the circuit breaker from the checked-out state file to the entity key
 # - read_entity_target_state returns {} for a missing file or target and the target state otherwise
 # - main builds target matrix, handoff payload, and pr_auto_merge from a successful entity detect
+# - main keeps the detect JSON out of the published prompt and stores the full JSON in the handoff payload
 # - main passes detect_env_json entries to the detect script only and rejects reserved or conflicting keys
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -295,6 +296,29 @@ state_file"
     run find "${RUNNER_TEMP}/loop-handoff" -type f
     [ "$status" -eq 0 ]
     [ "$(wc -l <<< "${output}")" -ge 1 ]
+}
+
+@test "main keeps the detect JSON out of the published prompt and stores the full JSON in the handoff payload" {
+    local matrix payload_file
+    # About 200 KB of comment bodies: far beyond what a job output may carry.
+    head -c 200000 /dev/zero | tr '\0' 'x' > "${BATS_TEST_TMPDIR}/big.txt"
+    jq -nc --rawfile big "${BATS_TEST_TMPDIR}/big.txt" '{status:"ok",skip:false,result:{handoff_key:"entity:issue:9",entity:{kind:"issue"},issue_number:9,comments:[{body:$big}]}}' > "${BATS_TEST_TMPDIR}/detect.sh.json"
+    printf '#!/bin/bash\ncat "%s/detect.sh.json"\n' "${BATS_TEST_TMPDIR}" > "${BATS_TEST_TMPDIR}/detect.sh"
+    chmod +x "${BATS_TEST_TMPDIR}/detect.sh"
+
+    run_main
+    [ "$status" -eq 0 ]
+    matrix="$(github_output_matrix)"
+    # The published matrix carries the marker, not the JSON.
+    [ "${#matrix}" -lt 20000 ]
+    [[ ${matrix} == *"__LOOP_DETECT_RESULT_JSON__"* ]]
+    [[ ${matrix} != *"xxxxxxxxxxxxxxxxxxxx"* ]]
+    # The handoff payload holds the full detect JSON that the skills read (status, skip, result.*).
+    payload_file="$(find "${RUNNER_TEMP}/loop-handoff" -type f -name '*.json' | head -1)"
+    [ -n "${payload_file}" ]
+    [ "$(jq -r '.result.status' "${payload_file}")" = "ok" ]
+    [ "$(jq -r '.result.result.issue_number' "${payload_file}")" = "9" ]
+    [ "$(jq -r '.result.result.comments[0].body | length' "${payload_file}")" = "200000" ]
 }
 
 @test "main passes detect_env_json entries to the detect script only" {

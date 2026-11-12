@@ -17,6 +17,9 @@
 # - admission_actor_is_bot is the one bot definition (type Bot, login bot, suffix -bot or [bot], app/ prefix; humans such as abbot are not bots)
 # - admission_actor_trusted accepts MEMBER, OWNER and COLLABORATOR on every repository and refuses the rest
 # - admission_evaluate admits a result without a gate, fails closed on an unknown entity state and skips the check when no state is reported
+# - admission_evaluate_delivery refuses pr_push without a PR number and admits everything else
+# - admission_evaluate_target decides the circuit breaker first, then a pending PR that is OPEN or unresolved
+# - admission_evaluate and admission_evaluate_target share one circuit breaker verdict
 # - admission_evaluate refuses a closed or merged entity, an untrusted or bot actor, a missing mention, an open PR, an open circuit breaker and a domain skip, in that order
 # - admission_evaluate applies the bot check to every source but schedule, the association check to webhooks (required) and to other sources (when reported), and the mention check to webhooks only
 
@@ -284,6 +287,59 @@ gate_json() {
     [ "$status" -eq 1 ]
     run admission_actor_is_bot "" ""
     [ "$status" -eq 1 ]
+}
+
+@test "admission_evaluate_delivery refuses pr_push without a PR number and admits everything else" {
+    local delivery
+    run admission_evaluate_delivery pr_push ""
+    [ "$(jq -r '.admit' <<< "${output}")" = "false" ]
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "pr_number_missing" ]
+    run admission_evaluate_delivery pr_push 0
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "pr_number_missing" ]
+    run admission_evaluate_delivery pr_push 12
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    for delivery in pr_create issue_comment issue_create none pr_review bogus; do
+        run admission_evaluate_delivery "${delivery}" ""
+        [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    done
+}
+
+@test "admission_evaluate_target refuses an open breaker, then a pending PR that is OPEN or unresolved, and admits a stale one" {
+    local recent state
+    recent="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    state="{\"consecutive_failures\":3,\"last_run\":\"${recent}\"}"
+    run admission_evaluate_target "${state}" none
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "circuit_breaker" ]
+    # The breaker is decided first even when a pending PR is also open.
+    run admission_evaluate_target "{\"consecutive_failures\":3,\"last_run\":\"${recent}\",\"pending\":{\"pr\":7}}" OPEN
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "circuit_breaker" ]
+
+    state='{"pending":{"pr":7,"sha":"abc"}}'
+    run admission_evaluate_target "${state}" OPEN
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "pending_pr" ]
+    [[ $(jq -r '.detail' <<< "${output}") == *"#7 is open"* ]]
+    run admission_evaluate_target "${state}" unknown
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "pending_pr" ]
+    [[ $(jq -r '.detail' <<< "${output}") == *"unresolved"* ]]
+    for fact in CLOSED MERGED; do
+        run admission_evaluate_target "${state}" "${fact}"
+        [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    done
+    run admission_evaluate_target '{}' none
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    run admission_evaluate_target '{"pending":{"pr":"7"}}' none
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+}
+
+@test "admission_evaluate and admission_evaluate_target share one circuit breaker verdict" {
+    local recent state gate
+    recent="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    state="{\"consecutive_failures\":4,\"last_run\":\"${recent}\"}"
+    gate='{"entity":{"kind":"issue","state":"open"},"trigger":{"source":"schedule"}}'
+    run admission_evaluate "${gate}" "${state}"
+    local from_evaluate="${output}"
+    run admission_evaluate_target "${state}" none
+    [ "${from_evaluate}" = "${output}" ]
 }
 
 @test "admission_actor_trusted accepts MEMBER OWNER COLLABORATOR only" {

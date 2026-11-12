@@ -16,7 +16,6 @@
 #######################################
 # Global variables
 #######################################
-LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 
 _MATRIX_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _loop_action_lib="$(cd "${_MATRIX_LIB_DIR}/../../lib/loop" && pwd)"
@@ -83,9 +82,7 @@ function build_prompt_text {
         echo "Last SHA: ${last_sha}"
         echo "Current SHA: ${current_sha}"
         echo ""
-        echo "## Change Detection Result"
-        echo "${LOOP_DETECT_RESULT_MARKER}"
-        echo "At execute time this is replaced with a runner-local JSON file path (not inlined JSON)."
+        handoff_emit_result_section
         if [[ -n ${open_rejections_prompt} ]]; then
             echo ""
             echo "## Open Rejections from Previous Run"

@@ -12,6 +12,7 @@
 # - validate_agent_unchanged_verdict fails on values other than APPROVE / REJECT
 # - parse_output_field extracts legacy line fields
 # - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
+# - materialize_matrix_handoff_context gives an entity prompt the full detect JSON the skills read
 # - materialize_matrix_handoff_context writes detect file and keeps prompt compact
 # - materialize_matrix_handoff_context rebuilds verifier_context from detect result when artifact omits it
 # - materialize_matrix_handoff_context fails when required artifact payload is missing
@@ -74,6 +75,30 @@ EOF
     run jq -e '.commits[0].subject == "from artifact"' "${DETECT_JSON_FILE}"
     [ "$status" -eq 0 ]
     [ "${VERIFIER_CONTEXT}" = "stored" ]
+}
+
+@test "materialize_matrix_handoff_context gives an entity prompt the full detect JSON the skills read" {
+    local candidate
+
+    # Entity shape: the handoff result is the whole detect JSON (status, skip, result.*).
+    candidate='{"target_json":{"key":"entity:issue:9"},"prompt":"p","verifier_context":"Issue #9","result":{"status":"ok","skip":false,"result":{"issue_number":9,"comments":[{"body":"hello"}]}}}'
+    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+
+    PROMPT_TEXT="$(handoff_emit_result_section)"
+    DETECT_RESULT_JSON="{}"
+    LOOP_HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
+    HANDOFF_KEY="entity:issue:9"
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status-entity"
+    mkdir -p "${STATUS_DIR}"
+
+    materialize_matrix_handoff_context
+
+    [[ ${PROMPT_TEXT} == *"Structured detect JSON path: ${DETECT_JSON_FILE}"* ]]
+    [[ ${PROMPT_TEXT} != *"hello"* ]]
+    run jq -e '.status == "ok" and .skip == false and .result.issue_number == 9 and .result.comments[0].body == "hello"' "${DETECT_JSON_FILE}"
+    [ "$status" -eq 0 ]
+    [ "${VERIFIER_CONTEXT}" = "Issue #9" ]
 }
 
 @test "materialize_matrix_handoff_context writes detect file and keeps prompt compact" {
