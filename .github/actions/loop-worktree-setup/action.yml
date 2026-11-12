@@ -116,7 +116,7 @@ runs:
           if [[ ${TARGET_KEY:-} == *"#"* ]]; then
             # shellcheck disable=SC1091
             source "${GITHUB_ACTION_PATH}/../lib/loop/target_slug.sh"
-            BRANCH="${BRANCH}-$(target_slug "${TARGET_KEY}")"
+            BRANCH="${BRANCH}-$(target_slug_from_key "${TARGET_KEY}")"
           fi
 
           if ! check_names_branch "${BRANCH}"; then

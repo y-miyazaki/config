@@ -6,7 +6,7 @@
 #
 # Usage:
 #   source target_slug.sh
-#   target_slug TARGET_KEY
+#   target_slug_from_key TARGET_KEY
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -23,7 +23,7 @@
 #######################################
 
 #######################################
-# target_slug: Print <slug>-<hash8> for a target key
+# target_slug_from_key: Print <slug>-<hash8> for a target key
 #
 # Globals:
 #   None
@@ -37,7 +37,7 @@
 # Returns:
 #   0 always
 #######################################
-function target_slug {
+function target_slug_from_key {
     local LC_ALL=C
     local key="${1:-}"
     local hash slug
