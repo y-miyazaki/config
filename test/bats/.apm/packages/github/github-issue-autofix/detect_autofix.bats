@@ -22,6 +22,10 @@ DETECT_SCRIPT="$(apm_skill_script_path github-issue-autofix detect_autofix.sh)"
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
 #!/bin/bash
+if [[ "$1" == "api" ]]; then
+    printf '%s\n' '{"state":"open"}'
+    exit 0
+fi
 if [[ "$1" == "pr" && "$2" == "list" ]]; then
     printf '%s\n' '[{"number":7,"title":"fix crash","body":"Fixes #12","isDraft":true}]'
     exit 0
@@ -50,6 +54,10 @@ EOF
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
 #!/bin/bash
+if [[ "$1" == "api" ]]; then
+    printf '%s\n' '{"state":"open"}'
+    exit 0
+fi
 if [[ "$1" == "pr" && "$2" == "list" ]]; then
     exit 1
 fi
@@ -77,6 +85,10 @@ EOF
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
 #!/bin/bash
+if [[ "$1" == "api" ]]; then
+    printf '%s\n' '{"state":"open"}'
+    exit 0
+fi
 if [[ "$1" == "pr" && "$2" == "list" ]]; then
     printf '%s\n' '[]'
     exit 0
@@ -125,6 +137,12 @@ if [[ "$1" == "pr" && "$2" == "list" ]]; then
 fi
 if [[ "$1" == "api" ]]; then
     for a in "$@"; do
+        if [[ "$a" =~ /issues/([0-9]+)$ ]]; then
+            [[ -f "${fix}/fail_issue_state" ]] && exit 1
+            f="${fix}/issue_state_${BASH_REMATCH[1]}.json"
+            if [[ -f "${f}" ]]; then cat "${f}"; else printf '{"state":"open"}'; fi
+            exit 0
+        fi
         if [[ "$a" =~ /issues/([0-9]+)/comments ]]; then
             [[ -f "${fix}/fail_comments" ]] && exit 1
             f="${fix}/comments_${BASH_REMATCH[1]}.json"
@@ -161,8 +179,15 @@ mk_issue() {
 # Assert helper: fails the test when output is not the expected jq truth.
 assert_jq() {
     local expr="$1"
-    [[ -n ${output} ]] || { echo "empty output" >&2; return 1; }
-    jq -e "${expr}" <<< "${output}" > /dev/null || { echo "jq assertion failed: ${expr}" >&2; echo "${output}" >&2; return 1; }
+    [[ -n ${output} ]] || {
+        echo "empty output" >&2
+        return 1
+    }
+    jq -e "${expr}" <<< "${output}" > /dev/null || {
+        echo "jq assertion failed: ${expr}" >&2
+        echo "${output}" >&2
+        return 1
+    }
 }
 
 @test "scan: lists qualifying Issues oldest first as result.items" {
@@ -309,8 +334,8 @@ assert_jq() {
     assert_jq '[.result.items[].key] == ["issue:20","issue:22"]'
     [ "$(grep -c '/comments' "${FIX}/calls.log")" -eq 1 ]
     grep -q 'issues/21/comments' "${FIX}/calls.log"
-    ! grep -q 'issues/20/comments' "${FIX}/calls.log"
-    ! grep -q 'issues/22/comments' "${FIX}/calls.log"
+    run ! grep -q 'issues/20/comments' "${FIX}/calls.log"
+    run ! grep -q 'issues/22/comments' "${FIX}/calls.log"
     [ "$(grep -c -- '--state closed' "${FIX}/calls.log")" -eq 1 ]
 }
 
@@ -358,6 +383,10 @@ assert_jq() {
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
 #!/bin/bash
+if [[ "$1" == "api" ]]; then
+    printf '%s\n' '{"state":"open"}'
+    exit 0
+fi
 if [[ "$1" == "pr" && "$2" == "list" ]]; then
     printf '%s\n' '[{"number":1,"title":"a","body":"","headRefName":"bot/autofix/1","labels":[{"name":"pr-label"}]}]'
     exit 0
@@ -462,6 +491,43 @@ EOF
     setup_scan_stub
     unset AUTOFIX_SCAN
     printf '%s' 'not json' > "${FIX}/open_prs.json"
+    ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+}
+
+@test "single-issue: skips when the Issue is closed" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    printf '%s' '{"state":"closed"}' > "${FIX}/issue_state_7.json"
+    ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.status == "ok" and .skip == true and (.message | test("not open"))'
+    run ! grep -q -- 'pr list' "${FIX}/calls.log"
+}
+
+@test "single-issue: closed Issue with AUTOFIX_ITEMS=true skips with empty result" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    printf '%s' '{"state":"closed"}' > "${FIX}/issue_state_7.json"
+    ISSUE_NUMBER=7 AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    assert_jq '.skip == true and .result == {}'
+}
+
+@test "single-issue: fails closed when the Issue state cannot be read" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    touch "${FIX}/fail_issue_state"
+    ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    assert_jq '.status == "error" and .skip == true'
+}
+
+@test "single-issue: fails closed when the Issue state is unreadable JSON" {
+    setup_scan_stub
+    unset AUTOFIX_SCAN
+    printf '%s' 'not json' > "${FIX}/issue_state_7.json"
     ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 1 ]
     assert_jq '.status == "error" and .skip == true'
@@ -585,7 +651,7 @@ EOF
     setup_scan_stub
     jq -s -c '.' <(mk_issue 20) > "${FIX}/issues.json"
     printf '%s' '[{"number":3,"body":"Fixes #20","closedAt":"2026-01-02T00:00:00Z","headRefName":"other/loop/3"}]' > "${FIX}/closed_prs.json"
-    AUTOFIX_BRANCH_PREFIX= run bash "${DETECT_SCRIPT}"
+    AUTOFIX_BRANCH_PREFIX='' run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     assert_jq '.skip == true and .result == {}'
 }

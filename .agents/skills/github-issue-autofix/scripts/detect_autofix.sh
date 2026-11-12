@@ -11,6 +11,8 @@
 # - Consume issue facts from environment variables
 # - Hydrate ISSUE_NUMBER from GITHUB_EVENT_PATH when unset
 # - Skip when an open/draft PR already closes the Issue (Fixes/Close/Resolve #N)
+# - Single-Issue mode skips when the Issue is not open (state other than "open"); fails closed when
+#   the Issue state cannot be read
 # - Scan mode (AUTOFIX_SCAN=true): list qualifying Issues as result.items (oldest first, max 50,
 #   never truncated to the platform detect_max_targets); no ISSUE_NUMBER required
 # - Scan mode qualifies Issues: open, not a PR, AUTOFIX_SOURCE_LABEL present, no autofix label,
@@ -267,6 +269,41 @@ function validate_pr_scan_limit {
         fi
         PR_SCAN_LIMIT=$((10#${AUTOFIX_PR_SCAN_LIMIT}))
     fi
+}
+
+#######################################
+# issue_is_open: Return whether the Issue is open
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   GH_TOKEN
+#   GITHUB_TOKEN
+#
+# Arguments:
+#   $1 - Issue number
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the Issue state is "open"; 1 otherwise (calls output_error when gh or jq fails)
+#
+# Usage:
+#   if ! issue_is_open "${ISSUE_NUMBER}"; then skip="true"; fi
+#
+#######################################
+function issue_is_open {
+    local issue_number="$1"
+    local issue state
+
+    export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    if ! issue="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${issue_number}" 2> /dev/null)"; then
+        output_error "github-issue-autofix: failed to read Issue #${issue_number}"
+    fi
+    if ! state="$(jq -er '.state' <<< "${issue}" 2> /dev/null)"; then
+        output_error "github-issue-autofix: unreadable state for Issue #${issue_number}"
+    fi
+    [[ ${state} == "open" ]]
 }
 
 #######################################
@@ -807,7 +844,10 @@ function main {
     ensure_pr_scan_prerequisites
     validate_pr_scan_limit
 
-    if open_pr_fixes_issue "${ISSUE_NUMBER}"; then
+    if ! issue_is_open "${ISSUE_NUMBER}"; then
+        skip="true"
+        message="github-issue-autofix: Issue #${ISSUE_NUMBER} is not open"
+    elif open_pr_fixes_issue "${ISSUE_NUMBER}"; then
         skip="true"
         message="github-issue-autofix: open/draft PR already references Fixes #${ISSUE_NUMBER}"
     else
