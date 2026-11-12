@@ -5,6 +5,7 @@
 
 # Use cases:
 # - target_circuit_breaker_open trips at three consecutive failures
+# - target_circuit_breaker_open closes after 30 days and stays open without a valid last_run
 # - read_budget_limits prefers budget file over defaults
 # - budget_exceeded trips when daily run count reaches max
 # - budget_exceeded allows runs under the daily cap
@@ -39,6 +40,28 @@ teardown() {
     [ "$status" -eq 0 ]
 
     run target_circuit_breaker_open 5
+    [ "$status" -eq 0 ]
+}
+
+@test "target_circuit_breaker_open closes after 30 days and stays open without a valid last_run" {
+    local today old recent
+    today="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    recent="$(date -u -d '29 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-29d +%Y-%m-%dT%H:%M:%SZ)"
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-31d +%Y-%m-%dT%H:%M:%SZ)"
+
+    run target_circuit_breaker_open 3 "${today}"
+    [ "$status" -eq 0 ]
+    run target_circuit_breaker_open 3 "${recent}"
+    [ "$status" -eq 0 ]
+    run target_circuit_breaker_open 3 "${old}"
+    [ "$status" -eq 1 ]
+    run target_circuit_breaker_open 2 "${today}"
+    [ "$status" -eq 1 ]
+    run target_circuit_breaker_open 3 ""
+    [ "$status" -eq 0 ]
+    run target_circuit_breaker_open 3 "garbage"
+    [ "$status" -eq 0 ]
+    run target_circuit_breaker_open 3
     [ "$status" -eq 0 ]
 }
 
