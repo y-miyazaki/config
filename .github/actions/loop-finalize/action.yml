@@ -332,7 +332,7 @@ runs:
         source "${loop_action_lib}/failure_record.sh"
         # shellcheck disable=SC1091
         source "${loop_action_lib}/deliver_message.sh"
-        deliver_loop_message
+        deliver_message_send
 
     - name: Push to Target Branch
       id: push_target

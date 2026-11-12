@@ -2,7 +2,7 @@
 #######################################
 # Description:
 #   Deliver delivery issue_create: open one GitHub Issue per new finding in issues.json.
-#   Sourced by deliver_message.sh, which dispatches here and owns fail_loop_message.
+#   Sourced by deliver_message.sh, which dispatches here and owns deliver_message_fail.
 #
 # Usage:
 #   source deliver_issue_create.sh   (from deliver_message.sh)
@@ -26,7 +26,7 @@
 #
 # Dependencies:
 #   - bash, gh, jq, sha256sum
-#   - ensure_labels.sh, loop_meta.sh, and fail_loop_message from deliver_message.sh
+#   - ensure_labels.sh, loop_meta.sh, and deliver_message_fail from deliver_message.sh
 #######################################
 
 #######################################
@@ -147,7 +147,7 @@ function mark_issue_create_unchanged {
 #   $2 - Maximum Issues per run
 #
 # Outputs:
-#   None (failures are recorded through fail_loop_message)
+#   None (failures are recorded through deliver_message_fail)
 #
 # Returns:
 #   0 when valid; 1 on failure (recorded)
@@ -158,7 +158,7 @@ function validate_issue_create_input {
     local limit="$2"
 
     if [[ ! -f ${file} ]]; then
-        fail_loop_message "issues.json is missing"
+        deliver_message_fail "issues.json is missing"
         return 1
     fi
     if ! jq -e '
@@ -168,11 +168,11 @@ function validate_issue_create_input {
             and (.body | type == "string" and length <= 60000)
             and (.fingerprint | type == "string" and length > 0)
         )' "${file}" > /dev/null 2>&1; then
-        fail_loop_message "issues.json is invalid (need an array of {title (1-256 chars), body (<= 60000 chars), fingerprint})"
+        deliver_message_fail "issues.json is invalid (need an array of {title (1-256 chars), body (<= 60000 chars), fingerprint})"
         return 1
     fi
     if ! [[ ${limit} =~ ^[1-9][0-9]*$ ]]; then
-        fail_loop_message "finalize_issue_limit must be a positive integer (got: ${limit})"
+        deliver_message_fail "finalize_issue_limit must be a positive integer (got: ${limit})"
         return 1
     fi
     return 0
@@ -221,7 +221,7 @@ function select_new_issue_findings {
     # Existing Issues (open and closed) carrying every label; markers are matched locally.
     if ! existing="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues?labels=${labels_csv}&state=all&per_page=100" \
         --jq '.[] | select(.pull_request == null) | .body // ""' 2>&1)"; then
-        fail_loop_message "Failed to list existing issues: ${existing}"
+        deliver_message_fail "Failed to list existing issues: ${existing}"
         return 1
     fi
     name_re="$(sed 's/[][\\.*^$/]/\\&/g' <<< "${loop_name}")"
@@ -302,7 +302,7 @@ function deliver_issue_create {
 
     mapfile -t labels < <(ensure_labels_parse_list "${FINALIZE_LABEL_ALLOWLIST:-}")
     if [[ ${#labels[@]} -eq 0 ]]; then
-        fail_loop_message "finalize_label_allowlist is empty; issue_create needs the labels to apply"
+        deliver_message_fail "finalize_label_allowlist is empty; issue_create needs the labels to apply"
         return 1
     fi
     for label in "${labels[@]}"; do
@@ -321,7 +321,7 @@ function deliver_issue_create {
 
     # Create missing labels only when an Issue will be filed.
     if [[ ${#picks[@]} -gt 0 ]] && ! err="$(ensure_labels_repo "${labels[@]}" 2>&1)"; then
-        fail_loop_message "${err}"
+        deliver_message_fail "${err}"
         return 1
     fi
 
@@ -340,7 +340,7 @@ function deliver_issue_create {
             err="${url}"
             rm -f "${body_file}"
             issue_create_summary "- failed creating \"${title}\" after ${created} created: ${created_numbers[*]:-none}"
-            fail_loop_message "Failed to create an issue after ${created} created (${created_numbers[*]:-none}): ${err}"
+            deliver_message_fail "Failed to create an issue after ${created} created (${created_numbers[*]:-none}): ${err}"
             return 1
         fi
         rm -f "${body_file}"

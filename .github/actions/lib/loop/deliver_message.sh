@@ -13,7 +13,7 @@
 #   source loop_meta.sh
 #   source failure_record.sh
 #   source deliver_message.sh
-#   deliver_loop_message
+#   deliver_message_send
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -40,7 +40,7 @@ source "${_DELIVER_MESSAGE_DIR}/ensure_labels.sh"
 source "${_DELIVER_MESSAGE_DIR}/deliver_issue_create.sh"
 
 #######################################
-# apply_loop_message_labels: Add and remove the allowlisted labels on an Issue or PR
+# deliver_message_apply_labels: Add and remove the allowlisted labels on an Issue or PR
 #
 # Globals:
 #   GITHUB_REPOSITORY - owner/name
@@ -59,10 +59,10 @@ source "${_DELIVER_MESSAGE_DIR}/deliver_issue_create.sh"
 #   0 on success (404 on DELETE counts as success); 1 on a failed gh call (recorded)
 #
 # Usage:
-#   apply_loop_message_labels 12 "${dir}/message_labels.json" "${FINALIZE_LABEL_ALLOWLIST}"
+#   deliver_message_apply_labels 12 "${dir}/message_labels.json" "${FINALIZE_LABEL_ALLOWLIST}"
 #
 #######################################
-function apply_loop_message_labels {
+function deliver_message_apply_labels {
     local number="$1"
     local labels_file="$2"
     local allowlist="${3:-}"
@@ -97,14 +97,14 @@ function apply_loop_message_labels {
     if [[ $(jq -r '.add | length' <<< "${filtered}") -gt 0 ]]; then
         mapfile -t add_names < <(jq -r '.add[]' <<< "${filtered}")
         if ! err="$(ensure_labels_repo "${add_names[@]}" 2>&1)"; then
-            fail_loop_message "${err}"
+            deliver_message_fail "${err}"
             return 1
         fi
         add_file="$(mktemp)"
         jq -c '{labels: .add}' <<< "${filtered}" > "${add_file}"
         if ! err="$(gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${number}/labels" --input "${add_file}" 2>&1 > /dev/null)"; then
             rm -f "${add_file}"
-            fail_loop_message "Failed to add labels on #${number}: ${err}"
+            deliver_message_fail "Failed to add labels on #${number}: ${err}"
             return 1
         fi
         rm -f "${add_file}"
@@ -117,7 +117,7 @@ function apply_loop_message_labels {
             if [[ ${err} == *"HTTP 404"* ]]; then
                 continue
             fi
-            fail_loop_message "Failed to remove label ${encoded} on #${number}: ${err}"
+            deliver_message_fail "Failed to remove label ${encoded} on #${number}: ${err}"
             return 1
         fi
     done
@@ -125,7 +125,7 @@ function apply_loop_message_labels {
 }
 
 #######################################
-# build_loop_message_body: Put the marker first (when missing) and Meta and the footer last
+# deliver_message_build_body: Put the marker first (when missing) and Meta and the footer last
 #
 # Globals:
 #   None
@@ -142,10 +142,10 @@ function apply_loop_message_labels {
 #   0 always
 #
 # Usage:
-#   body="$(build_loop_message_body "${text}" "${marker}" "${meta_block}")"
+#   body="$(deliver_message_build_body "${text}" "${marker}" "${meta_block}")"
 #
 #######################################
-function build_loop_message_body {
+function deliver_message_build_body {
     local text="$1"
     local marker="$2"
     local meta_block="$3"
@@ -157,7 +157,7 @@ function build_loop_message_body {
 }
 
 #######################################
-# loop_message_link_ref: Commit to read and link repository paths at
+# deliver_message_link_ref: Commit to read and link repository paths at
 #
 # Description:
 #   A PR review links at the reviewed commit (commit_id in review.json) when that
@@ -176,7 +176,7 @@ function build_loop_message_body {
 #   0 always
 #
 #######################################
-function loop_message_link_ref {
+function deliver_message_link_ref {
     local dir="${1:-}"
     local commit_id=""
 
@@ -195,7 +195,7 @@ function loop_message_link_ref {
 }
 
 #######################################
-# deliver_loop_message: Deliver message.md or review.json, with labels, as one GitHub write
+# deliver_message_send: Deliver message.md or review.json, with labels, as one GitHub write
 #
 # Globals:
 #   DELIVERY - issue_comment | issue_create | pr_review (anything else does nothing)
@@ -223,10 +223,10 @@ function loop_message_link_ref {
 #   0 on success or when there is nothing to deliver; 1 on failure (recorded)
 #
 # Usage:
-#   deliver_loop_message
+#   deliver_message_send
 #
 #######################################
-function deliver_loop_message {
+function deliver_message_send {
     local delivery="${DELIVERY:-}"
     local dir="${LOOP_MESSAGE_DIR:-}"
     local marker="<!-- ${LOOP_NAME:-}:v1 -->"
@@ -271,7 +271,7 @@ function deliver_loop_message {
     fallback="${fallback%"${fallback##*[![:space:]]}"}"
 
     if [[ -n ${text} ]]; then
-        link_ref="$(loop_message_link_ref "${dir}")"
+        link_ref="$(deliver_message_link_ref "${dir}")"
         text="$(python3 -I "${_DELIVER_MESSAGE_DIR}/linkify.py" --tracked --ref "${link_ref}" <<< "${text}" 2> /dev/null || printf '%s' "${text}")"
         if [[ -n ${fallback} ]]; then
             fallback="$(python3 -I "${_DELIVER_MESSAGE_DIR}/linkify.py" --tracked --ref "${link_ref}" <<< "${fallback}" 2> /dev/null || printf '%s' "${fallback}")"
@@ -295,28 +295,28 @@ function deliver_loop_message {
         return 0
     fi
 
-    if ! number="$(loop_message_target_number "${delivery}" "${TARGET_JSON:-}")"; then
-        fail_loop_message "target_json handoff key does not match delivery ${delivery}"
+    if ! number="$(deliver_message_target_number "${delivery}" "${TARGET_JSON:-}")"; then
+        deliver_message_fail "target_json handoff key does not match delivery ${delivery}"
         return 1
     fi
 
     loop_meta_reset
     meta_block="$(loop_meta_build_block "${OUTCOME:-}" "${VERDICT:-}" "" "${AGENT_ENGINE:-}" "${USAGE_JSON:-}" "${RUN_URL:-}")"
 
-    if ! apply_loop_message_labels "${number}" "${labels_file}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
+    if ! deliver_message_apply_labels "${number}" "${labels_file}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         return 1
     fi
 
     out_file="$(mktemp)"
     if [[ ${delivery} == "issue_comment" ]]; then
-        build_loop_message_body "${text}" "${marker}" "${meta_block}" > "${out_file}"
+        deliver_message_build_body "${text}" "${marker}" "${meta_block}" > "${out_file}"
         rc=0
-        post_loop_issue_comment "${number}" "${out_file}" || rc=$?
+        deliver_message_post_issue_comment "${number}" "${out_file}" || rc=$?
     else
         jq -c \
-            --arg body "$(build_loop_message_body "${text}" "${marker}" "${meta_block}")" \
+            --arg body "$(deliver_message_build_body "${text}" "${marker}" "${meta_block}")" \
             --arg fallback "${fallback}" \
-            --arg fallback_body "$(build_loop_message_body "${fallback}" "${marker}" "${meta_block}")" \
+            --arg fallback_body "$(deliver_message_build_body "${fallback}" "${marker}" "${meta_block}")" \
             '{
                 body: $body,
                 comments: (.comments // []),
@@ -324,14 +324,14 @@ function deliver_loop_message {
             } + (if (.commit_id // "") != "" then {commit_id: .commit_id} else {} end)' \
             "${dir}/review.json" > "${out_file}"
         rc=0
-        post_loop_pr_review "${number}" "${out_file}" || rc=$?
+        deliver_message_post_pr_review "${number}" "${out_file}" || rc=$?
     fi
     rm -f "${out_file}"
     return "${rc}"
 }
 
 #######################################
-# fail_loop_message: Record a deliver_message failure and annotate it without gh stderr
+# deliver_message_fail: Record a deliver_message failure and annotate it without gh stderr
 #
 # Globals:
 #   LOOP_FAILURE_FILE - Failure record path (skipped when unset)
@@ -346,10 +346,10 @@ function deliver_loop_message {
 #   0 always
 #
 # Usage:
-#   fail_loop_message "Failed to post: ${err}"
+#   deliver_message_fail "Failed to post: ${err}"
 #
 #######################################
-function fail_loop_message {
+function deliver_message_fail {
     local message="$1"
 
     echo "::error::Deliver Message failed (failure_stage=deliver_message; see the loop-finalize failure_message output)"
@@ -359,7 +359,7 @@ function fail_loop_message {
 }
 
 #######################################
-# loop_message_target_number: Read the Issue/PR number for a delivery from target_json
+# deliver_message_target_number: Read the Issue/PR number for a delivery from target_json
 #
 # Globals:
 #   None
@@ -375,10 +375,10 @@ function fail_loop_message {
 #   0 when the key is valid and its kind matches the delivery; 1 otherwise
 #
 # Usage:
-#   number="$(loop_message_target_number issue_comment "${TARGET_JSON}")"
+#   number="$(deliver_message_target_number issue_comment "${TARGET_JSON}")"
 #
 #######################################
-function loop_message_target_number {
+function deliver_message_target_number {
     local delivery="$1"
     local target_json="${2:-}"
     local key expected
@@ -397,7 +397,7 @@ function loop_message_target_number {
 }
 
 #######################################
-# post_loop_issue_comment: Post one Issue comment from a body file
+# deliver_message_post_issue_comment: Post one Issue comment from a body file
 #
 # Globals:
 #   GITHUB_REPOSITORY - owner/name
@@ -415,16 +415,16 @@ function loop_message_target_number {
 #   0 on success; 1 on failure (recorded)
 #
 # Usage:
-#   post_loop_issue_comment 12 "${body_file}"
+#   deliver_message_post_issue_comment 12 "${body_file}"
 #
 #######################################
-function post_loop_issue_comment {
+function deliver_message_post_issue_comment {
     local number="$1"
     local body_file="$2"
     local err
 
     if ! err="$(gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body-file "${body_file}" 2>&1 > /dev/null)"; then
-        fail_loop_message "Failed to post the loop comment on #${number}: ${err}"
+        deliver_message_fail "Failed to post the loop comment on #${number}: ${err}"
         return 1
     fi
     echo "::notice title=loop-deliver::Posted the loop comment on #${number}"
@@ -432,7 +432,7 @@ function post_loop_issue_comment {
 }
 
 #######################################
-# post_loop_pr_review: Post one COMMENT review; retry once without comments on HTTP 422
+# deliver_message_post_pr_review: Post one COMMENT review; retry once without comments on HTTP 422
 #
 # Globals:
 #   GITHUB_REPOSITORY - owner/name
@@ -451,10 +451,10 @@ function post_loop_issue_comment {
 #   0 on success; 1 on failure (recorded)
 #
 # Usage:
-#   post_loop_pr_review 7 "${review_file}"
+#   deliver_message_post_pr_review 7 "${review_file}"
 #
 #######################################
-function post_loop_pr_review {
+function deliver_message_post_pr_review {
     local number="$1"
     local review_file="$2"
     local payload err
@@ -481,6 +481,6 @@ function post_loop_pr_review {
         fi
     fi
     rm -f "${payload}"
-    fail_loop_message "Failed to post the review on PR #${number}: ${err}"
+    deliver_message_fail "Failed to post the review on PR #${number}: ${err}"
     return 1
 }
