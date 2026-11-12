@@ -35,7 +35,7 @@ LOOP_FAILURE_FILE="${LOOP_FAILURE_FILE:-}"
 STATUS_DIR="${STATUS_DIR:-}"
 
 #######################################
-# resolve_failure_file: Resolve failure JSON path from env
+# export_failure_diag_resolve_file: Resolve failure JSON path from env
 #
 # Globals:
 #   LOOP_FAILURE_FILE - Explicit failure JSON path (optional)
@@ -51,7 +51,7 @@ STATUS_DIR="${STATUS_DIR:-}"
 #   Exits 1 when neither env provides a path
 #
 #######################################
-function resolve_failure_file {
+function export_failure_diag_resolve_file {
     if [[ -n ${LOOP_FAILURE_FILE} ]]; then
         printf '%s' "${LOOP_FAILURE_FILE}"
         return 0
@@ -87,7 +87,7 @@ function main {
     # shellcheck disable=SC1091
     source "${SCRIPT_DIR}/failure_record.sh"
 
-    failure_file="$(resolve_failure_file)"
+    failure_file="$(export_failure_diag_resolve_file)"
     loop_failure_export_outputs "${failure_file}"
 }
 
