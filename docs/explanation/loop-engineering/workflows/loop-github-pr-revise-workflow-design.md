@@ -69,7 +69,7 @@ States for one PR. The platform stores the per-PR state under `pull_request:<pr_
 | ID  | State                     | Trigger                                                                                                                             | Next state   |
 | --- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ |
 | V0  | Idle                      | No unclaimed `@loop` comment and no run for the PR                                                                                  | V1 / V7      |
-| V1  | Queued                    | A mention or a dispatch passes the job `if`; the run waits in the concurrency group `loop-github-pr-revise-<pr_number>`             | V2 / V0 / V6 |
+| V1  | Queued                    | A mention or a dispatch passes the job `if`; the run waits in the concurrency group `loop-github-pr-revise-<pr_number>`             | V2 / V0 |
 | V2  | Running (claimed)         | Detect proceeds; on the comment path the gathered comments get `eyes`                                                               | V3 / V4 / V5 |
 | V3  | Pushed                    | Finalize merges the agent branch onto the PR head (`pr_pushed`); `consecutive_failures` resets to 0                                 | V1 / V7      |
 | V4  | Stacked PR pending        | Finalize opens a stacked PR (`pr_created`) and writes `pending`; detect skips the PR with `pending_pr` while the stacked PR is open | V0           |
