@@ -31,7 +31,10 @@
 # - write_state retries a raced push and carries the FINALIZE_COMMIT_PATHS files when they did not change on the remote
 # - write_state does not overwrite a FINALIZE_COMMIT_PATHS file that a rival changed to a conflicting value, and opens the state PR instead
 # - write_state merges a keyed JSON FINALIZE_COMMIT_PATHS file that a rival changed with the local version and pushes both
-# - resolve_consecutive_failures prints only the count on stdout, even when open_rejections is invalid
+# - prepare_open_rejections (called directly, never in a subshell) clears stale open_rejections for a non-rejection outcome and replaces invalid JSON with []
+# - resolve_consecutive_failures prints only the count on stdout
+# - run.sh persists an empty open_rejections for an error outcome and survives invalid open_rejections JSON
+# - validate_state_file_path accepts only .loop/state-<name>.json (the pattern loop-state-promote lists)
 # - write_state retry leaves no stale temp state file
 # - write_state retry rewrites state when the remote tip lacks the state file
 
@@ -247,6 +250,32 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"No state changes to commit."* ]]
 }
+@test "run.sh persists empty open_rejections for an error outcome and survives invalid JSON" {
+    local bad
+    for bad in '[{"id":"stale"}]' 'not json'; do
+        state_write_git_setup
+        printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":1}}}' \
+            > "${STATE_WRITE_WORK}/.loop/state-test.json"
+        state_write_seed
+        state_write_run \
+            GITHUB_TOKEN='test-token' \
+            STATE_FILE='.loop/state-test.json' \
+            STATE_BRANCH='main' \
+            TARGET_KEY='integration:main' \
+            WRITE_TARGET_STATE='true' \
+            OUTCOME='error' \
+            SHA='def456' \
+            OPEN_REJECTIONS="${bad}" \
+            GITHUB_REPOSITORY='test/repo' \
+            GITHUB_RUN_ID='2' \
+            GITHUB_RUN_ATTEMPT='1'
+        [ "$status" -eq 0 ]
+        run jq -e '.targets["integration:main"].open_rejections == []' \
+            "${STATE_WRITE_WORK}/.loop/state-test.json"
+        [ "$status" -eq 0 ]
+    done
+}
+
 @test "run.sh increments consecutive_failures on rejected outcome" {
     printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' \
         > "${STATE_WRITE_WORK}/.loop/state-test.json"
@@ -925,6 +954,16 @@ setup() {
     [ "$output" = "::error::finalize_commit_paths must not contain '..': ../outside.json" ]
 }
 
+@test "validate_state_file_path rejects a state file without the hyphen that loop-state-promote lists" {
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    local path
+    for path in .loop/state_foo.json .loop/state.foo.json; do
+        run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE='"${path}"' validate_state_file_path'
+        [ "$status" -eq 1 ]
+    done
+}
+
 @test "validate_state_file_path rejects non-loop path" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
@@ -933,8 +972,37 @@ setup() {
     [[ $output == *"must match .loop/state-<name>.json"* ]]
 }
 
-@test "resolve_consecutive_failures prints only the count on stdout when open_rejections is invalid" {
+@test "prepare_open_rejections clears rejections unless the outcome is rejected, pr_closed or watch" {
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    local outcome
+    for outcome in error pr_created unchanged unmapped_value; do
+        OUTCOME="${outcome}"
+        OPEN_REJECTIONS='[{"id":"r1"}]'
+        prepare_open_rejections
+        [ "${OPEN_REJECTIONS}" = "[]" ]
+    done
+    for outcome in rejected pr_closed watch; do
+        OUTCOME="${outcome}"
+        OPEN_REJECTIONS='[{"id":"r1"}]'
+        prepare_open_rejections
+        [ "${OPEN_REJECTIONS}" = '[{"id":"r1"}]' ]
+    done
+}
+
+@test "prepare_open_rejections replaces invalid JSON with an empty array and warns" {
     bats_require_minimum_version 1.5.0
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    OUTCOME='rejected'
+    OPEN_REJECTIONS='not json'
+    # Called directly (not in a command substitution) so the assignment is visible here.
+    prepare_open_rejections 2> "${BATS_TEST_TMPDIR}/stderr"
+    [ "${OPEN_REJECTIONS}" = "[]" ]
+    grep -q "open_rejections is not valid JSON" "${BATS_TEST_TMPDIR}/stderr"
+}
+
+@test "resolve_consecutive_failures prints only the count on stdout" {
     local state_tmp="${BATS_TEST_TMPDIR}/state_tmp.json"
     printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' > "${state_tmp}"
     # shellcheck disable=SC1090
@@ -942,11 +1010,9 @@ setup() {
     STATE_TMP="${state_tmp}"
     TARGET_KEY='integration:main'
     OUTCOME='rejected'
-    OPEN_REJECTIONS='not json'
 
-    run --separate-stderr resolve_consecutive_failures
+    run resolve_consecutive_failures
 
     [ "$status" -eq 0 ]
     [ "$output" = "3" ]
-    [[ $stderr == *"open_rejections is not valid JSON"* ]]
 }

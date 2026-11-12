@@ -20,7 +20,10 @@
 #   - Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
 #
 # Dependencies:
-#   None
+#   - Secret AGENT_TOKEN (required): engine API key
+#   - Secrets BOT_APP_CLIENT_ID and BOT_APP_PRIVATE_KEY (optional): GitHub App token for push and PR writes; GH_TOKEN (optional) is the fallback
+#   - Job permissions: contents write, pull-requests write, issues write for finalize; agent jobs hold read only
+#   - Optional environment (input environment): environment-scoped secrets override caller-passed secrets of the same name
 #
 # References:
 #   - docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution

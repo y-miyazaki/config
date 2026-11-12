@@ -47,7 +47,7 @@ Comma-separated deny tokens processed by `loop-detect`:
 | `fork`         | Exclude fork PRs           |
 | `draft`        | Exclude draft PRs          |
 | `label:<name>` | Exclude PRs with label     |
-| `wip_title`    | Exclude WIP title patterns |
+| `wip_title`    | Exclude titles starting with `wip` or `[wip]` as a word, any case (`Wipe cache` is kept) |
 
 **Dogfood default (ci-sweeper):**
 

@@ -13,7 +13,8 @@
 #   - Do not fan out resolved tokens via job outputs — see: docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
 #
 # Dependencies:
-#   None
+#   - Secret AGENT_TOKEN (required): engine API key
+#   - Secrets BOT_APP_CLIENT_ID and BOT_APP_PRIVATE_KEY (optional): GitHub App token for push and PR writes; GH_TOKEN (optional) is the fallback
 #
 # References:
 #   - Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md

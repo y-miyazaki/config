@@ -90,28 +90,14 @@ function parse_verifier_output {
     fi
 
     json_blob="$(extract_last_json_fence "${parse_file}")"
-    if [[ -n ${json_blob} ]] && jq -e '.verdict' > /dev/null 2>&1 <<< "${json_blob}"; then
-        verdict=$(jq -r '.verdict' <<< "${json_blob}")
-        reason=$(jq -r '.reason // empty' <<< "${json_blob}")
-        issue=$(jq -r '.issue // empty' <<< "${json_blob}")
-        fix=$(jq -r '.fix // empty' <<< "${json_blob}")
-        files=$(jq -r '
-            if (.files | type) == "array" then (.files | map(select(type == "string")) | join(","))
-            elif (.files | type) == "string" then .files
-            else empty end
-        ' <<< "${json_blob}")
-        parsed="true"
-        if [[ -n ${normalized_file} ]]; then
-            rm -f "${normalized_file}"
-        fi
-        return 0
+    if [[ -z ${json_blob} ]] || ! jq -e '.verdict' > /dev/null 2>&1 <<< "${json_blob}"; then
+        json_blob=""
+        while IFS= read -r line; do
+            if jq -e '.verdict' > /dev/null 2>&1 <<< "${line}"; then
+                json_blob="${line}"
+            fi
+        done < <(tail -30 "${parse_file}")
     fi
-
-    while IFS= read -r line; do
-        if jq -e '.verdict' > /dev/null 2>&1 <<< "${line}"; then
-            json_blob="${line}"
-        fi
-    done < <(tail -30 "${parse_file}")
 
     if [[ -n ${json_blob} ]]; then
         verdict=$(jq -r '.verdict' <<< "${json_blob}")
@@ -148,7 +134,7 @@ function parse_verifier_output {
     fi
 
     local legacy_line
-    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${parse_file}" | tail -1 || true)
+    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]]*|:.*)$' "${parse_file}" | tail -1 || true)
     if [[ -n ${legacy_line} ]]; then
         verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
         reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')

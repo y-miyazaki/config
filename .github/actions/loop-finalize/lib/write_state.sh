@@ -270,13 +270,48 @@ function load_state_tmp {
 }
 
 #######################################
+# prepare_open_rejections: Validate OPEN_REJECTIONS and clear it when the outcome ends the rejection chain
+#
+# Description:
+#   Must be called directly, never inside a command substitution: it assigns OPEN_REJECTIONS,
+#   and a subshell would drop the assignment (stale rejections persisted, or invalid JSON
+#   reaching jq --argjson and aborting the state write).
+#
+# Globals:
+#   OPEN_REJECTIONS - JSON array; reset to [] when invalid or when the outcome is not a rejection
+#   OUTCOME - Run outcome
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   STDERR: warning when open_rejections is not valid JSON
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function prepare_open_rejections {
+    local effect
+
+    if ! jq -e . <<< "${OPEN_REJECTIONS}" > /dev/null 2>&1; then
+        echo "::warning::open_rejections is not valid JSON; using []" >&2
+        OPEN_REJECTIONS='[]'
+    fi
+
+    effect="$(outcome_counter_effect "${OUTCOME}")"
+    if [[ ${effect} == "reset" || (${effect} == "keep" && ${OUTCOME} != "watch") ]]; then
+        OPEN_REJECTIONS='[]'
+    fi
+}
+
+#######################################
 # resolve_consecutive_failures: Compute consecutive_failures for outcome
 #
 # Globals:
 #   TARGET_KEY - Target key in state file
 #   STATE_TMP - Current state JSON temp file
 #   OUTCOME - Run outcome
-#   OPEN_REJECTIONS - JSON array; may be reset
 #
 # Arguments:
 #   None
@@ -292,25 +327,11 @@ function resolve_consecutive_failures {
     local prev_consecutive
 
     prev_consecutive="$(jq -r --arg key "${TARGET_KEY}" '.targets[$key].consecutive_failures // 0' "${STATE_TMP}" 2> /dev/null || echo "0")"
-    if ! jq -e . <<< "${OPEN_REJECTIONS}" > /dev/null 2>&1; then
-        echo "::warning::open_rejections is not valid JSON; using []" >&2
-        OPEN_REJECTIONS='[]'
-    fi
 
     case "$(outcome_counter_effect "${OUTCOME}")" in
-        increment)
-            echo $((prev_consecutive + 1))
-            ;;
-        keep)
-            if [[ ${OUTCOME} != "watch" ]]; then
-                OPEN_REJECTIONS='[]'
-            fi
-            echo "${prev_consecutive}"
-            ;;
-        *)
-            OPEN_REJECTIONS='[]'
-            echo "0"
-            ;;
+        increment) echo $((prev_consecutive + 1)) ;;
+        keep) echo "${prev_consecutive}" ;;
+        *) echo "0" ;;
     esac
 }
 
@@ -484,6 +505,7 @@ function retry_state_write {
         load_state_tmp
         pre_prune_consecutive=""
         if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+            prepare_open_rejections
             pre_prune_consecutive="$(resolve_consecutive_failures)"
         fi
         prune_targets_by_retention "${STATE_TMP}"
@@ -888,7 +910,7 @@ function validate_state_file_path {
         echo "::error::state_file must not contain '..'" >&2
         return 1
     fi
-    if ! [[ ${STATE_FILE} =~ ^\.loop/state[-a-zA-Z0-9_.]+\.json$ ]]; then
+    if ! [[ ${STATE_FILE} =~ ^\.loop/state-[-a-zA-Z0-9_.]+\.json$ ]]; then
         echo "::error::state_file must match .loop/state-<name>.json" >&2
         return 1
     fi
@@ -936,6 +958,7 @@ function main {
     # after the breaker cooldown (see resolve_consecutive_with_probe)
     pre_prune_consecutive=""
     if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+        prepare_open_rejections
         pre_prune_consecutive="$(resolve_consecutive_failures)"
     fi
     prune_targets_by_retention "${STATE_TMP}"

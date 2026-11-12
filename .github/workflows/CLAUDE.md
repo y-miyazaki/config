@@ -64,7 +64,7 @@ name: ...
 | Description  | **MUST**. First line is `<Kind> workflow: <title>` with Kind one of `Reusable`, `Loop`, `CI`, `CD`, `Manual`, `Platform`.            |
 | Usage        | **MUST**. Reusable (`ci-*`, `cd-*`): the `uses:` line and the `with:` / `secrets:` contract. `on-*` and `example/`: `Runs on:` list. |
 | Design Rules | **MUST**. Constraints a maintainer must not break (security model, concurrency, delivery contract).                                  |
-| Dependencies | **MUST**. Required secrets, labels, permissions, external setup.                                                                     |
+| Dependencies | **MUST**. Required secrets, labels, permissions, external setup. List every `workflow_call` secret; `None` only when there are none. |
 | References   | **MUST**. Design doc, spec, or inputs reference paths.                                                                               |
 
 Sections appear in the order above, each `# Name:` heading followed by `#` indented lines (list items use `#   -`; `None` is plain text, not a list item). Keep one fact per line and no trailing prose outside a section.
@@ -167,6 +167,11 @@ When a loop step records failure metadata for run logs or action outputs:
 | Action → action via `env.*` from prior action `GITHUB_ENV`        | Hidden contract — use `steps.<id>.outputs.*`             |
 | Force-push over `to.branch` on `pr_push`                          | Drops commits from earlier serialized runs (#684)        |
 | `cancel-in-progress: true` on pr-revise concurrency               | Kills in-flight work; use queue + merge landing          |
+| `[skip ci]` in a commit that lands on a PR head (`pr_push`)       | Suppresses the PR's required checks on the new head      |
+| One derived value computed in two jobs (artifact name, key)       | Drifts, and `GITHUB_RUN_ATTEMPT` differs after a re-run  |
+| Best-effort step ahead of Write State without a failure guard     | A failure skips Write State and loses the pending cursor |
+| One validation pattern defined in several actions that disagree   | A value passes one action and is invisible to the next   |
+| Assigning a global inside a function called via `$(...)`          | The subshell drops the assignment                        |
 
 ---
 
@@ -187,6 +192,13 @@ Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engin
 ## Loop judgements (MUST)
 
 Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../../docs/explanation/loop-engineering/CLAUDE.md#loop-judgements-go-through-the-gate-must). Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger filters; actor trust, mention and repository visibility checks belong to the gate.
+
+## Cross-job values and best-effort steps (MUST)
+
+- A value that two jobs must agree on (artifact name, target key) is computed once and passed as a job output (`needs.<job>.outputs.*`). Do not recompute it in the second job: `GITHUB_RUN_ATTEMPT` changes when only failed jobs are re-run.
+- A commit that lands on a PR head (`pr_push` merge commit) **MUST NOT** carry `[skip ci]`. Only state, ledger, and run-log commits on `state_branch` do.
+- A step that is not critical (for example Enable Auto-Merge) and runs before `Write State` **MUST** handle its own failure (warn and continue). A failure there would skip `Write State` and lose the pending PR cursor.
+- A pattern that several actions validate (the state file path `.loop/state-<name>.json`, which `loop-state-promote` lists) **MUST** have one definition shape; change every copy together and add a Bats case for each.
 
 ## Verification
 

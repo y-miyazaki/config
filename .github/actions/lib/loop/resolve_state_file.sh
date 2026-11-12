@@ -40,7 +40,7 @@ function resolve_state_file {
             echo "::error::state_file must not contain '..'" >&2
             return 1
         fi
-        if ! [[ ${STATE_FILE_INPUT} =~ ^\.loop/state[-a-zA-Z0-9_.]+\.json$ ]]; then
+        if ! [[ ${STATE_FILE_INPUT} =~ ^\.loop/state-[-a-zA-Z0-9_.]+\.json$ ]]; then
             echo "::error::state_file must match .loop/state-<name>.json" >&2
             return 1
         fi

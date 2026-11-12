@@ -17,6 +17,7 @@
 # - pr_excluded excludes fork when fork token is set
 # - pr_excluded excludes label match
 # - pr_excluded excludes wip_title when token is set
+# - pr_excluded wip_title matches wip as a word in any case and not words that start with wip
 # - list_open_prs fails when gh missing and detect_pr_enabled is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -56,7 +57,7 @@ pr_json_with_labels() {
 
 @test "pr_excluded allows bot author listed in detect_pr_bot_allowlist" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "dependabot"
     [ "$status" -eq 1 ]
 }
@@ -75,14 +76,14 @@ pr_json_with_labels() {
 
 @test "pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" ""
     [ "$status" -eq 0 ]
 }
 
 @test "pr_excluded excludes bot authors when scoped intake is false" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "" "false"
     [ "$status" -eq 0 ]
 }
@@ -113,6 +114,20 @@ pr_json_with_labels() {
     pr='{"number":1,"title":"WIP: auth refactor","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "wip_title" ""
     [ "$status" -eq 0 ]
+}
+
+@test "pr_excluded wip_title matches wip as a word in any case and not words that start with wip" {
+    local title pr
+    for title in "[wip] fix" "[WIP] fix" "Wip: fix" "wip fix" "WIP"; do
+        pr="{\"number\":1,\"title\":\"${title}\",\"isDraft\":false,\"author\":{\"login\":\"alice\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "wip_title" ""
+        [ "$status" -eq 0 ]
+    done
+    for title in "Wipe stale cache entries" "wiping tmp dir" "Add wipe command"; do
+        pr="{\"number\":1,\"title\":\"${title}\",\"isDraft\":false,\"author\":{\"login\":\"alice\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "wip_title" ""
+        [ "$status" -eq 1 ]
+    done
 }
 
 @test "list_open_prs fails when gh missing and detect_pr_enabled is true" {

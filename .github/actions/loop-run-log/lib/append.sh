@@ -237,7 +237,7 @@ function loop_run_log_build_entry {
     + (if ($attempts | length) > 0 then {attempts: ($attempts | tonumber)} else {} end)
     + (if ($has_changes | length) > 0 then {has_changes: ($has_changes == "true")} else {} end)
     + (if ($verdict | length) > 0 then {verdict: $verdict} else {} end)
-    + (if ($usage_json | length) > 0 then {usage: ($usage_json | fromjson)} else {} end)
+    + ((try ($usage_json | fromjson) catch null) as $usage | if $usage != null then {usage: $usage} else {} end)
     + (if ($agent_result | length) > 0 then {agent_result: $agent_result} else {} end)
     + (if ($failure_stage | length) > 0 then {failure_stage: $failure_stage} else {} end)
     + (if ($failure_message | length) > 0 then {failure_message: $failure_message} else {} end)

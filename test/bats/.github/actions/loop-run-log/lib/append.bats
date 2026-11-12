@@ -6,6 +6,7 @@
 # Use cases:
 # - loop_run_log_build_entry includes tokens_total zero by default
 # - loop_run_log_build_entry sets tokens_total from measured usage_json
+# - loop_run_log_build_entry omits usage and still writes an entry when usage_json is invalid
 # - loop_run_log_append_entry writes JSONL entry with expected format
 # - loop_run_log_build_entry ignores target_key when empty
 # - loop_run_log_build_entry appends target_key last
@@ -82,6 +83,12 @@ _push_concurrent_entry() {
     [ "$(jq -r '.loop_name' <<< "${result}")" = "docs-updater" ]
     [ "$(jq -r '.tokens_total' <<< "${result}")" = "0" ]
     [ "$(jq -r '.usage // empty' <<< "${result}")" = "" ]
+}
+
+@test "loop_run_log_build_entry omits usage and still writes an entry when usage_json is invalid" {
+    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "error" "none" "APPROVE" "999" '{"truncated":')"
+    [ "$(jq -r '.outcome' <<< "${result}")" = "error" ]
+    [ "$(jq -r 'has("usage")' <<< "${result}")" = "false" ]
 }
 
 @test "loop_run_log_build_entry sets tokens_total from usage_json" {
