@@ -34,7 +34,7 @@ Update affected canonical docs in the **same change** when modifying:
 
 - Duplicate job graphs — link to [loop-engineering-design.md — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram) instead
 - Stale `env:` / `LOOP_*` caller config without mapping to `ci-loop-caller` `with:` inputs
-- `pull_requests` input name — canonical is `pr_enabled`
+- `pull_requests` input name — canonical is `detect_pr_enabled`
 - Semantic `findings[]` attributed to detect scripts — detect emits mechanical facts only ([CONTEXT.md](CONTEXT.md))
 - Separate finalize matrix job under caller — finalize runs inside `ci-loop-agent`
 - "SHA advances on REJECT" — `last_sha` uses `metadata` mode on REJECT; see Retry Policy in [loop-engineering-design.md](loop-engineering-design.md)

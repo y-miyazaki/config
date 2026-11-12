@@ -3,11 +3,11 @@
 Platform specification for PR notifications after loop finalize on `pull_request` targets.
 Status: **implemented (P1)** — `loop-notify-pr`, `notify_context_json` in `.github/actions/`; PR-head finalize migration to `pr_create` pending.
 
-| Layer                  | Document                                                                                                   |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Invariants             | [Loop Engineering Design](../explanation/loop-engineering/loop-engineering-design.md)                      |
-| Targets / `pr_exclude` | [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md)                  |
-| CI sweeper dogfood     | [CI Sweeper Workflow Design](../explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md) |
+| Layer                          | Document                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Invariants                     | [Loop Engineering Design](../explanation/loop-engineering/loop-engineering-design.md)                      |
+| Targets / `detect_pr_denylist` | [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md)                  |
+| CI sweeper dogfood             | [CI Sweeper Workflow Design](../explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md) |
 
 ## Problem
 
@@ -26,19 +26,19 @@ When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** t
 ## Non-Goals (v1)
 
 - Notifications for `integration` + `pr_create` (fix PR body is sufficient; no human PR in scope).
-- Per-PR opt-in labels (`pr_require` / `ci-sweeper-ok`) — removed; use `pr_exclude` only.
+- Per-PR opt-in labels (`pr_require` / `ci-sweeper-ok`) — removed; use `detect_pr_denylist` only.
 - Auto-merge of the **human PR** (only the **bot fix PR** is auto-merged at L3).
 - Inline review comments per changed line (reviewdog-style).
 - External channels (Slack, email, PagerDuty).
 
 ## Repository Prerequisites
 
-| Prerequisite                            | Owner           | Failure mode                         |
-| --------------------------------------- | --------------- | ------------------------------------ |
-| `pr_enabled: true` on ci-sweeper caller | Loop maintainer | PR-head targets not enumerated       |
-| `pull-requests: write` on finalize job  | Caller workflow | `loop-notify-pr` cannot post comment |
+| Prerequisite                                   | Owner           | Failure mode                         |
+| ---------------------------------------------- | --------------- | ------------------------------------ |
+| `detect_pr_enabled: true` on ci-sweeper caller | Loop maintainer | PR-head targets not enumerated       |
+| `pull-requests: write` on finalize job         | Caller workflow | `loop-notify-pr` cannot post comment |
 
-## PR watch filters (`pr_exclude`)
+## PR watch filters (`detect_pr_denylist`)
 
 Comma-separated deny tokens processed by `loop-detect`:
 
@@ -52,11 +52,11 @@ Comma-separated deny tokens processed by `loop-detect`:
 **Dogfood default (ci-sweeper):**
 
 ```text
-pr_exclude: fork,draft,label:no-loop
-pr_enabled: true
+detect_pr_denylist: fork,draft,label:no-loop
+detect_pr_enabled: true
 ```
 
-Bots excluded unless `pr_include_bots` lists them. No `pr_require` gate.
+Bots excluded unless `detect_pr_bot_allowlist` lists them. No `pr_require` gate.
 
 ## When `loop-notify-pr` Runs
 
@@ -170,7 +170,7 @@ Inputs/outputs unchanged from P1 except:
 | Phase  | Deliverable                                                                               |
 | ------ | ----------------------------------------------------------------------------------------- |
 | **P0** | Spec + design docs (this document)                                                        |
-| **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                             |
+| **P1** | `loop-notify-pr`, `notify_context_json`, `detect_pr_denylist` filters                     |
 | **P2** | Dogfood ci-sweeper: `pr_create` to PR head + notify with fix PR link; remove `pr_require` |
 | **P3** | Optional `agent_summary` appendix in `ci-sweeper` skill reference                         |
 
@@ -178,7 +178,7 @@ Inputs/outputs unchanged from P1 except:
 
 | Topic              | Decision                                             |
 | ------------------ | ---------------------------------------------------- |
-| Opt-in             | `pr_exclude` deny list only; no label opt-in         |
+| Opt-in             | `detect_pr_denylist` deny list only; no label opt-in |
 | Human PR automerge | Never — L3 auto-merge applies to **bot fix PR** only |
 | Delivery           | `pr_create` to PR head branch; not direct `pr_push`  |
 | Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`             |

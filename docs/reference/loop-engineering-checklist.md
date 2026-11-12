@@ -65,7 +65,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
 - [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `pr_create`
-- [ ] `pr_exclude` for PR-head watch; no `pr_require` label opt-in
+- [ ] `detect_pr_denylist` for PR-head watch; no `pr_require` label opt-in
 - [ ] GitHub-entity loops (issue/stale): caller grants `issues: write` / `pull-requests: write`; skill performs API actions in **Execute**; Finalize advances state cursor (no file PR at L1)
 
 #### Skill
@@ -84,7 +84,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md) and [Loop Caller Workflows](../explanation/loop-engineering/loop-caller-workflows-design.md).
 
-- [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` (`pr_enabled`) in caller `with:`
+- [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` (`detect_pr_enabled`) in caller `with:`
 - [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
 - [ ] Matrix execute/finalize; capped by `LOOP_MAX_TARGETS_PER_SCHEDULE`
 - [ ] `LOOP_PR_EXCLUDE`; bots excluded unless `LOOP_PR_INCLUDE_BOTS`

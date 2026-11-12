@@ -71,7 +71,7 @@ The document's main job is **coverage**: for every human operation or trigger, s
 
 ### Source of truth and gap dispositions
 
-- When a design document and the workflow YAML / entry skill / scripts disagree, the implementation wins. The document is corrected, and the discrepancy is recorded under `Unhandled cases` with disposition `Follow-up` only when the implementation itself looks wrong. The builder does not change behavior. Loops marked "not yet run" are documented from the implementation and flagged `unverified on GitHub`.
+- When a design document and the workflow YAML / entry skill / scripts disagree, the implementation wins. The document is corrected. For every discrepancy, the builder also judges whether the implementation itself is wrong (a missing guard, a stuck state, a silent failure, or paths that behave inconsistently). When it is, the discrepancy is recorded under `Unhandled cases` with disposition `Follow-up` and a one-line reason. The builder does not change behavior. Loops marked "not yet run" are documented from the implementation and flagged `unverified on GitHub`.
 - Dispositions: `Accepted` (the loop intentionally does nothing, with the reason), `Limitation` (a known constraint of the platform or engine, with the reason), `Follow-up` (should be handled; a person must decide). A row without a reason is not valid.
 - The author may not close a gap as `Accepted` on their own when the case leaves a PR, Issue, or label stuck with no human path to recover. That case is `Follow-up` and is listed in the final report for the user to decide.
 
