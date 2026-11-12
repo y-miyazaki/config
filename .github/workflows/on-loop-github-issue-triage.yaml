@@ -89,7 +89,6 @@ jobs:
           !contains(github.event.issue.labels.*.name, 'triage:failed') &&
           !contains(github.event.issue.labels.*.name, 'loop:code-review') &&
           (
-            github.event.repository.private == true ||
             (
               contains(fromJSON('["opened","reopened"]'), github.event.action) &&
               contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
@@ -123,10 +122,7 @@ jobs:
           github.event.comment.user.type != 'Bot' &&
           contains(github.event.issue.labels.*.name, 'triage:needs-info') &&
           !contains(github.event.issue.labels.*.name, 'triage:failed') &&
-          (
-            github.event.repository.private == true ||
-            contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
-          )
+          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
         )
       )
     needs: list
