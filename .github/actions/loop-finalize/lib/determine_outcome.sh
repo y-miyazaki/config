@@ -8,8 +8,12 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Decision order: failed agent push (error), issue_create, override, failed agent
-#   (error), REJECT (rejected), message deliveries, then the has_changes rules
+# - Decision order: failed agent push (error), error override (error), issue_create,
+#   override, failed agent (error), REJECT (rejected), message deliveries, then the
+#   has_changes rules
+# - An error override (the maker exited non-zero with no diff) is error for every
+#   delivery, including issue_create: it can only lower the outcome, never raise it,
+#   so the Credential Isolation rule below does not apply to it
 # - issue_create ignores an outcome override (Credential Isolation): a failed agent is
 #   error, APPROVE is issue_created, REJECT is rejected, any other verdict is error
 # - A failed agent push (push_failed=true) is error, even over an outcome
@@ -56,7 +60,7 @@ function determine_outcome {
     local delivery="${5:-}"
     local push_failed="${6:-false}"
 
-    if [[ ${push_failed} == "true" ]]; then
+    if [[ ${push_failed} == "true" || ${override} == "error" ]]; then
         printf '%s\n' "error"
     elif [[ ${delivery} == "issue_create" ]]; then
         if [[ ${agent_result} != "success" && ${agent_result} != "skipped" ]]; then

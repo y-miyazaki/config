@@ -229,10 +229,10 @@ On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent
 
 ### Circuit breaker (per `target.key`)
 
-| Field                  | Role                                        |
-| ---------------------- | ------------------------------------------- |
-| `attempt_fingerprint`  | workflow run / commit range + failure class |
-| `consecutive_failures` | ≥3 → `circuit_breaker` (`skip_reason`)      |
+| Field                  | Role                                                                        |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `attempt_fingerprint`  | workflow run / commit range + failure class                                 |
+| `consecutive_failures` | ≥3 and `last_run` less than 30 days old → `circuit_breaker` (`skip_reason`) |
 
 `outcome: watch` does **not** increment `consecutive_failures`. CI run-ledger is **secondary** dedupe — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#detect-truth-source).
 

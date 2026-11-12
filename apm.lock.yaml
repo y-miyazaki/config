@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-11T14:31:10.072073+00:00'
+generated_at: '2026-11-12T05:13:44.170848+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -1878,7 +1878,7 @@ dependencies:
     .agents/skills/changelog/references/common-checklist.md: sha256:58c5a681eee1a6b2ec3b7c76be3504ac64f5b66820df178db7053cd238959448
     .agents/skills/changelog/references/common-output-format.md: sha256:9c77e0362f29e20ac8e0b764edb2651d49fac4e6f9ac4a7025d8553c3f5d25ae
     .agents/skills/changelog/references/common-troubleshooting.md: sha256:0107a06e1eebe955c556208ff185d9df51a310727e1a826ca8640ae26cd61b06
-    .agents/skills/changelog/scripts/detect_changelog_commits.sh: sha256:3d79987bdc6be5c31e908512213923c0c994edf520f832a497d4045137f1e139
+    .agents/skills/changelog/scripts/detect_changelog_commits.sh: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
     .agents/skills/changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/changelog/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/changelog/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -2110,7 +2110,7 @@ dependencies:
     .claude/skills/changelog/references/common-checklist.md: sha256:58c5a681eee1a6b2ec3b7c76be3504ac64f5b66820df178db7053cd238959448
     .claude/skills/changelog/references/common-output-format.md: sha256:9c77e0362f29e20ac8e0b764edb2651d49fac4e6f9ac4a7025d8553c3f5d25ae
     .claude/skills/changelog/references/common-troubleshooting.md: sha256:0107a06e1eebe955c556208ff185d9df51a310727e1a826ca8640ae26cd61b06
-    .claude/skills/changelog/scripts/detect_changelog_commits.sh: sha256:3d79987bdc6be5c31e908512213923c0c994edf520f832a497d4045137f1e139
+    .claude/skills/changelog/scripts/detect_changelog_commits.sh: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
     .claude/skills/changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/changelog/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/changelog/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -2320,7 +2320,7 @@ dependencies:
     .claude/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:ae2a12d1a38b67b24e71b507f4df15d22460afd6cbf721f1efdb7132a557ff45
   source: local
   local_path: ./.apm/packages/repo-maintenance
-  content_hash: sha256:f4af31f9de610f19c5defcf8e16dd2660135ec33a2f09a387c1be51e1e601cdc
+  content_hash: sha256:1d3e4e0e24b23ce422bc36eeae5b6bc86efdceec39805db03e6ec30fc78d8483
   declared_license: Apache-2.0
 - repo_url: _local/shell-script
   name: config-shell-script
@@ -3235,7 +3235,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:3d79987bdc6be5c31e908512213923c0c994edf520f832a497d4045137f1e139
+  content_hash: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/scripts/lib/all.sh
@@ -8626,7 +8626,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:3d79987bdc6be5c31e908512213923c0c994edf520f832a497d4045137f1e139
+  content_hash: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/scripts/lib/all.sh
