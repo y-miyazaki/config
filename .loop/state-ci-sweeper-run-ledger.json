@@ -247,6 +247,14 @@
       "reject_count": 1,
       "loop_run_id": "43162839849",
       "updated_at": "2026-11-12T05:40:39Z"
+    },
+    "43172981983": {
+      "workflow_name": "on-ci-push-shell-script (push)",
+      "head_sha": "2216b6a77192828a6778e4334b9d23f10b20441f",
+      "outcome": "rejected",
+      "reject_count": 1,
+      "loop_run_id": "43174080208",
+      "updated_at": "2026-11-12T07:17:49Z"
     }
   }
 }
