@@ -43,7 +43,7 @@ on:
         required: false
         type: string
       trivy_version:
-        default: v0.76.1
+        default: v0.76.2
         description: "Trivy version to use"
         required: false
         type: string
