@@ -48,6 +48,15 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 
 `shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
 
+## Loop workflow design docs (MUST)
+
+Applies when creating or editing `docs/explanation/loop-engineering/workflows/loop-*-workflow-design.md`.
+
+- Follow [Loop Workflow Design Template](docs/explanation/loop-engineering/workflows/loop-workflow-design-template.md) (section order and families).
+- `User actions` (with `Values changed` and `Transition` columns) and `Unhandled cases` are required.
+- Transition IDs come from `loop-issue-handoff.md`, the template's `S0–S5` (Scheduled loop states), or the document's own `State model`.
+- Behavior-changing findings found while documenting are recorded as `Follow-up`; do not fix them in the doc change.
+
 ## Conventions
 
 | Topic           | Rule             |
