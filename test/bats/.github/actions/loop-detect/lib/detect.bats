@@ -38,6 +38,9 @@ bats_require_minimum_version 1.5.0
 # - items mode orders by last_run (no state first) before the detect_max_targets cap
 # - items mode falls back to HEAD~10 for from.since without item state
 # - items mode treats an empty items array as skip and a missing, invalid, or duplicate key as an error
+# - gate_blocks_candidate ignores a missing gate and refuses a closed entity, keeping the first reason
+# - append_detect_candidate drops a candidate whose detect result carries a closed gate
+# - items mode drops an item whose gate refuses it and reports the gate reason when none remains
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -443,6 +446,76 @@ EOF
     run grep -Fx 'skip_reason=checkout_failed' "${github_output}"
     [ "$status" -eq 0 ]
 }
+@test "gate_blocks_candidate ignores a missing gate and refuses a closed entity keeping the first reason" {
+    GATE_BLOCKED=0
+    GATE_BLOCK_REASON=""
+    run gate_blocks_candidate "k" "" '{}'
+    [ "$status" -eq 1 ]
+    run gate_blocks_candidate "k" "null" '{}'
+    [ "$status" -eq 1 ]
+    gate_blocks_candidate "k1" '{"entity":{"kind":"issue","state":"closed"}}' '{}'
+    gate_blocks_candidate "k2" '{"entity":{"kind":"issue"}}' '{}'
+    [ "${GATE_BLOCKED}" -eq 2 ]
+    [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
+    run gate_blocks_candidate "k3" '{"entity":{"kind":"issue","state":"open"}}' '{}'
+    [ "$status" -eq 1 ]
+}
+
+@test "append_detect_candidate drops a candidate whose detect result carries a closed gate" {
+    local repo_root state_file
+
+    repo_root="${DETECT_TMP}/repo"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-x.json"
+    printf '%s\n' '{"targets":{}}' > "${state_file}"
+    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
+    cat > "${DETECT_SCRIPT}" << EOF
+#!/usr/bin/env bash
+printf '%s\\n' '{"status":"ok","skip":false,"result":{"gate":{"entity":{"kind":"issue","number":3,"state":"closed"}}}}'
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+    STATE_FILE="${state_file}"
+    STATE_BRANCH="main"
+    export AGENT_MAKER_SKILL_NAME="loop-x"
+    LEVEL="L2"
+    AGENT_EDIT_ALLOWLIST="*"
+    AGENT_MAKER_INSTRUCTIONS=""
+    PENDING_PR_BLOCKED=0
+    CIRCUIT_BREAKER_BLOCKED=0
+    GATE_BLOCKED=0
+    GATE_BLOCK_REASON=""
+    CANDIDATES_JSON=()
+    stub_checkout_context "${repo_root}"
+
+    append_detect_candidate "integration:main" "main" "" "" build_integration_target_json
+
+    [ "${GATE_BLOCKED}" -eq 1 ]
+    [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
+    [ "${#CANDIDATES_JSON[@]}" -eq 0 ]
+}
+
+@test "empty candidates emit the gate reason when the gate refused every candidate" {
+    local github_output
+
+    CANDIDATES_JSON=()
+    CHECKOUT_FAILED=0
+    CIRCUIT_BREAKER_BLOCKED=0
+    PENDING_PR_BLOCKED=0
+    GATE_BLOCKED=1
+    GATE_BLOCK_REASON="entity_closed"
+    github_output="$(mktemp)"
+    GITHUB_OUTPUT="${github_output}"
+
+    write_empty_candidates_outputs
+
+    run grep -Fx 'skip_reason=entity_closed' "${github_output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "validate_branch_match accepts list glob and regex" {
     for mode in list glob regex; do
         DETECT_BRANCH_MATCH_MODE="${mode}"
@@ -1145,6 +1218,24 @@ output_matrix_keys() {
     append_items_candidates "main"
     [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
     [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 0 ]
+}
+
+@test "items mode drops an item whose gate refuses it and reports the gate reason when none remains" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}},
+        {"key":"issue:2","context":{"issue_number":2},"gate":{"entity":{"kind":"issue","number":2,"state":"open"}}}]}}'
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:2" ]
+    [ "${GATE_BLOCKED}" -eq 1 ]
+    rm -rf "${ITEMS_REPO}"
+
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}}]}}'
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=entity_closed' "${GITHUB_OUTPUT}"
 }
 
 @test "items mode skips item with pending pr" {

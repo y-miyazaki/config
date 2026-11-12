@@ -17,6 +17,9 @@ bats_require_minimum_version 1.5.0
 # - main skips when daily budget is exceeded
 # - main publishes skip_reason domain:<slug> and a one-line redacted skip_detail when the detect script skips
 # - action.yml exposes skip_detail
+# - main skips with the admission reason when result.gate refuses the entity and proceeds when it admits
+# - main applies the circuit breaker from the checked-out state file to the entity key
+# - read_entity_target_state returns {} for a missing file or target and the target state otherwise
 # - main builds target matrix, handoff payload, and pr_auto_merge from a successful entity detect
 # - main passes detect_env_json entries to the detect script only and rejects reserved or conflicting keys
 
@@ -323,6 +326,52 @@ state_file"
     [ "$status" -eq 0 ]
     run grep -Fx 'pr_auto_merge=false' "${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
+}
+
+@test "main skips with the admission reason when result.gate refuses the entity" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=false' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=entity_closed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=entity state is closed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main proceeds when result.gate admits the entity" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"open"}}}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=true' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main applies the circuit breaker from the state file to the entity key" {
+    local today
+    today="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '%s\n' "{\"targets\":{\"entity:issue:1\":{\"consecutive_failures\":3,\"last_run\":\"${today}\"}}}" > "${BATS_TEST_TMPDIR}/state.json"
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"open"}}}}'
+    run_main STATE_FILE="${BATS_TEST_TMPDIR}/state.json"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "read_entity_target_state returns the target state or an empty object" {
+    printf '%s\n' '{"targets":{"entity:issue:1":{"consecutive_failures":2}}}' > "${BATS_TEST_TMPDIR}/state.json"
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/state.json" "entity:issue:1"
+    [ "$output" = '{"consecutive_failures":2}' ]
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/state.json" "entity:issue:2"
+    [ "$output" = '{}' ]
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/missing.json" "entity:issue:1"
+    [ "$output" = '{}' ]
+    run read_entity_target_state "" "entity:issue:1"
+    [ "$output" = '{}' ]
 }
 
 @test "resolve_detect_script_path fails when script is missing" {

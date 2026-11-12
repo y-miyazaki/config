@@ -467,6 +467,10 @@ function append_detect_candidate {
         return 0
     fi
 
+    if gate_blocks_candidate "${target_key}" "$(jq -c '.result.gate // null' <<< "${detect_result}")" "${target_state}"; then
+        return 0
+    fi
+
     verifier_context="$(build_verifier_context_from_result "${detect_result}")"
     assemble_detect_candidate \
         "${target_key}" "${head_branch}" "${current_sha}" "${last_sha}" "${target_state}" "${consecutive}" \
@@ -557,6 +561,9 @@ function append_items_candidates {
         item_state="$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")"
         consecutive="$(target_consecutive_failures "${item_state}")"
         if target_state_blocks_candidate "${item_key}" "${item_state}" "${consecutive}"; then
+            continue
+        fi
+        if gate_blocks_candidate "${item_key}" "$(jq -c '.gate // null' <<< "${item_json}")" "${item_state}"; then
             continue
         fi
         unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
@@ -1077,6 +1084,52 @@ function log_detect_notice {
 }
 
 #######################################
+# gate_blocks_candidate: Return 0 when the admission gate refuses the facts of a detect result
+#
+# Description:
+#   A detect result without a gate is not evaluated. A refusal is counted per candidate and the
+#   first refusal reason becomes the skip_reason when no candidate remains.
+#
+# Globals:
+#   GATE_BLOCKED - Incremented on a refusal
+#   GATE_BLOCK_REASON - Set to the first refusal reason
+#
+# Arguments:
+#   $1 - Target key (for the log line)
+#   $2 - Gate JSON (the detect result gate object; empty or null for none)
+#   $3 - Target state JSON
+#
+# Outputs:
+#   ::notice:: line on a refusal
+#
+# Returns:
+#   0 when the gate refuses, 1 when it admits or there is no gate
+#
+#######################################
+function gate_blocks_candidate {
+    local target_key="$1"
+    local gate_json="${2:-}"
+    local target_state="${3:-}"
+    local verdict reason detail
+
+    if [[ -z ${gate_json} || ${gate_json} == "null" ]]; then
+        return 1
+    fi
+    verdict="$(admission_evaluate "${gate_json}" "${target_state}")"
+    if [[ $(jq -r '.admit' <<< "${verdict}") == "true" ]]; then
+        return 1
+    fi
+    reason="$(jq -r '.skip_reason' <<< "${verdict}")"
+    detail="$(jq -r '.detail' <<< "${verdict}")"
+    echo "::notice::admission refused ${target_key}: ${reason} (${detail})"
+    GATE_BLOCKED=$((GATE_BLOCKED + 1))
+    if [[ -z ${GATE_BLOCK_REASON} ]]; then
+        GATE_BLOCK_REASON="${reason}"
+    fi
+    return 0
+}
+
+#######################################
 # target_state_blocks_candidate: Return 0 when circuit breaker or pending PR blocks a target
 #
 # Globals:
@@ -1261,6 +1314,7 @@ function validate_detect_items_config {
 #   CHECKOUT_FAILED - Checkout failure count
 #   CIRCUIT_BREAKER_BLOCKED - Circuit breaker block count
 #   PENDING_PR_BLOCKED - Pending PR block count
+#   GATE_BLOCKED, GATE_BLOCK_REASON - Admission gate refusal count and first reason
 #   GITHUB_OUTPUT - Written via write_detect_outputs / write_legacy_outputs
 #
 # Arguments:
@@ -1278,6 +1332,8 @@ function write_empty_candidates_outputs {
         write_detect_outputs "false" "circuit_breaker" "[]"
     elif [[ ${PENDING_PR_BLOCKED} -gt 0 ]]; then
         write_detect_outputs "false" "pending_pr" "[]"
+    elif [[ ${GATE_BLOCKED} -gt 0 ]]; then
+        write_detect_outputs "false" "${GATE_BLOCK_REASON}" "[]"
     elif [[ ${CHECKOUT_FAILED} -gt 0 ]]; then
         write_detect_outputs "false" "checkout_failed" "[]"
     else

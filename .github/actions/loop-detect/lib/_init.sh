@@ -78,3 +78,7 @@ declare -a OPEN_PRS_JSON=()
 CIRCUIT_BREAKER_BLOCKED=0
 # shellcheck disable=SC2034
 PENDING_PR_BLOCKED=0
+# shellcheck disable=SC2034
+GATE_BLOCKED=0
+# shellcheck disable=SC2034
+GATE_BLOCK_REASON=""

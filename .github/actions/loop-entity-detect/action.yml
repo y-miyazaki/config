@@ -160,6 +160,7 @@ runs:
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        STATE_FILE: ${{ steps.paths.outputs.state_file }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name
