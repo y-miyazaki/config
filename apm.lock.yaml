@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-12T11:26:07.923984+00:00'
+generated_at: '2026-11-12T12:00:20.855057+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -784,7 +784,7 @@ dependencies:
     .agents/skills/github-pr-revise/references/category-pr-body-links.md: sha256:0f316b769a72095fdc2c912544040e5730cdaeffb5a1c21e0587a414b89ecacb
     .agents/skills/github-pr-revise/references/common-checklist.md: sha256:fa16cffc35b8f07b59804185ab171c9de5c779320d8e131ebabc98d6193ecda2
     .agents/skills/github-pr-revise/references/common-output-format.md: sha256:4bb8d1d6eb265df37f02011612160a8a002ede5203cfc490764fc60428563bdf
-    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
+    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:e94b154744bf8d5ee7106379af4bc1810e82463e64a907d8f93631d9234364c4
     .agents/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-pr-revise/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-pr-revise/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -914,7 +914,7 @@ dependencies:
     .claude/skills/github-pr-revise/references/category-pr-body-links.md: sha256:0f316b769a72095fdc2c912544040e5730cdaeffb5a1c21e0587a414b89ecacb
     .claude/skills/github-pr-revise/references/common-checklist.md: sha256:fa16cffc35b8f07b59804185ab171c9de5c779320d8e131ebabc98d6193ecda2
     .claude/skills/github-pr-revise/references/common-output-format.md: sha256:4bb8d1d6eb265df37f02011612160a8a002ede5203cfc490764fc60428563bdf
-    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
+    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:e94b154744bf8d5ee7106379af4bc1810e82463e64a907d8f93631d9234364c4
     .claude/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-pr-revise/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-pr-revise/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:d9ffa27beab48d6cd1c016671f4d34cd349be954abd2ed763ada4648a1df0174
+  content_hash: sha256:da9d5dbc196a9b59dc815e852575000f28fa3bc051f7a89245838489c7a7d31b
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -5710,7 +5710,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
+  content_hash: sha256:e94b154744bf8d5ee7106379af4bc1810e82463e64a907d8f93631d9234364c4
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise/scripts/lib/all.sh
@@ -11101,7 +11101,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
+  content_hash: sha256:e94b154744bf8d5ee7106379af4bc1810e82463e64a907d8f93631d9234364c4
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise/scripts/lib/all.sh

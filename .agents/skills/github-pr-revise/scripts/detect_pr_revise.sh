@@ -74,7 +74,7 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #   None
 #
 # Returns:
-#   0 when association is allowed or empty, 1 otherwise
+#   0 for MEMBER, OWNER or COLLABORATOR; 1 otherwise, including empty (fail closed)
 #
 # Usage:
 #   if association_value_allowed "${assoc}"; then ...
@@ -82,10 +82,6 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 function association_value_allowed {
     local assoc="${1:-}"
-
-    if [[ -z ${assoc} ]]; then
-        return 0
-    fi
 
     case "${assoc}" in
         MEMBER | OWNER | COLLABORATOR) return 0 ;;
