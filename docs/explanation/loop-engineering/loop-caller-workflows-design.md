@@ -46,7 +46,7 @@ Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `res
 
 ### Target selection (inside `loop-detect`)
 
-1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`branch_match`, `pr_enabled`, `level`, …).
+1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`detect_branch_match`, `detect_pr_enabled`, `level`, …).
 2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
 3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
 4. Cap at `detect_max_targets`; excess → `target_budget` on next cron.
