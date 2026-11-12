@@ -1101,7 +1101,7 @@ dogfood_value() {
     # loop-execute / loop-finalize; the ci-loop-agent input check covers them.
     local wf name
     local -a old_names=(
-        ack_trigger_comment additional_commit_paths agent_allowed_tools allowlist
+        trigger_thread_ack_comment additional_commit_paths agent_allowed_tools allowlist
         auto_merge base_ref branch_match branch_match_mode branch_prefix branch_state
         cli_version commit_message denylist detect_domain_env_json dispatch_hook_script
         dispatch_hook_token domain_persistence_script effort engine finalize_enabled

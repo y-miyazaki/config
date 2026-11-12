@@ -6,9 +6,9 @@
 #
 # Usage:
 #   source trigger_thread.sh
-#   ack_trigger_comment
-#   ack_gathered_comments
-#   reply_trigger_comment "$(build_done_reply_body ...)"
+#   trigger_thread_ack_comment
+#   trigger_thread_ack_gathered_comments
+#   trigger_thread_reply_comment "$(trigger_thread_build_done_reply_body ...)"
 #
 # Design Rules:
 #   - Failures warn only; never fail the caller job
@@ -24,7 +24,7 @@
 #######################################
 
 #######################################
-# ack_trigger_comment: Add eyes reaction on the triggering comment
+# trigger_thread_ack_comment: Add eyes reaction on the triggering comment
 #
 # Globals:
 #   GITHUB_EVENT_NAME - Webhook event name
@@ -42,7 +42,7 @@
 #   0 always (warnings only)
 #
 #######################################
-function ack_trigger_comment {
+function trigger_thread_ack_comment {
     local event_name="${GITHUB_EVENT_NAME:-}"
     local comment_id="${TRIGGER_COMMENT_ID:-}"
     local repository="${REPOSITORY:-}"
@@ -77,7 +77,7 @@ function ack_trigger_comment {
 }
 
 #######################################
-# ack_gathered_comments: Add eyes reactions for each gathered comment
+# trigger_thread_ack_gathered_comments: Add eyes reactions for each gathered comment
 #
 # Globals:
 #   ACK_COMMENTS_JSON - JSON array of {comment_id, source}
@@ -96,10 +96,10 @@ function ack_trigger_comment {
 #   0 always (warnings only)
 #
 # Usage:
-#   ACK_COMMENTS_JSON='[{"comment_id":1,"source":"issue_comment"}]' ack_gathered_comments
+#   ACK_COMMENTS_JSON='[{"comment_id":1,"source":"issue_comment"}]' trigger_thread_ack_gathered_comments
 #
 #######################################
-function ack_gathered_comments {
+function trigger_thread_ack_gathered_comments {
     local repository="${REPOSITORY:-}"
     local specs="${ACK_COMMENTS_JSON:-}"
     local item comment_id source endpoint
@@ -118,13 +118,13 @@ function ack_gathered_comments {
     fi
 
     if [[ -z ${specs} || ${specs} == "[]" ]]; then
-        ack_trigger_comment
+        trigger_thread_ack_comment
         return 0
     fi
 
     if ! jq -e 'type == "array"' > /dev/null 2>&1 <<< "${specs}"; then
         echo "::warning::ACK_COMMENTS_JSON must be a JSON array"
-        ack_trigger_comment
+        trigger_thread_ack_comment
         return 0
     fi
 
@@ -159,13 +159,13 @@ function ack_gathered_comments {
     done < <(jq -c '.[]?' <<< "${specs}")
 
     if [[ ${#ids[@]} -eq 0 ]]; then
-        ack_trigger_comment
+        trigger_thread_ack_comment
     fi
     return 0
 }
 
 #######################################
-# build_done_reply_body: Render done-reply markdown for a trigger thread
+# trigger_thread_build_done_reply_body: Render done-reply markdown for a trigger thread
 #
 # Globals:
 #   None
@@ -188,7 +188,7 @@ function ack_gathered_comments {
 #   0 on success
 #
 #######################################
-function build_done_reply_body {
+function trigger_thread_build_done_reply_body {
     local outcome="${1:-}"
     local verdict="${2:-}"
     local reason="${3:-}"
@@ -274,7 +274,7 @@ function build_done_reply_body {
 }
 
 #######################################
-# reply_trigger_comment: Post done reply on the triggering comment thread
+# trigger_thread_reply_comment: Post done reply on the triggering comment thread
 #
 # Globals:
 #   GITHUB_EVENT_NAME - Webhook event name
@@ -293,7 +293,7 @@ function build_done_reply_body {
 #   0 always (warnings only)
 #
 #######################################
-function reply_trigger_comment {
+function trigger_thread_reply_comment {
     local body="${1:-}"
     local event_name="${GITHUB_EVENT_NAME:-}"
     local comment_id="${TRIGGER_COMMENT_ID:-}"

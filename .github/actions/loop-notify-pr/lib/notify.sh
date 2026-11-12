@@ -357,7 +357,7 @@ function find_existing_comment {
 #   None
 #
 # Outputs:
-#   Warning/notice annotations via reply_trigger_comment
+#   Warning/notice annotations via trigger_thread_reply_comment
 #
 # Returns:
 #   0 always
@@ -391,9 +391,9 @@ function post_trigger_done_reply {
     overview="$(truncate_text_at_boundary "$(redact_sensitive_text "${overview}")" 1200)"
     summary="${overview}"
 
-    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${AGENT_ENGINE}" "${USAGE_JSON}")"
+    body="$(trigger_thread_build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${AGENT_ENGINE}" "${USAGE_JSON}")"
 
-    reply_trigger_comment "${body}"
+    trigger_thread_reply_comment "${body}"
 }
 
 #######################################
