@@ -216,11 +216,12 @@ function sort_candidates_by_priority {
 }
 
 #######################################
-# write_detect_outputs: Write should_run, skip_reason, delivery, pr_auto_merge, target_matrix
+# write_detect_outputs: Write should_run, skip_reason, skip_detail, delivery, pr_auto_merge, target_matrix
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
 #   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (derive_pr_auto_merge)
+#   SKIP_DETAIL - Read; the first detect or gate detail, published only when should_run is false
 #
 # Arguments:
 #   $1 - should_run (true|false)
@@ -242,6 +243,11 @@ function write_detect_outputs {
     {
         echo "should_run=${should_run}"
         echo "skip_reason=${skip_reason}"
+        if [[ ${should_run} == "false" ]]; then
+            echo "skip_detail=${SKIP_DETAIL:-}"
+        else
+            echo "skip_detail="
+        fi
         echo "delivery=${DELIVERY:-}"
         echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         local delim

@@ -41,6 +41,8 @@ bats_require_minimum_version 1.5.0
 # - gate_blocks_candidate ignores a missing gate and refuses a closed entity, keeping the first reason
 # - append_detect_candidate drops a candidate whose detect result carries a closed gate
 # - items mode drops an item whose gate refuses it and reports the gate reason when none remains
+# - record_skip_detail keeps the first detail on one redacted line
+# - write_detect_outputs publishes skip_detail only for a skip
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -516,6 +518,29 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+@test "record_skip_detail keeps the first detail on one redacted line" {
+    SKIP_DETAIL=""
+    record_skip_detail $'first line\nsecond token=abc123secret'
+    record_skip_detail "later detail"
+    [ "${SKIP_DETAIL}" = "first line second token=[REDACTED]" ]
+}
+
+@test "write_detect_outputs publishes skip_detail only for a skip" {
+    local github_output
+    github_output="$(mktemp)"
+    GITHUB_OUTPUT="${github_output}"
+    SKIP_DETAIL="detect said no"
+
+    write_detect_outputs "false" "no_changes" "[]"
+    run grep -Fx 'skip_detail=detect said no' "${github_output}"
+    [ "$status" -eq 0 ]
+
+    : > "${github_output}"
+    write_detect_outputs "true" "none" '[{"target_json":{}}]'
+    run grep -Fx 'skip_detail=' "${github_output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "validate_branch_match accepts list glob and regex" {
     for mode in list glob regex; do
         DETECT_BRANCH_MATCH_MODE="${mode}"
@@ -799,6 +824,7 @@ EOF
     local pr_number normalized expected entry checked=0
     expected="should_run=false
 skip_reason=pr_number_missing
+skip_detail=
 delivery=pr_push
 pr_auto_merge=false
 target_matrix<<TARGET_MATRIX_X

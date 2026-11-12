@@ -11,6 +11,12 @@
 # - Budget reads loop-budget.json and loop-run-log.md for daily aggregation
 #######################################
 
+_ADMISSION_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! declare -f redact_sensitive_text > /dev/null 2>&1; then
+    # shellcheck source=./redact.sh disable=SC1091
+    source "${_ADMISSION_LIB_DIR}/redact.sh"
+fi
+
 #######################################
 # admission_budget_exceeded: Return 0 when daily budget is exceeded
 #
@@ -380,4 +386,28 @@ function admission_evaluate {
 function admission_result {
     jq -nc --argjson admit "${1}" --arg skip_reason "${2}" --arg detail "${3}" \
         '{admit: $admit, skip_reason: $skip_reason, detail: $detail}'
+}
+
+#######################################
+# admission_skip_detail: Build the one-line, redacted detail recorded with a skip reason
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Message text (a detect script message or a gate detail)
+#
+# Outputs:
+#   STDOUT: the message on one line, redacted and cut to 300 characters
+#
+# Returns:
+#   0 always
+#
+#######################################
+function admission_skip_detail {
+    local message="${1:-}"
+
+    message="$(printf '%s' "${message}" | tr '\r\n' '  ')"
+    message="$(redact_sensitive_text "${message}")"
+    printf '%s' "${message:0:300}"
 }

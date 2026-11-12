@@ -116,7 +116,7 @@ function validate_finalize_commit_path {
 #   STATE_PR_SKIP - When true, skip PR fallback on push failure
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
 #   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths committed with the state file
-#   STATE_EXTRA_PATHS - Set from FINALIZE_COMMIT_PATHS; carried across a push retry only while unchanged on the remote
+#   STATE_EXTRA_PATHS - Set from FINALIZE_COMMIT_PATHS; carried across a push retry, merged when a rival changed a JSON object file
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
 #
@@ -293,7 +293,7 @@ function resolve_consecutive_failures {
 
     prev_consecutive="$(jq -r --arg key "${TARGET_KEY}" '.targets[$key].consecutive_failures // 0' "${STATE_TMP}" 2> /dev/null || echo "0")"
     if ! jq -e . <<< "${OPEN_REJECTIONS}" > /dev/null 2>&1; then
-        echo "::warning::open_rejections is not valid JSON; using []"
+        echo "::warning::open_rejections is not valid JSON; using []" >&2
         OPEN_REJECTIONS='[]'
     fi
 
@@ -355,6 +355,13 @@ function resolve_consecutive_with_probe {
 #######################################
 # carry_extra_paths_begin: Save the extra paths of the local state commit before a retry reset
 #
+# Description:
+#   An extra path that is unchanged on the remote since the local commit's parent is carried as is.
+#   One that a rival changed is carried only as a merge: both versions must be JSON objects, and
+#   objects merge key by key (a ledger keyed by run ID or path). A key that both sides set to
+#   different values, or a non-object file, is a conflict, because overwriting either side would
+#   lose a ledger entry.
+#
 # Globals:
 #   STATE_EXTRA_PATHS - Extra repo-relative paths committed with the state file
 #   PUSH_BRANCH - Remote branch the retry resets to
@@ -363,26 +370,45 @@ function resolve_consecutive_with_probe {
 #   $1 - Directory that receives one saved copy per extra path
 #
 # Outputs:
-#   Warning on stdout when an extra path changed on the remote
+#   Notice or warning on stdout
 #
 # Returns:
-#   0 when every extra path is saved and unchanged on the remote since the local commit's parent;
-#   1 when one changed (a concurrent writer touched it, so overwriting it would lose that change)
+#   0 when every extra path is saved (as is, or merged with the remote version);
+#   1 when a rival-changed path cannot be merged
 #
 #######################################
 function carry_extra_paths_begin {
     local save_dir="$1"
-    local path base_blob remote_blob index=0
+    local path base_blob remote_blob index=0 remote_file merged
 
     for path in "${STATE_EXTRA_PATHS[@]}"; do
         base_blob="$(git rev-parse --verify --quiet "HEAD~1:${path}" 2> /dev/null || true)"
         remote_blob="$(git rev-parse --verify --quiet "origin/${PUSH_BRANCH}:${path}" 2> /dev/null || true)"
-        if [[ ${base_blob} != "${remote_blob}" ]]; then
-            echo "::warning::${path} changed on ${PUSH_BRANCH} during the push race; not overwriting it."
-            return 1
-        fi
         if git cat-file -e "HEAD:${path}" 2> /dev/null; then
             git show "HEAD:${path}" > "${save_dir}/${index}"
+        fi
+        if [[ ${base_blob} != "${remote_blob}" ]]; then
+            if [[ -z ${remote_blob} || ! -f "${save_dir}/${index}" ]]; then
+                echo "::warning::${path} changed on ${PUSH_BRANCH} during the push race; not overwriting it."
+                return 1
+            fi
+            remote_file="${save_dir}/${index}.remote"
+            git show "origin/${PUSH_BRANCH}:${path}" > "${remote_file}"
+            # shellcheck disable=SC2016  # jq program, not shell
+            if ! merged="$(jq -s '
+                def merge($a; $b):
+                  if ($a | type) == "object" and ($b | type) == "object" then
+                    reduce ($b | keys_unsorted[]) as $k ($a;
+                      .[$k] = (if has($k) then merge(.[$k]; $b[$k]) else $b[$k] end))
+                  elif $a == $b then $a
+                  else error("conflict")
+                  end;
+                merge(.[0]; .[1])' "${remote_file}" "${save_dir}/${index}" 2> /dev/null)"; then
+                echo "::warning::${path} changed on ${PUSH_BRANCH} during the push race and cannot be merged; not overwriting it."
+                return 1
+            fi
+            printf '%s\n' "${merged}" > "${save_dir}/${index}"
+            echo "Merged ${path} with the version pushed during the race."
         fi
         index=$((index + 1))
     done

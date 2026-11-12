@@ -313,6 +313,7 @@ jobs:
       pr_auto_merge: ${{ steps.detect.outputs.pr_auto_merge }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
+      skip_detail: ${{ steps.detect.outputs.skip_detail }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
       target_matrix: ${{ steps.detect.outputs.target_matrix }}
@@ -570,5 +571,6 @@ jobs:
           outcome: skipped
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_detail: ${{ needs.detect.outputs.skip_detail }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}

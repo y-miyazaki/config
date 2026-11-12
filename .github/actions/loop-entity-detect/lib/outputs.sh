@@ -44,9 +44,7 @@ function resolve_entity_skip_detail {
     local message
 
     message="$(jq -r '(.message // "") | tostring' "${detect_file}" 2> /dev/null || true)"
-    message="$(printf '%s' "${message}" | tr '\r\n' '  ')"
-    message="$(redact_sensitive_text "${message}")"
-    printf '%s' "${message:0:300}"
+    admission_skip_detail "${message}"
 }
 
 #######################################

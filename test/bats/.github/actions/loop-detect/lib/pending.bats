@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154,SC2317
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/loop-detect/lib/detect.sh (pending PR gate)
 
 # Use cases:
@@ -10,6 +12,7 @@
 # - CLOSED pending on pull_request target → continue into detect
 # - empty candidates + PENDING_PR_BLOCKED → skip_reason=pending_pr (main branch)
 # - circuit_breaker takes precedence over pending_pr when both counters set
+# - target_state_apply_merged_pending promotes pending.sha to last_sha in memory only when the pending PR is MERGED
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -234,4 +237,31 @@ EOF
 
     run grep -Fx 'skip_reason=circuit_breaker' "${github_output}"
     [ "$status" -eq 0 ]
+}
+
+@test "target_state_apply_merged_pending promotes pending.sha when the pending PR is MERGED" {
+    local state='{"last_sha":"deadbeef","pending":{"sha":"cafebabe","pr":42},"consecutive_failures":1}'
+    install_gh_pr_state_mock "MERGED"
+    run --separate-stderr target_state_apply_merged_pending "${state}"
+    [ "$status" -eq 0 ]
+    [ "$(jq -c '{last_sha, has_pending: has("pending"), consecutive_failures}' <<< "${output}")" = '{"last_sha":"cafebabe","has_pending":false,"consecutive_failures":1}' ]
+}
+
+@test "target_state_apply_merged_pending leaves the state unchanged for OPEN CLOSED or no pending" {
+    local state='{"last_sha":"deadbeef","pending":{"sha":"cafebabe","pr":42}}' value
+    for value in OPEN CLOSED; do
+        install_gh_pr_state_mock "${value}"
+        run target_state_apply_merged_pending "${state}"
+        [ "$output" = "${state}" ]
+    done
+    run target_state_apply_merged_pending '{"last_sha":"deadbeef"}'
+    [ "$output" = '{"last_sha":"deadbeef"}' ]
+}
+
+@test "target_state_apply_merged_pending leaves the state unchanged without a token" {
+    local state='{"last_sha":"deadbeef","pending":{"sha":"cafebabe","pr":42}}'
+    install_gh_pr_state_mock "MERGED"
+    unset GITHUB_TOKEN
+    run target_state_apply_merged_pending "${state}"
+    [ "$output" = "${state}" ]
 }

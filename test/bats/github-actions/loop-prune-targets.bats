@@ -12,11 +12,12 @@
 # - pull_request pr_closed aged: delete
 # - pull_request persisted old pr-closed aged: delete (same as pr_closed, via outcome_normalize)
 # - integration persisted old pr-closed aged: cooldown same as pr_closed
-# - non-terminal outcomes (pr_created, old pr-created, unchanged) aged: keep
+# - pull_request key aged without pending: delete whatever the outcome (pr_merged, watch, unchanged, pr_pushed, ...)
+# - pull_request key with a non-terminal outcome that is still recent: keep
 # - missing last_run: keep
 # - per-target hash key (integration:<branch>#<key>) aged without pending: delete regardless of outcome
 # - per-target hash key with pending, within 30 days, or missing last_run: keep
-# - plain integration key aged: kept (cooldown only), aged terminal pull_request key still deleted
+# - plain integration key aged: kept (cooldown only), aged pull_request key deleted
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -258,9 +259,9 @@ setup() {
     [ "${checked}" -eq 2 ]
 }
 
-@test "prune_targets_json keeps aged pull_request key for non-terminal outcomes" {
+@test "prune_targets_json deletes aged pull_request key for any outcome without pending" {
     local state outcome checked=0
-    for outcome in pr_created pr-created pr_pushed unchanged no-changes; do
+    for outcome in pr_created pr-created pr_pushed unchanged no-changes pr_merged watch error; do
         state="$(jq -nc --arg outcome "${outcome}" '{
           targets: {
             "pull_request:7": {
@@ -271,11 +272,25 @@ setup() {
         }')"
         run prune_targets_json "${state}"
         [ "$status" -eq 0 ]
-        run jq -r '.targets["pull_request:7"].outcome' <<< "${output}"
-        [ "$output" = "${outcome}" ]
+        run jq -e '.targets | has("pull_request:7") | not' <<< "${output}"
+        [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 5 ]
+    [ "${checked}" -eq 8 ]
+}
+
+@test "prune_targets_json keeps recent pull_request key for non-terminal outcomes" {
+    local state recent outcome
+    recent="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    for outcome in pr_merged watch unchanged; do
+        state="$(jq -nc --arg outcome "${outcome}" --arg last_run "${recent}" '{
+          targets: {"pull_request:7": {last_run: $last_run, outcome: $outcome}}
+        }')"
+        run prune_targets_json "${state}"
+        [ "$status" -eq 0 ]
+        run jq -r '.targets["pull_request:7"].outcome' <<< "${output}"
+        [ "$output" = "${outcome}" ]
+    done
 }
 
 @test "prune_targets_json keeps entry when last_run missing" {

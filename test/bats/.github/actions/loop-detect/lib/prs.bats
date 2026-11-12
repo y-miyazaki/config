@@ -8,6 +8,7 @@
 # - pr_excluded allows bot author listed in detect_pr_bot_allowlist
 # - pr_excluded allows bot author when scoped intake selected the PR explicitly
 # - pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty
+# - pr_excluded uses the one bot definition: app/<slug> and [bot] logins count as bots, a human login does not
 # - pr_excluded excludes bot authors when scoped intake is false
 # - list_open_prs admits bot-authored PRs under DETECT_PR_NUMBER
 # - list_open_prs keeps fork/draft/label exclusions for scoped bot PRs
@@ -26,6 +27,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
+    bats_source_rel ".github/actions/lib/loop/admission.sh"
     bats_source_rel ".github/actions/loop-detect/lib/branches.sh"
     bats_source_rel ".github/actions/loop-detect/lib/prs.sh"
     DETECT_PR_ENABLED="false"
@@ -56,6 +58,18 @@ pr_json_with_labels() {
     local pr
     pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "dependabot"
+    [ "$status" -eq 1 ]
+}
+
+@test "pr_excluded uses the one bot definition for app slug and bot suffix logins" {
+    local login pr
+    for login in "app/renovate" "renovate[bot]" "app/repo-maintenance-bot"; do
+        pr="{\"number\":1,\"title\":\"t\",\"isDraft\":false,\"author\":{\"login\":\"${login}\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "" "" "false"
+        [ "$status" -eq 0 ]
+    done
+    pr='{"number":1,"title":"t","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "" "" "false"
     [ "$status" -eq 1 ]
 }
 

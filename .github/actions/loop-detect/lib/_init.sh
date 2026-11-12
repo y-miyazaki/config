@@ -82,3 +82,5 @@ PENDING_PR_BLOCKED=0
 GATE_BLOCKED=0
 # shellcheck disable=SC2034
 GATE_BLOCK_REASON=""
+# shellcheck disable=SC2034
+SKIP_DETAIL=""

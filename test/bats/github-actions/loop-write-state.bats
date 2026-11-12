@@ -29,7 +29,9 @@
 # - write_state gives up after WRITE_STATE_MAX_RETRIES and opens the state PR fallback
 # - write_state does not retry on remote rejected
 # - write_state retries a raced push and carries the FINALIZE_COMMIT_PATHS files when they did not change on the remote
-# - write_state does not overwrite a FINALIZE_COMMIT_PATHS file that a rival changed, and opens the state PR instead
+# - write_state does not overwrite a FINALIZE_COMMIT_PATHS file that a rival changed to a conflicting value, and opens the state PR instead
+# - write_state merges a keyed JSON FINALIZE_COMMIT_PATHS file that a rival changed with the local version and pushes both
+# - resolve_consecutive_failures prints only the count on stdout, even when open_rejections is invalid
 # - write_state retry leaves no stale temp state file
 # - write_state retry rewrites state when the remote tip lacks the state file
 
@@ -75,6 +77,9 @@ git fetch -q origin main > /dev/null 2>&1
 git reset -q --hard origin/main > /dev/null 2>&1
 if [ '${mode}' = remove_file ]; then
     git rm -q .loop/state-test.json
+elif [ '${mode}' = add_ledger_keyed ]; then
+    printf '%s\\n' '{"runs":{"rival":{"outcome":"pr_created"}}}' > .loop/state-test-ledger.json
+    git add .loop/state-test-ledger.json
 elif [ '${mode}' = add_ledger ]; then
     printf '%s\\n' '{"entries":["rival"]}' > .loop/state-test-ledger.json
     git add .loop/state-test-ledger.json
@@ -722,6 +727,33 @@ setup() {
     [ "$status" -eq 0 ]
     [ "$output" = '{"entries":["rival"]}' ]
 }
+@test "write_state merges a keyed FINALIZE_COMMIT_PATHS file that a rival changed" {
+    state_write_mock_gh
+    state_write_race_setup 1 add_ledger_keyed
+    printf '%s\n' '{"runs":{"mine":{"outcome":"pr_created"}}}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        PATH="${PATH}" \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Merged .loop/state-test-ledger.json"* ]]
+    [[ $output != *"State PR queued for auto-merge"* ]]
+    run git -C "${STATE_WRITE_BARE}" show main:.loop/state-test-ledger.json
+    [ "$status" -eq 0 ]
+    [ "$(jq -c '.runs | keys' <<< "${output}")" = '["mine","rival"]' ]
+}
 @test "write_state gives up after 3 retries and opens state PR fallback" {
     state_write_mock_gh
     state_write_race_setup 10
@@ -899,4 +931,22 @@ setup() {
     run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE=state.json validate_state_file_path'
     [ "$status" -eq 1 ]
     [[ $output == *"must match .loop/state-<name>.json"* ]]
+}
+
+@test "resolve_consecutive_failures prints only the count on stdout when open_rejections is invalid" {
+    bats_require_minimum_version 1.5.0
+    local state_tmp="${BATS_TEST_TMPDIR}/state_tmp.json"
+    printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' > "${state_tmp}"
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    STATE_TMP="${state_tmp}"
+    TARGET_KEY='integration:main'
+    OUTCOME='rejected'
+    OPEN_REJECTIONS='not json'
+
+    run --separate-stderr resolve_consecutive_failures
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "3" ]
+    [[ $stderr == *"open_rejections is not valid JSON"* ]]
 }

@@ -12,7 +12,7 @@
 # Design Rules:
 #   - Never delete non-pull_request keys (watch / integration:*), except per-target keys below
 #   - Delete keys containing '#' (integration:<branch>#<key>) when aged + no pending, regardless of outcome
-#   - Delete pull_request:* when terminal + aged + no pending
+#   - Delete pull_request:* when aged + no pending, whatever the outcome
 #   - Cooldown watch reject fields after 30 days
 #   - Fail-safe: missing/invalid last_run → keep entry
 #   - Terminal outcomes come from the outcome mapping table (outcome_is_prune_terminal in
@@ -138,7 +138,8 @@ function prune_targets_json {
             .
           end
         elif (.key | startswith("pull_request:")) then
-          if (.value | terminal) and (.value | aged) then
+          # Aged and no pending: delete, whatever the outcome (merged, watch, unchanged, rejected, ...)
+          if (.value | aged) then
             empty
           else
             .

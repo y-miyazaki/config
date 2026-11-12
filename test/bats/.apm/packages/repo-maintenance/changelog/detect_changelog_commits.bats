@@ -11,6 +11,7 @@
 # - parse_commit_subject marks breaking header
 # - is_loop_maintenance_commit skips chore changelog scope
 # - is_loop_maintenance_commit skips subject with loop-changelog marker
+# - is_loop_maintenance_commit ignores a squash-merge (#N) suffix when matching maintenance subjects
 # - is_loop_maintenance_commit allows regular feat commits
 # - is_loop_maintenance_commit skips promote and clear_pending state commits and only those
 # - detect_changelog_commits range scope returns feat commit
@@ -103,6 +104,17 @@ setup() {
     run is_loop_maintenance_commit "feat" "loop" "promote state for PR #1"
     [ "$status" -eq 1 ]
     run is_loop_maintenance_commit "chore" "other" "promote state for PR #1"
+    [ "$status" -eq 1 ]
+}
+
+@test "is_loop_maintenance_commit ignores a squash-merge (#N) suffix" {
+    run is_loop_maintenance_commit "chore" "loop" "update state [skip ci] (#1240)"
+    [ "$status" -eq 0 ]
+    run is_loop_maintenance_commit "chore" "loop" "append run log [skip ci] (#7)"
+    [ "$status" -eq 0 ]
+    run is_loop_maintenance_commit "chore" "loop" "promote state for PR #12 [skip ci] (#13)"
+    [ "$status" -eq 0 ]
+    run is_loop_maintenance_commit "chore" "loop" "increase agent_maker_max_turns to 15 (#9)"
     [ "$status" -eq 1 ]
 }
 

@@ -67,6 +67,28 @@ LOOP_DETECT_ENV_ARGS=()
 STATE_FILE="${STATE_FILE-}"
 
 #######################################
+# record_skip_detail: Keep the first skip detail of the run for the run log
+#
+# Globals:
+#   SKIP_DETAIL - Set when empty
+#
+# Arguments:
+#   $1 - Detail text (one line is built from it)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 always
+#
+#######################################
+function record_skip_detail {
+    if [[ -z ${SKIP_DETAIL:-} ]]; then
+        SKIP_DETAIL="$(admission_skip_detail "${1:-}")"
+    fi
+}
+
+#######################################
 # resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
 #
 # Must run before any target checkout. Relative detect scripts otherwise resolve
@@ -447,7 +469,7 @@ function append_detect_candidate {
         checkout_context "${head_branch}" || return 0
     fi
 
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
+    target_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")")"
     consecutive="$(target_consecutive_failures "${target_state}")"
     if target_state_blocks_candidate "${target_key}" "${target_state}" "${consecutive}"; then
         return 0
@@ -462,6 +484,7 @@ function append_detect_candidate {
     detect_result="$(invoke_detect_script "${last_sha}" "${target_key}")"
 
     if detect_result_skip "${detect_result}"; then
+        record_skip_detail "${target_key}: $(jq -r '.message // "detect skip=true"' <<< "${detect_result}")"
         log_detect_notice "skip" "${target_key}" \
             "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
         return 0
@@ -541,6 +564,7 @@ function append_items_candidates {
     detect_result="$(invoke_detect_script "${last_sha}" "integration:${branch}")" || return
 
     if detect_result_skip "${detect_result}"; then
+        record_skip_detail "integration:${branch}: $(jq -r '.message // "detect skip=true"' <<< "${detect_result}")"
         log_detect_notice "skip" "integration:${branch}" "detect skip=true (items mode)"
         return 0
     fi
@@ -558,7 +582,7 @@ function append_items_candidates {
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")"
+        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")")"
         consecutive="$(target_consecutive_failures "${item_state}")"
         if target_state_blocks_candidate "${item_key}" "${item_state}" "${consecutive}"; then
             continue
@@ -574,7 +598,7 @@ function append_items_candidates {
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")"
+        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")")"
         consecutive="$(target_consecutive_failures "${item_state}")"
         last_sha="$(target_last_sha "${item_state}" "${branch}" "")"
         item_result="$(item_result_json "${item_json}")" || return 1
@@ -1126,6 +1150,7 @@ function gate_blocks_candidate {
     if [[ -z ${GATE_BLOCK_REASON} ]]; then
         GATE_BLOCK_REASON="${reason}"
     fi
+    record_skip_detail "${target_key}: ${detail}"
     return 0
 }
 
@@ -1315,6 +1340,7 @@ function validate_detect_items_config {
 #   CIRCUIT_BREAKER_BLOCKED - Circuit breaker block count
 #   PENDING_PR_BLOCKED - Pending PR block count
 #   GATE_BLOCKED, GATE_BLOCK_REASON - Admission gate refusal count and first reason
+#   SKIP_DETAIL - First skip detail (published with a skip)
 #   GITHUB_OUTPUT - Written via write_detect_outputs / write_legacy_outputs
 #
 # Arguments:
