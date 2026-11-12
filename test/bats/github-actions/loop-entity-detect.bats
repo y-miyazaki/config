@@ -15,6 +15,8 @@ bats_require_minimum_version 1.5.0
 # - main fails when skip is false and result.entity.kind is missing or invalid
 # - main fails when the entity target kind is not allowed by delivery
 # - main skips when daily budget is exceeded
+# - main publishes skip_reason domain:<slug> and a one-line redacted skip_detail when the detect script skips
+# - action.yml exposes skip_detail
 # - main builds target matrix, handoff payload, and pr_auto_merge from a successful entity detect
 # - main passes detect_env_json entries to the detect script only and rejects reserved or conflicting keys
 
@@ -200,7 +202,47 @@ state_file"
     [ "$status" -eq 0 ]
     run grep -Fx 'should_run=false' "${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
-    run grep -Fx 'skip_reason=detect_skip' "${GITHUB_OUTPUT}"
+    run grep -Fx 'skip_reason=domain:detect' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main publishes the detect skip_reason slug and message as skip_detail" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":true,"skip_reason":"already_reviewed","message":"marker review exists for abc123","result":{}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=domain:already_reviewed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=marker review exists for abc123' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main falls back to domain:detect when the detect skip_reason is not a slug" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":true,"skip_reason":"Bad Reason!","message":"x","result":{}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=domain:detect' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main publishes skip_detail on one line, redacted and cut to 300 characters" {
+    local long
+    long="$(printf 'a%.0s' {1..400})"
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        "{\"status\":\"ok\",\"skip\":true,\"message\":\"line one\\nline two token=abc123secret ${long}\",\"result\":{}}"
+    run_main
+    [ "$status" -eq 0 ]
+    [ "$(grep -c '^skip_detail=' "${GITHUB_OUTPUT}")" -eq 1 ]
+    run grep -F 'skip_detail=line one line two token=[REDACTED]' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -F 'abc123secret' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 1 ]
+    [ "$(grep '^skip_detail=' "${GITHUB_OUTPUT}" | cut -d= -f2- | wc -c)" -le 302 ]
+}
+
+@test "action.yml exposes skip_detail from the detect step" {
+    run grep -F 'steps.detect.outputs.skip_detail' "${ACTION_YML}"
     [ "$status" -eq 0 ]
 }
 

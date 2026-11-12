@@ -9,6 +9,7 @@
 # - loop_run_log_append_entry writes JSONL entry with expected format
 # - loop_run_log_build_entry ignores target_key when empty
 # - loop_run_log_build_entry appends target_key last
+# - loop_run_log_build_entry records skip_detail only when non-empty
 # - loop_run_log_compute_duration returns zero for empty start
 # - loop_run_log_compute_duration returns elapsed seconds
 # - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
@@ -115,6 +116,16 @@ _push_concurrent_entry() {
     result="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected" "entity:issue:7")"
     [ "$(jq -r '.target_key' <<< "${result}")" = "entity:issue:7" ]
     [ "$(jq -r 'keys_unsorted | last' <<< "${result}")" = "target_key" ]
+}
+
+@test "loop_run_log_build_entry records skip_detail only when non-empty" {
+    run loop_run_log_build_entry "" 1 "" "loop" "skipped" "domain:detect" "" "1" "" "" "" "" "" "marker review exists"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.skip_detail' <<< "${output}")" = "marker review exists" ]
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "domain:detect" ]
+    run loop_run_log_build_entry "" 1 "" "loop" "skipped" "budget" "" "1" "" "" "" "" "" ""
+    [ "$status" -eq 0 ]
+    [ "$(jq 'has("skip_detail")' <<< "${output}")" = "false" ]
 }
 
 @test "loop_run_log_append_entry writes JSONL entry with expected format" {

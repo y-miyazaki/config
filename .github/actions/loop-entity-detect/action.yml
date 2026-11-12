@@ -111,8 +111,11 @@ outputs:
   should_run:
     description: Whether the execute job should run
     value: ${{ steps.detect.outputs.should_run }}
+  skip_detail:
+    description: One-line, redacted detect message of a detect-script skip (empty otherwise)
+    value: ${{ steps.detect.outputs.skip_detail }}
   skip_reason:
-    description: Why execution was skipped (budget | detect_skip). Invalid level/delivery inputs, a missing or invalid result.entity.kind, and a target kind the delivery does not allow fail the step without skip_reason outputs.
+    description: Why execution was skipped (budget | domain:<reason>; domain:detect when the detect script gives no reason). Invalid level/delivery inputs, a missing or invalid result.entity.kind, and a target kind the delivery does not allow fail the step without skip_reason outputs.
     value: ${{ steps.detect.outputs.skip_reason }}
   state_file:
     description: Resolved loop state JSON path

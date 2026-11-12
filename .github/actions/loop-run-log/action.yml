@@ -67,9 +67,13 @@ inputs:
     default: ""
     description: "Workflow run start timestamp (ISO 8601) for duration calculation"
     required: false
+  skip_detail:
+    default: ""
+    description: "One-line detect message recorded as skip_detail in run log JSON (empty when none)"
+    required: false
   skip_reason:
     default: "none"
-    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing)"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing | domain:<reason>)"
     required: false
   state_branch:
     description: "Branch hosting .loop/* state files; the run log commit is pushed here"
@@ -111,6 +115,7 @@ runs:
         OUTCOME: ${{ inputs.outcome }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
+        SKIP_DETAIL: ${{ inputs.skip_detail }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         STATE_BRANCH: ${{ inputs.state_branch }}
         TARGET_KEY: ${{ inputs.target_key }}

@@ -30,13 +30,13 @@ Handoff-only (not in that diagram):
 
 ### Required outputs
 
-| Output                  | Source                                                                                                                  |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                  |
-| `skip_reason`           | `loop-detect`                                                                                                           |
-| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                      |
-| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact)) |
-| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                             |
+| Output                  | Source                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                         |
+| `skip_reason`           | `loop-detect`; entity callers publish `budget` or `domain:<reason>` and a one-line redacted `skip_detail` (the detect message) |
+| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                             |
+| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact))        |
+| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                                    |
 
 Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `result` and `verifier_context` live in the **loop-handoff** artifact (`payloads/<sanitized-key>.json`).
 

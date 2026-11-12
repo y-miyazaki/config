@@ -175,7 +175,8 @@ function loop_run_log_resolve_cost_usd {
 #   $10 - agent_result (optional)
 #   $11 - failure_stage (optional)
 #   $12 - failure_message (optional)
-#   $13 - target_key (optional, appended last when non-empty)
+#   $13 - target_key (optional, appended when non-empty)
+#   $14 - skip_detail (optional, appended last when non-empty)
 #
 # Outputs:
 #   JSON object to stdout
@@ -198,6 +199,7 @@ function loop_run_log_build_entry {
     local failure_stage="${11:-}"
     local failure_message="${12:-}"
     local target_key="${13:-}"
+    local skip_detail="${14:-}"
     local run_id resolved_tokens resolved_cost
 
     run_id="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -221,6 +223,7 @@ function loop_run_log_build_entry {
         --arg failure_message "${failure_message}" \
         --arg cost_usd "${resolved_cost}" \
         --arg target_key "${target_key}" \
+        --arg skip_detail "${skip_detail}" \
         '{
       run_id: $run_id,
       loop_name: $loop_name,
@@ -238,7 +241,8 @@ function loop_run_log_build_entry {
     + (if ($agent_result | length) > 0 then {agent_result: $agent_result} else {} end)
     + (if ($failure_stage | length) > 0 then {failure_stage: $failure_stage} else {} end)
     + (if ($failure_message | length) > 0 then {failure_message: $failure_message} else {} end)
-    + (if ($target_key | length) > 0 then {target_key: $target_key} else {} end)'
+    + (if ($target_key | length) > 0 then {target_key: $target_key} else {} end)
+    + (if ($skip_detail | length) > 0 then {skip_detail: $skip_detail} else {} end)'
 }
 
 #######################################

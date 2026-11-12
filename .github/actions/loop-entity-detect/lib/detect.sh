@@ -109,6 +109,7 @@ function resolve_detect_script_path {
 #
 # Arguments:
 #   $1 - skip_reason
+#   $2 - skip_detail (optional)
 #
 # Outputs:
 #   should_run=false on GITHUB_OUTPUT
@@ -119,8 +120,9 @@ function resolve_detect_script_path {
 #######################################
 function write_entity_skip_outputs {
     local skip_reason="$1"
+    local skip_detail="${2:-}"
 
-    write_entity_detect_outputs "false" "${skip_reason}" "[]"
+    write_entity_detect_outputs "false" "${skip_reason}" "[]" "${skip_detail}"
     exit 0
 }
 
@@ -206,7 +208,8 @@ function main {
     fi
 
     if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
-        write_entity_skip_outputs "detect_skip"
+        write_entity_skip_outputs "$(resolve_entity_skip_reason "${DETECT_OUT}")" \
+            "$(resolve_entity_skip_detail "${DETECT_OUT}")"
     fi
 
     loop_handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
