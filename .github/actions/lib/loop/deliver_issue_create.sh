@@ -300,7 +300,7 @@ function deliver_issue_create {
         return 0
     fi
 
-    mapfile -t labels < <(parse_label_list "${FINALIZE_LABEL_ALLOWLIST:-}")
+    mapfile -t labels < <(ensure_labels_parse_list "${FINALIZE_LABEL_ALLOWLIST:-}")
     if [[ ${#labels[@]} -eq 0 ]]; then
         fail_loop_message "finalize_label_allowlist is empty; issue_create needs the labels to apply"
         return 1
@@ -320,7 +320,7 @@ function deliver_issue_create {
     rm -f "${picks_file}"
 
     # Create missing labels only when an Issue will be filed.
-    if [[ ${#picks[@]} -gt 0 ]] && ! err="$(ensure_repo_labels "${labels[@]}" 2>&1)"; then
+    if [[ ${#picks[@]} -gt 0 ]] && ! err="$(ensure_labels_repo "${labels[@]}" 2>&1)"; then
         fail_loop_message "${err}"
         return 1
     fi

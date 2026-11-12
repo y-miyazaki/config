@@ -81,7 +81,7 @@ function apply_loop_message_labels {
         return 0
     fi
 
-    allow_json="$(parse_label_list "${allowlist}" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+    allow_json="$(ensure_labels_parse_list "${allowlist}" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
     filtered="$(jq -c --argjson a "${allow_json}" '
         {
             add: [.add[] | select(IN($a[]))],
@@ -96,7 +96,7 @@ function apply_loop_message_labels {
 
     if [[ $(jq -r '.add | length' <<< "${filtered}") -gt 0 ]]; then
         mapfile -t add_names < <(jq -r '.add[]' <<< "${filtered}")
-        if ! err="$(ensure_repo_labels "${add_names[@]}" 2>&1)"; then
+        if ! err="$(ensure_labels_repo "${add_names[@]}" 2>&1)"; then
             fail_loop_message "${err}"
             return 1
         fi

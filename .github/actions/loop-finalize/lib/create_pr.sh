@@ -137,7 +137,7 @@ function main {
     if [[ -n ${PR_LABELS} ]]; then
         gh_args+=(--label "${PR_LABELS}")
         # gh splits --label on commas; create each missing label first
-        mapfile -t pr_label_names < <(parse_label_list "${PR_LABELS}" ",")
+        mapfile -t pr_label_names < <(ensure_labels_parse_list "${PR_LABELS}" ",")
     fi
     if [[ ${PR_DRAFT} == "true" ]]; then
         gh_args+=(--draft)
@@ -146,7 +146,7 @@ function main {
     # gh prints the PR URL on stdout; warnings and notices on stderr must not end up in the URL.
     pr_err_path="$(mktemp "${work_dir}/err.XXXXXX")"
     pr_failed="false"
-    if ! pr_err="$(ensure_repo_labels "${pr_label_names[@]}" 2>&1)"; then
+    if ! pr_err="$(ensure_labels_repo "${pr_label_names[@]}" 2>&1)"; then
         pr_failed="true"
     elif ! url="$(gh pr create "${gh_args[@]}" 2> "${pr_err_path}")"; then
         pr_failed="true"

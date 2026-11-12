@@ -238,7 +238,7 @@ Issues created before a Deliver Message failure remain; the next run skips them 
 
 ## Operations
 
-- **The label is created on demand.** Every loop label path (`issue_create`, message labels, and `pr_labels`) first creates the labels that do not exist (`ensure_repo_labels`, including `loop:code-review`), using the `issues: write` or `pull-requests: write` permission the workflow already has. An existing label is left unchanged, and a run that files nothing creates no label. Never remove the label from the allowlist: the duplicate lookup depends on it.
+- **The label is created on demand.** Every loop label path (`issue_create`, message labels, and `pr_labels`) first creates the labels that do not exist (`ensure_labels_repo`, including `loop:code-review`), using the `issues: write` or `pull-requests: write` permission the workflow already has. An existing label is left unchanged, and a run that files nothing creates no label. Never remove the label from the allowlist: the duplicate lookup depends on it.
 - **Never remove the label from a created Issue.** The duplicate check lists Issues by this label, so an Issue without it no longer counts and the same finding can be filed again.
 - **Do not add an intake label to `finalize_label_allowlist`.** `autofix`, `needs-triage`, and `triage:needs-info` raise Webhook events that start other loops (invariant 10 in [Design Invariants](../loop-engineering-design.md#design-invariants)). A bats test checks every caller. A human may add `autofix` to a single Issue later.
 - **Check the "not planned" rate weekly.** Read it from the `loop:code-review` Issue list; no automatic count exists. Apply Slow Down or Kill from the table in [Stop conditions](#stop-conditions).

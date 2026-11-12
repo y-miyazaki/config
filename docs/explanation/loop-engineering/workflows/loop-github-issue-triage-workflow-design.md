@@ -183,7 +183,7 @@ See `.apm/packages/github/.apm/skills/github-issue-triage/SKILL.md` and `referen
 
 The agent does not write to GitHub. It writes the comment to `message.md` and the label changes (`{"add": [...], "remove": [...]}`) to `message_labels.json` in `LOOP_MESSAGE_DIR`; `loop-agent-once` creates that directory, names it at the end of the prompt, and passes the files to `finalize-l1` as the job output `message_json`. `loop-finalize` (Deliver Message) then adds or removes the labels that are in `finalize_label_allowlist`, and posts the comment once as one Issue comment with the Marker, Meta block and footer. No later step edits the posted comment.
 
-Labels that do not exist yet are created by the workflow before they are added (`ensure_repo_labels`), so the result of `POST .../issues/<n>/labels` naming a missing label no longer matters. The allowlist still bounds which labels can be created.
+Labels that do not exist yet are created by the workflow before they are added (`ensure_labels_repo`), so the result of `POST .../issues/<n>/labels` naming a missing label no longer matters. The allowlist still bounds which labels can be created.
 
 ## Implementation Checklist
 

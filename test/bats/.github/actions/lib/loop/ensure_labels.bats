@@ -6,11 +6,11 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/lib/loop/ensure_labels.sh
 #
 # Use cases:
-# - ensure_repo_labels creates each label once, in order, without --force
-# - ensure_repo_labels treats an already existing label as success
-# - ensure_repo_labels stops at the first other failure and reports the label and gh error
-# - ensure_repo_labels skips empty names and does nothing without arguments
-# - parse_label_list trims names, drops empty entries, and splits on newlines or a given separator
+# - ensure_labels_repo creates each label once, in order, without --force
+# - ensure_labels_repo treats an already existing label as success
+# - ensure_labels_repo stops at the first other failure and reports the label and gh error
+# - ensure_labels_repo skips empty names and does nothing without arguments
+# - ensure_labels_parse_list trims names, drops empty entries, and splits on newlines or a given separator
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -44,16 +44,16 @@ teardown() {
     rm -f "${BATS_TEST_TMPDIR}/gh.log"
 }
 
-@test "parse_label_list splits on newlines by default, trims names and drops empty entries" {
-    run parse_label_list $'  loop:code-review \n\n\textra label\t\n   \n'
+@test "ensure_labels_parse_list splits on newlines by default, trims names and drops empty entries" {
+    run ensure_labels_parse_list $'  loop:code-review \n\n\textra label\t\n   \n'
     [ "$status" -eq 0 ]
     [ "${lines[0]}" = "loop:code-review" ]
     [ "${lines[1]}" = "extra label" ]
     [ "${#lines[@]}" -eq 2 ]
 }
 
-@test "parse_label_list splits on the given separator and keeps newlines out of names" {
-    run parse_label_list "a, b ,, needs review" ","
+@test "ensure_labels_parse_list splits on the given separator and keeps newlines out of names" {
+    run ensure_labels_parse_list "a, b ,, needs review" ","
     [ "$status" -eq 0 ]
     [ "${lines[0]}" = "a" ]
     [ "${lines[1]}" = "b" ]
@@ -61,17 +61,17 @@ teardown() {
     [ "${#lines[@]}" -eq 3 ]
 }
 
-@test "parse_label_list prints nothing for an empty or blank list" {
-    run parse_label_list ""
+@test "ensure_labels_parse_list prints nothing for an empty or blank list" {
+    run ensure_labels_parse_list ""
     [ "$status" -eq 0 ]
     [ -z "$output" ]
-    run parse_label_list $' \n \n'
+    run ensure_labels_parse_list $' \n \n'
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "ensure_repo_labels creates each label once in order without --force" {
-    run ensure_repo_labels "loop:code-review" "extra label"
+@test "ensure_labels_repo creates each label once in order without --force" {
+    run ensure_labels_repo "loop:code-review" "extra label"
     [ "$status" -eq 0 ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/gh.log")" -eq 2 ]
     [ "$(sed -n 1p "${BATS_TEST_TMPDIR}/gh.log")" = "label create loop:code-review --repo o/r --description Created by a loop workflow" ]
@@ -79,27 +79,27 @@ teardown() {
     run ! grep -q -- '--force' "${BATS_TEST_TMPDIR}/gh.log"
 }
 
-@test "ensure_repo_labels skips empty names and does nothing without arguments" {
-    run ensure_repo_labels
+@test "ensure_labels_repo skips empty names and does nothing without arguments" {
+    run ensure_labels_repo
     [ "$status" -eq 0 ]
-    run ensure_repo_labels "" ""
+    run ensure_labels_repo "" ""
     [ "$status" -eq 0 ]
     [ ! -f "${BATS_TEST_TMPDIR}/gh.log" ]
 }
 
-@test "ensure_repo_labels stops at the first other failure and reports the label and gh error" {
+@test "ensure_labels_repo stops at the first other failure and reports the label and gh error" {
     export GH_MOCK_RC="0 1 0"
     export GH_MOCK_ERR="HTTP 403: Resource not accessible by integration"
-    run --separate-stderr ensure_repo_labels "a" "b" "c"
+    run --separate-stderr ensure_labels_repo "a" "b" "c"
     [ "$status" -eq 1 ]
     [ "$stderr" = "Failed to create label b: HTTP 403: Resource not accessible by integration" ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/gh.log")" -eq 2 ]
 }
 
-@test "ensure_repo_labels treats an already existing label as success" {
+@test "ensure_labels_repo treats an already existing label as success" {
     export GH_MOCK_RC="1 0"
     export GH_MOCK_ERR='label already exists'
-    run ensure_repo_labels "a" "b"
+    run ensure_labels_repo "a" "b"
     [ "$status" -eq 0 ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/gh.log")" -eq 2 ]
 }

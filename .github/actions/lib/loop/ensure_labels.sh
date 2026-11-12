@@ -7,14 +7,14 @@
 #
 # Usage:
 #   source ensure_labels.sh
-#   ensure_repo_labels LABEL [LABEL...]
-#   parse_label_list LIST [SEPARATOR]
+#   ensure_labels_repo LABEL [LABEL...]
+#   ensure_labels_parse_list LIST [SEPARATOR]
 #
 # Output:
 #   None (library file, sourced by other scripts)
 #
 # Design Rules:
-#   - parse_label_list is the one place that turns a caller-supplied label list into names
+#   - ensure_labels_parse_list is the one place that turns a caller-supplied label list into names
 #   - An existing label is never changed (no --force; color and description stay)
 #   - "already exists" is success, so a concurrent run creating the same label is safe
 #   - Any other gh failure stops at the first label and is reported on stderr
@@ -25,7 +25,7 @@
 #######################################
 
 #######################################
-# ensure_repo_labels: Create each given label unless it already exists
+# ensure_labels_repo: Create each given label unless it already exists
 #
 # Globals:
 #   GITHUB_REPOSITORY - owner/name
@@ -41,7 +41,7 @@
 #   0 when every label exists afterwards; 1 on the first failed create
 #
 #######################################
-function ensure_repo_labels {
+function ensure_labels_repo {
     local label err
 
     for label in "$@"; do
@@ -56,7 +56,7 @@ function ensure_repo_labels {
 }
 
 #######################################
-# parse_label_list: Print one trimmed label name per line from a delimited list
+# ensure_labels_parse_list: Print one trimmed label name per line from a delimited list
 #
 # Globals:
 #   None
@@ -72,11 +72,11 @@ function ensure_repo_labels {
 #   0 always
 #
 # Usage:
-#   mapfile -t labels < <(parse_label_list "${FINALIZE_LABEL_ALLOWLIST:-}")
-#   mapfile -t labels < <(parse_label_list "${PR_LABELS}" ",")
+#   mapfile -t labels < <(ensure_labels_parse_list "${FINALIZE_LABEL_ALLOWLIST:-}")
+#   mapfile -t labels < <(ensure_labels_parse_list "${PR_LABELS}" ",")
 #
 #######################################
-function parse_label_list {
+function ensure_labels_parse_list {
     local list="${1:-}"
     local separator="${2:-$'\n'}"
     local label
