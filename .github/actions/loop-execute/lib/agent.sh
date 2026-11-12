@@ -268,28 +268,19 @@ function harvest_workspace_into_worktree {
         return 0
     fi
 
-    while IFS= read -r line; do
-        [[ -z ${line} ]] && continue
+    # -z gives NUL-separated, unquoted paths, so non-ASCII names and names holding " -> " are exact.
+    # A rename or copy is "XY new" followed by a separate "old" entry.
+    while IFS= read -r -d '' line; do
         xy="${line:0:2}"
         path="${line:3}"
-        if [[ ${xy} == R* || ${xy} == C* ]] && [[ ${path} == *" -> "* ]]; then
-            # Rename/copy porcelain lines are "old -> new"; only the new path
-            # is harvested, and the stale old path is dropped from the
-            # worktree so the rename isn't recreated as a duplicate add.
-            old_path="${path%% -> *}"
-            path="${path##* -> }"
-            old_path="${old_path#\"}"
-            old_path="${old_path%\"}"
-            old_path="${old_path//\\\"/\"}"
-            # A copy leaves the source in place, so only renames drop it.
-            if [[ ${xy} == R* && -n ${old_path} && ${old_path} != .git/* ]]; then
+        old_path=""
+        if [[ ${xy:0:1} == [RC] || ${xy:1:1} == [RC] ]]; then
+            IFS= read -r -d '' old_path || true
+            # A copy leaves the source in place, so only renames drop it; the stale old
+            # path is removed from the worktree so the rename isn't recreated as a duplicate add.
+            if [[ ${xy} == *R* && -n ${old_path} && ${old_path} != .git/* ]]; then
                 rm -rf "${worktree:?}/${old_path}"
             fi
-        fi
-        if [[ ${path} == \"* ]]; then
-            path="${path#\"}"
-            path="${path%\"}"
-            path="${path//\\\"/\"}"
         fi
         [[ -z ${path} || ${path} == .git/* ]] && continue
         dest="${worktree}/${path}"
@@ -313,7 +304,7 @@ function harvest_workspace_into_worktree {
             return 1
         fi
         harvested=1
-    done < <(git -C "${workspace}" status --porcelain --untracked-files=all)
+    done < <(git -C "${workspace}" status --porcelain -z --untracked-files=all)
 
     if [[ ${harvested} -eq 1 ]]; then
         echo "::warning::Harvested maker edits from GITHUB_WORKSPACE into worktree"

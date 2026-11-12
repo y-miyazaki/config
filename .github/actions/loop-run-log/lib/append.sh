@@ -29,6 +29,9 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/check_names
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/git_auth.sh"
+# shellcheck source=../../lib/loop/retention.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/retention.sh"
 
 #######################################
 # Global variables
@@ -69,7 +72,7 @@ function loop_run_log_append_entry {
     local entry_json="${2:?entry_json required}"
     local cutoff tmp_dir kept_lines
 
-    cutoff="$(loop_run_log_prune_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     tmp_dir="$(mktemp -d)"
     kept_lines="${tmp_dir}/kept.jsonl"
 
@@ -383,22 +386,3 @@ function loop_run_log_compute_duration {
     echo $((now_epoch - started_epoch))
 }
 
-#######################################
-# loop_run_log_prune_cutoff_date: Return UTC date string for 30-day prune window
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   YYYY-MM-DD cutoff date to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function loop_run_log_prune_cutoff_date {
-    date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d
-}

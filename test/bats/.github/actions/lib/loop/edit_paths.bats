@@ -11,6 +11,8 @@
 # - collect_allowlist_violations matches docs root markdown via ** glob
 # - collect_allowlist_violations matches nested docs markdown via ** glob
 # - path_matches_glob supports trailing ** directory patterns
+# - path_matches_glob trims blanks and keeps a pattern holding a quote or backslash
+# - collect_denylist_violations still flags a path whose denylist glob holds a quote
 # - path_matches_glob matches a root-level file against a leading ** pattern
 # - path_matches_glob treats a bare ** as matching every path
 # - collect_denylist_violations flags denylisted paths
@@ -34,6 +36,23 @@ source "${_bats_support}/support/common.bash"
 
 setup() {
     bats_source_rel ".github/actions/lib/loop/edit_paths.sh"
+}
+
+@test "path_matches_glob trims blanks and keeps a pattern holding a quote or backslash" {
+    run path_matches_glob "docs/it's.md" "  docs/it's.md  "
+    [ "$status" -eq 0 ]
+    run path_matches_glob "docs/it's.md" "**/it's*"
+    [ "$status" -eq 0 ]
+    run path_matches_glob 'a\b.txt' 'a\b.txt'
+    [ "$status" -eq 0 ]
+    run path_matches_glob "docs/x.md" "   "
+    [ "$status" -eq 1 ]
+}
+
+@test "collect_denylist_violations still flags a path whose denylist glob holds a quote" {
+    AGENT_EDIT_DENYLIST="**/it's*"
+    run collect_denylist_violations "docs/it's.md"
+    [[ $output == *"docs/it's.md"* ]]
 }
 
 @test "collect_allowlist_violations returns nothing when allowlist unset" {

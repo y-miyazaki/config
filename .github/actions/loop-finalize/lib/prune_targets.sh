@@ -29,29 +29,12 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+# shellcheck source=../../lib/loop/retention.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/retention.sh"
 # shellcheck source=../../lib/loop/outcome.sh
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/outcome.sh"
-
-#######################################
-# prune_targets_cutoff_date: UTC YYYY-MM-DD for 30-day window
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Cutoff date to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function prune_targets_cutoff_date {
-    date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d
-}
 
 #######################################
 # prune_targets_terminal_outcomes: List the persisted target outcomes the prune treats as terminal
@@ -115,7 +98,7 @@ function prune_targets_json {
         return 0
     fi
 
-    cutoff="$(prune_targets_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     terminal_outcomes="$(prune_targets_terminal_outcomes "${state_json}")"
 
     jq -c --arg cutoff "${cutoff}" --argjson terminal_outcomes "${terminal_outcomes}" '

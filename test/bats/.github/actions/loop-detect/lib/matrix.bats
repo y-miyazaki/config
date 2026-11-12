@@ -14,6 +14,7 @@
 # - candidate_priority_rank follows DETECT_PRIORITY order
 # - shrink_matrix_candidate_for_output strips result and sets handoff_key
 # - sort_candidates_by_priority puts integration before pull_request by default
+# - sort_candidates_by_priority keeps modes missing from DETECT_PRIORITY, last and in input order
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -178,6 +179,22 @@ setup() {
     shrunk="$(shrink_matrix_candidate_for_output "${candidate}")"
     run jq -e '.handoff_key == "integration:main" and .verifier_context == "" and (.result? | not)' <<< "${shrunk}"
     [ "$status" -eq 0 ]
+}
+
+@test "sort_candidates_by_priority keeps modes missing from DETECT_PRIORITY, last and in input order" {
+    DETECT_PRIORITY="integration"
+    CANDIDATES_JSON=(
+        '{"target_json":{"mode":"pull_request","key":"pull_request:1"},"prompt":"a"}'
+        '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"b"}'
+        '{"target_json":{"mode":"pull_request","key":"pull_request:2"},"prompt":"c"}'
+    )
+
+    sort_candidates_by_priority
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 3 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main" ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}")" = "pull_request:1" ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[2]}")" = "pull_request:2" ]
 }
 
 @test "sort_candidates_by_priority puts integration before pull_request by default" {

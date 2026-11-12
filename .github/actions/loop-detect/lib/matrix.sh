@@ -191,27 +191,19 @@ function sort_candidates_by_priority {
         return 0
     fi
 
-    local -a sorted=()
-    local candidate rank min_rank min_idx i
+    local -a keyed=() sorted=()
+    local i rank
 
-    while [[ ${#sorted[@]} -lt ${#CANDIDATES_JSON[@]} ]]; do
-        min_rank=99
-        min_idx=-1
-        for i in "${!CANDIDATES_JSON[@]}"; do
-            candidate="${CANDIDATES_JSON[$i]}"
-            [[ -z ${candidate} ]] && continue
-            rank=$(candidate_priority_rank "$(jq -r '.target_json.mode' <<< "${candidate}")")
-            if [[ ${rank} -lt ${min_rank} ]]; then
-                min_rank="${rank}"
-                min_idx="${i}"
-            fi
-        done
-        if [[ ${min_idx} -lt 0 ]]; then
-            break
-        fi
-        sorted+=("${CANDIDATES_JSON[$min_idx]}")
-        CANDIDATES_JSON[min_idx]=""
+    # Rank once per candidate, then sort on the zero-padded "rank:index" key. The index keeps the
+    # sort stable, and a mode missing from DETECT_PRIORITY ranks 99 (last) instead of being dropped.
+    for i in "${!CANDIDATES_JSON[@]}"; do
+        [[ -z ${CANDIDATES_JSON[$i]} ]] && continue
+        rank="$(candidate_priority_rank "$(jq -r '.target_json.mode' <<< "${CANDIDATES_JSON[$i]}")")"
+        keyed+=("$(printf '%03d:%06d' "${rank}" "${i}")")
     done
+    while IFS=: read -r _ i; do
+        sorted+=("${CANDIDATES_JSON[$((10#${i}))]}")
+    done < <(printf '%s\n' "${keyed[@]}" | sort)
     CANDIDATES_JSON=("${sorted[@]}")
 }
 

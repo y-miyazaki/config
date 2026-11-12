@@ -116,7 +116,7 @@ setup() {
 
 @test "prune_targets_json clears aged reject fields on integration key" {
     local state out cutoff old
-    cutoff="$(prune_targets_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     old="2020-01-01T00:00:00Z"
     state="$(jq -nc --arg old "${old}" '{
       targets: {

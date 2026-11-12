@@ -13,7 +13,6 @@
 # - loop_run_log_build_entry records skip_detail only when non-empty
 # - loop_run_log_compute_duration returns zero for empty start
 # - loop_run_log_compute_duration returns elapsed seconds
-# - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
 # - loop_run_log_append_entry prunes entries older than 30 days
 # - budget token selection prefers measured usage over tokens_total
 # - loop_run_log_build_entry carries the per-model usage breakdown through unchanged
@@ -162,16 +161,11 @@ _push_concurrent_entry() {
     [ "${result}" -le 15 ]
 }
 
-@test "loop_run_log_prune_cutoff_date returns YYYY-MM-DD" {
-    result="$(loop_run_log_prune_cutoff_date)"
-    [[ ${result} =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
-}
-
 @test "loop_run_log_append_entry prunes entries older than 30 days" {
     local log_file="${TEST_DIR}/loop-run-log.md"
     local cutoff old_date recent_date new_entry
 
-    cutoff="$(loop_run_log_prune_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     old_date="$(date -u -d "${cutoff} - 1 day" +%Y-%m-%dT%H:%M:%SZ)"
     recent_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     new_entry='{"run_id":"'"${recent_date}"'","loop_name":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_total":0,"workflow_run":"1"}'

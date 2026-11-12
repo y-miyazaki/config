@@ -62,14 +62,15 @@ function apply_platform_denylist_default {
 function collect_allowlist_violations {
     local changed_files="$1"
     local violations="" pattern file matched
+    local -a patterns=()
     if [[ -z ${AGENT_EDIT_ALLOWLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${AGENT_EDIT_ALLOWLIST:-}"
+    IFS=',' read -ra patterns <<< "${AGENT_EDIT_ALLOWLIST:-}"
     while IFS= read -r file; do
         [[ -z ${file} ]] && continue
         matched="false"
-        for pattern in "${PATTERNS[@]}"; do
+        for pattern in "${patterns[@]}"; do
             if path_matches_glob "${file}" "${pattern}"; then
                 matched="true"
                 break
@@ -103,11 +104,12 @@ function collect_allowlist_violations {
 function collect_denylist_violations {
     local changed_files="$1"
     local violations="" pattern file
+    local -a patterns=()
     if [[ -z ${AGENT_EDIT_DENYLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${AGENT_EDIT_DENYLIST:-}"
-    for pattern in "${PATTERNS[@]}"; do
+    IFS=',' read -ra patterns <<< "${AGENT_EDIT_DENYLIST:-}"
+    for pattern in "${patterns[@]}"; do
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
             if path_matches_glob "${file}" "${pattern}"; then
@@ -319,7 +321,9 @@ function path_matches_glob {
     local pattern="$2"
     local trimmed ere
 
-    trimmed="$(echo "${pattern}" | xargs)"
+    # Pure parameter-expansion trim: xargs fails on a quote or backslash (the pattern then matched nothing).
+    trimmed="${pattern#"${pattern%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
     [[ -z ${trimmed} ]] && return 1
 
     if [[ ${trimmed} != *[\*\?\[]* ]]; then

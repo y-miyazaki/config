@@ -12,6 +12,8 @@
 #######################################
 
 _ADMISSION_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./retention.sh disable=SC1091
+source "${_ADMISSION_LIB_DIR}/retention.sh"
 if ! declare -f redact_sensitive_text > /dev/null 2>&1; then
     # shellcheck source=./redact.sh disable=SC1091
     source "${_ADMISSION_LIB_DIR}/redact.sh"
@@ -205,7 +207,7 @@ function admission_circuit_breaker_open {
 
     [[ ${consecutive} -ge 3 ]] || return 1
     [[ ${last_run} =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]] || return 0
-    cutoff="$(date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d)"
+    cutoff="$(retention_cutoff_date)"
     [[ ${last_run:0:10} < ${cutoff} ]] && return 1
     return 0
 }
