@@ -80,6 +80,7 @@ nav:
               - Loop Issue Handoff: explanation/loop-engineering/loop-issue-handoff.md
           - Per-loop workflows:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+              - Loop Workflow Design Template: explanation/loop-engineering/workflows/loop-workflow-design-template.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
               - CI Sweeper: explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
               - Docs Updater: explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md
