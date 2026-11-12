@@ -139,7 +139,7 @@ runs:
         set -euo pipefail
         # shellcheck disable=SC1091
         source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
-        resolve_state_file
+        resolve_state_file_emit
 
     - name: Detect Entity Target
       id: detect

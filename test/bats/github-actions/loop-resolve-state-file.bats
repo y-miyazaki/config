@@ -22,52 +22,52 @@ setup() {
     : > "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_state_file uses explicit state_file input" {
+@test "resolve_state_file_emit uses explicit state_file input" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=changelog STATE_FILE_INPUT=.loop/state-custom.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=changelog STATE_FILE_INPUT=.loop/state-custom.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
     [ "$status" -eq 0 ]
     grep -q '^state_file=.loop/state-custom.json$' "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_state_file derives path from loop_name" {
+@test "resolve_state_file_emit derives path from loop_name" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=docs-updater STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=docs-updater STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
     [ "$status" -eq 0 ]
     grep -q '^state_file=.loop/state-docs-updater.json$' "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_state_file emits empty path when inputs missing" {
+@test "resolve_state_file_emit emits empty path when inputs missing" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
     [ "$status" -eq 0 ]
     grep -q '^state_file=$' "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_state_file rejects path traversal" {
+@test "resolve_state_file_emit rejects path traversal" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT=.loop/../outside.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT=.loop/../outside.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
     [ "$status" -eq 1 ]
     [[ $output == *"must match .loop/state-<name>.json"* ]]
 }
 
-@test "resolve_state_file rejects a state file without the hyphen that loop-state-promote lists" {
+@test "resolve_state_file_emit rejects a state file without the hyphen that loop-state-promote lists" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
     local path
     for path in .loop/state_foo.json .loop/state.foo.json; do
-        run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT='"${path}"' GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+        run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT='"${path}"' GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
         [ "$status" -eq 1 ]
     done
 }
 
-@test "resolve_state_file rejects non-loop state path pattern" {
+@test "resolve_state_file_emit rejects non-loop state path pattern" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT=state.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT=state.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file_emit'
     [ "$status" -eq 1 ]
     [[ $output == *"must match .loop/state-<name>.json"* ]]
 }

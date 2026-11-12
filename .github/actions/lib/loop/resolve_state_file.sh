@@ -4,7 +4,7 @@
 #
 # Usage:
 #   source "${GITHUB_ACTION_PATH}/../lib/loop/resolve_state_file.sh"
-#   LOOP_NAME=changelog STATE_FILE_INPUT= GITHUB_OUTPUT=/tmp/out resolve_state_file
+#   LOOP_NAME=changelog STATE_FILE_INPUT= GITHUB_OUTPUT=/tmp/out resolve_state_file_emit
 #
 # Output:
 #   state_file=<path> on GITHUB_OUTPUT (may be empty)
@@ -19,7 +19,7 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check_names.sh"
 
 #######################################
-# resolve_state_file: Resolve state file path
+# resolve_state_file_emit: Resolve state file path
 #
 # Globals:
 #   LOOP_NAME - Loop name for default path
@@ -36,7 +36,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check_names.sh"
 #   0 on success
 #
 #######################################
-function resolve_state_file {
+function resolve_state_file_emit {
     local state_file=""
 
     if [[ -n ${STATE_FILE_INPUT:-} ]]; then
@@ -61,5 +61,5 @@ if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     set -euo pipefail
     umask 027
     export LC_ALL=C.UTF-8
-    resolve_state_file
+    resolve_state_file_emit
 fi
