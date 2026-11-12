@@ -12,7 +12,7 @@
 #######################################
 
 #######################################
-# budget_exceeded: Return 0 when daily budget is exceeded
+# admission_budget_exceeded: Return 0 when daily budget is exceeded
 #
 # Globals:
 #   None
@@ -31,7 +31,7 @@
 #   0 when budget exceeded, 1 otherwise
 #
 #######################################
-function budget_exceeded {
+function admission_budget_exceeded {
     local loop_name="$1"
     local budget_file="$2"
     local run_log_file="$3"
@@ -42,10 +42,10 @@ function budget_exceeded {
     # Split on the single separator space rather than with `read`, which would
     # collapse a leading empty field and shift max_tokens into max_runs when
     # only a token limit is configured.
-    limits="$(read_budget_limits "${loop_name}" "${budget_file}" "${default_runs}" "${default_tokens}")"
+    limits="$(admission_read_budget_limits "${loop_name}" "${budget_file}" "${default_runs}" "${default_tokens}")"
     max_runs="${limits%% *}"
     max_tokens="${limits#* }"
-    max_cost="$(read_budget_cost_limit "${loop_name}" "${budget_file}")"
+    max_cost="$(admission_read_budget_cost_limit "${loop_name}" "${budget_file}")"
     if [[ -z ${max_runs} && -z ${max_tokens} && -z ${max_cost} ]]; then
         return 1
     fi
@@ -108,7 +108,7 @@ function budget_exceeded {
 }
 
 #######################################
-# read_budget_limits: Echo max_runs and max_tokens for loop name
+# admission_read_budget_limits: Echo max_runs and max_tokens for loop name
 #
 # Globals:
 #   None
@@ -126,7 +126,7 @@ function budget_exceeded {
 #   0 on success
 #
 #######################################
-function read_budget_limits {
+function admission_read_budget_limits {
     local loop_name="$1"
     local budget_file="$2"
     local default_runs="$3"
@@ -143,7 +143,7 @@ function read_budget_limits {
 }
 
 #######################################
-# read_budget_cost_limit: Echo the configured daily cost cap for a loop
+# admission_read_budget_cost_limit: Echo the configured daily cost cap for a loop
 #
 # Globals:
 #   None
@@ -159,7 +159,7 @@ function read_budget_limits {
 #   0 on success
 #
 #######################################
-function read_budget_cost_limit {
+function admission_read_budget_cost_limit {
     local loop_name="$1"
     local budget_file="$2"
 
@@ -169,7 +169,7 @@ function read_budget_cost_limit {
 }
 
 #######################################
-# target_circuit_breaker_open: Return 0 while the circuit breaker blocks the target
+# admission_circuit_breaker_open: Return 0 while the circuit breaker blocks the target
 #
 # Description:
 #   Open when consecutive_failures >= 3, but only while last_run is inside the 30-day
@@ -192,7 +192,7 @@ function read_budget_cost_limit {
 #   0 when circuit breaker is open, 1 otherwise
 #
 #######################################
-function target_circuit_breaker_open {
+function admission_circuit_breaker_open {
     local consecutive="$1"
     local last_run="${2:-}"
     local cutoff
@@ -341,7 +341,7 @@ function admission_evaluate {
 
     consecutive="$(jq -r '.consecutive_failures // 0' <<< "${target_state}")"
     last_run="$(jq -r '.last_run // ""' <<< "${target_state}")"
-    if [[ ${consecutive} =~ ^[0-9]+$ ]] && target_circuit_breaker_open "${consecutive}" "${last_run}"; then
+    if [[ ${consecutive} =~ ^[0-9]+$ ]] && admission_circuit_breaker_open "${consecutive}" "${last_run}"; then
         admission_result false "circuit_breaker" "consecutive_failures ${consecutive}"
         return 0
     fi

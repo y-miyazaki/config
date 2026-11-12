@@ -10,7 +10,7 @@
 # - pull_request rejected recent: keep
 # - pull_request with pending: keep even if terminal
 # - pull_request pr_closed aged: delete
-# - pull_request persisted old pr-closed aged: delete (same as pr_closed, via normalize_outcome)
+# - pull_request persisted old pr-closed aged: delete (same as pr_closed, via outcome_normalize)
 # - integration persisted old pr-closed aged: cooldown same as pr_closed
 # - non-terminal outcomes (pr_created, old pr-created, unchanged) aged: keep
 # - missing last_run: keep

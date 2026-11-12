@@ -7,7 +7,7 @@
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 #   source "${loop_action_lib}/outcome.sh"
-#   normalize_outcome "<value>"
+#   outcome_normalize "<value>"
 #   outcome_counter_effect "<value>"
 #   outcome_is_prune_terminal "<value>"
 #
@@ -25,7 +25,7 @@
 #######################################
 
 #######################################
-# normalize_outcome: Map an old persisted outcome value to its current name
+# outcome_normalize: Map an old persisted outcome value to its current name
 #
 # Globals:
 #   None
@@ -41,7 +41,7 @@
 #   0 always
 #
 #######################################
-function normalize_outcome {
+function outcome_normalize {
     local value="${1:-}"
 
     case "${value}" in
@@ -70,7 +70,7 @@ function normalize_outcome {
 #
 #######################################
 function outcome_counter_effect {
-    case "$(normalize_outcome "${1:-}")" in
+    case "$(outcome_normalize "${1:-}")" in
         rejected | pr_closed) echo "increment" ;;
         watch | error) echo "keep" ;;
         *) echo "reset" ;;
@@ -94,7 +94,7 @@ function outcome_counter_effect {
 #
 #######################################
 function outcome_is_prune_terminal {
-    case "$(normalize_outcome "${1:-}")" in
+    case "$(outcome_normalize "${1:-}")" in
         rejected | pr_closed) return 0 ;;
         *) return 1 ;;
     esac

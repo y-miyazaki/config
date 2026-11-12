@@ -4,16 +4,16 @@
 # Tests for .github/actions/lib/loop/admission.sh
 
 # Use cases:
-# - target_circuit_breaker_open trips at three consecutive failures
-# - target_circuit_breaker_open closes after 30 days and stays open without a valid last_run
-# - read_budget_limits prefers budget file over defaults
-# - budget_exceeded trips when daily run count reaches max
-# - budget_exceeded allows runs under the daily cap
-# - budget_exceeded trips when daily token count reaches max
-# - budget_exceeded counts legacy pattern and tokens_estimate log entries
-# - budget_exceeded applies a token-only limit when no run limit is configured
-# - budget_exceeded excludes skipped entries from run and token aggregation
-# - budget_exceeded still counts entries that carry target_key
+# - admission_circuit_breaker_open trips at three consecutive failures
+# - admission_circuit_breaker_open closes after 30 days and stays open without a valid last_run
+# - admission_read_budget_limits prefers budget file over defaults
+# - admission_budget_exceeded trips when daily run count reaches max
+# - admission_budget_exceeded allows runs under the daily cap
+# - admission_budget_exceeded trips when daily token count reaches max
+# - admission_budget_exceeded counts legacy pattern and tokens_estimate log entries
+# - admission_budget_exceeded applies a token-only limit when no run limit is configured
+# - admission_budget_exceeded excludes skipped entries from run and token aggregation
+# - admission_budget_exceeded still counts entries that carry target_key
 # - admission_actor_is_bot is the one bot definition (type Bot, login suffix bot or [bot], app/ prefix)
 # - admission_actor_trusted accepts MEMBER, OWNER and COLLABORATOR on every repository and refuses the rest
 # - admission_evaluate admits a result without a gate and fails closed when the entity state is missing
@@ -37,51 +37,51 @@ teardown() {
     rm -rf "${GUARDS_TMP}"
 }
 
-@test "target_circuit_breaker_open trips at three consecutive failures" {
-    run target_circuit_breaker_open 2
+@test "admission_circuit_breaker_open trips at three consecutive failures" {
+    run admission_circuit_breaker_open 2
     [ "$status" -ne 0 ]
 
-    run target_circuit_breaker_open 3
+    run admission_circuit_breaker_open 3
     [ "$status" -eq 0 ]
 
-    run target_circuit_breaker_open 5
+    run admission_circuit_breaker_open 5
     [ "$status" -eq 0 ]
 }
 
-@test "target_circuit_breaker_open closes after 30 days and stays open without a valid last_run" {
+@test "admission_circuit_breaker_open closes after 30 days and stays open without a valid last_run" {
     local today old recent
     today="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     recent="$(date -u -d '29 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-29d +%Y-%m-%dT%H:%M:%SZ)"
     old="$(date -u -d '31 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-31d +%Y-%m-%dT%H:%M:%SZ)"
 
-    run target_circuit_breaker_open 3 "${today}"
+    run admission_circuit_breaker_open 3 "${today}"
     [ "$status" -eq 0 ]
-    run target_circuit_breaker_open 3 "${recent}"
+    run admission_circuit_breaker_open 3 "${recent}"
     [ "$status" -eq 0 ]
-    run target_circuit_breaker_open 3 "${old}"
+    run admission_circuit_breaker_open 3 "${old}"
     [ "$status" -eq 1 ]
-    run target_circuit_breaker_open 2 "${today}"
+    run admission_circuit_breaker_open 2 "${today}"
     [ "$status" -eq 1 ]
-    run target_circuit_breaker_open 3 ""
+    run admission_circuit_breaker_open 3 ""
     [ "$status" -eq 0 ]
-    run target_circuit_breaker_open 3 "garbage"
+    run admission_circuit_breaker_open 3 "garbage"
     [ "$status" -eq 0 ]
-    run target_circuit_breaker_open 3
+    run admission_circuit_breaker_open 3
     [ "$status" -eq 0 ]
 }
 
-@test "read_budget_limits prefers budget file over defaults" {
+@test "admission_read_budget_limits prefers budget file over defaults" {
     local budget_file
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
     jq -nc '{loops:{"ci-sweeper":{max_runs_per_day:2,max_tokens_per_day:100}}}' > "${budget_file}"
 
-    run read_budget_limits "ci-sweeper" "${budget_file}" "5" "1000000"
+    run admission_read_budget_limits "ci-sweeper" "${budget_file}" "5" "1000000"
     [ "$status" -eq 0 ]
     [ "$output" = "2 100" ]
 }
 
-@test "budget_exceeded trips when daily run count reaches max" {
+@test "admission_budget_exceeded trips when daily run count reaches max" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -91,12 +91,12 @@ teardown() {
     printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"tokens_total\":10}" \
         > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily run budget exceeded"* ]]
 }
 
-@test "budget_exceeded allows runs under the daily cap" {
+@test "admission_budget_exceeded allows runs under the daily cap" {
     local budget_file run_log
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -104,11 +104,11 @@ teardown() {
     jq -nc '{loops:{"ci-sweeper":{max_runs_per_day:5,max_tokens_per_day:1000000}}}' > "${budget_file}"
     : > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -ne 0 ]
 }
 
-@test "budget_exceeded trips when daily token count reaches max" {
+@test "admission_budget_exceeded trips when daily token count reaches max" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -118,12 +118,12 @@ teardown() {
     printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"tokens_total\":100}" \
         > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily token budget exceeded"* ]]
 }
 
-@test "budget_exceeded counts legacy pattern and tokens_estimate log entries" {
+@test "admission_budget_exceeded counts legacy pattern and tokens_estimate log entries" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -133,12 +133,12 @@ teardown() {
     printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"pattern\":\"ci-sweeper\",\"tokens_estimate\":100}" \
         > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily token budget exceeded"* ]]
 }
 
-@test "budget_exceeded applies a token-only limit when no run limit is configured" {
+@test "admission_budget_exceeded applies a token-only limit when no run limit is configured" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/missing-budget.json"
@@ -148,12 +148,12 @@ teardown() {
         > "${run_log}"
 
     # Empty default_runs must not shift default_tokens into the run limit.
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "" "100"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "" "100"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily token budget exceeded"* ]]
 }
 
-@test "budget_exceeded excludes skipped entries from run aggregation" {
+@test "admission_budget_exceeded excludes skipped entries from run aggregation" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/missing-budget.json"
@@ -165,11 +165,11 @@ teardown() {
         printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"outcome\":\"pr-created\"}"
     } > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "2" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "2" "1000000"
     [ "$status" -ne 0 ]
 }
 
-@test "budget_exceeded excludes skipped entries from token aggregation" {
+@test "admission_budget_exceeded excludes skipped entries from token aggregation" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/missing-budget.json"
@@ -178,11 +178,11 @@ teardown() {
     printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"outcome\":\"skipped\",\"tokens_total\":100}" \
         > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "100" "100"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "100" "100"
     [ "$status" -ne 0 ]
 }
 
-@test "budget_exceeded trips when daily cost reaches max" {
+@test "admission_budget_exceeded trips when daily cost reaches max" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -194,12 +194,12 @@ teardown() {
         "{\"run_id\":\"${today}T01:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":10,\"cost_usd\":2.1}" \
         > "${run_log}"
 
-    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    run admission_budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily cost budget exceeded"* ]]
 }
 
-@test "budget_exceeded allows runs under the daily cost cap" {
+@test "admission_budget_exceeded allows runs under the daily cost cap" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -210,11 +210,11 @@ teardown() {
         "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":10,\"cost_usd\":1.5}" \
         > "${run_log}"
 
-    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    run admission_budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
     [ "$status" -ne 0 ]
 }
 
-@test "budget_exceeded falls back to tokens when the engine reports no cost" {
+@test "admission_budget_exceeded falls back to tokens when the engine reports no cost" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -225,12 +225,12 @@ teardown() {
         "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":150}" \
         > "${run_log}"
 
-    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "100"
+    run admission_budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "100"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily token budget exceeded"* ]]
 }
 
-@test "budget_exceeded reads cost from the nested usage object" {
+@test "admission_budget_exceeded reads cost from the nested usage object" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -241,12 +241,12 @@ teardown() {
         "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"usage\":{\"cost_usd\":2.5}}" \
         > "${run_log}"
 
-    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    run admission_budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily cost budget exceeded"* ]]
 }
 
-@test "budget_exceeded still counts entries that carry target_key" {
+@test "admission_budget_exceeded still counts entries that carry target_key" {
     local budget_file run_log today
 
     budget_file="${GUARDS_TMP}/loop-budget.json"
@@ -256,7 +256,7 @@ teardown() {
     printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"ci-sweeper\",\"tokens_total\":10,\"target_key\":\"entity:issue:7\"}" \
         > "${run_log}"
 
-    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    run admission_budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily run budget exceeded"* ]]
 }

@@ -177,7 +177,7 @@ function main {
         exit 1
     fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
+    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
         "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_entity_skip_outputs "budget"

@@ -13,7 +13,7 @@
 #   - Prefer direct push to STATE_BRANCH; open auto-merge state PR when push is blocked
 #   - PR fallback is refused for advance + pr_pushed (delivery pr_push landed on the
 #     PR head; pr_create records pending instead of advance)
-#   - Persisted and passed outcomes are read through normalize_outcome (old names)
+#   - Persisted and passed outcomes are read through outcome_normalize (old names)
 #
 # Output:
 #   Commits state (and optional additional paths) to the resolved push branch
@@ -176,7 +176,7 @@ function commit_and_push_state {
     fi
     echo "${push_err}" >&2
 
-    if is_push_race_error "${push_err}"; then
+    if push_race_is_error "${push_err}"; then
         if retry_state_write; then
             return 0
         fi
@@ -190,7 +190,7 @@ function commit_and_push_state {
     # The state-only PR is not the landed path. Advance mode is reached only by
     # delivery pr_push, whose outcome is pr_pushed. pr_create writes pending mode, so
     # keying this refusal on pr_created would never match and silently disable it.
-    if [[ ${STATE_WRITE_MODE} == "advance" && $(normalize_outcome "${OUTCOME}") == "pr_pushed" ]]; then
+    if [[ ${STATE_WRITE_MODE} == "advance" && $(outcome_normalize "${OUTCOME}") == "pr_pushed" ]]; then
         echo "::error::Direct push to ${PUSH_BRANCH} blocked and state PR fallback refused: advance mode with pr_pushed outcome. Allow direct push to state_branch (ruleset bypass) for delivery pr_push."
         exit 1
     fi
@@ -485,7 +485,7 @@ function retry_state_write {
             return 0
         fi
         echo "${push_err}" >&2
-        if ! is_push_race_error "${push_err}"; then
+        if ! push_race_is_error "${push_err}"; then
             [[ -z ${carry_dir} ]] || rm -rf "${carry_dir}"
             return 1
         fi

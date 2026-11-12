@@ -11,7 +11,7 @@ bats_require_minimum_version 1.5.0
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
 # - apply_scoped_pr_number_filter drops integration and keeps matching PR only
 # - apply_target_cap truncates candidates to fan-out cap
-# - target_circuit_breaker_open blocks append_integration_candidate before detect
+# - admission_circuit_breaker_open blocks append_integration_candidate before detect
 # - build_integration_target_json emits integration mode payload
 # - append_detect_candidate blocks detect when pending PR is open
 # - append_detect_candidate appends candidate when detect reports failures

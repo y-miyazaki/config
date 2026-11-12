@@ -24,7 +24,7 @@
 # - refuses PR fallback for advance + pr_pushed when push is blocked
 # - opens the state PR fallback for advance + pr_created (the refusal keys on pr_pushed only)
 # - state_pr_skip warns when direct push is blocked
-# - is_push_race_error matches fetch first / non-fast-forward and rejects remote rejected
+# - push_race_is_error matches fetch first / non-fast-forward and rejects remote rejected
 # - write_state retries a raced push (non-fast-forward) and keeps both targets
 # - write_state gives up after WRITE_STATE_MAX_RETRIES and opens the state PR fallback
 # - write_state does not retry on remote rejected
@@ -162,19 +162,19 @@ setup() {
     [ "$status" -eq 0 ]
     rm -f "${STATE_TMP}"
 }
-@test "is_push_race_error matches fetch first" {
+@test "push_race_is_error matches fetch first" {
     state_write_source_helpers
-    run is_push_race_error " ! [rejected]        HEAD -> main (fetch first)"
+    run push_race_is_error " ! [rejected]        HEAD -> main (fetch first)"
     [ "$status" -eq 0 ]
 }
-@test "is_push_race_error matches non-fast-forward" {
+@test "push_race_is_error matches non-fast-forward" {
     state_write_source_helpers
-    run is_push_race_error " ! [rejected]        HEAD -> main (non-fast-forward)"
+    run push_race_is_error " ! [rejected]        HEAD -> main (non-fast-forward)"
     [ "$status" -eq 0 ]
 }
-@test "is_push_race_error rejects remote rejected" {
+@test "push_race_is_error rejects remote rejected" {
     state_write_source_helpers
-    run is_push_race_error " ! [remote rejected] HEAD -> main (pre-receive hook declined)"
+    run push_race_is_error " ! [remote rejected] HEAD -> main (pre-receive hook declined)"
     [ "$status" -eq 1 ]
 }
 @test "run.sh clear_pending mode clears pending without advancing last_sha" {

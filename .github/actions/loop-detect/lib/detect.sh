@@ -1101,7 +1101,7 @@ function target_state_blocks_candidate {
     local consecutive="$3"
     local pending_pr
 
-    if target_circuit_breaker_open "${consecutive}" "$(jq -r '.last_run // empty' <<< "${target_state}")"; then
+    if admission_circuit_breaker_open "${consecutive}" "$(jq -r '.last_run // empty' <<< "${target_state}")"; then
         echo "::warning::Circuit breaker open for ${target_key}"
         CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
         return 0
@@ -1404,7 +1404,7 @@ function main {
         return 0
     fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_detect_outputs "false" "budget" "[]"
         write_legacy_outputs "[]"

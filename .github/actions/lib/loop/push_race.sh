@@ -6,7 +6,7 @@
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 #   source "${loop_action_lib}/push_race.sh"
-#   if is_push_race_error "${push_err}"; then ...; fi
+#   if push_race_is_error "${push_err}"; then ...; fi
 #
 # Design Rules:
 #   - Functions are pure: no globals are read or written
@@ -17,7 +17,7 @@
 #######################################
 
 #######################################
-# is_push_race_error: Detect a push rejected because the remote moved
+# push_race_is_error: Detect a push rejected because the remote moved
 #
 # Globals:
 #   None
@@ -32,7 +32,7 @@
 #   0 for "! [rejected] ... (fetch first|non-fast-forward)" without "[remote rejected]", 1 otherwise
 #
 #######################################
-function is_push_race_error {
+function push_race_is_error {
     local text="$1"
 
     if [[ ${text} == *"[remote rejected]"* ]]; then

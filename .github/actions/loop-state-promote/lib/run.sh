@@ -177,7 +177,7 @@ function commit_changed_state_files {
 
     # A push that lost a race is replayed: the caller fetches the latest state and applies
     # the update again, so a concurrent state write is never overwritten
-    if is_push_race_error "${push_err}" && [[ ${PROMOTE_ATTEMPT} -lt ${PROMOTE_MAX_RETRIES} ]]; then
+    if push_race_is_error "${push_err}" && [[ ${PROMOTE_ATTEMPT} -lt ${PROMOTE_MAX_RETRIES} ]]; then
         return "${PUSH_RACE_RETRY_STATUS}"
     fi
 
