@@ -8,7 +8,7 @@
 # - merge conflicts fail closed without updating to.branch
 # - the landing merge commit carries no [skip ci] so PR checks run on the new head
 # - identical agent and to.branch names are rejected
-# - invalid branch names are rejected
+# - invalid branch names are rejected, including a leading dash that git would read as an option
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -144,4 +144,13 @@ push_target_run() {
     push_target_run
     [ "$status" -eq 1 ]
     [[ $output == *"invalid agent branch"* ]]
+}
+
+@test "push_target rejects a branch name with a leading dash" {
+    push_target_git_setup
+    AGENT_BRANCH="loop/ok"
+    TO_BRANCH="--upload-pack=x"
+    push_target_run
+    [ "$status" -eq 1 ]
+    [[ $output == *"invalid to.branch"* ]]
 }

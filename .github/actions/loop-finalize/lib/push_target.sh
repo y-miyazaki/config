@@ -65,11 +65,11 @@ function main {
     : "${TO_BRANCH:?TO_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 
-    if ! [[ ${AGENT_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! [[ ${AGENT_BRANCH} =~ ^[a-zA-Z0-9_./][a-zA-Z0-9/_.-]*$ ]]; then
         echo "::error::push_target: invalid agent branch: ${AGENT_BRANCH}" >&2
         exit 1
     fi
-    if ! [[ ${TO_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! [[ ${TO_BRANCH} =~ ^[a-zA-Z0-9_./][a-zA-Z0-9/_.-]*$ ]]; then
         echo "::error::push_target: invalid to.branch: ${TO_BRANCH}" >&2
         exit 1
     fi

@@ -313,7 +313,7 @@ function harvest_workspace_into_worktree {
             return 1
         fi
         harvested=1
-    done < <(git -C "${workspace}" status --porcelain)
+    done < <(git -C "${workspace}" status --porcelain --untracked-files=all)
 
     if [[ ${harvested} -eq 1 ]]; then
         echo "::warning::Harvested maker edits from GITHUB_WORKSPACE into worktree"

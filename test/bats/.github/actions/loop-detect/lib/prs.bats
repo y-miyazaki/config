@@ -15,6 +15,7 @@
 # - list_open_prs still drops bot-authored PRs when scanning without a scoped number
 # - pr_excluded excludes draft when draft token is set
 # - pr_excluded excludes fork when fork token is set
+# - pr_excluded fork token excludes a cross-repository PR whose fork was deleted
 # - pr_excluded excludes label match
 # - pr_excluded excludes wip_title when token is set
 # - pr_excluded wip_title matches wip as a word in any case and not words that start with wip
@@ -100,6 +101,16 @@ pr_json_with_labels() {
     pr='{"number":1,"title":"fix","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":true}}'
     run pr_excluded "${pr}" "fork" ""
     [ "$status" -eq 0 ]
+}
+
+@test "pr_excluded fork token excludes a cross-repository PR whose fork was deleted" {
+    local pr
+    pr='{"number":1,"title":"t","isDraft":false,"isCrossRepository":true,"author":{"login":"alice"},"labels":[],"headRepository":null}'
+    run pr_excluded "${pr}" "fork" ""
+    [ "$status" -eq 0 ]
+    pr='{"number":1,"title":"t","isDraft":false,"isCrossRepository":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "fork" ""
+    [ "$status" -eq 1 ]
 }
 
 @test "pr_excluded excludes label match" {

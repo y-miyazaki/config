@@ -7,6 +7,7 @@ bats_require_minimum_version 1.5.0
 #
 # Use cases:
 # - create_pr exits cleanly after PR creation (EXIT trap must not reference local scope)
+# - create_pr keeps gh stderr notices out of the PR url
 # - create_pr records redacted failure when gh pr create fails
 # - create_pr threads OUTCOME into the rendered PR body loop meta block
 # - ci-sweeper Failure context comes from the handoff-resolved detect JSON (no inline input)
@@ -46,6 +47,9 @@ if [[ "$1" == "pr" && "$2" == "create" ]]; then
     if [[ "${GH_PR_CREATE_FAIL:-}" == "1" ]]; then
         echo "error: x-access-token:ghp_[REDACTED:GitHub token] denied" >&2
         exit 1
+    fi
+    if [[ "${GH_PR_CREATE_NOISE:-}" == "1" ]]; then
+        echo "warning: a new gh version is available" >&2
     fi
     echo "https://github.com/example/repo/pull/42"
     exit 0
@@ -96,6 +100,31 @@ teardown() {
     run bash "${script}"
     [ "$status" -eq 0 ]
     [[ $output == *"https://github.com/example/repo/pull/42"* ]]
+}
+
+@test "create_pr keeps gh stderr notices out of the PR url" {
+    local script out
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    out="${BATS_TEST_TMPDIR}/github_output"
+    : > "${out}"
+    export AGENT_BRANCH="loop/test-branch"
+    export GH_PR_CREATE_NOISE="1"
+    export GITHUB_OUTPUT="${out}"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    grep -qxF 'url=https://github.com/example/repo/pull/42' "${out}"
+    grep -qxF 'number=42' "${out}"
 }
 
 @test "create_pr records redacted failure when gh pr create fails" {

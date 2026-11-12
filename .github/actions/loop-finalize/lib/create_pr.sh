@@ -86,7 +86,7 @@ function main {
     local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
-    local composed url number pr_err
+    local composed url number pr_err pr_err_path pr_failed
     local -a pr_label_names=()
 
     : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
@@ -143,7 +143,16 @@ function main {
         gh_args+=(--draft)
     fi
 
-    if ! pr_err="$(ensure_repo_labels "${pr_label_names[@]}" 2>&1)" || ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then
+    # gh prints the PR URL on stdout; warnings and notices on stderr must not end up in the URL.
+    pr_err_path="$(mktemp "${work_dir}/err.XXXXXX")"
+    pr_failed="false"
+    if ! pr_err="$(ensure_repo_labels "${pr_label_names[@]}" 2>&1)"; then
+        pr_failed="true"
+    elif ! url="$(gh pr create "${gh_args[@]}" 2> "${pr_err_path}")"; then
+        pr_failed="true"
+        pr_err="$(cat "${pr_err_path}")"
+    fi
+    if [[ ${pr_failed} == "true" ]]; then
         if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
@@ -153,7 +162,7 @@ function main {
         printf '%s\n' "${pr_err}" >&2
         exit 1
     fi
-    url="${pr_err}"
+    url="$(tail -n 1 <<< "${url}")"
     number="$(gh pr view "${url}" --json number --jq '.number')"
     printf '%s\n' "${url}"
 

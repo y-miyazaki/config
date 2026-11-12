@@ -7,6 +7,7 @@ bats_require_minimum_version 1.5.0
 # Use cases:
 # - run_agent_capture preserves USAGE_* unlike pipe to tee
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
+# - harvest_workspace_into_worktree copies files inside a new untracked directory
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree is a no-op when workspace equals worktree
 # - harvest_workspace_into_worktree harvests a renamed file instead of failing
@@ -143,6 +144,26 @@ STUB
     harvest_workspace_into_worktree
     [[ "$(cat "${wt}/foo.txt")" == "edited" ]]
     [[ "$(cat "${wt}/added.txt")" == "new" ]]
+}
+
+@test "harvest_workspace_into_worktree copies files inside a new untracked directory" {
+    local ws wt
+
+    ws="${BATS_TEST_TMPDIR}/ws-newdir"
+    wt="${BATS_TEST_TMPDIR}/wt-newdir"
+    bats_git_fresh_repo "${ws}"
+    bats_git_fresh_repo "${wt}"
+    printf 'orig\n' > "${ws}/foo.txt"
+    printf 'orig\n' > "${wt}/foo.txt"
+    bats_git_commit "${ws}" "init"
+    bats_git_commit "${wt}" "init"
+    mkdir -p "${ws}/docs/new-guide"
+    printf 'guide\n' > "${ws}/docs/new-guide/a.md"
+
+    GITHUB_WORKSPACE="${ws}"
+    WORKTREE_PATH="${wt}"
+    harvest_workspace_into_worktree
+    [[ "$(cat "${wt}/docs/new-guide/a.md")" == "guide" ]]
 }
 
 @test "harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE" {

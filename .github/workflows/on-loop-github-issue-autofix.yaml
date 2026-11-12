@@ -11,10 +11,13 @@
 #   Both jobs run in items mode: state keys are per Issue (integration:main#issue:<N>)
 #
 # Design Rules:
-#   None
+#   - The webhook and schedule paths share one concurrency group per Issue; the schedule path uses loop-state-main
+#   - The maker never calls repository_dispatch; edits stay outside .github/workflows/** (agent_edit_denylist)
+#   - The loop and loop-scheduled jobs keep identical maker, checker and tool settings (enforced by Bats)
 #
 # Dependencies:
-#   None
+#   - Requires repository secrets: AGENT_TOKEN (engine API key), MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY
+#   - Requires the Issue label autofix (webhook path) and loop:code-review (scan path)
 #
 # References:
 #   - Design: docs/superpowers/specs/2026-11-11-loop-scheduled-intake-design.md

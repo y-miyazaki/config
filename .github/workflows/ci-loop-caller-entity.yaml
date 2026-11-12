@@ -253,6 +253,7 @@ jobs:
       actions: write
       contents: read
       issues: read
+      pull-requests: read
     outputs:
       delivery: ${{ steps.detect.outputs.delivery }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}

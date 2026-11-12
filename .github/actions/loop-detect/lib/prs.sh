@@ -58,7 +58,7 @@ function list_open_prs {
             return 1
         fi
         pr_line="$(gh pr view "${DETECT_PR_NUMBER}" --json \
-            number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository,state \
+            number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository,state \
             2> /dev/null || true)"
         if [[ -z ${pr_line} ]]; then
             return 0
@@ -75,7 +75,7 @@ function list_open_prs {
     fi
 
     prs_json="$(gh pr list --state open --limit 50 --json \
-        number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
+        number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
 
     while IFS= read -r pr_line; do
         [[ -z ${pr_line} ]] && continue
@@ -116,7 +116,8 @@ function pr_excluded {
     split_csv "${exclude_csv}" exclude_tokens
     author_login=$(jq -r '.author.login // ""' <<< "${pr_json}")
     is_draft=$(jq -r '.isDraft // false' <<< "${pr_json}")
-    is_fork=$(jq -r '.headRepository.isFork // false' <<< "${pr_json}")
+    # isCrossRepository also covers a deleted fork, whose headRepository is null
+    is_fork=$(jq -r '(.isCrossRepository // false) or (.headRepository.isFork // false)' <<< "${pr_json}")
     labels_json=$(jq -c '.labels // []' <<< "${pr_json}")
 
     for token in "${exclude_tokens[@]}"; do
