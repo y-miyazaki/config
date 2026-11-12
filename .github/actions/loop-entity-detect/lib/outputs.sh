@@ -10,16 +10,72 @@
 # Design Rules:
 # - Multiline values use heredoc delimiters on GITHUB_OUTPUT
 # - Detect outputs mirror loop-detect write_detect_outputs shape
+# - A detect-script skip is published as skip_reason domain:<slug> plus a one-line, redacted skip_detail
 #######################################
 
 _ENTITY_OUTPUTS_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! declare -f redact_sensitive_text > /dev/null 2>&1; then
+    # shellcheck source=../../lib/loop/redact.sh disable=SC1091
+    source "${_ENTITY_OUTPUTS_LIB_DIR}/../../lib/loop/redact.sh"
+fi
 if ! declare -f derive_pr_auto_merge > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
     source "${_ENTITY_OUTPUTS_LIB_DIR}/../../lib/loop/delivery.sh"
 fi
 
 #######################################
-# write_entity_detect_outputs: Write should_run, skip_reason, delivery, pr_auto_merge, target_matrix
+# resolve_entity_skip_detail: Build the one-line, redacted detail of a detect-script skip
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Path to the detect JSON file
+#
+# Outputs:
+#   The detect message on one line, redacted and cut to 300 characters (empty when absent)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function resolve_entity_skip_detail {
+    local detect_file="$1"
+    local message
+
+    message="$(jq -r '(.message // "") | tostring' "${detect_file}" 2> /dev/null || true)"
+    admission_skip_detail "${message}"
+}
+
+#######################################
+# resolve_entity_skip_reason: Build the skip_reason of a detect-script skip
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Path to the detect JSON file
+#
+# Outputs:
+#   domain:<slug>; slug is the detect JSON skip_reason when it matches ^[a-z0-9_]+$, else detect
+#
+# Returns:
+#   0 always
+#
+#######################################
+function resolve_entity_skip_reason {
+    local detect_file="$1"
+    local slug
+
+    slug="$(jq -r '(.skip_reason // .result.skip_reason // "") | tostring' "${detect_file}" 2> /dev/null || true)"
+    if [[ ! ${slug} =~ ^[a-z0-9_]+$ ]]; then
+        slug="detect"
+    fi
+    printf 'domain:%s' "${slug}"
+}
+
+#######################################
+# write_entity_detect_outputs: Write should_run, skip_reason, skip_detail, delivery, pr_auto_merge, target_matrix
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
@@ -29,6 +85,7 @@ fi
 #   $1 - should_run (true|false)
 #   $2 - skip_reason
 #   $3 - target_matrix JSON array string
+#   $4 - skip_detail (optional, one line)
 #
 # Outputs:
 #   None
@@ -41,11 +98,13 @@ function write_entity_detect_outputs {
     local should_run="$1"
     local skip_reason="$2"
     local target_matrix_json="$3"
+    local skip_detail="${4:-}"
     local delim
 
     {
         echo "should_run=${should_run}"
         echo "skip_reason=${skip_reason}"
+        echo "skip_detail=${skip_detail}"
         echo "delivery=${DELIVERY:-}"
         echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"

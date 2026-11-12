@@ -25,7 +25,7 @@ _LOOP_ENTITY_DETECT_LIB_LOADED=true
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck disable=SC1091
-source "${LIB_DIR}/../../loop-detect/lib/guards.sh"
+source "${LIB_DIR}/../../lib/loop/admission.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/outputs.sh"
 # shellcheck disable=SC1091

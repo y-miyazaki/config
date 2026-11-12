@@ -215,7 +215,7 @@ function build_comment_body {
     fi
 
     next_step=""
-    if [[ $(normalize_outcome "${OUTCOME}") == "pr_created" && -n ${FIX_PR_URL} ]]; then
+    if [[ $(outcome_normalize "${OUTCOME}") == "pr_created" && -n ${FIX_PR_URL} ]]; then
         if [[ ${PR_AUTO_MERGE} == "true" ]]; then
             next_step="**Next step (L3):** Bot fix PR will auto-merge when checks pass. Wait for CI on this PR after merge."
         else

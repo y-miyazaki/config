@@ -11,8 +11,8 @@
 # - Consume issue facts from environment variables
 # - Hydrate ISSUE_NUMBER from GITHUB_EVENT_PATH when unset
 # - Skip when an open/draft PR already closes the Issue (Fixes/Close/Resolve #N)
-# - Single-Issue mode skips when the Issue is not open (state other than "open"); fails closed when
-#   the Issue state cannot be read
+# - Single-Issue mode reports the Issue state as the fact result.gate.entity.state (items mode: per item
+#   gate); the admission gate decides on it. Fails closed when the state cannot be read
 # - Scan mode (AUTOFIX_SCAN=true): list qualifying Issues as result.items (oldest first, max 50,
 #   never truncated to the platform detect_max_targets); no ISSUE_NUMBER required
 # - Scan mode qualifies Issues: open, not a PR, AUTOFIX_SOURCE_LABEL present, no autofix label,
@@ -272,12 +272,13 @@ function validate_pr_scan_limit {
 }
 
 #######################################
-# issue_is_open: Return whether the Issue is open
+# resolve_issue_state: Read the Issue state fact into ISSUE_STATE
 #
 # Globals:
 #   GITHUB_REPOSITORY
 #   GH_TOKEN
 #   GITHUB_TOKEN
+#   ISSUE_STATE (set; open | closed)
 #
 # Arguments:
 #   $1 - Issue number
@@ -286,24 +287,24 @@ function validate_pr_scan_limit {
 #   None
 #
 # Returns:
-#   0 when the Issue state is "open"; 1 otherwise (calls output_error when gh or jq fails)
+#   0 on success; calls output_error (exit 1) when gh or jq fails. Not run in a subshell so
+#   output_error can emit the error JSON
 #
 # Usage:
-#   if ! issue_is_open "${ISSUE_NUMBER}"; then skip="true"; fi
+#   resolve_issue_state "${ISSUE_NUMBER}"
 #
 #######################################
-function issue_is_open {
+function resolve_issue_state {
     local issue_number="$1"
-    local issue state
+    local issue
 
     export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
     if ! issue="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${issue_number}" 2> /dev/null)"; then
         output_error "github-issue-autofix: failed to read Issue #${issue_number}"
     fi
-    if ! state="$(jq -er '.state' <<< "${issue}" 2> /dev/null)"; then
+    if ! ISSUE_STATE="$(jq -er '.state' <<< "${issue}" 2> /dev/null)"; then
         output_error "github-issue-autofix: unreadable state for Issue #${issue_number}"
     fi
-    [[ ${state} == "open" ]]
 }
 
 #######################################
@@ -354,6 +355,29 @@ function open_pr_fixes_issue {
 }
 
 #######################################
+# build_gate_json: Build the result.gate facts of the Issue
+#
+# Globals:
+#   ISSUE_NUMBER
+#   ISSUE_STATE
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   {"entity":{"kind":"issue","number":N,"state":S}} on stdout (no trigger: the admission gate
+#   skips the actor and mention checks without a webhook source)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function build_gate_json {
+    jq -nc --argjson n "${ISSUE_NUMBER}" --arg state "${ISSUE_STATE:-}" \
+        '{entity: {kind: "issue", number: $n, state: $state}}'
+}
+
+#######################################
 # build_result_json: Build the result object JSON
 #
 # Globals:
@@ -373,7 +397,10 @@ function open_pr_fixes_issue {
 #
 #######################################
 function build_result_json {
-    json_object issue_number "${ISSUE_NUMBER}"
+    local gate
+    gate="$(build_gate_json)"
+    jq -nc --arg issue_number "${ISSUE_NUMBER}" --argjson gate "${gate}" \
+        '{issue_number: $issue_number, gate: $gate}'
 }
 
 #######################################
@@ -381,6 +408,7 @@ function build_result_json {
 #
 # Globals:
 #   ISSUE_NUMBER
+#   ISSUE_STATE
 #   AUTOFIX_ITEMS
 #
 # Arguments:
@@ -415,10 +443,11 @@ function output_json {
         if [[ ${skip} == "true" ]]; then
             result_json="{}"
         else
-            result_json="$(jq -n -c --argjson n "${ISSUE_NUMBER}" '{items: [{
+            result_json="$(jq -n -c --argjson n "${ISSUE_NUMBER}" --argjson gate "$(build_gate_json)" '{items: [{
                 key: ("issue:" + ($n | tostring)),
                 entity: {kind: "issue", number: $n},
-                context: {issue_number: $n}
+                context: {issue_number: $n},
+                gate: $gate
             }]}')"
         fi
     else
@@ -844,10 +873,8 @@ function main {
     ensure_pr_scan_prerequisites
     validate_pr_scan_limit
 
-    if ! issue_is_open "${ISSUE_NUMBER}"; then
-        skip="true"
-        message="github-issue-autofix: Issue #${ISSUE_NUMBER} is not open"
-    elif open_pr_fixes_issue "${ISSUE_NUMBER}"; then
+    resolve_issue_state "${ISSUE_NUMBER}"
+    if open_pr_fixes_issue "${ISSUE_NUMBER}"; then
         skip="true"
         message="github-issue-autofix: open/draft PR already references Fixes #${ISSUE_NUMBER}"
     else

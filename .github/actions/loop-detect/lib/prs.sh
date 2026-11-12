@@ -11,6 +11,7 @@
 # - Applies DETECT_PR_DENYLIST tokens
 # - Applies DETECT_PR_BOT_ALLOWLIST opt-in when scanning
 # - Bypasses the bot-author heuristic when DETECT_PR_NUMBER names the PR
+# - Bot authors are identified by admission_actor_is_bot (lib/loop/admission.sh, sourced by _init.sh)
 #######################################
 
 #######################################
@@ -148,7 +149,7 @@ function pr_excluded {
     # number selected this target (a human mention on that PR), the human has
     # already chosen it, so author provenance must not veto them. Token
     # exclusions above (fork / draft / wip_title / label:*) still apply.
-    if [[ ${scoped_intake} != "true" && ${author_login} == *[bB][oO][tT] ]]; then
+    if [[ ${scoped_intake} != "true" ]] && admission_actor_is_bot "" "${author_login}"; then
         local -a include_bots=()
         local bot allowed="false"
         split_csv "${include_bots_csv}" include_bots

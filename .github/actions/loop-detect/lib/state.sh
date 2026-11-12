@@ -159,6 +159,51 @@ function target_last_sha {
 }
 
 #######################################
+# target_state_apply_merged_pending: Treat a merged pending fix PR as promoted
+#
+# Description:
+#   loop-state-promote promotes pending to last_sha only for a PR that carries the loop label. A
+#   merged pending PR whose label was removed would leave last_sha behind, so detect would scan the
+#   range the PR already covered. This function applies the promotion to the in-memory state only
+#   (detect never writes state): last_sha becomes pending.sha and pending is dropped.
+#
+# Globals:
+#   GITHUB_TOKEN - Used for the live PR state lookup
+#
+# Arguments:
+#   $1 - Target state JSON
+#
+# Outputs:
+#   Target state JSON on stdout (promoted when the pending PR is MERGED, unchanged otherwise)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function target_state_apply_merged_pending {
+    local target_state="$1"
+    local pending_pr pr_state
+
+    if ! jq -e '(.pending.pr | type) == "number" and (.pending.sha | type) == "string"' <<< "${target_state}" > /dev/null 2>&1; then
+        printf '%s' "${target_state}"
+        return 0
+    fi
+    if [[ -z ${GITHUB_TOKEN:-} ]] || ! command -v gh > /dev/null 2>&1; then
+        printf '%s' "${target_state}"
+        return 0
+    fi
+
+    pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
+    pr_state="$(gh pr view "${pending_pr}" --json state --jq '.state' 2> /dev/null || true)"
+    if [[ ${pr_state} == "MERGED" ]]; then
+        echo "::notice::Pending PR #${pending_pr} is MERGED; promoting pending.sha to last_sha for this run" >&2
+        jq -c '.last_sha = .pending.sha | del(.pending)' <<< "${target_state}"
+        return 0
+    fi
+    printf '%s' "${target_state}"
+}
+
+#######################################
 # target_pending_blocks_detect: Return 0 when an open pending fix PR blocks detect
 #
 # Globals:

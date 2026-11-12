@@ -456,6 +456,11 @@ function is_loop_maintenance_commit {
     local scope="$2"
     local subject="$3"
 
+    # A squash merge appends " (#N)" to the subject; match the maintenance subjects without it
+    if [[ ${subject} =~ ^(.*)\ \(#[0-9]+\)$ ]]; then
+        subject="${BASH_REMATCH[1]}"
+    fi
+
     if [[ ${commit_type} == "chore" && ${scope} == "changelog" ]]; then
         return 0
     fi

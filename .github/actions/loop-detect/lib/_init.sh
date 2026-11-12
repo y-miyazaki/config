@@ -26,7 +26,7 @@ LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/branches.sh"
 # shellcheck disable=SC1091
-source "${LIB_DIR}/guards.sh"
+source "${LIB_DIR}/../../lib/loop/admission.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/state.sh"
 # shellcheck disable=SC1091
@@ -78,3 +78,9 @@ declare -a OPEN_PRS_JSON=()
 CIRCUIT_BREAKER_BLOCKED=0
 # shellcheck disable=SC2034
 PENDING_PR_BLOCKED=0
+# shellcheck disable=SC2034
+GATE_BLOCKED=0
+# shellcheck disable=SC2034
+GATE_BLOCK_REASON=""
+# shellcheck disable=SC2034
+SKIP_DETAIL=""

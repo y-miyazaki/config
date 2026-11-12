@@ -176,6 +176,11 @@ mk_issue() {
          user:{type:"Bot"}, body:("<!-- src:marker:abc --> body " + ($n|tostring))} + $extra'
 }
 
+# assert_proceed: the output is a proceed result for the Issue and carries the open-state gate fact.
+assert_proceed() {
+    assert_jq ".status == \"ok\" and .skip == false and .message == \"github-issue-autofix: proceed\" and .result.issue_number == \"$1\" and .result.gate.entity == {kind:\"issue\",number:$1,state:\"open\"}"
+}
+
 # Assert helper: fails the test when output is not the expected jq truth.
 assert_jq() {
     local expr="$1"
@@ -400,7 +405,7 @@ EOF
     unset AUTOFIX_SCAN
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"12"}}' ]
+    assert_proceed 12
 }
 
 @test "scan: missing required env yields status error and exit 1" {
@@ -456,7 +461,7 @@ EOF
     ISSUE_NUMBER=7 AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     assert_jq '.status == "ok" and .skip == false and (.message | length) > 0'
-    assert_jq '.result == {items:[{key:"issue:7",entity:{kind:"issue",number:7},context:{issue_number:7}}]}'
+    assert_jq '.result == {items:[{key:"issue:7",entity:{kind:"issue",number:7},context:{issue_number:7},gate:{entity:{kind:"issue",number:7,state:"open"}}}]}'
 }
 
 @test "items: AUTOFIX_ITEMS=true skips with empty result when ISSUE_NUMBER is empty" {
@@ -481,10 +486,10 @@ EOF
     unset AUTOFIX_SCAN
     ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+    assert_proceed 7
     ISSUE_NUMBER=7 AUTOFIX_ITEMS=false run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+    assert_proceed 7
 }
 
 @test "items: single-issue open PR list with broken JSON yields status error" {
@@ -496,23 +501,22 @@ EOF
     assert_jq '.status == "error" and .skip == true'
 }
 
-@test "single-issue: skips when the Issue is closed" {
+@test "single-issue: reports a closed Issue as a gate fact and leaves the decision to the gate" {
     setup_scan_stub
     unset AUTOFIX_SCAN
     printf '%s' '{"state":"closed"}' > "${FIX}/issue_state_7.json"
     ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    assert_jq '.status == "ok" and .skip == true and (.message | test("not open"))'
-    run ! grep -q -- 'pr list' "${FIX}/calls.log"
+    assert_jq '.status == "ok" and .skip == false and .result.gate.entity == {kind:"issue",number:7,state:"closed"}'
 }
 
-@test "single-issue: closed Issue with AUTOFIX_ITEMS=true skips with empty result" {
+@test "single-issue: closed Issue with AUTOFIX_ITEMS=true carries the closed state on the item" {
     setup_scan_stub
     unset AUTOFIX_SCAN
     printf '%s' '{"state":"closed"}' > "${FIX}/issue_state_7.json"
     ISSUE_NUMBER=7 AUTOFIX_ITEMS=true run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    assert_jq '.skip == true and .result == {}'
+    assert_jq '.skip == false and .result.items[0].gate.entity.state == "closed"'
 }
 
 @test "single-issue: fails closed when the Issue state cannot be read" {
@@ -548,7 +552,7 @@ EOF
     unset AUTOFIX_SCAN
     ISSUE_NUMBER=7 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+    assert_proceed 7
     grep -q -- '--state open.*--limit 1000' "${FIX}/calls.log"
     rm -f "${FIX}/calls.log"
     ISSUE_NUMBER=7 AUTOFIX_PR_SCAN_LIMIT=5 run bash "${DETECT_SCRIPT}"
@@ -571,7 +575,7 @@ EOF
     jq -n -c '[range(0;2) as $n | {number:$n,title:"t",body:"",isDraft:false}]' > "${FIX}/open_prs.json"
     ISSUE_NUMBER=7 AUTOFIX_PR_SCAN_LIMIT=3 run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    [ "${output}" = '{"status":"ok","skip":false,"message":"github-issue-autofix: proceed","result":{"issue_number":"7"}}' ]
+    assert_proceed 7
 }
 
 @test "limit: single-issue mode rejects an invalid AUTOFIX_PR_SCAN_LIMIT" {

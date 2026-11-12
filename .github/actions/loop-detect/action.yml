@@ -172,6 +172,9 @@ outputs:
   should_run:
     description: "Whether the execute job should run"
     value: ${{ steps.detect.outputs.should_run }}
+  skip_detail:
+    description: "One-line, redacted detail of the first skip (a detect script message or an admission detail; empty when the run proceeds)"
+    value: ${{ steps.detect.outputs.skip_detail }}
   skip_reason:
     description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | target_budget | checkout_failed | config_error | pending_pr | pr_number_missing). Invalid level/delivery inputs and non-zero detect-script exit fail the step without skip_reason outputs."
     value: ${{ steps.detect.outputs.skip_reason }}

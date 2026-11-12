@@ -11,6 +11,7 @@
 # - Consume issue event fields from environment variables
 # - Skip bot actors and bot issue comments
 # - result.entity.kind is always issue (the loop entity platform requires it when skip=false)
+# - result.gate.entity carries the Issue state fact when it is known (event payload or API); the admission gate decides on it
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 on success; fatal errors emit status=error JSON and exit 1
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/apm/sync_skill_lib.sh)
@@ -173,6 +174,7 @@ function hydrate_issue_env_from_event {
     ISSUE_COMMENT_ID="${comment_id}"
     ISSUE_ACTOR="$(jq -r '.sender.login // ""' <<< "${event_json}")"
     ISSUE_ACTOR_TYPE="$(jq -r '.sender.type // ""' <<< "${event_json}")"
+    ISSUE_STATE="$(jq -r '.issue.state // ""' <<< "${event_json}")"
     ISSUE_COMMENT_USER_TYPE="$(jq -r '.comment.user.type // ""' <<< "${event_json}")"
 }
 
@@ -237,6 +239,9 @@ function hydrate_issue_from_api_if_needed {
     ISSUE_EVENT_ACTION="${ISSUE_EVENT_ACTION:-workflow_dispatch}"
     ISSUE_ACTOR="${ISSUE_ACTOR:-${GITHUB_ACTOR:-}}"
     ISSUE_ACTOR_TYPE="${ISSUE_ACTOR_TYPE:-User}"
+    if [[ -z ${ISSUE_STATE:-} ]]; then
+        ISSUE_STATE="$(jq -r '.state // ""' <<< "${issue_json}")"
+    fi
 }
 
 #######################################
@@ -452,6 +457,11 @@ function output_json {
     local result_json verifier_context
 
     result_json="$(build_result_json)"
+    # The entity state is a fact for the admission gate; it is reported only when it is known
+    if [[ -n ${ISSUE_STATE:-} ]]; then
+        result_json="$(jq -c --argjson n "${ISSUE_NUMBER}" --arg state "${ISSUE_STATE}" \
+            '. + {gate: {entity: {kind: "issue", number: $n, state: $state}}}' <<< "${result_json}")"
+    fi
     verifier_context="$(build_verifier_context)"
 
     json_object \

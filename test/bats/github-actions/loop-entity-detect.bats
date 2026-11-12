@@ -15,6 +15,11 @@ bats_require_minimum_version 1.5.0
 # - main fails when skip is false and result.entity.kind is missing or invalid
 # - main fails when the entity target kind is not allowed by delivery
 # - main skips when daily budget is exceeded
+# - main publishes skip_reason domain:<slug> and a one-line redacted skip_detail when the detect script skips
+# - action.yml exposes skip_detail
+# - main skips with the admission reason when result.gate refuses the entity and proceeds when it admits
+# - main applies the circuit breaker from the checked-out state file to the entity key
+# - read_entity_target_state returns {} for a missing file or target and the target state otherwise
 # - main builds target matrix, handoff payload, and pr_auto_merge from a successful entity detect
 # - main passes detect_env_json entries to the detect script only and rejects reserved or conflicting keys
 
@@ -200,7 +205,47 @@ state_file"
     [ "$status" -eq 0 ]
     run grep -Fx 'should_run=false' "${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
-    run grep -Fx 'skip_reason=detect_skip' "${GITHUB_OUTPUT}"
+    run grep -Fx 'skip_reason=domain:detect' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main publishes the detect skip_reason slug and message as skip_detail" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":true,"skip_reason":"already_reviewed","message":"marker review exists for abc123","result":{}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=domain:already_reviewed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=marker review exists for abc123' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main falls back to domain:detect when the detect skip_reason is not a slug" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":true,"skip_reason":"Bad Reason!","message":"x","result":{}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=domain:detect' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main publishes skip_detail on one line, redacted and cut to 300 characters" {
+    local long
+    long="$(printf 'a%.0s' {1..400})"
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        "{\"status\":\"ok\",\"skip\":true,\"message\":\"line one\\nline two token=abc123secret ${long}\",\"result\":{}}"
+    run_main
+    [ "$status" -eq 0 ]
+    [ "$(grep -c '^skip_detail=' "${GITHUB_OUTPUT}")" -eq 1 ]
+    run grep -F 'skip_detail=line one line two token=[REDACTED]' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -F 'abc123secret' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 1 ]
+    [ "$(grep '^skip_detail=' "${GITHUB_OUTPUT}" | cut -d= -f2- | wc -c)" -le 302 ]
+}
+
+@test "action.yml exposes skip_detail from the detect step" {
+    run grep -F 'steps.detect.outputs.skip_detail' "${ACTION_YML}"
     [ "$status" -eq 0 ]
 }
 
@@ -281,6 +326,52 @@ state_file"
     [ "$status" -eq 0 ]
     run grep -Fx 'pr_auto_merge=false' "${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
+}
+
+@test "main skips with the admission reason when result.gate refuses the entity" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=false' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=entity_closed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_detail=entity state is closed' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main proceeds when result.gate admits the entity" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"open"}}}}'
+    run_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=true' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "main applies the circuit breaker from the state file to the entity key" {
+    local today
+    today="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '%s\n' "{\"targets\":{\"entity:issue:1\":{\"consecutive_failures\":3,\"last_run\":\"${today}\"}}}" > "${BATS_TEST_TMPDIR}/state.json"
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"},"gate":{"entity":{"kind":"issue","number":1,"state":"open"}}}}'
+    run_main STATE_FILE="${BATS_TEST_TMPDIR}/state.json"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+}
+
+@test "read_entity_target_state returns the target state or an empty object" {
+    printf '%s\n' '{"targets":{"entity:issue:1":{"consecutive_failures":2}}}' > "${BATS_TEST_TMPDIR}/state.json"
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/state.json" "entity:issue:1"
+    [ "$output" = '{"consecutive_failures":2}' ]
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/state.json" "entity:issue:2"
+    [ "$output" = '{}' ]
+    run read_entity_target_state "${BATS_TEST_TMPDIR}/missing.json" "entity:issue:1"
+    [ "$output" = '{}' ]
+    run read_entity_target_state "" "entity:issue:1"
+    [ "$output" = '{}' ]
 }
 
 @test "resolve_detect_script_path fails when script is missing" {

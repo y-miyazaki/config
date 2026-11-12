@@ -24,7 +24,12 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-run-log/action.yml"
     run action_yml_input_field "${ACTION_YML}" outcome description
     [ "${output}" = '"Run outcome (pr_created | pr_pushed | reported | issue_commented | issue_created | pr_reviewed | unchanged | rejected | error | skipped)"' ]
     run action_yml_input_field "${ACTION_YML}" skip_reason description
-    [ "${output}" = '"Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing)"' ]
+    [ "${output}" = '"Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing | domain:<reason>)"' ]
+}
+
+@test "action passes SKIP_DETAIL from skip_detail" {
+    run grep -F 'inputs.skip_detail' "${ACTION_YML}"
+    [ "$status" -eq 0 ]
 }
 
 @test "action passes STATE_BRANCH from state_branch" {

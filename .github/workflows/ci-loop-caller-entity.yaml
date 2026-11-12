@@ -258,6 +258,7 @@ jobs:
       pr_auto_merge: ${{ steps.detect.outputs.pr_auto_merge }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
+      skip_detail: ${{ steps.detect.outputs.skip_detail }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
       target_matrix: ${{ steps.detect.outputs.target_matrix }}
@@ -372,7 +373,7 @@ jobs:
   record-skip:
     # Record every non-run (circuit_breaker, budget, no_changes) so a quiet
     # cron tick is distinguishable from a loop that never started. Skipped
-    # entries do not consume the daily budget (see loop-detect guards.sh).
+    # entries do not consume the daily budget (see lib/loop/admission.sh).
     if: >-
       needs.detect.result == 'success' &&
       needs.detect.outputs.should_run == 'false'
@@ -405,5 +406,6 @@ jobs:
           outcome: skipped
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_detail: ${{ needs.detect.outputs.skip_detail }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}

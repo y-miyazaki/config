@@ -7,6 +7,7 @@
 # - emits issue facts, handoff_key entity:issue:N, and result.entity.kind issue
 # - skips Bot actors, Bot comments, and triage:failed issues
 # - hydrates issue facts from GITHUB_EVENT_PATH and gh api
+# - reports the Issue state as result.gate.entity only when the state is known
 # - emits no dispatch_* fields for any event (autofix starts from its own intake)
 # - rejects invalid input with structured errors
 
@@ -68,6 +69,25 @@ NO_DISPATCH_FIELDS='([.result | keys[] | select(startswith("dispatch_"))] == [])
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e ".result.entity.kind == \"issue\" and ${NO_DISPATCH_FIELDS}" <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "reports the event Issue state as the gate entity fact" {
+    local event="${BATS_TEST_TMPDIR}/event.json"
+    printf '%s' '{"action":"opened","issue":{"number":8,"title":"t","body":"b","state":"closed","labels":[{"name":"needs-triage"}]},"sender":{"login":"alice","type":"User"}}' > "${event}"
+    run env GITHUB_EVENT_PATH="${event}" GITHUB_EVENT_NAME=issues bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result.gate == {entity:{kind:"issue",number:8,state:"closed"}}' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "omits the gate when the Issue state is not known" {
+    run env ISSUE_NUMBER=42 ISSUE_TITLE='Crash on save' ISSUE_BODY='steps' \
+        ISSUE_LABELS_JSON='[]' ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=opened \
+        ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result | has("gate") | not' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

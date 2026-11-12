@@ -21,7 +21,7 @@
 # Optional environment:
 #   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
-#   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
+#   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE, STATE_FILE
 #   GITHUB_TOKEN (detect token)
 #######################################
 
@@ -56,6 +56,38 @@ AGENT_EDIT_DENYLIST="${AGENT_EDIT_DENYLIST-}"
 AGENT_UNCHANGED_VERDICT="${AGENT_UNCHANGED_VERDICT-}"
 HANDOFF_DIR="${RUNNER_TEMP:-/tmp}/loop-handoff"
 DETECT_OUT="${RUNNER_TEMP:-/tmp}/entity-detect.json"
+
+#######################################
+# read_entity_target_state: Read one target's state from the checked-out state file
+#
+# Description:
+#   Reads the state file of the working tree only. A missing file, an unreadable file or a missing
+#   target gives {} (no state), so the circuit breaker is not open for a target without history.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - State file path (may be empty)
+#   $2 - Target key
+#
+# Outputs:
+#   Target state JSON on stdout ({} when none)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function read_entity_target_state {
+    local state_file="${1:-}"
+    local target_key="$2"
+
+    if [[ -z ${state_file} || ! -f ${state_file} ]]; then
+        printf '{}'
+        return 0
+    fi
+    jq -c --arg key "${target_key}" '.targets[$key] // {}' "${state_file}" 2> /dev/null || printf '{}'
+}
 
 #######################################
 # resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
@@ -109,6 +141,7 @@ function resolve_detect_script_path {
 #
 # Arguments:
 #   $1 - skip_reason
+#   $2 - skip_detail (optional)
 #
 # Outputs:
 #   should_run=false on GITHUB_OUTPUT
@@ -119,8 +152,9 @@ function resolve_detect_script_path {
 #######################################
 function write_entity_skip_outputs {
     local skip_reason="$1"
+    local skip_detail="${2:-}"
 
-    write_entity_detect_outputs "false" "${skip_reason}" "[]"
+    write_entity_detect_outputs "false" "${skip_reason}" "[]" "${skip_detail}"
     exit 0
 }
 
@@ -145,7 +179,7 @@ function write_entity_skip_outputs {
 #
 #######################################
 function main {
-    local full_matrix target_matrix candidate detect_status skip_reason
+    local full_matrix target_matrix candidate detect_status handoff_key skip_reason verdict
 
     if [[ -z ${LOOP_NAME} || -z ${AGENT_MAKER_SKILL_NAME} ]]; then
         echo "::error::LOOP_NAME and AGENT_MAKER_SKILL_NAME are required" >&2
@@ -175,7 +209,7 @@ function main {
         exit 1
     fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
+    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
         "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_entity_skip_outputs "budget"
@@ -206,7 +240,16 @@ function main {
     fi
 
     if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
-        write_entity_skip_outputs "detect_skip"
+        write_entity_skip_outputs "$(resolve_entity_skip_reason "${DETECT_OUT}")" \
+            "$(resolve_entity_skip_detail "${DETECT_OUT}")"
+    fi
+
+    handoff_key="$(jq -r '.[0].target_json.key' <<< "${full_matrix}")"
+    verdict="$(admission_evaluate "$(jq -c '.result.gate // null' "${DETECT_OUT}")" \
+        "$(read_entity_target_state "${STATE_FILE:-}" "${handoff_key}")")"
+    if [[ $(jq -r '.admit' <<< "${verdict}") != "true" ]]; then
+        write_entity_skip_outputs "$(jq -r '.skip_reason' <<< "${verdict}")" \
+            "$(jq -r '.detail' <<< "${verdict}")"
     fi
 
     loop_handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
