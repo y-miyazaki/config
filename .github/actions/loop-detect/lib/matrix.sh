@@ -19,7 +19,7 @@
 
 _MATRIX_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _loop_action_lib="$(cd "${_MATRIX_LIB_DIR}/../../lib/loop" && pwd)"
-if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
+if ! declare -f build_constraints_emit > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
     source "${_loop_action_lib}/build_constraints.sh"
 fi
@@ -97,7 +97,7 @@ function build_prompt_text {
             echo "${agent_maker_instructions}"
         fi
         echo ""
-        emit_loop_constraints "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "${agent_report_file}" || return 1
+        build_constraints_emit "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "${agent_report_file}" || return 1
     }
 }
 

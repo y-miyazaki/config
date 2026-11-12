@@ -25,7 +25,7 @@ if ! declare -f handoff_emit_result_section > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
     source "${_entity_loop_action_lib}/handoff.sh"
 fi
-if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
+if ! declare -f build_constraints_emit > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
     source "${_entity_loop_action_lib}/build_constraints.sh"
 fi
@@ -73,7 +73,7 @@ function build_entity_target_prompt {
         echo "level: ${level}"
         echo "delivery: ${delivery}"
         echo ""
-        emit_loop_constraints "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "" || return 1
+        build_constraints_emit "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "" || return 1
     }
 }
 

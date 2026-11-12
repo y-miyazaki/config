@@ -6,7 +6,7 @@
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 #   source "${loop_action_lib}/build_constraints.sh"
-#   emit_loop_constraints "<level>" "<agent_edit_target>" "<agent_edit_allowlist>" "<agent_report_file>"
+#   build_constraints_emit "<level>" "<agent_edit_target>" "<agent_edit_allowlist>" "<agent_report_file>"
 #
 # Design Rules:
 #   - Skills branch on agent_edit_allowed and agent_edit_target — not on level or delivery
@@ -18,7 +18,7 @@
 #######################################
 
 #######################################
-# emit_loop_constraints: Emit ## Constraints for loop maker prompts
+# build_constraints_emit: Emit ## Constraints for loop maker prompts
 #
 # Globals:
 #   None
@@ -36,7 +36,7 @@
 #   0 on success; 1 on invalid level or agent_edit_target
 #
 #######################################
-function emit_loop_constraints {
+function build_constraints_emit {
     local level="${1:-}"
     local agent_edit_target="${2:-}"
     local allowlist="${3:-}"
