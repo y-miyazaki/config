@@ -1,3 +1,23 @@
+#######################################
+# Description:
+#   Composite action: promote or clear pending loop state
+#   Promotes or clears the pending loop state when a fix PR closes.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-state-promote@<commit SHA>
+#   Called by: on-loop-state-promote.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs pr_number, merged, state_branch, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#######################################
 name: loop-state-promote
 description: "Promote or clear pending loop state after a fix PR closes."
 

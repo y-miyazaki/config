@@ -10,10 +10,13 @@ Design background: [GitHub Workflows Design](../../docs/explanation/github-workf
 
 Before changing code here, find the docs that describe it and update them in the same change (see Document sync in `AGENTS.md`).
 
-| Changed code                                                                                 | Docs to find and update                                                                                                                                                      |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.github/workflows/*.yaml`                                                                   | Paths in the file's header `# References:`                                                                                                                                   |
-| `.github/actions/loop-*/` (including `lib/`) and `.github/actions/lib/loop/` (no References) | `docs/explanation/loop-engineering/loop-engineering-design.md` and the matching `docs/explanation/loop-engineering/workflows/loop-*-workflow-design.md`; see its `CLAUDE.md` |
+| Changed code                                               | Docs to find and update                                                                                                                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/*.yaml`                                 | Paths in the file's header `# References:`                                                                                                                                      |
+| `.github/actions/<name>/` (action.yml and its `lib/`)      | Paths in that `action.yml` header `# References:`                                                                                                                               |
+| `.github/actions/lib/loop/` (shared, no header of its own) | `docs/explanation/loop-engineering/loop-engineering-design.md` and the `References` of every `loop-*` action that sources it; see `docs/explanation/loop-engineering/CLAUDE.md` |
+
+When a change alters what the header states (called-by workflows, design rules, dependencies, references), update the header in the same change.
 
 ---
 
@@ -33,7 +36,7 @@ Before changing code here, find the docs that describe it and update them in the
 
 ## Header format
 
-Every `.github/workflows/*.yaml` and `example/*.yaml` file **MUST** open with this comment block immediately before `name:`, in the same style as shell script headers. All five sections are required; write `None` on the next line when a section does not apply. Checked by `test/bats/github-actions/workflow-header.bats`.
+Every `.github/workflows/*.yaml`, `example/*.yaml`, and `.github/actions/*/action.yml` file **MUST** open with this comment block immediately before `name:`, in the same style as shell script headers. All five sections are required; write `None` on the next line when a section does not apply. Checked by `test/bats/github-actions/workflow-header.bats` (workflows) and `test/bats/github-actions/action-header.bats` (composite actions). For a composite action, Kind is `Composite action`, Usage is the `uses:` line plus a `Called by:` line, and every `References` path must exist.
 
 ```yaml
 #######################################

@@ -1,3 +1,25 @@
+#######################################
+# Description:
+#   Composite action: finalize a loop run
+#   Delivers the result (push, PR, Issue comment, or PR review), writes state, and runs the optional finalize hook.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-finalize@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - pr_push MUST land by merge into the latest to.branch and fail closed (see .github/workflows/CLAUDE.md)
+#
+# Dependencies:
+#   - Required inputs current_sha, delivery, github_token, state_branch, target_json
+#   - gh
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#######################################
 name: loop-finalize
 description: "Finalize a loop run per delivery: push, PR, Issue comment, or PR review, state, optional finalize hook."
 

@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: set up Terraform with cache
+#   Sets up Terraform and restores the plugin cache and init cache.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/setup-terraform-with-cache@<commit SHA>
+#   Called by: None in this repository (consumer-facing)
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs terraform_version, terraform_path, plugin_cache_key, init_cache_key
+#   - hashicorp/setup-terraform, actions/cache
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#######################################
 name: setup-terraform-with-cache
 description: "Setup Terraform with plugin cache and init cache restore."
 author: "GitHub Copilot"

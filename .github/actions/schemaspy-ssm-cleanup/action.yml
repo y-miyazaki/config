@@ -1,3 +1,21 @@
+#######################################
+# Description:
+#   Composite action: SchemaSpy SSM cleanup
+#   Terminates the background SSM port-forwarding session when bastion mode is enabled.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@<commit SHA>
+#   Called by: cd-aws-schemaspy.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - AWS CLI with credentials from the calling job
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#######################################
 name: schemaspy-ssm-cleanup
 description: "Terminate background SSM port forwarding session when bastion mode is enabled."
 

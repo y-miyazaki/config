@@ -1,3 +1,25 @@
+#######################################
+# Description:
+#   Composite action: detect loop work
+#   Enumerates branches and PRs, runs the detect script per context, and builds target_matrix.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-detect@<commit SHA>
+#   Called by: ci-loop-caller.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - A target stopped by the circuit breaker is skipped with skip_reason circuit_breaker
+#
+# Dependencies:
+#   - Required inputs loop_name, level, delivery, agent_maker_skill_name, state_branch, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-workflows-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: loop-detect
 description: "Detect loop work: enumerate branches/PRs, run detect script per context, build target_matrix."
 

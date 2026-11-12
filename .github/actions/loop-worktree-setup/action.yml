@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: create the agent worktree
+#   Creates an isolated git worktree from from_ref on from_branch for loop agent changes.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-worktree-setup@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs agent_maker_skill_name, github_token
+#   - git
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: loop-worktree-setup
 description: "Create an isolated git worktree at from_ref on from_branch for loop agent modifications."
 

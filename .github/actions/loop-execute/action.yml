@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: bounded Agent to Verify loop
+#   Runs the maker and checker in one job: installs the CLI once and retries with checker feedback.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-execute@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - Reaches a sibling action only through ${GITHUB_ACTION_PATH}/../<sibling>/lib/ for that sibling's owned behavior
+#
+# Dependencies:
+#   - Required inputs agent_engine, agent_maker_skill_name, agent_token, branch, github_token, prompt_text, worktree_path
+#   - Node.js, uv, git, gh
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#######################################
 name: loop-execute
 description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
 

@@ -1,3 +1,25 @@
+#######################################
+# Description:
+#   Composite action: single AI agent session
+#   Runs one agent session (claude, copilot, codex, cursor). For non-loop one-shot use.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-agent-once@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - Reaches a sibling action only through ${GITHUB_ACTION_PATH}/../<sibling>/lib/ for that sibling's owned behavior
+#
+# Dependencies:
+#   - Required inputs agent_engine, agent_token, github_token, prompt_text
+#   - Node.js, uv, git, gh
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/reference/specification.md
+#######################################
 name: loop-agent-once
 description: "Run a single AI agent session (claude/copilot/codex/cursor). For non-loop one-shot use."
 

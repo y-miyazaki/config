@@ -1,3 +1,23 @@
+#######################################
+# Description:
+#   Composite action: ephemeral git authentication
+#   Configures and clears git authentication through http.extraheader (same pattern as actions/checkout).
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/git-auth@<commit SHA>
+#   Called by: ci-go.yaml, ci-shell-script.yaml, ci-mise-update-lock.yaml, ci-aqua-update-checksum.yaml, cd-go-releaser.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - The configured http.extraheader MUST be removed by the clear step after use
+#
+# Dependencies:
+#   - Required input github_token
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#   - docs/reference/specification.md
+#######################################
 name: git-auth
 description: "Configure and clear ephemeral git authentication using http.extraheader (same pattern as actions/checkout)."
 author: "GitHub Copilot"
