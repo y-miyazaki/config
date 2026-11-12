@@ -62,8 +62,6 @@ source "${SCRIPT_DIR}/_init.sh"
 # Environment supplied by loop-detect composite action (validated in main).
 STATE_BRANCH="${STATE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
-# KEY=VALUE entries from detect_env_json, filled by loop_build_detect_env_args (detect_env.sh).
-LOOP_DETECT_ENV_ARGS=()
 STATE_FILE="${STATE_FILE-}"
 # Run-scoped snapshot of the state file from the state branch (set by main); reads fall back to STATE_FILE
 STATE_READ_FILE="${STATE_READ_FILE-}"
@@ -1465,9 +1463,7 @@ function main {
     if ! validate_detect_inputs; then
         return 1
     fi
-    # shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
-    source "${SCRIPT_DIR}/../../lib/loop/detect_env.sh"
-    if ! loop_build_detect_env_args "${DETECT_ENV_JSON:-}"; then
+    if ! detect_env_build_args "${DETECT_ENV_JSON:-}"; then
         return 1
     fi
 
@@ -1475,6 +1471,7 @@ function main {
     if [[ ${DETECT_PR_NUMBER:-} == "0" ]]; then
         DETECT_PR_NUMBER=""
     fi
+    local delivery_verdict
     delivery_verdict="$(admission_evaluate_delivery "${DELIVERY}" "${DETECT_PR_NUMBER:-}")"
     if [[ $(jq -r '.admit' <<< "${delivery_verdict}") != "true" ]]; then
         log_detect_notice "skip" "${LOOP_NAME}" "$(jq -r '.detail' <<< "${delivery_verdict}")"
@@ -1488,7 +1485,7 @@ function main {
     local target_matrix_json="[]"
     local branch pr_json github_token="${GITHUB_TOKEN:-}"
     local pre_cap_count
-    local scoped_head delivery_verdict
+    local scoped_head
     CHECKOUT_FAILED=0
 
     # Pin detect script before any target checkout (stale PR trees must not supply it).

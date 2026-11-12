@@ -228,7 +228,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 
 | Input             | Required | Default | Maps to                                                  |
 | ----------------- | -------- | ------- | -------------------------------------------------------- |
-| `detect_env_json` | no       | `{}`    | Detect job step `env` (export step before `loop-detect`) |
+| `detect_env_json` | no       | `{}`    | `detect_env_json` input of `loop-detect` / `loop-entity-detect`: a JSON object of scalar `KEY: value` entries, validated by `lib/loop/detect_env.sh`, handed to the detect script child process only (never exported, never written to `GITHUB_ENV`) |
 
 **Decision:** `detect_env_json` only — no per-domain top-level inputs (e.g. `changelog_file`). Per-loop JSON keys: [Domain detect environment index](workflows/loop-caller-inputs-reference.md#domain-detect-environment-detect_env_json) → each workflow design doc.
 
@@ -424,7 +424,7 @@ New domain env keys go into `detect_env_json` without editing reusable job steps
 | Risk                                                   | Mitigation                                                                                                                       |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | Long `with:` blocks in callers                         | Acceptable trade-off vs triple job duplication; per-loop design doc lists all keys                                               |
-| `detect_env_json` typos                                | Document keys per loop; detect script fails fast on missing required env; validate JSON in export step                           |
+| `detect_env_json` typos                                | Document keys per loop; detect script fails fast on missing required env; `detect_env_build_args` rejects reserved names (runner, loader, shell, git, gh, `*_PROXY`, `*_CA_BUNDLE`, `SSL_*`, `NODE_*`, `PYTHON*`, `PERL*`, `RUBY*`, action inputs), names already set, non-scalar values and newlines                           |
 | Input drift between `loop-detect` and `ci-loop-caller` | Maintain mapping table in inputs reference; reusable maps `detect_branch_match` and `state_branch` through under the same names. |
 | Reusable change affects all loops                      | CI workflow lint on every PR; thin callers keep blast radius visible in review                                                   |
 | Multiline `agent_checker_instructions` in `with:`      | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                |

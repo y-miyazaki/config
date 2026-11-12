@@ -40,6 +40,8 @@ _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
 source "${_loop_action_lib}/check_names.sh"
 # shellcheck source=../../lib/loop/state_snapshot.sh disable=SC1091
 source "${_loop_action_lib}/state_snapshot.sh"
+# shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+source "${_loop_action_lib}/detect_env.sh"
 # shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
 source "${_loop_action_lib}/edit_paths.sh"
 # shellcheck disable=SC1091

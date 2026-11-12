@@ -7,7 +7,8 @@
 # - state_snapshot_from_branch copies several files with one fetch
 # - state_snapshot_from_branch leaves a destination absent when the branch has no such file
 # - state_snapshot_from_branch rejects an invalid branch name and odd file/destination pairs
-# - state_snapshot_from_branch falls back to the local copies with a warning when the fetch fails
+# - state_snapshot_from_branch leaves files absent when the state branch does not exist yet
+# - state_snapshot_from_branch fails closed when the fetch fails while the branch exists
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -80,9 +81,20 @@ setup() {
     [[ $output == *"pairs"* ]]
 }
 
-@test "state_snapshot_from_branch falls back to the local copies with a warning when the fetch fails" {
+@test "state_snapshot_from_branch leaves files absent when the state branch does not exist yet" {
+    : > "${BATS_TEST_TMPDIR}/snap.json"
     run state_snapshot_from_branch no-such-branch ".loop/state-x.json" "${BATS_TEST_TMPDIR}/snap.json"
     [ "$status" -eq 0 ]
-    [[ $output == *"could not fetch"* ]]
-    [ "$(jq -r '.targets["pull_request:7"].consecutive_failures' "${BATS_TEST_TMPDIR}/snap.json")" = "0" ]
+    [ ! -e "${BATS_TEST_TMPDIR}/snap.json" ]
+}
+
+@test "state_snapshot_from_branch fails closed when the fetch fails while the branch exists" {
+    local bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${bin}"
+    printf '#!/bin/bash\nif [[ $1 == fetch ]]; then exit 1; fi\nexec %s "$@"\n' "$(command -v git)" > "${bin}/git"
+    chmod +x "${bin}/git"
+    PATH="${bin}:${PATH}" run state_snapshot_from_branch main ".loop/state-x.json" "${BATS_TEST_TMPDIR}/snap.json"
+    [ "$status" -eq 1 ]
+    [[ $output == *"state cannot be read"* ]]
+    [ ! -e "${BATS_TEST_TMPDIR}/snap.json" ]
 }

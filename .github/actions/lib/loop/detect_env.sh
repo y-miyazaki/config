@@ -6,7 +6,7 @@
 #
 # Usage:
 #   source detect_env.sh
-#   loop_build_detect_env_args "${DETECT_ENV_JSON}" || exit 1
+#   detect_env_build_args "${DETECT_ENV_JSON}" || exit 1
 #   env "${LOOP_DETECT_ENV_ARGS[@]}" bash "${DETECT_SCRIPT}"
 #
 # Output:
@@ -16,8 +16,8 @@
 #   - Entries reach only the detect script: they are never exported into the calling
 #     process and never written to GITHUB_ENV
 #   - Keys must match ^[A-Z_][A-Z0-9_]*$
-#   - Reserved names (runner, loader, shell, git, gh, proxy, TLS, and action-input
-#     variables) are rejected
+#   - Reserved names (runner, loader, shell, git, gh, any *_PROXY or *_CA_BUNDLE, SSL_*, NODE_*, PYTHON*, PERL*, RUBY*,
+#     and action-input variables) are rejected
 #   - A key that is already set is rejected so a caller cannot override action inputs
 #   - Values must be scalars without CR or LF; null and empty-string entries are skipped
 #######################################
@@ -25,7 +25,7 @@
 LOOP_DETECT_ENV_ARGS=()
 
 #######################################
-# loop_build_detect_env_args: Validate detect_env_json and fill LOOP_DETECT_ENV_ARGS
+# detect_env_build_args: Validate detect_env_json and fill LOOP_DETECT_ENV_ARGS
 #
 # Globals:
 #   LOOP_DETECT_ENV_ARGS - Reset, then filled with KEY=VALUE entries (write)
@@ -40,7 +40,7 @@ LOOP_DETECT_ENV_ARGS=()
 #   0 on success; 1 on invalid JSON, key, value, or a reserved or already-set name
 #
 #######################################
-function loop_build_detect_env_args {
+function detect_env_build_args {
     local env_json="${1:-}"
     local key value_type value
 
@@ -58,17 +58,18 @@ function loop_build_detect_env_args {
             return 1
         fi
         case "${key}" in
-            BASH_* | BASHOPTS | CDPATH | CURL_* | DYLD_* | ENV | GH_* | GIT_* | GITHUB_* | GLOBIGNORE | HOME | HTTP_PROXY | HTTPS_PROXY | IFS | INPUT_* | LD_* | NODE_OPTIONS | NO_PROXY | PATH | PS4 | RUNNER_* | SHELL | SHELLOPTS | SSL_* | TMPDIR)
+            BASH_* | BASHOPTS | CDPATH | CURL_* | DYLD_* | ENV | GH_* | GIT_* | GITHUB_* | GLOBIGNORE | HOME | IFS | INPUT_* | LD_* | NODE_* | PATH | PERL* | PS4 | PYTHON* | RUBY* | RUNNER_* | SHELL | SHELLOPTS | SSL_* | TMPDIR | *_CA_BUNDLE | *_PROXY | *_proxy)
                 echo "detect_env_json key is reserved: ${key}" >&2
                 return 1
                 ;;
         esac
+        # A null entry is never emitted, so it cannot conflict with an existing variable.
+        [[ ${value_type} == "null" ]] && continue
         if [[ -v ${key} ]]; then
             echo "detect_env_json key conflicts with an existing variable: ${key}" >&2
             return 1
         fi
         case "${value_type}" in
-            null) continue ;;
             array | object)
                 echo "detect_env_json values must be scalars (key: ${key})" >&2
                 return 1

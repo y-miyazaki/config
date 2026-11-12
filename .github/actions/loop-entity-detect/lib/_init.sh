@@ -36,5 +36,7 @@ source "${LIB_DIR}/outputs.sh"
 source "${LIB_DIR}/entity_target.sh"
 
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+source "${_loop_action_lib}/detect_env.sh"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"
