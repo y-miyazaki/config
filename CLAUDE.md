@@ -14,7 +14,7 @@
 
 **Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/CLAUDE.md](.apm/CLAUDE.md) or this file, never package sources.
 
-**Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/workflows/CLAUDE.md`) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
+**Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/workflows/CLAUDE.md`, `docs/explanation/loop-engineering/CLAUDE.md`) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
 
 ## Permission parity (MUST)
 
@@ -47,16 +47,6 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `zizmor`              | `Stop`                      |
 
 `shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
-
-## Loop workflow design docs (MUST)
-
-Applies when creating or editing `docs/explanation/loop-engineering/workflows/loop-*-workflow-design.md`.
-
-- Follow [Loop Workflow Design Template](docs/explanation/loop-engineering/workflows/loop-workflow-design-template.md) (section order and families).
-- `User actions` (with `Values changed` and `Transition` columns) and `Unhandled cases` are required.
-- Transition IDs come from `loop-issue-handoff.md`, the template's `S0–S5` (Scheduled loop states), or the document's own `State model`.
-- Behavior-changing findings found while documenting are recorded as `Follow-up`; do not fix them in the doc change.
-- When the design document and the implementation disagree, the implementation is the baseline and the document is corrected. Also judge whether the implementation is wrong, and record a `Follow-up` row when it is (full rule: the template's "How to use this template" section).
 
 ## Conventions
 
