@@ -3,20 +3,21 @@
 #   CI workflow: mise lockfile update on push
 #
 # Usage:
-#   Runs on: push
+#   Runs on: push to main and renovate/** (paths: mise.toml)
 #   This workflow requires a GitHub App for auto-committing lockfile updates.
 #   1. Create a GitHub App with "Contents: Read & Write" repository permission.
 #   2. Install the App on the target repository (or organization).
 #   3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
 #
 # Design Rules:
-#   None
+#   - The push trigger MUST stay limited to main and renovate/**: the job runs with the App secrets on the pushed tree, so a push to any other branch (agent branches included) must not reach it
+#   - renovate/** stays because the workflow commits mise.lock onto Renovate branches (see gitIgnoredAuthors in .github/renovate.json)
 #
 # Dependencies:
-#   None
+#   - Secrets MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY
 #
 # References:
-#   None
+#   - docs/explanation/loop-engineering/loop-engineering-design.md (Agent Credential Isolation)
 #######################################
 name: on-ci-push-mise-update-lock
 
@@ -24,6 +25,9 @@ run-name: "${{ github.workflow }} (${{ github.event_name }})"
 
 on:
   push:
+    branches:
+      - main
+      - "renovate/**"
     paths:
       - "mise.toml"
 
