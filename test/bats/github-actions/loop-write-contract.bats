@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-# Tests for .github/actions/lib/loop/validate_loop_write_contract.sh
+# Tests for .github/actions/lib/loop/check_loop_write_contract.sh
 #
 # Use cases:
 # - L1 accepts delivery none or issue_comment with every edit field empty
@@ -21,7 +21,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-VALIDATE_LIB="$(bats_workspace_root)/.github/actions/lib/loop/validate_loop_write_contract.sh"
+VALIDATE_LIB="$(bats_workspace_root)/.github/actions/lib/loop/check_loop_write_contract.sh"
 
 setup() {
     # shellcheck disable=SC1090
@@ -31,7 +31,7 @@ setup() {
 @test "validate accepts L1 delivery none and issue_comment with empty edit fields" {
     local checked=0 delivery
     for delivery in none issue_comment; do
-        run validate_loop_write_contract "L1" "${delivery}" "" "" "" "" "" ""
+        run check_loop_write_contract_all "L1" "${delivery}" "" "" "" "" "" ""
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
@@ -41,7 +41,7 @@ setup() {
 @test "validate accepts L2 and L3 agent_edit_allowlist double star" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "**" "" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "**" "" "APPROVE" "" ""
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
@@ -51,7 +51,7 @@ setup() {
 @test "validate accepts L2 and L3 agent_edit_denylist empty" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "src/**" "" "APPROVE" "" ""
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
@@ -61,7 +61,7 @@ setup() {
 @test "validate accepts L2 and L3 agent_edit_denylist set" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "src/**" ".github/**" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "src/**" ".github/**" "APPROVE" "" ""
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
@@ -72,7 +72,7 @@ setup() {
     local checked=0 level target
     for level in L2 L3; do
         for target in fix report; do
-            run validate_loop_write_contract "${level}" "none" "${target}" "src/**" "" "APPROVE" "" ""
+            run check_loop_write_contract_all "${level}" "none" "${target}" "src/**" "" "APPROVE" "" ""
             [ "$status" -eq 0 ]
             checked=$((checked + 1))
         done
@@ -84,7 +84,7 @@ setup() {
     local checked=0 level verdict
     for level in L2 L3; do
         for verdict in APPROVE REJECT; do
-            run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "${verdict}" "" ""
+            run check_loop_write_contract_all "${level}" "none" "fix" "src/**" "" "${verdict}" "" ""
             [ "$status" -eq 0 ]
             checked=$((checked + 1))
         done
@@ -96,7 +96,7 @@ setup() {
     local checked=0 level delivery
     for level in L2 L3; do
         for delivery in none pr_create pr_push; do
-            run validate_loop_write_contract "${level}" "${delivery}" "fix" "src/**" "" "APPROVE" "" ""
+            run check_loop_write_contract_all "${level}" "${delivery}" "fix" "src/**" "" "APPROVE" "" ""
             [ "$status" -eq 0 ]
             checked=$((checked + 1))
         done
@@ -108,7 +108,7 @@ setup() {
     local checked=0 level delivery
     for level in L2 L3; do
         for delivery in issue_comment pr_review; do
-            run validate_loop_write_contract "${level}" "${delivery}" "report" "src/**" "" "APPROVE" "render.sh" ""
+            run check_loop_write_contract_all "${level}" "${delivery}" "report" "src/**" "" "APPROVE" "render.sh" ""
             [ "$status" -eq 0 ]
             checked=$((checked + 1))
         done
@@ -120,7 +120,7 @@ setup() {
     local checked=0 level delivery
     for level in L2 L3; do
         for delivery in issue_comment pr_review; do
-            run validate_loop_write_contract "${level}" "${delivery}" "report" "src/**" "" "APPROVE" "" ""
+            run check_loop_write_contract_all "${level}" "${delivery}" "report" "src/**" "" "APPROVE" "" ""
             [ "$status" -eq 1 ]
             [ "$output" = "::error::finalize_script is required for delivery ${delivery}" ]
             checked=$((checked + 1))
@@ -131,15 +131,15 @@ setup() {
 
 @test "validate accepts finalize_label_allowlist only with issue_comment or pr_review" {
     local checked=0 delivery
-    run validate_loop_write_contract "L1" "issue_comment" "" "" "" "" "" $'bug\nfeature'
+    run check_loop_write_contract_all "L1" "issue_comment" "" "" "" "" "" $'bug\nfeature'
     [ "$status" -eq 0 ]
-    run validate_loop_write_contract "L2" "pr_review" "report" "src/**" "" "APPROVE" "render.sh" "bug"
+    run check_loop_write_contract_all "L2" "pr_review" "report" "src/**" "" "APPROVE" "render.sh" "bug"
     [ "$status" -eq 0 ]
-    run validate_loop_write_contract "L1" "none" "" "" "" "" "" "bug"
+    run check_loop_write_contract_all "L1" "none" "" "" "" "" "" "bug"
     [ "$status" -eq 1 ]
     [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: none)" ]
     for delivery in pr_create pr_push none; do
-        run validate_loop_write_contract "L2" "${delivery}" "fix" "src/**" "" "APPROVE" "" "bug"
+        run check_loop_write_contract_all "L2" "${delivery}" "fix" "src/**" "" "APPROVE" "" "bug"
         [ "$status" -eq 1 ]
         [ "$output" = "::error::finalize_label_allowlist requires delivery issue_comment, issue_create or pr_review (got: ${delivery})" ]
         checked=$((checked + 1))
@@ -150,7 +150,7 @@ setup() {
 @test "validate rejects L1 finalize_script" {
     local checked=0 delivery
     for delivery in none issue_comment; do
-        run validate_loop_write_contract "L1" "${delivery}" "" "" "" "" "x.sh" ""
+        run check_loop_write_contract_all "L1" "${delivery}" "" "" "" "" "x.sh" ""
         [ "$status" -eq 1 ]
         [ "$output" = "::error::finalize_script is not allowed at L1" ]
         checked=$((checked + 1))
@@ -161,7 +161,7 @@ setup() {
 @test "validate rejects L1 delivery pr_create pr_push pr_review issue_create" {
     local checked=0 delivery
     for delivery in "" pr_create pr_push pr_review issue_create log issue notion open_pr; do
-        run validate_loop_write_contract "L1" "${delivery}" "" "" "" "" "" ""
+        run check_loop_write_contract_all "L1" "${delivery}" "" "" "" "" "" ""
         [ "$status" -eq 1 ]
         [ "$output" = "::error::delivery must be none or issue_comment at L1 (got: ${delivery:-empty})" ]
         checked=$((checked + 1))
@@ -170,25 +170,25 @@ setup() {
 }
 
 @test "validate rejects L1 non-empty agent_edit_allowlist" {
-    run validate_loop_write_contract "L1" "none" "" "src/**" "" "" "" ""
+    run check_loop_write_contract_all "L1" "none" "" "src/**" "" "" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"agent_edit_allowlist"* ]]
 }
 
 @test "validate rejects L1 non-empty agent_edit_denylist" {
-    run validate_loop_write_contract "L1" "none" "" "" ".github/**" "" "" ""
+    run check_loop_write_contract_all "L1" "none" "" "" ".github/**" "" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"agent_edit_denylist"* ]]
 }
 
 @test "validate rejects L1 non-empty agent_edit_target" {
-    run validate_loop_write_contract "L1" "none" "fix" "" "" "" "" ""
+    run check_loop_write_contract_all "L1" "none" "fix" "" "" "" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"agent_edit_target"* ]]
 }
 
 @test "validate rejects L1 non-empty agent_unchanged_verdict" {
-    run validate_loop_write_contract "L1" "none" "" "" "" "APPROVE" "" ""
+    run check_loop_write_contract_all "L1" "none" "" "" "" "APPROVE" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"agent_unchanged_verdict"* ]]
 }
@@ -197,7 +197,7 @@ setup() {
     local checked=0 level delivery
     for level in L2 L3; do
         for delivery in "" log issue notion open_pr slack; do
-            run validate_loop_write_contract "${level}" "${delivery}" "fix" "src/**" "" "APPROVE" "" ""
+            run check_loop_write_contract_all "${level}" "${delivery}" "fix" "src/**" "" "APPROVE" "" ""
             [ "$status" -eq 1 ]
             [[ $output == *"delivery"* ]]
             checked=$((checked + 1))
@@ -209,7 +209,7 @@ setup() {
 @test "validate rejects L2 and L3 empty agent_edit_allowlist" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "" "" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "" "" "APPROVE" "" ""
         [ "$status" -eq 1 ]
         [[ $output == *"agent_edit_allowlist is required"* ]]
         checked=$((checked + 1))
@@ -220,7 +220,7 @@ setup() {
 @test "validate rejects L2 and L3 empty agent_edit_target" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "" "src/**" "" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "" "src/**" "" "APPROVE" "" ""
         [ "$status" -eq 1 ]
         [[ $output == *"agent_edit_target is required"* ]]
         checked=$((checked + 1))
@@ -231,7 +231,7 @@ setup() {
 @test "validate rejects L2 and L3 empty agent_unchanged_verdict" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "src/**" "" "" "" ""
         [ "$status" -eq 1 ]
         [[ $output == *"agent_unchanged_verdict is required"* ]]
         checked=$((checked + 1))
@@ -242,7 +242,7 @@ setup() {
 @test "validate rejects L2 and L3 invalid agent_edit_target" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "hybrid" "src/**" "" "APPROVE" "" ""
+        run check_loop_write_contract_all "${level}" "none" "hybrid" "src/**" "" "APPROVE" "" ""
         [ "$status" -eq 1 ]
         [[ $output == *"agent_edit_target must be fix or report"* ]]
         checked=$((checked + 1))
@@ -253,7 +253,7 @@ setup() {
 @test "validate rejects L2 and L3 invalid agent_unchanged_verdict" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "approve" "" ""
+        run check_loop_write_contract_all "${level}" "none" "fix" "src/**" "" "approve" "" ""
         [ "$status" -eq 1 ]
         [[ $output == *"agent_unchanged_verdict must be APPROVE or REJECT"* ]]
         checked=$((checked + 1))
@@ -262,13 +262,13 @@ setup() {
 }
 
 @test "validate rejects L4 level" {
-    run validate_loop_write_contract "L4" "none" "fix" "src/**" "" "APPROVE" "" ""
+    run check_loop_write_contract_all "L4" "none" "fix" "src/**" "" "APPROVE" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"level must be"* ]]
 }
 
 @test "validate rejects empty level" {
-    run validate_loop_write_contract "" "none" "" "" "" "" "" ""
+    run check_loop_write_contract_all "" "none" "" "" "" "" "" ""
     [ "$status" -eq 1 ]
     [[ $output == *"level is required"* ]]
 }
@@ -276,58 +276,58 @@ setup() {
 @test "validate L2 and L3 issue_create requires finalize_script, finalize_label_allowlist and REJECT" {
     local checked=0 level
     for level in L2 L3; do
-        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "" "loop:code-review"
+        run check_loop_write_contract_all "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "" "loop:code-review"
         [ "$status" -eq 1 ]
         [[ $output == *"finalize_script is required for delivery issue_create"* ]]
-        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" ""
+        run check_loop_write_contract_all "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" ""
         [ "$status" -eq 1 ]
         [[ $output == *"finalize_label_allowlist is required for delivery issue_create"* ]]
-        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "APPROVE" "scripts/x.sh" "loop:code-review"
+        run check_loop_write_contract_all "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "APPROVE" "scripts/x.sh" "loop:code-review"
         [ "$status" -eq 1 ]
         [[ $output == *"agent_unchanged_verdict must be REJECT for delivery issue_create"* ]]
-        run validate_loop_write_contract "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" "loop:code-review"
+        run check_loop_write_contract_all "${level}" "issue_create" "report" ".loop-code-review/findings.json" "" "REJECT" "scripts/x.sh" "loop:code-review"
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 2 ]
 }
 
-@test "validate_finalize_label_allowlist accepts a non-empty allowlist for issue_create" {
-    run validate_finalize_label_allowlist "issue_create" "loop:code-review"
+@test "check_loop_write_contract_finalize_label_allowlist accepts a non-empty allowlist for issue_create" {
+    run check_loop_write_contract_finalize_label_allowlist "issue_create" "loop:code-review"
     [ "$status" -eq 0 ]
-    run validate_finalize_label_allowlist "pr_create" "loop:code-review"
+    run check_loop_write_contract_finalize_label_allowlist "pr_create" "loop:code-review"
     [ "$status" -eq 1 ]
     [[ $output == *"issue_comment, issue_create or pr_review"* ]]
 }
 
-@test "validate_agent_tool_denylist allows claude at L2 and L3 and rejects other engines and L1" {
-    run validate_agent_tool_denylist L2 claude "Agent"
+@test "check_loop_write_contract_agent_tool_denylist allows claude at L2 and L3 and rejects other engines and L1" {
+    run check_loop_write_contract_agent_tool_denylist L2 claude "Agent"
     [ "$status" -eq 0 ]
-    run validate_agent_tool_denylist L3 claude "Agent"
+    run check_loop_write_contract_agent_tool_denylist L3 claude "Agent"
     [ "$status" -eq 0 ]
-    run validate_agent_tool_denylist L2 codex "Agent"
+    run check_loop_write_contract_agent_tool_denylist L2 codex "Agent"
     [ "$status" -eq 1 ]
     [[ $output == *"agent_tool_denylist requires agent_engine claude"* ]]
-    run validate_agent_tool_denylist L1 claude "Agent"
+    run check_loop_write_contract_agent_tool_denylist L1 claude "Agent"
     [ "$status" -eq 1 ]
     [[ $output == *"agent_tool_denylist is not allowed at L1"* ]]
-    run validate_agent_tool_denylist L1 claude ""
+    run check_loop_write_contract_agent_tool_denylist L1 claude ""
     [ "$status" -eq 0 ]
-    run validate_agent_tool_denylist L2 codex ""
+    run check_loop_write_contract_agent_tool_denylist L2 codex ""
     [ "$status" -eq 0 ]
 }
 
-@test "validate_finalize_issue_limit accepts a positive integer or empty and rejects other values for issue_create" {
-    run validate_finalize_issue_limit issue_create "3"
+@test "check_loop_write_contract_finalize_issue_limit accepts a positive integer or empty and rejects other values for issue_create" {
+    run check_loop_write_contract_finalize_issue_limit issue_create "3"
     [ "$status" -eq 0 ]
-    run validate_finalize_issue_limit issue_create ""
+    run check_loop_write_contract_finalize_issue_limit issue_create ""
     [ "$status" -eq 0 ]
     local bad
     for bad in 0 -1 abc 1.5; do
-        run validate_finalize_issue_limit issue_create "${bad}"
+        run check_loop_write_contract_finalize_issue_limit issue_create "${bad}"
         [ "$status" -eq 1 ]
         [[ $output == *"finalize_issue_limit must be a positive integer"* ]]
     done
-    run validate_finalize_issue_limit pr_create "abc"
+    run check_loop_write_contract_finalize_issue_limit pr_create "abc"
     [ "$status" -eq 0 ]
 }

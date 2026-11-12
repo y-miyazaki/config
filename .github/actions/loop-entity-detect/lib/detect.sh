@@ -187,10 +187,10 @@ function main {
 
     local loop_action_lib
     loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
-    # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
-    source "${loop_action_lib}/validate_loop_write_contract.sh"
+    # shellcheck source=../../lib/loop/check_loop_write_contract.sh disable=SC1091
+    source "${loop_action_lib}/check_loop_write_contract.sh"
     # A configuration error fails the job (no outputs written).
-    if ! validate_loop_write_contract "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
+    if ! check_loop_write_contract_all "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
         "${AGENT_EDIT_ALLOWLIST}" "${AGENT_EDIT_DENYLIST}" "${AGENT_UNCHANGED_VERDICT}" \
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         exit 1

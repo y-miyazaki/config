@@ -5,8 +5,8 @@
 #
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
-#   source "${loop_action_lib}/validate_loop_write_contract.sh"
-#   validate_loop_write_contract "<level>" "<delivery>" "<agent_edit_target>" \
+#   source "${loop_action_lib}/check_loop_write_contract.sh"
+#   check_loop_write_contract_all "<level>" "<delivery>" "<agent_edit_target>" \
 #       "<agent_edit_allowlist>" "<agent_edit_denylist>" "<agent_unchanged_verdict>" \
 #       "<finalize_script>" "<finalize_label_allowlist>"
 #
@@ -25,7 +25,7 @@
 #   - L2/L3: agent_edit_allowlist is required; empty fails, ** means unrestricted
 #   - L2/L3: agent_edit_denylist is optional; empty uses the default denylist
 #   - L2/L3: agent_unchanged_verdict must be APPROVE or REJECT (required)
-#   - validate_agent_tool_denylist: agent_tool_denylist needs L2/L3 and agent_engine claude
+#   - check_loop_write_contract_agent_tool_denylist: agent_tool_denylist needs L2/L3 and agent_engine claude
 #   - Required values are enforced here, not by composite action required: true
 #
 # Output:
@@ -37,7 +37,7 @@ _LOOP_WRITE_CONTRACT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${_LOOP_WRITE_CONTRACT_LIB_DIR}/delivery.sh"
 
 #######################################
-# validate_finalize_label_allowlist: Validate finalize_label_allowlist against the delivery
+# check_loop_write_contract_finalize_label_allowlist: Validate finalize_label_allowlist against the delivery
 #
 # Globals:
 #   None
@@ -53,7 +53,7 @@ source "${_LOOP_WRITE_CONTRACT_LIB_DIR}/delivery.sh"
 #   0 when empty or delivery is issue_comment, issue_create or pr_review; 1 otherwise
 #
 #######################################
-function validate_finalize_label_allowlist {
+function check_loop_write_contract_finalize_label_allowlist {
     local delivery="${1:-}"
     local finalize_label_allowlist="${2:-}"
 
@@ -65,7 +65,7 @@ function validate_finalize_label_allowlist {
 }
 
 #######################################
-# validate_finalize_issue_limit: Validate finalize_issue_limit for delivery issue_create
+# check_loop_write_contract_finalize_issue_limit: Validate finalize_issue_limit for delivery issue_create
 #
 # Globals:
 #   None
@@ -81,7 +81,7 @@ function validate_finalize_label_allowlist {
 #   0 when delivery is not issue_create, or the value is empty or a positive integer; 1 otherwise
 #
 #######################################
-function validate_finalize_issue_limit {
+function check_loop_write_contract_finalize_issue_limit {
     local delivery="${1:-}"
     local finalize_issue_limit="${2:-}"
 
@@ -94,7 +94,7 @@ function validate_finalize_issue_limit {
 }
 
 #######################################
-# validate_agent_tool_denylist: Validate agent_tool_denylist against the level and engine
+# check_loop_write_contract_agent_tool_denylist: Validate agent_tool_denylist against the level and engine
 #
 # Globals:
 #   None
@@ -111,7 +111,7 @@ function validate_finalize_issue_limit {
 #   0 when empty, or when level is L2/L3 and the engine is claude; 1 otherwise
 #
 #######################################
-function validate_agent_tool_denylist {
+function check_loop_write_contract_agent_tool_denylist {
     local level="${1:-}"
     local agent_engine="${2:-}"
     local agent_tool_denylist="${3:-}"
@@ -129,7 +129,7 @@ function validate_agent_tool_denylist {
 }
 
 #######################################
-# validate_loop_write_contract: Validate loop inputs keyed on level
+# check_loop_write_contract_all: Validate loop inputs keyed on level
 #
 # Globals:
 #   None
@@ -151,7 +151,7 @@ function validate_agent_tool_denylist {
 #   0 when valid; 1 when invalid
 #
 #######################################
-function validate_loop_write_contract {
+function check_loop_write_contract_all {
     local level="${1:-}"
     local delivery="${2:-}"
     local agent_edit_target="${3:-}"
@@ -187,7 +187,7 @@ function validate_loop_write_contract {
                 echo "::error::finalize_script is not allowed at L1" >&2
                 return 1
             fi
-            validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
+            check_loop_write_contract_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
             return 0
             ;;
         L2 | L3) ;;
@@ -211,7 +211,7 @@ function validate_loop_write_contract {
         echo "::error::finalize_label_allowlist is required for delivery issue_create" >&2
         return 1
     fi
-    validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
+    check_loop_write_contract_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
 
     case "${agent_edit_target}" in
         fix | report) ;;

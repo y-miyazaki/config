@@ -48,8 +48,8 @@ source "${_loop_action_lib}/edit_paths.sh"
 source "${LIB_DIR}/range_detect.sh"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"
-# shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
-source "${_loop_action_lib}/validate_loop_write_contract.sh"
+# shellcheck source=../../lib/loop/check_loop_write_contract.sh disable=SC1091
+source "${_loop_action_lib}/check_loop_write_contract.sh"
 
 # Plumbing defaults only; decision inputs (DELIVERY, LEVEL) and the level-keyed
 # AGENT_* inputs have no default and are validated in detect.sh.

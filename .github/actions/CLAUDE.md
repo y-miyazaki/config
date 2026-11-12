@@ -48,7 +48,7 @@ Rules:
 - A function in a shared `lib/loop/<stem>.sh` file starts with `<stem>_`. `main` is the only exception. A new or renamed function that does not follow this is rejected in review.
 - A run or skip decision outside `admission.sh` is a defect (see Loop judgements go through the gate). A function named `admission_*` is the only kind of function that returns an admit or skip decision.
 - Facts are named for what they read (`detect_*`, `read_*`), decisions for what they refuse (`admission_*`), effects for what they write (`write_*`, `deliver_*`).
-- Not yet renamed (rename when the file is next changed, one file per change): `build_constraints.sh`, `created_by.sh`, `deliver_*.sh`, `ensure_labels.sh`, `loop_message.sh`, `loop_meta.sh`, `target_slug.sh`, `text.sh`, `trigger_thread.sh`, `validate_loop_write_contract.sh`, `verifier_context.sh`.
+- Not yet renamed (rename when the file is next changed, one file per change): `build_constraints.sh`, `created_by.sh`, `deliver_*.sh`, `ensure_labels.sh`, `loop_message.sh`, `loop_meta.sh`, `target_slug.sh`, `text.sh`, `trigger_thread.sh`, `check_loop_write_contract.sh`, `verifier_context.sh`.
 
 Gate map (`.github/actions/lib/loop/admission.sh`):
 

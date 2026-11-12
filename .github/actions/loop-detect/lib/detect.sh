@@ -1286,12 +1286,12 @@ function validate_candidate_targets {
 #
 #######################################
 function validate_detect_inputs {
-    validate_loop_write_contract \
+    check_loop_write_contract_all \
         "${LEVEL:-}" "${DELIVERY:-}" "${AGENT_EDIT_TARGET:-}" \
         "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_EDIT_DENYLIST:-}" "${AGENT_UNCHANGED_VERDICT:-}" \
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}" || return 1
-    validate_finalize_issue_limit "${DELIVERY:-}" "${FINALIZE_ISSUE_LIMIT:-}" || return 1
-    validate_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
+    check_loop_write_contract_finalize_issue_limit "${DELIVERY:-}" "${FINALIZE_ISSUE_LIMIT:-}" || return 1
+    check_loop_write_contract_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
     delivery_validate_value "${DELIVERY:-}" || return 1
     delivery_validate_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
     validate_detect_items_config || return 1
