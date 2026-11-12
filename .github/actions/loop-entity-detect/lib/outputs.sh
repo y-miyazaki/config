@@ -18,7 +18,7 @@ if ! declare -f redact_sensitive_text > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/redact.sh disable=SC1091
     source "${_ENTITY_OUTPUTS_LIB_DIR}/../../lib/loop/redact.sh"
 fi
-if ! declare -f derive_pr_auto_merge > /dev/null 2>&1; then
+if ! declare -f delivery_derive_pr_auto_merge > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
     source "${_ENTITY_OUTPUTS_LIB_DIR}/../../lib/loop/delivery.sh"
 fi
@@ -79,7 +79,7 @@ function resolve_entity_skip_reason {
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
-#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (derive_pr_auto_merge)
+#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (delivery_derive_pr_auto_merge)
 #
 # Arguments:
 #   $1 - should_run (true|false)
@@ -106,7 +106,7 @@ function write_entity_detect_outputs {
         echo "skip_reason=${skip_reason}"
         echo "skip_detail=${skip_detail}"
         echo "delivery=${DELIVERY:-}"
-        echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
+        echo "pr_auto_merge=$(delivery_derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"
         echo "target_matrix<<${delim}"
         echo "${target_matrix_json}"

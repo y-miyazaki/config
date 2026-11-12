@@ -13,7 +13,7 @@
 # - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH, DETECT_PR_NUMBER, or workflow_run event head is set
 # - Validates level/delivery inputs first; a validation failure exits 1 (fails the job)
 # - delivery pr_push without a PR number skips with skip_reason=pr_number_missing (exit 0)
-# - Every target kind must be allowed by delivery (validate_delivery_target)
+# - Every target kind must be allowed by delivery (delivery_validate_target)
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
 # - DETECT_ITEMS=true gates and orders result.items per item key; the branch key is not consulted
@@ -1262,7 +1262,7 @@ function validate_candidate_targets {
 
     for candidate in "${CANDIDATES_JSON[@]+"${CANDIDATES_JSON[@]}"}"; do
         target_json="$(jq -c '.target_json' <<< "${candidate}")"
-        validate_delivery_target "${DELIVERY}" "${target_json}" || return 1
+        delivery_validate_target "${DELIVERY}" "${target_json}" || return 1
     done
     return 0
 }
@@ -1294,8 +1294,8 @@ function validate_detect_inputs {
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}" || return 1
     validate_finalize_issue_limit "${DELIVERY:-}" "${FINALIZE_ISSUE_LIMIT:-}" || return 1
     validate_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
-    validate_delivery_value "${DELIVERY:-}" || return 1
-    validate_delivery_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
+    delivery_validate_value "${DELIVERY:-}" || return 1
+    delivery_validate_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
     validate_detect_items_config || return 1
     return 0
 }

@@ -23,7 +23,7 @@ if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
     source "${_loop_action_lib}/build_constraints.sh"
 fi
-if ! declare -f derive_pr_auto_merge > /dev/null 2>&1; then
+if ! declare -f delivery_derive_pr_auto_merge > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
     source "${_loop_action_lib}/delivery.sh"
 fi
@@ -209,7 +209,7 @@ function sort_candidates_by_priority {
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
-#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (derive_pr_auto_merge)
+#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (delivery_derive_pr_auto_merge)
 #   SKIP_DETAIL - Read; the first detect or gate detail, published only when should_run is false
 #
 # Arguments:
@@ -238,7 +238,7 @@ function write_detect_outputs {
             echo "skip_detail="
         fi
         echo "delivery=${DELIVERY:-}"
-        echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
+        echo "pr_auto_merge=$(delivery_derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         local delim
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"
         echo "target_matrix<<${delim}"

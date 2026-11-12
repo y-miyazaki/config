@@ -15,7 +15,7 @@
 #   - L1: delivery must be none or issue_comment; agent_edit_target, agent_edit_allowlist,
 #     agent_edit_denylist, agent_unchanged_verdict, and finalize_script must be empty
 #   - L2/L3: delivery must be issue_comment, issue_create, none, pr_create, pr_push, or
-#     pr_review (validate_delivery_value)
+#     pr_review (delivery_validate_value)
 #   - L2/L3: finalize_script is required for delivery issue_comment, issue_create and pr_review
 #   - issue_create (L2/L3 only): finalize_label_allowlist is required and
 #     agent_unchanged_verdict must be REJECT (an APPROVE on no output would fail delivery forever)
@@ -201,7 +201,7 @@ function validate_loop_write_contract {
             ;;
     esac
 
-    validate_delivery_value "${delivery}" || return 1
+    delivery_validate_value "${delivery}" || return 1
 
     if [[ (${delivery} == "issue_comment" || ${delivery} == "issue_create" || ${delivery} == "pr_review") && -z ${finalize_script} ]]; then
         echo "::error::finalize_script is required for delivery ${delivery}" >&2

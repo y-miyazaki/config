@@ -68,7 +68,7 @@ function main {
 
     : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
-    validate_delivery_value "${DELIVERY}" || exit 1
+    delivery_validate_value "${DELIVERY}" || exit 1
 
     if [[ -z ${STATE_BRANCH} ]]; then
         echo "::error::state_branch is required"
@@ -94,7 +94,7 @@ function main {
         exit 1
     fi
 
-    validate_delivery_target "${DELIVERY}" "${TARGET_JSON}" || exit 1
+    delivery_validate_target "${DELIVERY}" "${TARGET_JSON}" || exit 1
 
     base_branch="$(jq -r '(if .mode == "pull_request" then .base.branch else .to.branch end) // ""' <<< "${TARGET_JSON}")"
 

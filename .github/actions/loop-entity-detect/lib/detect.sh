@@ -13,7 +13,7 @@
 # - Large payloads live in loop-handoff artifact; matrix output stays slim
 # - Detect-script boundary: non-zero exit fails the step without skip_reason
 # - level and delivery have no defaults; invalid level-keyed inputs fail the step
-# - skip=false requires result.entity.kind issue | pr, allowed by delivery (validate_delivery_target)
+# - skip=false requires result.entity.kind issue | pr, allowed by delivery (delivery_validate_target)
 #
 # Dependencies:
 # - bash, jq, openssl
@@ -197,7 +197,7 @@ function main {
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         exit 1
     fi
-    if ! validate_delivery_value "${DELIVERY}"; then
+    if ! delivery_validate_value "${DELIVERY}"; then
         exit 1
     fi
 
@@ -249,7 +249,7 @@ function main {
         exit 1
     fi
     if [[ $(jq 'length' <<< "${full_matrix}") -gt 0 ]] \
-        && ! validate_delivery_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
+        && ! delivery_validate_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
         exit 1
     fi
 

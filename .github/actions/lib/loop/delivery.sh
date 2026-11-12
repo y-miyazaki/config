@@ -6,8 +6,8 @@
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 #   source "${loop_action_lib}/delivery.sh"
-#   derive_pr_auto_merge "<level>" "<delivery>"
-#   validate_delivery_value "<delivery>"
+#   delivery_derive_pr_auto_merge "<level>" "<delivery>"
+#   delivery_validate_value "<delivery>"
 #
 # Design Rules:
 #   - Functions are pure: no globals are read or written
@@ -23,7 +23,7 @@
 #######################################
 
 #######################################
-# derive_pr_auto_merge: Derive whether the opened PR is auto-merged
+# delivery_derive_pr_auto_merge: Derive whether the opened PR is auto-merged
 #
 # Globals:
 #   None
@@ -39,7 +39,7 @@
 #   0 always
 #
 #######################################
-function derive_pr_auto_merge {
+function delivery_derive_pr_auto_merge {
     local level="${1:-}"
     local delivery="${2:-}"
 
@@ -51,7 +51,7 @@ function derive_pr_auto_merge {
 }
 
 #######################################
-# validate_delivery_detect_config: Validate delivery against branch caller detect settings
+# delivery_validate_detect_config: Validate delivery against branch caller detect settings
 #
 # Globals:
 #   None
@@ -68,7 +68,7 @@ function derive_pr_auto_merge {
 #   0 when valid; 1 when invalid
 #
 #######################################
-function validate_delivery_detect_config {
+function delivery_validate_detect_config {
     local delivery="${1:-}"
     local detect_pr_enabled="${2:-}"
     local detect_branch_match="${3:-}"
@@ -102,7 +102,7 @@ function validate_delivery_detect_config {
 }
 
 #######################################
-# validate_delivery_target: Validate a target kind is allowed for the delivery
+# delivery_validate_target: Validate a target kind is allowed for the delivery
 #
 # Globals:
 #   None
@@ -118,7 +118,7 @@ function validate_delivery_detect_config {
 #   0 when the target kind is allowed; 1 otherwise
 #
 #######################################
-function validate_delivery_target {
+function delivery_validate_target {
     local delivery="${1:-}"
     local target_json="${2:-}"
     local kind
@@ -171,7 +171,7 @@ function validate_delivery_target {
 }
 
 #######################################
-# validate_delivery_value: Validate the delivery value is a known delivery
+# delivery_validate_value: Validate the delivery value is a known delivery
 #
 # Globals:
 #   None
@@ -186,7 +186,7 @@ function validate_delivery_target {
 #   0 for issue_comment, issue_create, none, pr_create, pr_push, pr_review; 1 otherwise
 #
 #######################################
-function validate_delivery_value {
+function delivery_validate_value {
     local delivery="${1:-}"
 
     case "${delivery}" in
