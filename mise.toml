@@ -63,7 +63,7 @@ claude = { version = "2.1.318", lazy = true, lazy_bins = ["claude"] }           
 "npm:awsp" = { version = "0.2.0", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
-"aqua:kayac/ecspresso" = { version = "2.8.7", lazy = true, lazy_bins = ["ecspresso"] }                             # ECS deployment tool
+"aqua:kayac/ecspresso" = { version = "2.8.8", lazy = true, lazy_bins = ["ecspresso"] }                             # ECS deployment tool
 "aqua:Songmu/ecschedule" = { version = "0.21.1", lazy = true, lazy_bins = ["ecschedule"] }                        # ECS scheduled tasks deployment tool
 "pipx:aws-mfa" = { version = "0.0.12", depends = ["python"], lazy = true, lazy_bins = ["aws-mfa"] }               # AWS MFA helper
 
