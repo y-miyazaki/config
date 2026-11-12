@@ -28,7 +28,7 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 | 1   | `Purpose`                                                                                                                                        | R   | What the loop does, the level (L1 / L2), what it never does; behaviors to know as a short list |
 | 2   | `Use cases`                                                                                                                                      | R   | Each row: use case, trigger, outcome, Transition (state ID)                                    |
 | 3   | `Out of scope`                                                                                                                                   | R   | Exact heading text                                                                             |
-| 4   | `Intake paths (event family, optional)`                                                                                                          | O   | Event family only: each path, its gating, who it handles                                       |
+| 4   | `Intake paths`                                                                                                          | O   | Event family only: each path, its gating, who it handles                                       |
 | 5   | `State model`                                                                                                                                    | R   | State IDs this loop uses and where they are defined                                            |
 | 6   | `User actions`                                                                                                                                   | R   | Table: User action / Loop response / Values changed / Result and next action / Transition      |
 | 7   | `Unhandled cases`                                                                                                                                | R   | Table: Case / Why nothing follows / Disposition (`Accepted`, `Limitation`, `Follow-up`)        |
@@ -64,7 +64,7 @@ Behaviors to know:
 
 - What this loop deliberately does not do, one bullet each.
 
-## Intake paths (event family, optional)
+## Intake paths
 
 Omit this section for scheduled loops. For each path, state the events, the gating rule, and which targets it handles.
 
