@@ -3,7 +3,7 @@
     "integration:main": {
       "last_run": "2026-10-18T10:14:22Z",
       "outcome": "rejected",
-      "consecutive_failures": 2,
+      "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
     }

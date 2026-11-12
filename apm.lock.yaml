@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-12T10:56:38.380739+00:00'
+generated_at: '2026-11-12T11:26:07.923984+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -784,7 +784,7 @@ dependencies:
     .agents/skills/github-pr-revise/references/category-pr-body-links.md: sha256:0f316b769a72095fdc2c912544040e5730cdaeffb5a1c21e0587a414b89ecacb
     .agents/skills/github-pr-revise/references/common-checklist.md: sha256:fa16cffc35b8f07b59804185ab171c9de5c779320d8e131ebabc98d6193ecda2
     .agents/skills/github-pr-revise/references/common-output-format.md: sha256:4bb8d1d6eb265df37f02011612160a8a002ede5203cfc490764fc60428563bdf
-    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:6f4be0a53b4da26db5f45994cb9f838b1807d38eebec27691579152781290bd4
+    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
     .agents/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-pr-revise/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-pr-revise/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -914,7 +914,7 @@ dependencies:
     .claude/skills/github-pr-revise/references/category-pr-body-links.md: sha256:0f316b769a72095fdc2c912544040e5730cdaeffb5a1c21e0587a414b89ecacb
     .claude/skills/github-pr-revise/references/common-checklist.md: sha256:fa16cffc35b8f07b59804185ab171c9de5c779320d8e131ebabc98d6193ecda2
     .claude/skills/github-pr-revise/references/common-output-format.md: sha256:4bb8d1d6eb265df37f02011612160a8a002ede5203cfc490764fc60428563bdf
-    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:6f4be0a53b4da26db5f45994cb9f838b1807d38eebec27691579152781290bd4
+    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
     .claude/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-pr-revise/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-pr-revise/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:4c7becba4c957b63aacdfa56c8476dcf0016d5b333052bfb19f569ac1b5244a7
+  content_hash: sha256:d9ffa27beab48d6cd1c016671f4d34cd349be954abd2ed763ada4648a1df0174
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -1878,7 +1878,7 @@ dependencies:
     .agents/skills/changelog/references/common-checklist.md: sha256:58c5a681eee1a6b2ec3b7c76be3504ac64f5b66820df178db7053cd238959448
     .agents/skills/changelog/references/common-output-format.md: sha256:9c77e0362f29e20ac8e0b764edb2651d49fac4e6f9ac4a7025d8553c3f5d25ae
     .agents/skills/changelog/references/common-troubleshooting.md: sha256:0107a06e1eebe955c556208ff185d9df51a310727e1a826ca8640ae26cd61b06
-    .agents/skills/changelog/scripts/detect_changelog_commits.sh: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
+    .agents/skills/changelog/scripts/detect_changelog_commits.sh: sha256:77b638100f2e2c5a164bbedfe0b88628311cb6c7cd3538c1c2eb7b2e6c6a3e82
     .agents/skills/changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/changelog/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/changelog/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -2110,7 +2110,7 @@ dependencies:
     .claude/skills/changelog/references/common-checklist.md: sha256:58c5a681eee1a6b2ec3b7c76be3504ac64f5b66820df178db7053cd238959448
     .claude/skills/changelog/references/common-output-format.md: sha256:9c77e0362f29e20ac8e0b764edb2651d49fac4e6f9ac4a7025d8553c3f5d25ae
     .claude/skills/changelog/references/common-troubleshooting.md: sha256:0107a06e1eebe955c556208ff185d9df51a310727e1a826ca8640ae26cd61b06
-    .claude/skills/changelog/scripts/detect_changelog_commits.sh: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
+    .claude/skills/changelog/scripts/detect_changelog_commits.sh: sha256:77b638100f2e2c5a164bbedfe0b88628311cb6c7cd3538c1c2eb7b2e6c6a3e82
     .claude/skills/changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/changelog/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/changelog/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -2320,7 +2320,7 @@ dependencies:
     .claude/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:ae2a12d1a38b67b24e71b507f4df15d22460afd6cbf721f1efdb7132a557ff45
   source: local
   local_path: ./.apm/packages/repo-maintenance
-  content_hash: sha256:1d3e4e0e24b23ce422bc36eeae5b6bc86efdceec39805db03e6ec30fc78d8483
+  content_hash: sha256:c970a5dad9378d6cb93eb008dc25df8574bb6823edd6d2836ab025f68ac0ccf3
   declared_license: Apache-2.0
 - repo_url: _local/shell-script
   name: config-shell-script
@@ -3235,7 +3235,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
+  content_hash: sha256:77b638100f2e2c5a164bbedfe0b88628311cb6c7cd3538c1c2eb7b2e6c6a3e82
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/scripts/lib/all.sh
@@ -5710,7 +5710,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:6f4be0a53b4da26db5f45994cb9f838b1807d38eebec27691579152781290bd4
+  content_hash: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise/scripts/lib/all.sh
@@ -8626,7 +8626,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:32dce0b627cfb1341f702be136c67d81bf44131b8d8f186580d9d23bd4cd8276
+  content_hash: sha256:77b638100f2e2c5a164bbedfe0b88628311cb6c7cd3538c1c2eb7b2e6c6a3e82
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/scripts/lib/all.sh
@@ -11101,7 +11101,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:6f4be0a53b4da26db5f45994cb9f838b1807d38eebec27691579152781290bd4
+  content_hash: sha256:b45bc82ab899ee2fbcae025286d6fd025b8748bc287e488508eed5020f92332d
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise/scripts/lib/all.sh
