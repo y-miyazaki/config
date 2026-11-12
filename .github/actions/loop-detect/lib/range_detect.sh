@@ -10,9 +10,9 @@
 #   range_detect "<since>" "<head>" "<state_file>" "<run_log_file>"
 #
 # Design Rules:
-#   - Requires list_diff_paths (lib/loop/edit_paths.sh) and the target checked out as cwd
+#   - Requires edit_paths_list_diff_paths (lib/loop/edit_paths.sh) and the target checked out as cwd
 #   - Platform-written paths (.loop/, the state file, the run log) are excluded by git
-#     pathspec, not filtered from the output: list_diff_paths prints nothing for an
+#     pathspec, not filtered from the output: edit_paths_list_diff_paths prints nothing for an
 #     unsafe path (rc 2), so a later filter could neither exclude nor count them
 #   - rc 2 (unsafe path) runs the loop with a range-only verifier_context
 #   - rc 1 (git failure) fails the detect phase; the rc is read explicitly, never via set -e
@@ -58,7 +58,7 @@ function range_detect {
         pathspec+=(":!${path#"${top}"/}")
     done
 
-    paths_out="$(list_diff_paths "${since}" "${head}" "${pathspec[@]}")" || rc=$?
+    paths_out="$(edit_paths_list_diff_paths "${since}" "${head}" "${pathspec[@]}")" || rc=$?
     if [[ ${rc} -eq 1 ]]; then
         echo "::error::loop-detect: git diff failed for range ${since}..${head}" >&2
         return 1

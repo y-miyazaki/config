@@ -43,7 +43,7 @@
 #     still shows its old path. .loop/ is not excluded.
 #   - .github/workflows/ changes need an allowlist pattern starting with
 #     .github/; ** or an empty allowlist does not allow them.
-#   - Changed paths come from list_diff_paths (-z, core.quotePath=false), so
+#   - Changed paths come from edit_paths_list_diff_paths (-z, core.quotePath=false), so
 #     non-ASCII names are checked unquoted; a path with a control character,
 #     double quote, or backslash fails the push.
 #   - Never force-push; an existing remote branch fails. The ls-remote check
@@ -136,7 +136,7 @@ function collect_workflow_violations {
         [[ ${file} == .github/workflows/* ]] || continue
         matched="false"
         for pattern in "${github_patterns[@]}"; do
-            if path_matches_glob "${file}" "${pattern}"; then
+            if edit_paths_path_matches_glob "${file}" "${pattern}"; then
                 matched="true"
                 break
             fi
@@ -190,7 +190,7 @@ function fail_push {
 #
 # Returns:
 #   0 on success, 1 when git diff fails, 2 when a path has unsafe characters
-#   (see list_diff_paths)
+#   (see edit_paths_list_diff_paths)
 #######################################
 function list_changed_files {
     local from_ref="$1"
@@ -203,7 +203,7 @@ function list_changed_files {
     else
         range="refs/remotes/origin/${base_branch}...refs/heads/${branch}"
     fi
-    list_diff_paths "${range}" --
+    edit_paths_list_diff_paths "${range}" --
 }
 
 #######################################
@@ -365,7 +365,7 @@ function main {
     fi
 
     # 7. Denylist, allowlist, and workflow re-check on the --no-renames diff
-    apply_platform_denylist_default
+    edit_paths_apply_platform_denylist_default
     if ! err_file="$(mktemp)"; then
         fail_push "could not create a temporary file for the diff"
     fi
@@ -380,8 +380,8 @@ function main {
         fail_push "diff of ${branch} failed: ${err}"
     fi
     if ! violations="$(
-        collect_denylist_violations "${changed}" \
-            && collect_allowlist_violations "${changed}" \
+        edit_paths_collect_denylist_violations "${changed}" \
+            && edit_paths_collect_allowlist_violations "${changed}" \
             && collect_workflow_violations "${changed}"
     )"; then
         fail_push "edit path check failed"

@@ -179,7 +179,7 @@ function write_verifier_output_contract {
 # Description:
 #   Writes verdict/reason/reject-* files under the attempt directory. On a
 #   denylist violation or a changed path with unsafe characters (see
-#   list_diff_paths) also writes denylist_blocked=true there so loop.sh can
+#   edit_paths_list_diff_paths) also writes denylist_blocked=true there so loop.sh can
 #   force bundle.sh to skip bundling the branch, even if HAS_CHANGES is true.
 #
 # Globals:
@@ -218,7 +218,7 @@ function run_verify {
     # "no changes" and approve an unreviewed branch.
     git fetch origin "${BASE_BRANCH}" 2> /dev/null || true
     local diff_status=0
-    changed_files="$(list_diff_paths "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
+    changed_files="$(edit_paths_list_diff_paths "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
         2> "${attempt_dir}/branch-diff-error.txt")" || diff_status=$?
     if [[ ${diff_status} -eq 2 ]]; then
         local unsafe_error
@@ -260,7 +260,7 @@ function run_verify {
         return 0
     fi
 
-    violations="$(collect_denylist_violations "${changed_files}")"
+    violations="$(edit_paths_collect_denylist_violations "${changed_files}")"
     if [[ -n ${violations} ]]; then
         local denylist_files
         denylist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)
@@ -275,7 +275,7 @@ function run_verify {
         return 0
     fi
 
-    violations="$(collect_allowlist_violations "${changed_files}")"
+    violations="$(edit_paths_collect_allowlist_violations "${changed_files}")"
     if [[ -n ${violations} ]]; then
         local allowlist_files
         allowlist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)

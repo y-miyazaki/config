@@ -11,7 +11,7 @@
 # - Allowlist and denylist checks run before the LLM checker
 # - Glob patterns follow gitwildmatch-style path rules (** crosses /)
 # - Empty AGENT_EDIT_DENYLIST is coerced to the platform default at loop start
-# - Changed paths come from list_diff_paths (-z, core.quotePath=false): git's
+# - Changed paths come from edit_paths_list_diff_paths (-z, core.quotePath=false): git's
 #   default quoting of non-ASCII names would let them slip past the globs
 #######################################
 
@@ -22,7 +22,7 @@
 DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*'
 
 #######################################
-# apply_platform_denylist_default: Use platform denylist when caller omits one
+# edit_paths_apply_platform_denylist_default: Use platform denylist when caller omits one
 #
 # Globals:
 #   AGENT_EDIT_DENYLIST - Comma-separated glob denylist (read/write)
@@ -37,14 +37,14 @@ DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*'
 #   None
 #
 #######################################
-function apply_platform_denylist_default {
+function edit_paths_apply_platform_denylist_default {
     if [[ -z ${AGENT_EDIT_DENYLIST:-} ]]; then
         AGENT_EDIT_DENYLIST="${DEFAULT_EXECUTE_DENYLIST}"
     fi
 }
 
 #######################################
-# collect_allowlist_violations: Find changed files outside the allowlist
+# edit_paths_collect_allowlist_violations: Find changed files outside the allowlist
 #
 # Globals:
 #   AGENT_EDIT_ALLOWLIST - Comma-separated glob allowlist (optional)
@@ -59,7 +59,7 @@ function apply_platform_denylist_default {
 #   0 on success
 #
 #######################################
-function collect_allowlist_violations {
+function edit_paths_collect_allowlist_violations {
     local changed_files="$1"
     local violations="" pattern file matched
     local -a patterns=()
@@ -71,7 +71,7 @@ function collect_allowlist_violations {
         [[ -z ${file} ]] && continue
         matched="false"
         for pattern in "${patterns[@]}"; do
-            if path_matches_glob "${file}" "${pattern}"; then
+            if edit_paths_path_matches_glob "${file}" "${pattern}"; then
                 matched="true"
                 break
             fi
@@ -86,7 +86,7 @@ function collect_allowlist_violations {
 }
 
 #######################################
-# collect_denylist_violations: Find changed files matching the denylist
+# edit_paths_collect_denylist_violations: Find changed files matching the denylist
 #
 # Globals:
 #   AGENT_EDIT_DENYLIST - Comma-separated glob denylist
@@ -101,7 +101,7 @@ function collect_allowlist_violations {
 #   0 on success
 #
 #######################################
-function collect_denylist_violations {
+function edit_paths_collect_denylist_violations {
     local changed_files="$1"
     local violations="" pattern file
     local -a patterns=()
@@ -112,7 +112,7 @@ function collect_denylist_violations {
     for pattern in "${patterns[@]}"; do
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
-            if path_matches_glob "${file}" "${pattern}"; then
+            if edit_paths_path_matches_glob "${file}" "${pattern}"; then
                 violations="${violations}${file}\n"
             fi
         done <<< "${changed_files}"
@@ -123,7 +123,7 @@ function collect_denylist_violations {
 }
 
 #######################################
-# component_to_ere: Convert one path segment glob to ERE
+# edit_paths_component_to_ere: Convert one path segment glob to ERE
 #
 # Globals:
 #   None
@@ -138,7 +138,7 @@ function collect_denylist_violations {
 #   0 on success
 #
 #######################################
-function component_to_ere {
+function edit_paths_component_to_ere {
     local component="$1"
     local fragment="" index=0
     local character
@@ -160,7 +160,7 @@ function component_to_ere {
 }
 
 #######################################
-# glob_to_ere: Convert a repo-relative glob to an anchored ERE
+# edit_paths_glob_to_ere: Convert a repo-relative glob to an anchored ERE
 #
 # Description:
 #   Maps gitwildmatch-style path globs to bash ERE. A standalone ** path
@@ -180,7 +180,7 @@ function component_to_ere {
 #   0 on success
 #
 #######################################
-function glob_to_ere {
+function edit_paths_glob_to_ere {
     local glob="$1"
     local -a parts=()
     local remaining="${glob}"
@@ -222,7 +222,7 @@ function glob_to_ere {
         fi
         leading_double_star=false
 
-        ere+="$(component_to_ere "${part}")"
+        ere+="$(edit_paths_component_to_ere "${part}")"
     done
 
     ere+='$'
@@ -230,7 +230,7 @@ function glob_to_ere {
 }
 
 #######################################
-# list_diff_paths: List changed paths unquoted, rejecting unsafe names
+# edit_paths_list_diff_paths: List changed paths unquoted, rejecting unsafe names
 #
 # Description:
 #   Runs git diff --name-only --no-renames -z with core.quotePath=false so
@@ -257,7 +257,7 @@ function glob_to_ere {
 #   has unsafe characters or is not valid UTF-8
 #
 #######################################
-function list_diff_paths {
+function edit_paths_list_diff_paths {
     local path git_status quoted
     local -a paths=()
 
@@ -300,7 +300,7 @@ function list_diff_paths {
 }
 
 #######################################
-# path_matches_glob: Test whether a file path matches a glob pattern
+# edit_paths_path_matches_glob: Test whether a file path matches a glob pattern
 #
 # Globals:
 #   None
@@ -316,7 +316,7 @@ function list_diff_paths {
 #   0 when matched, 1 otherwise
 #
 #######################################
-function path_matches_glob {
+function edit_paths_path_matches_glob {
     local file="$1"
     local pattern="$2"
     local trimmed ere
@@ -331,6 +331,6 @@ function path_matches_glob {
         return
     fi
 
-    ere="$(glob_to_ere "${trimmed}")"
+    ere="$(edit_paths_glob_to_ere "${trimmed}")"
     [[ ${file} =~ ${ere} ]]
 }

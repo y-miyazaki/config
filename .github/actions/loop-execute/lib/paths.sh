@@ -54,7 +54,7 @@ function infer_files_from_text {
 # Description:
 #   Uses origin/<base> when that ref exists (after a best-effort fetch),
 #   otherwise <base>. Ignores .loop/ so state-only commits are not treated
-#   as product changes. Paths come from list_diff_paths (unquoted, no rename
+#   as product changes. Paths come from edit_paths_list_diff_paths (unquoted, no rename
 #   detection); a path with unsafe characters lists nothing and logs an error,
 #   and run_verify rejects such a branch.
 #
@@ -86,7 +86,7 @@ function list_non_loop_branch_files {
         if ! git rev-parse --verify "${base_ref}" > /dev/null 2>&1; then
             base_ref="${base_branch}"
         fi
-        if ! list_diff_paths "${base_ref}...HEAD" -- . ':!.loop/'; then
+        if ! edit_paths_list_diff_paths "${base_ref}...HEAD" -- . ':!.loop/'; then
             echo "::error::Branch diff against ${base_ref} failed or listed an unsafe path; path guards saw no files" >&2
         fi
     )

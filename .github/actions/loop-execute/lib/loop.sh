@@ -67,7 +67,7 @@ function initialize_loop_state {
     validate_agent_report_check || return 1
     materialize_matrix_handoff_context
     load_default_prompts
-    apply_platform_denylist_default
+    edit_paths_apply_platform_denylist_default
     reset_usage_totals
 }
 
@@ -368,9 +368,9 @@ function run_bounded_loop {
         elif [[ ${ATTEMPT} -gt 1 && -n ${REJECT_FEEDBACK} ]]; then
             local branch_changed_files branch_violations
             branch_changed_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
-            branch_violations="$(collect_denylist_violations "${branch_changed_files}")"
+            branch_violations="$(edit_paths_collect_denylist_violations "${branch_changed_files}")"
             if [[ -z ${branch_violations} ]]; then
-                branch_violations="$(collect_allowlist_violations "${branch_changed_files}")"
+                branch_violations="$(edit_paths_collect_allowlist_violations "${branch_changed_files}")"
             fi
             if [[ -n ${branch_violations} ]]; then
                 echo "::error::Attempt ${ATTEMPT} produced no file changes while open rejections remain"
