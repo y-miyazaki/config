@@ -39,6 +39,9 @@ source "${SCRIPT_DIR}/../../lib/loop/outcome.sh"
 # shellcheck source=../../lib/loop/push_race.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/push_race.sh"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
@@ -560,11 +563,11 @@ function retry_state_write {
 #
 #######################################
 function validate_branches {
-    if ! [[ ${READ_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${READ_BRANCH}"; then
         echo "::error::Invalid state read branch: ${READ_BRANCH}"
         exit 1
     fi
-    if ! [[ ${PUSH_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${PUSH_BRANCH}"; then
         echo "::error::Invalid state push branch: ${PUSH_BRANCH}"
         exit 1
     fi
@@ -906,12 +909,8 @@ function write_target_state {
 #
 #######################################
 function validate_state_file_path {
-    if [[ ${STATE_FILE} == *".."* ]]; then
-        echo "::error::state_file must not contain '..'" >&2
-        return 1
-    fi
-    if ! [[ ${STATE_FILE} =~ ^\.loop/state-[-a-zA-Z0-9_.]+\.json$ ]]; then
-        echo "::error::state_file must match .loop/state-<name>.json" >&2
+    if ! check_names_state_file "${STATE_FILE}"; then
+        echo "::error::state_file must match .loop/state-<name>.json (no '..')" >&2
         return 1
     fi
     return 0

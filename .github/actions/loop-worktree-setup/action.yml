@@ -76,13 +76,15 @@ runs:
 
         # shellcheck disable=SC1091
         source "${GITHUB_ACTION_PATH}/../lib/loop/git_auth.sh"
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
         loop_git_configure_auth
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""
 
         if [[ -n "${FROM_BRANCH}" ]]; then
-          if ! [[ "${FROM_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${FROM_BRANCH}"; then
             echo "::error::Invalid from branch: ${FROM_BRANCH}"
             exit 1
           fi
@@ -90,7 +92,7 @@ runs:
         fi
 
         if [[ -n "${FROM_REF}" ]]; then
-          if ! [[ "${FROM_REF}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${FROM_REF}"; then
             echo "::error::Invalid from ref: ${FROM_REF}"
             exit 1
           fi
@@ -100,7 +102,7 @@ runs:
         fi
 
         if [[ -n "${BRANCH}" ]]; then
-          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${BRANCH}"; then
             echo "::error::Invalid branch name: ${BRANCH}"
             exit 1
           fi
@@ -117,7 +119,7 @@ runs:
             BRANCH="${BRANCH}-$(target_slug "${TARGET_KEY}")"
           fi
 
-          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${BRANCH}"; then
             echo "::error::Invalid branch name: ${BRANCH}"
             exit 1
           fi

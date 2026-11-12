@@ -37,6 +37,9 @@ GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 TO_BRANCH="${TO_BRANCH:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
@@ -65,11 +68,11 @@ function main {
     : "${TO_BRANCH:?TO_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 
-    if ! [[ ${AGENT_BRANCH} =~ ^[a-zA-Z0-9_./][a-zA-Z0-9/_.-]*$ ]]; then
+    if ! check_names_branch "${AGENT_BRANCH}"; then
         echo "::error::push_target: invalid agent branch: ${AGENT_BRANCH}" >&2
         exit 1
     fi
-    if ! [[ ${TO_BRANCH} =~ ^[a-zA-Z0-9_./][a-zA-Z0-9/_.-]*$ ]]; then
+    if ! check_names_branch "${TO_BRANCH}"; then
         echo "::error::push_target: invalid to.branch: ${TO_BRANCH}" >&2
         exit 1
     fi

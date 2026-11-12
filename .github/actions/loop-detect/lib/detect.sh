@@ -65,6 +65,8 @@ DETECT_SCRIPT="${DETECT_SCRIPT-}"
 # KEY=VALUE entries from detect_env_json, filled by loop_build_detect_env_args (detect_env.sh).
 LOOP_DETECT_ENV_ARGS=()
 STATE_FILE="${STATE_FILE-}"
+# Run-scoped snapshot of the state file from the state branch (set by main); reads fall back to STATE_FILE
+STATE_READ_FILE="${STATE_READ_FILE-}"
 
 #######################################
 # record_skip_detail: Keep the first skip detail of the run for the run log
@@ -469,7 +471,7 @@ function append_detect_candidate {
         checkout_context "${head_branch}" || return 0
     fi
 
-    target_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")")"
+    target_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_READ_FILE:-${STATE_FILE}}" "${target_key}" "${STATE_BRANCH}")")"
     consecutive="$(target_consecutive_failures "${target_state}")"
     if target_state_blocks_candidate "${target_key}" "${target_state}" "${consecutive}"; then
         return 0
@@ -582,7 +584,7 @@ function append_items_candidates {
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")")"
+        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_READ_FILE:-${STATE_FILE}}" "${item_key}" "${STATE_BRANCH}")")"
         consecutive="$(target_consecutive_failures "${item_state}")"
         if target_state_blocks_candidate "${item_key}" "${item_state}" "${consecutive}"; then
             continue
@@ -593,12 +595,12 @@ function append_items_candidates {
         unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
     done < <(jq -c '.[]' <<< "${items_json}")
 
-    unblocked_json="$(order_items_by_last_run "${STATE_FILE}" "${branch}" "${unblocked_json}")" || return 1
+    unblocked_json="$(order_items_by_last_run "${STATE_READ_FILE:-${STATE_FILE}}" "${branch}" "${unblocked_json}")" || return 1
 
     while IFS= read -r item_json; do
         key="$(jq -r '.key' <<< "${item_json}")"
         item_key="$(item_target_key "${branch}" "${key}")"
-        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_FILE}" "${item_key}" "${STATE_BRANCH}")")"
+        item_state="$(target_state_apply_merged_pending "$(read_target_state "${STATE_READ_FILE:-${STATE_FILE}}" "${item_key}" "${STATE_BRANCH}")")"
         consecutive="$(target_consecutive_failures "${item_state}")"
         last_sha="$(target_last_sha "${item_state}" "${branch}" "")"
         item_result="$(item_result_json "${item_json}")" || return 1
@@ -844,7 +846,7 @@ function checkout_context {
     local attempt
     local fetch_ok=false
 
-    if ! [[ ${branch} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${branch}"; then
         echo "::error::Invalid branch name: ${branch}"
         return 1
     fi
@@ -1325,7 +1327,7 @@ function validate_detect_items_config {
     fi
     trimmed="${branch_match#"${branch_match%%[![:space:]]*}"}"
     trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
-    if [[ ! ${trimmed} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${trimmed}"; then
         echo "::error::detect_items true requires detect_branch_match to name exactly one branch (got: ${branch_match})" >&2
         return 1
     fi
@@ -1402,7 +1404,7 @@ function write_legacy_outputs {
     last_sha=$(jq -r '.result.since // .result.commit_range // empty' <<< "${first}")
     current_sha=$(jq -r '.target_json.from.ref' <<< "${first}")
     target_key=$(jq -r '.target_json.key' <<< "${first}")
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
+    target_state="$(read_target_state "${STATE_READ_FILE:-${STATE_FILE}}" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
 
     {
@@ -1478,7 +1480,14 @@ function main {
     fi
 
     mkdir -p "$(dirname "${STATE_FILE}")"
-    migrate_state_targets "${STATE_FILE}" "${STATE_BRANCH}"
+    # Snapshot the state before any target checkout: the tracked copy on a PR head is stale.
+    STATE_READ_FILE="$(mktemp)"
+    if ! snapshot_state_from_branch "${STATE_FILE}" "${STATE_BRANCH}" "${STATE_READ_FILE}"; then
+        write_detect_outputs "false" "config_error" "[]"
+        write_legacy_outputs "[]"
+        return 0
+    fi
+    migrate_state_targets "${STATE_READ_FILE}" "${STATE_BRANCH}"
 
     if ! validate_branch_match; then
         write_detect_outputs "false" "config_error" "[]"
@@ -1486,7 +1495,13 @@ function main {
         return 0
     fi
 
-    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+    # The run log and budget are state-branch files too: read them from the snapshot, not the event ref.
+    local budget_read_file run_log_read_file
+    budget_read_file="$(mktemp)"
+    run_log_read_file="$(mktemp)"
+    snapshot_state_from_branch "${BUDGET_FILE:-.loop/loop-budget.json}" "${STATE_BRANCH}" "${budget_read_file}" || true
+    snapshot_state_from_branch "${RUN_LOG_FILE:-.loop/loop-run-log.md}" "${STATE_BRANCH}" "${run_log_read_file}" || true
+    if admission_budget_exceeded "${LOOP_NAME}" "${budget_read_file}" "${run_log_read_file}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_detect_outputs "false" "budget" "[]"
         write_legacy_outputs "[]"

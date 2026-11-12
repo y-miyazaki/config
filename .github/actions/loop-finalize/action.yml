@@ -426,7 +426,9 @@ runs:
           echo "Skipping branch delete: delivery=${DELIVERY} verdict=${VERDICT} has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
-        if ! [[ "${AGENT_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+        # shellcheck source=../lib/loop/check_names.sh
+        source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
+        if ! check_names_branch "${AGENT_BRANCH}"; then
           echo "::error::Invalid branch name: ${AGENT_BRANCH}"
           exit 1
         fi

@@ -9,6 +9,9 @@ bats_require_minimum_version 1.5.0
 # - pending + OPEN → block (live reality)
 # - pending + CLOSED / MERGED → do not block (stale; promote should clear)
 # - pending + unresolved / no token / no gh → fail closed (block)
+# - snapshot_state_from_branch copies the state file from origin/<state_branch>, not the checked-out tree
+# - snapshot_state_from_branch leaves the destination absent when the branch has no such file
+# - snapshot_state_from_branch rejects an invalid branch name and falls back to the local copy when the fetch fails
 # - target_last_sha returns the stored sha unchanged unless verification is requested
 # - target_last_sha falls back to HEAD~10 with a stderr warning for an unreachable sha when verifying
 
@@ -47,7 +50,63 @@ EOF
 }
 
 setup() {
+    bats_source_rel ".github/actions/lib/loop/check_names.sh"
     bats_source_rel ".github/actions/loop-detect/lib/state.sh"
+}
+
+# snapshot_sandbox: bare origin with main holding the authoritative state, work clone on feature/pr-head with a stale copy
+snapshot_sandbox() {
+    SNAP_BARE="${BATS_TEST_TMPDIR}/origin.git"
+    SNAP_WORK="${BATS_TEST_TMPDIR}/work"
+    git init -q --bare -b main "${SNAP_BARE}"
+    git clone -q "${SNAP_BARE}" "${SNAP_WORK}" 2> /dev/null
+    git -C "${SNAP_WORK}" config user.email "t@example.com"
+    git -C "${SNAP_WORK}" config user.name "t"
+    git -C "${SNAP_WORK}" checkout -q -b main
+    mkdir -p "${SNAP_WORK}/.loop"
+    printf '{"targets":{"pull_request:7":{"consecutive_failures":0}}}\n' > "${SNAP_WORK}/.loop/state-x.json"
+    git -C "${SNAP_WORK}" add -A
+    git -C "${SNAP_WORK}" commit -q -m "init"
+    git -C "${SNAP_WORK}" push -q origin main
+    git -C "${SNAP_WORK}" checkout -q -b feature/pr-head
+    # Authoritative state advances on main after the PR head forked.
+    git -C "${SNAP_WORK}" checkout -q main
+    printf '{"targets":{"pull_request:7":{"consecutive_failures":3}}}\n' > "${SNAP_WORK}/.loop/state-x.json"
+    git -C "${SNAP_WORK}" commit -q -am "state"
+    git -C "${SNAP_WORK}" push -q origin main
+    git -C "${SNAP_WORK}" checkout -q feature/pr-head
+}
+
+@test "snapshot_state_from_branch copies the state file from origin state branch, not the checked-out tree" {
+    snapshot_sandbox
+    cd "${SNAP_WORK}"
+    run snapshot_state_from_branch ".loop/state-x.json" "main" "${BATS_TEST_TMPDIR}/snap.json"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.targets["pull_request:7"].consecutive_failures' "${BATS_TEST_TMPDIR}/snap.json")" = "3" ]
+    # The stale tracked copy on the PR head is untouched and not what was read.
+    [ "$(jq -r '.targets["pull_request:7"].consecutive_failures' .loop/state-x.json)" = "0" ]
+}
+
+@test "snapshot_state_from_branch leaves the destination absent when the branch has no such file" {
+    snapshot_sandbox
+    cd "${SNAP_WORK}"
+    : > "${BATS_TEST_TMPDIR}/snap.json"
+    run snapshot_state_from_branch ".loop/state-missing.json" "main" "${BATS_TEST_TMPDIR}/snap.json"
+    [ "$status" -eq 0 ]
+    [ ! -e "${BATS_TEST_TMPDIR}/snap.json" ]
+}
+
+@test "snapshot_state_from_branch rejects an invalid branch name and falls back to the local copy when the fetch fails" {
+    snapshot_sandbox
+    cd "${SNAP_WORK}"
+    run snapshot_state_from_branch ".loop/state-x.json" "--upload-pack=x" "${BATS_TEST_TMPDIR}/snap.json"
+    [ "$status" -eq 1 ]
+    [[ $output == *"Invalid state branch"* ]]
+
+    run snapshot_state_from_branch ".loop/state-x.json" "no-such-branch" "${BATS_TEST_TMPDIR}/snap.json"
+    [ "$status" -eq 0 ]
+    [[ $output == *"could not fetch"* ]]
+    [ "$(jq -r '.targets["pull_request:7"].consecutive_failures' "${BATS_TEST_TMPDIR}/snap.json")" = "0" ]
 }
 
 @test "target_pending_blocks_detect returns false when pending is absent" {

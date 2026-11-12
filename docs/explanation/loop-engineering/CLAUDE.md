@@ -32,7 +32,8 @@ Applies when adding or changing any rule that decides whether a loop run proceed
 Rules:
 
 - Do not patch a symptom in the layer where it surfaced. Find the gate that owns the judgement and change it there; if no gate owns it, add the judgement to the gate, not beside it.
-- One definition per concept: bot actor, trusted author association, open entity, and `skip_reason` each have exactly one definition. Do not add a second.
+- One definition per concept: bot actor, trusted author association, open entity, and `skip_reason` each have exactly one definition. Do not add a second. The same holds for the names actions validate: a branch name and the state file path have one definition in `lib/loop/check_names.sh` (`check_names_branch`, `check_names_state_file`); a copy of their regex elsewhere is a defect, and a Bats case fails on it.
+- Authoritative data (state file, run log, budget) is read from `origin/<state_branch>`, never from the checked-out tree, which may be a PR head. Code that runs with a write token comes from the trusted ref (see [Trusted ref](multi-branch-loops-design.md#trusted-ref)).
 - Repository visibility is never a trust signal. Actor trust is `author_association` (MEMBER, OWNER, COLLABORATOR) on every repository.
 - Every new skip condition adds a `skip_reason` value from the shared vocabulary and a Bats case that proves the run is skipped.
 - Every new outcome adds a row to the outcome mapping table and a Bats case for the counter, `pending` and prune effect.

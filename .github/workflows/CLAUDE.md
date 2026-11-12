@@ -198,7 +198,8 @@ Changing what decides whether a loop run proceeds, is skipped, or how an outcome
 - A value that two jobs must agree on (artifact name, target key) is computed once and passed as a job output (`needs.<job>.outputs.*`). Do not recompute it in the second job: `GITHUB_RUN_ATTEMPT` changes when only failed jobs are re-run.
 - A commit that lands on a PR head (`pr_push` merge commit) **MUST NOT** carry `[skip ci]`. Only state, ledger, and run-log commits on `state_branch` do.
 - A step that is not critical (for example Enable Auto-Merge) and runs before `Write State` **MUST** handle its own failure (warn and continue). A failure there would skip `Write State` and lose the pending PR cursor.
-- A pattern that several actions validate (the state file path `.loop/state-<name>.json`, which `loop-state-promote` lists) **MUST** have one definition shape; change every copy together and add a Bats case for each.
+- Branch names and the state file path are validated only through `.github/actions/lib/loop/check_names.sh` (`check_names_branch`, `check_names_state_file`). **MUST NOT** add a regex of your own; the Bats case in `test/bats/.github/actions/lib/loop/check_names.bats` fails on a copy. Any other pattern that several actions validate gets the same treatment: one shared definition, every copy replaced in the same change.
+- A job that holds a write token and runs repository scripts (`detect`, `finalize-l1`, `finalize-l2`) **MUST** check out `inputs.state_branch` on `pull_request*` events (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`), so PR-controlled code never runs with that token. Read authoritative data (state file, run log, budget) from `origin/<state_branch>`, not from the checked-out tree.
 
 ## Verification
 

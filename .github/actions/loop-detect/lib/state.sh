@@ -72,6 +72,54 @@ function migrate_state_targets {
 }
 
 #######################################
+# snapshot_state_from_branch: Copy the state file as it is on the state branch to a stable path
+#
+# Description:
+#   Per-target state is authoritative on the state branch (write_state and loop-state-promote read
+#   origin/<state_branch>). Detect switches the working tree to each target branch or PR head, where
+#   the tracked copy of the state file is stale, so it snapshots the state branch once before any
+#   checkout and reads the snapshot. A missing file on the branch leaves the destination absent so
+#   migrate_state_targets creates the default; a failed fetch falls back to the local copy.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Repo-relative state file path
+#   $2 - State branch name
+#   $3 - Destination path (removed first)
+#
+# Outputs:
+#   STDOUT: error annotation for an invalid branch name, warning when the fetch fails
+#
+# Returns:
+#   0 on success (including a missing state file); 1 when the branch name is invalid
+#
+#######################################
+function snapshot_state_from_branch {
+    local state_file="$1"
+    local branch="$2"
+    local dest="$3"
+
+    if ! check_names_branch "${branch}"; then
+        echo "::error::Invalid state branch: ${branch}"
+        return 1
+    fi
+    rm -f "${dest}"
+    if git fetch origin "${branch}" > /dev/null 2>&1; then
+        if git cat-file -e "origin/${branch}:${state_file}" 2> /dev/null; then
+            git show "origin/${branch}:${state_file}" > "${dest}"
+        fi
+        return 0
+    fi
+    echo "::warning::loop-detect/state: could not fetch ${branch}; reading the local ${state_file}"
+    if [[ -f ${state_file} ]]; then
+        cp "${state_file}" "${dest}"
+    fi
+    return 0
+}
+
+#######################################
 # read_target_state: Echo JSON object for one target key
 #
 # Globals:

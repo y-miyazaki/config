@@ -348,6 +348,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # A PR event checks out the PR merge ref; privileged jobs run repo scripts with a write token, so pin the trusted state branch
+          ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}
 
       - name: Resolve GitHub Token
         id: resolve_github_token
@@ -546,6 +548,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          # A PR event checks out the PR merge ref; privileged jobs run repo scripts with a write token, so pin the trusted state branch
+          ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}
 
       - name: Download Loop Handoff
         if: inputs.handoff_artifact_name != ''

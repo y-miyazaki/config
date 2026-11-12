@@ -37,6 +37,9 @@ umask 027
 export LC_ALL=C.UTF-8
 
 _LOOP_BUNDLE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${_LOOP_BUNDLE_LIB_DIR}/check_names.sh"
 
 #######################################
 # main: Bundle branch when loop produced changes
@@ -64,7 +67,7 @@ function main {
     : "${WORKTREE_PATH:?}"
     : "${GITHUB_OUTPUT:?}"
     LOOP_DENYLIST_BLOCKED="${LOOP_DENYLIST_BLOCKED:-false}"
-    if ! [[ ${BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${BRANCH}"; then
         echo "::error::Invalid branch name: ${BRANCH}"
         exit 1
     fi

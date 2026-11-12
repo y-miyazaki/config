@@ -7,6 +7,7 @@
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
 # - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
+# - jobs that run repo scripts with a write token (both detect jobs, finalize-l1, finalize-l2) check out the trusted state branch on PR events
 # - agent jobs hold only read GitHub permissions and no App or GH_TOKEN secret; agent-l2 hands the branch to finalize-l2 as a bundle artifact
 # - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the loop-finalize outcome and failure stage
 # - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
@@ -391,6 +392,17 @@ dogfood_value() {
     if job_block "${AGENT}" finalize-l2 | step_block 'Parse Target' | grep -q 'bundle_artifact_name\|GITHUB_RUN_ATTEMPT'; then
         return 1
     fi
+}
+
+@test "jobs that run repo scripts with a write token check out the trusted state branch on PR events" {
+    local expected
+    expected="ref: \${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}"
+    job_block "${BRANCH_CALLER}" detect | grep -qF "${expected}"
+    job_block "${ENTITY_CALLER}" detect | grep -qF "${expected}"
+    job_block "${AGENT}" finalize-l1 | grep -qF "${expected}"
+    job_block "${AGENT}" finalize-l2 | grep -qF "${expected}"
+    # Exactly four pins: the read-only agent jobs keep the event ref the maker edits.
+    [ "$(grep -c "${expected}" "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}" | awk -F: '{s+=$2} END {print s}')" -eq 4 ]
 }
 
 @test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {

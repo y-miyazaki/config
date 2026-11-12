@@ -84,7 +84,7 @@ Defined here only. Other docs link to this section.
 ```text
 loop-detect
   1. Read LOOP_* + state (targets map)
-  2. Pin DETECT_SCRIPT to an absolute path (state_branch / job checkout) BEFORE any target checkout
+  2. Pin DETECT_SCRIPT to an absolute path (state_branch / job checkout) BEFORE any target checkout, then snapshot the state file, run log and budget from `origin/<state_branch>` (see [Trusted ref](#trusted-ref))
   3. Resolve integration branch list (glob/regex)
   4. Optionally enumerate open PRs (LOOP_PULL_REQUESTS)
   5. Apply trigger scope (LOOP_SCOPED_HEAD_BRANCH / LOOP_SCOPED_PR_NUMBER / workflow_run event head) → drop non-matching targets
@@ -100,6 +100,12 @@ loop-detect
 Execute and finalize jobs use **matrix fan-out** over `target_matrix` — one cell per target, parallel with per-target `concurrency.group`.
 
 Detect scripts scan **only the current context** (branch/ref `loop-detect` checked out for git state). The **script binary** always comes from the pinned absolute path on the job's initial checkout so stale PR heads cannot run older detect logic.
+
+### Trusted ref
+
+A job that holds a write token and runs repository scripts (both `detect` jobs, `finalize-l1`, `finalize-l2`) must not run code that a PR author controls. On a `pull_request*` event the default checkout is the PR merge ref, so these jobs check out `inputs.state_branch` instead (`ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}`). Other events keep their default ref, which is already the default branch or a ref a maintainer chose. The read-only agent jobs keep the event ref because the maker edits it.
+
+Authoritative data follows the same rule: `loop-detect` snapshots the state file, the run log and the budget file from `origin/<state_branch>` before any target checkout and reads the snapshot (`snapshot_state_from_branch` in `loop-detect/lib/state.sh`), and `loop-run-log` checks out the state branch tip before it appends and pushes. Branch names and the state file path are validated by one definition, `lib/loop/check_names.sh`.
 
 ## Target Model (from / to)
 

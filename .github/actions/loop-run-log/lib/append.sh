@@ -246,6 +246,42 @@ function loop_run_log_build_entry {
 }
 
 #######################################
+# loop_run_log_checkout_state_branch: Check out the state branch tip before the run log is appended
+#
+# Description:
+#   The run log is committed on the current HEAD and pushed as HEAD:<base_branch>. After a pr_push
+#   landing HEAD is the PR head, so without this switch an unreviewed PR head would be pushed to the
+#   state branch (and the run log would be read from the wrong tree).
+#
+# Globals:
+#   GITHUB_TOKEN - Exported from the token argument for git auth
+#
+# Arguments:
+#   $1 - State branch name
+#   $2 - GitHub token
+#
+# Outputs:
+#   STDOUT: a workflow warning when the branch cannot be checked out
+#
+# Returns:
+#   0 when the state branch tip is checked out, 1 otherwise
+#
+#######################################
+function loop_run_log_checkout_state_branch {
+    local base_branch="${1:?base_branch required}"
+    local token="${2:?token required}"
+
+    export GITHUB_TOKEN="${token}"
+    loop_git_configure_auth
+    if git fetch origin "${base_branch}" > /dev/null 2>&1 \
+        && git checkout -q -B "${base_branch}" "origin/${base_branch}"; then
+        return 0
+    fi
+    echo "::warning::loop-run-log: could not check out ${base_branch}; the run log entry is not written"
+    return 1
+}
+
+#######################################
 # loop_run_log_commit_and_push: Commit the run log entry and push to the base branch
 #
 # Description:

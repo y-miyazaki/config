@@ -199,6 +199,9 @@ function main {
     local duration_s entry_json
 
     validate_required_inputs
+    if ! loop_run_log_checkout_state_branch "${STATE_BRANCH}" "${GITHUB_TOKEN}"; then
+        return 0
+    fi
     duration_s="$(resolve_duration_s)"
     entry_json="$(append_run_log_entry "${duration_s}")"
     loop_run_log_commit_and_push "${STATE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}" "${entry_json}"

@@ -6,6 +6,7 @@
 # Use cases:
 # - run.sh rejects missing loop_name
 # - run.sh rejects missing state_branch
+# - run.sh pushes the run log from the state branch even when HEAD is on another branch
 # - run.sh appends entry, commits, and writes entry_json output
 # - run.sh computes duration when duration input is empty
 
@@ -93,6 +94,31 @@ setup() {
     run awk '/^entry_json<</{found=1;next} found{print; exit}' "${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
     assert_loop_run_log_entry_json "${output}"
+}
+
+@test "run.sh pushes the run log from the state branch even when HEAD is on another branch" {
+    # After a pr_push landing HEAD is the PR head; its commits must never reach the state branch.
+    git -C "${RUN_LOG_WORK}" checkout -q -b feature/pr-head
+    printf 'unreviewed\n' > "${RUN_LOG_WORK}/pr-only.txt"
+    git -C "${RUN_LOG_WORK}" add pr-only.txt
+    git -C "${RUN_LOG_WORK}" commit -q -m "feat: pr commit"
+
+    run_log_run \
+        GITHUB_TOKEN='test-token' \
+        LOOP_NAME='docs-updater' \
+        OUTCOME='error' \
+        RUN_LOG_FILE='.loop/loop-run-log.md' \
+        STATE_BRANCH='main' \
+        LOOP_RUN_ID='42' \
+        DURATION_S_INPUT='1' \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Run log pushed to main on attempt 1."* ]]
+
+    run git -C "${RUN_LOG_BARE}" ls-tree --name-only refs/heads/main
+    [[ $output != *"pr-only.txt"* ]]
+    run git -C "${RUN_LOG_BARE}" show refs/heads/main:.loop/loop-run-log.md
+    [[ $output == *'"outcome":"error"'* ]]
 }
 
 @test "run.sh computes duration when duration input is empty" {

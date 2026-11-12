@@ -36,6 +36,8 @@ source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh disable=SC1091
+source "${_loop_action_lib}/check_names.sh"
 # shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
 source "${_loop_action_lib}/edit_paths.sh"
 # shellcheck disable=SC1091

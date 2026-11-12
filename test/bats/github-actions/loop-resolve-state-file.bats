@@ -51,7 +51,7 @@ setup() {
     source "${RESOLVE_STATE_LIB}"
     run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME= STATE_FILE_INPUT=.loop/../outside.json GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
     [ "$status" -eq 1 ]
-    [[ $output == *"must not contain '..'"* ]]
+    [[ $output == *"must match .loop/state-<name>.json"* ]]
 }
 
 @test "resolve_state_file rejects a state file without the hyphen that loop-state-promote lists" {

@@ -12,6 +12,7 @@ Operational constitution for AI-assisted development agents. Self-contained — 
 - Do not rely on training knowledge for version-specific APIs, library behavior, or toolchain details — verify in repository code, docs, tests, and official primary sources before acting.
 - Read existing code before modifying; search related implementations and shared interfaces.
 - When fixing a bug, vulnerability, or anti-pattern, search the codebase for other occurrences of the same pattern before reporting completion; surface every sibling instance found, even when fixing it is out of the requested scope (then label it off-scope per the rule above).
+- Consolidate, do not patch piecemeal: when a rule, validation, or constant exists in more than one place, give it one shared definition with one owner and replace every copy in the same change. State the impact scope (code, tests, docs, configuration) before editing, and keep the change coherent with the existing design principles rather than fixing only the reported instance.
 - Stop and Ask before: destructive operations, conflicting requirements, unclear specifications, irreversible architectural decisions, security-sensitive ambiguity, or disproportionate cost.
 - Do not expose secrets, credentials, or sensitive tokens in outputs, logs, or commits.
 - After two failed attempts on the same approach: diagnose root cause and switch strategy; do not patch incrementally.

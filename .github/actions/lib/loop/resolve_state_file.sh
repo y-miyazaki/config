@@ -14,6 +14,10 @@
 #   - Empty output when neither input is provided
 #######################################
 
+# shellcheck source=./check_names.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/check_names.sh"
+
 #######################################
 # resolve_state_file: Resolve state file path
 #
@@ -36,14 +40,6 @@ function resolve_state_file {
     local state_file=""
 
     if [[ -n ${STATE_FILE_INPUT:-} ]]; then
-        if [[ ${STATE_FILE_INPUT} == *".."* ]]; then
-            echo "::error::state_file must not contain '..'" >&2
-            return 1
-        fi
-        if ! [[ ${STATE_FILE_INPUT} =~ ^\.loop/state-[-a-zA-Z0-9_.]+\.json$ ]]; then
-            echo "::error::state_file must match .loop/state-<name>.json" >&2
-            return 1
-        fi
         state_file="${STATE_FILE_INPUT}"
     elif [[ -n ${LOOP_NAME:-} ]]; then
         if ! [[ ${LOOP_NAME} =~ ^[a-zA-Z0-9][-a-zA-Z0-9_.]*$ ]]; then
@@ -51,6 +47,11 @@ function resolve_state_file {
             return 1
         fi
         state_file=".loop/state-${LOOP_NAME}.json"
+    fi
+
+    if [[ -n ${state_file} ]] && ! check_names_state_file "${state_file}"; then
+        echo "::error::state_file must match .loop/state-<name>.json (no '..')" >&2
+        return 1
     fi
 
     echo "state_file=${state_file}" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"

@@ -44,6 +44,9 @@ PROMOTE_MAX_RETRIES="${PROMOTE_MAX_RETRIES:-3}"
 PUSH_RACE_RETRY_STATUS=75
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
@@ -238,8 +241,12 @@ function open_state_pr_fallback {
 function list_state_files {
     local branch="$1"
 
-    git ls-tree -r --name-only "origin/${branch}" -- .loop 2> /dev/null \
-        | grep -E '^\.loop/state-[^/]+\.json$' || true
+    local path
+    while IFS= read -r path; do
+        if check_names_state_file "${path}"; then
+            printf '%s\n' "${path}"
+        fi
+    done < <(git ls-tree -r --name-only "origin/${branch}" -- .loop 2> /dev/null || true)
 }
 
 #######################################
@@ -259,7 +266,7 @@ function list_state_files {
 #
 #######################################
 function validate_state_push_branch {
-    if ! [[ ${STATE_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${STATE_BRANCH}"; then
         echo "::error::Invalid state push branch: ${STATE_BRANCH}"
         exit 1
     fi
