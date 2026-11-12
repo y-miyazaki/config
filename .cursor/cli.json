@@ -131,6 +131,8 @@
       "Write(**/*.ts)",
       "Write(**/*.yaml)",
       "Write(**/*.yml)",
+      "Write(**/AGENTS.md)",
+      "Write(**/CLAUDE.md)",
       "Write(.apm/**)",
       "Write(cmd/**)",
       "Write(docs/**)",
