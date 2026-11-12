@@ -4,8 +4,8 @@
 # Tests for .github/actions/lib/loop/text.sh
 #
 # Use cases:
-# - truncate_text keeps short text unchanged
-# - truncate_text cuts text to the maximum length
+# - text_truncate keeps short text unchanged
+# - text_truncate cuts text to the maximum length
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -19,14 +19,14 @@ setup() {
 
 }
 
-@test "truncate_text cuts text to the maximum length" {
-    run truncate_text "abcdefgh" 3
+@test "text_truncate cuts text to the maximum length" {
+    run text_truncate "abcdefgh" 3
     [ "$status" -eq 0 ]
     [ "$output" = "abc" ]
 }
 
-@test "truncate_text keeps short text unchanged" {
-    run truncate_text "abc" 10
+@test "text_truncate keeps short text unchanged" {
+    run text_truncate "abc" 10
     [ "$status" -eq 0 ]
     [ "$output" = "abc" ]
 }

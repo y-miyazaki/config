@@ -5,7 +5,7 @@
 #
 # Usage:
 #   source text.sh
-#   truncate_text TEXT MAX
+#   text_truncate TEXT MAX
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -15,7 +15,7 @@
 #######################################
 
 #######################################
-# truncate_text: Truncate text to max length
+# text_truncate: Truncate text to max length
 #
 # Globals:
 #   None
@@ -31,7 +31,7 @@
 #   0 on success
 #
 #######################################
-function truncate_text {
+function text_truncate {
     local text="$1"
     local max="$2"
     if [[ ${#text} -le ${max} ]]; then

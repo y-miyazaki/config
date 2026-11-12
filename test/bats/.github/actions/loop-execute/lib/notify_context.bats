@@ -18,8 +18,8 @@
 # - parse_agent_summary extracts block after marker
 # - parse_agent_summary returns empty when file missing
 # - redact_sensitive_text redacts github tokens
-# - truncate_text preserves short input
-# - truncate_text truncates long input
+# - text_truncate preserves short input
+# - text_truncate truncates long input
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -346,14 +346,14 @@ EOF
     [[ $output != *"gha_abcdefghijklmnopqrstuvwxyz"* ]] # pragma: allowlist secret
 }
 
-@test "truncate_text preserves short input" {
-    run truncate_text "short" 10
+@test "text_truncate preserves short input" {
+    run text_truncate "short" 10
     [ "$status" -eq 0 ]
     [ "$output" = "short" ]
 }
 
-@test "truncate_text truncates long input" {
-    run truncate_text "abcdefghij" 4
+@test "text_truncate truncates long input" {
+    run text_truncate "abcdefghij" 4
     [ "$status" -eq 0 ]
     [ "$output" = "abcd" ]
 }

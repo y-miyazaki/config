@@ -95,7 +95,7 @@ function render_agent_section {
     local heading="${2:-}"
     local max_chars="${3:-}"
 
-    text="$(truncate_text "$(redact_sensitive_text "${text}")" "${max_chars}")"
+    text="$(text_truncate "$(redact_sensitive_text "${text}")" "${max_chars}")"
     if [[ -z ${text} ]]; then
         return 0
     fi
@@ -456,7 +456,7 @@ function render_failure_context {
         job_url="$(jq -r --argjson i "${i}" '.failures[$i].job_url // empty' <<< "${detect_json}")"
         failure_type="$(jq -r --argjson i "${i}" '.failures[$i].failure_type // empty' <<< "${detect_json}")"
         reason="$(jq -r --argjson i "${i}" '.failures[$i].reason // empty' <<< "${detect_json}")"
-        reason="$(truncate_text "$(redact_sensitive_text "${reason}")" 500)"
+        reason="$(text_truncate "$(redact_sensitive_text "${reason}")" 500)"
         workflow_url="$(workflow_actions_url "${workflow_path}" 2> /dev/null || true)"
         if [[ -z ${job_url} && -n ${run_url} ]]; then
             job_id="$(jq -r --argjson i "${i}" '.failures[$i].job_id // empty' <<< "${detect_json}")"

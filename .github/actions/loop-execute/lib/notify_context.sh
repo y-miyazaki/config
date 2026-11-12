@@ -332,7 +332,7 @@ function main {
     fi
 
     fix_summary="$(build_fix_summary "${detect_json}")"
-    fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
+    fix_summary="$(text_truncate "$(redact_sensitive_text "${fix_summary}")" 2000)"
 
     changed_files_json='[]'
     diff_stat=""
@@ -366,20 +366,20 @@ function main {
         else
             diff_stat="$(git diff --stat "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null | tail -1 || true)"
         fi
-        diff_stat="$(truncate_text "$(redact_sensitive_text "${diff_stat}")" 500)"
+        diff_stat="$(text_truncate "$(redact_sensitive_text "${diff_stat}")" 500)"
     fi
 
     if [[ -n ${STATUS_DIR} && -d ${STATUS_DIR} ]]; then
         last_output="$(find "${STATUS_DIR}" -name 'agent-output.txt' 2> /dev/null | sort -V | tail -1 || true)"
         if [[ -n ${last_output} ]]; then
             agent_summary="$(parse_agent_summary "${last_output}")"
-            agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
+            agent_summary="$(text_truncate "$(redact_sensitive_text "${agent_summary}")" 2000)"
             agent_report_overview="$(extract_agent_report_overview "${last_output}")"
-            agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
+            agent_report_overview="$(text_truncate "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
             agent_report_summary="$(extract_agent_report_summary "${last_output}")"
-            agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
+            agent_report_summary="$(text_truncate "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
             agent_report_verification="$(extract_agent_report_verification "${last_output}")"
-            agent_report_verification="$(truncate_text "$(redact_sensitive_text "${agent_report_verification}")" 2000)"
+            agent_report_verification="$(text_truncate "$(redact_sensitive_text "${agent_report_verification}")" 2000)"
         fi
     fi
 

@@ -171,11 +171,11 @@ function build_comment_body {
         changed_files=""
     fi
 
-    agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
-    agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
-    fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
-    agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
-    reject_display="$(truncate_text "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
+    agent_report_overview="$(text_truncate "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
+    agent_report_summary="$(text_truncate "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
+    fix_summary="$(text_truncate "$(redact_sensitive_text "${fix_summary}")" 2000)"
+    agent_summary="$(text_truncate "$(redact_sensitive_text "${agent_summary}")" 2000)"
+    reject_display="$(text_truncate "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
     # Keep Reason on one table row (newlines / pipes break markdown tables).
     reject_display="${reject_display//$'\n'/ }"
     reject_display="${reject_display//|/\\|}"
