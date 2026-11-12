@@ -363,10 +363,13 @@ function retry_state_write {
         git reset --hard "origin/${PUSH_BRANCH}"
         rm -f "${STATE_TMP}" "${STATE_TMP}.next"
         load_state_tmp
+        consecutive=""
+        if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+            consecutive="$(resolve_consecutive_failures)"
+        fi
         prune_targets_by_retention "${STATE_TMP}"
         now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
-            consecutive="$(resolve_consecutive_failures)"
             write_target_state "${now}" "${consecutive}"
         fi
 
@@ -801,11 +804,17 @@ function main {
     validate_required_inputs
 
     load_state_tmp
+    # Count before pruning: the 30-day cooldown in prune_targets resets an aged terminal
+    # target to 0, which would erase the failures of the run detect let through after
+    # the breaker cooldown (a rejected probe must reopen the breaker, not restart at 1)
+    consecutive=""
+    if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
+        consecutive="$(resolve_consecutive_failures)"
+    fi
     prune_targets_by_retention "${STATE_TMP}"
     now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     if [[ ${WRITE_TARGET_STATE} == "true" ]]; then
-        consecutive="$(resolve_consecutive_failures)"
         write_target_state "${now}" "${consecutive}"
     fi
 

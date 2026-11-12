@@ -55,14 +55,14 @@ The loop uses the shared states `S0`–`S5` from [Loop Workflow Design Template]
 
 The values that hold each state in this loop:
 
-| State | Values in this loop                                                                                                                                                        |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S0    | No open `pending.pr`, `consecutive_failures` below 3, and budget left; detect always returns `skip: false`                                                                 |
-| S1    | The test PR carries `loop-automation`; `pending` holds `{ sha, pr, … }`; run-log `pr_created`; ledger entries for the changed test paths with `outcome` `pr_created`       |
-| S2    | `on-loop-state-promote` sets `last_sha` to `pending.sha`, removes `pending`, and sets `outcome` `pr_merged`, `consecutive_failures` `0`, and `open_rejections` `[]`        |
-| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` and `consecutive_failures` do not change; the ledger keeps the test paths for 30 days |
-| S4    | The PR stays open; every tick records run-log `skipped` with `skip_reason` `pending_pr`                                                                                    |
-| S5    | `consecutive_failures` is 3 or more; every tick records run-log `skipped` with `skip_reason` `circuit_breaker`                                                             |
+| State | Values in this loop                                                                                                                                                            |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S0    | No open `pending.pr`, `consecutive_failures` below 3, and budget left; detect always returns `skip: false`                                                                     |
+| S1    | The test PR carries `loop-automation`; `pending` holds `{ sha, pr, … }`; run-log `pr_created`; ledger entries for the changed test paths with `outcome` `pr_created`           |
+| S2    | `on-loop-state-promote` sets `last_sha` to `pending.sha`, removes `pending`, and sets `outcome` `pr_merged`, `consecutive_failures` `0`, and `open_rejections` `[]`            |
+| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` and `consecutive_failures` do not change; the ledger keeps the test paths for 30 days     |
+| S4    | The PR stays open; every tick records run-log `skipped` with `skip_reason` `pending_pr`                                                                                        |
+| S5    | `consecutive_failures` is 3 or more and `last_run` is under 30 days old; each tick within 30 days of `last_run` records run-log `skipped` with `skip_reason` `circuit_breaker` |
 
 A run that opens no PR (checker `REJECT`, no diff, agent error) leaves the target in S0. Only `rejected` raises `consecutive_failures`; the third one moves the target to S5. Retry limits and resets are in [Failure handling and the circuit breaker](#failure-handling-and-the-circuit-breaker).
 
@@ -111,7 +111,7 @@ Not applicable: 3, 5 — the loop uses no mention token and reads or writes no I
 | Checker `REJECT`, or no test file written | Run-log `rejected`; state `outcome` `rejected`, `last_reject_reason`, `consecutive_failures` + 1; ledger `rejected` for changed paths; agent branch deleted | Maintainer | Read the reason; adjust `agent_maker_instructions` or `agent_checker_instructions` by PR | The next tick selects again; the third `rejected` in a row moves to S5         |
 | Agent or push error                       | Run-log `error`; `consecutive_failures` unchanged; no ledger entry                                                                                          | Maintainer | Fix the cause                                                                            | The next tick or `workflow_dispatch` retries                                   |
 | Ledger update problem                     | `update_test_gap_ledger.sh` exits 0 and writes a warning on stderr; the ledger is not updated                                                               | Maintainer | Read the finalize log; fix the ledger file by PR                                         | The next tick; the target may be selected again                                |
-| Circuit breaker open                      | Run-log `skipped`, `skip_reason` `circuit_breaker` on every tick                                                                                            | Maintainer | Fix the cause, then reset `consecutive_failures` in `.loop/state-test-gap.json` by PR    | The next tick after the merge (S5 -> S0)                                       |
+| Circuit breaker open                      | Run-log `skipped`, `skip_reason` `circuit_breaker` on every tick until 30 days after `last_run`                                                             | Maintainer | Fix the cause, then reset `consecutive_failures` in `.loop/state-test-gap.json` by PR    | The next tick after the merge (S5 -> S0)                                       |
 | Daily budget used up                      | Run-log `skipped`, `skip_reason` `budget`                                                                                                                   | Maintainer | Wait, or add a `test-gap` entry to `.loop/loop-budget.json` by PR                        | The next tick or `workflow_dispatch`                                           |
 | State promote fails after a merge         | The `on-loop-state-promote` run fails; `pending` stays with a merged `pending.pr`                                                                           | Maintainer | Re-run the failed `on-loop-state-promote` run                                            | Detect treats the stale `pending` as not blocking; the next tick runs as usual |
 
@@ -329,7 +329,7 @@ Phase 1 targets shell scripts with Bats suites only. Go support needs a CI calle
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `agent_loop_max_attempts` | Agent→Verify cycles inside one run (`3`); the last verdict decides the run outcome                                                                                           |
 | `consecutive_failures`    | `loop-finalize` adds 1 on `rejected`, keeps it on `error`, and sets it to `0` on any other outcome; `on-loop-state-promote` sets it to `0` on merge and leaves it on close   |
-| Circuit breaker           | `loop-detect` skips the target with `skip_reason` `circuit_breaker` when `consecutive_failures` is 3 or more                                                                 |
+| Circuit breaker           | `loop-detect` skips the target with `skip_reason` `circuit_breaker` when `consecutive_failures` is 3 or more and `last_run` is less than 30 days old                         |
 | Pending PR                | `loop-detect` skips the target with `skip_reason` `pending_pr` while `pending.pr` is open (or its state cannot be read); a closed or merged `pending.pr` is treated as stale |
 | Concurrency               | Workflow group `loop-state-main` (`cancel-in-progress: false`, `queue: max`), shared with the other scheduled loops and `on-loop-state-promote`                              |
 

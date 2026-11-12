@@ -8,6 +8,8 @@
 # - advance mode: last_sha + outcome; reset consecutive_failures on pr_created
 # - issue_commented and pr_reviewed reset consecutive_failures
 # - rejected, pr_closed, and persisted old pr-closed outcomes increment consecutive_failures
+# - a rejected run on an aged terminal target keeps counting from the stored value (the
+#   30-day prune cooldown does not erase it), and an approved run still resets it
 # - finalize_commit_paths are committed with the state file
 # - no-op when unchanged
 # - metadata mode: outcome without advancing last_sha
@@ -287,6 +289,53 @@ setup() {
     done
     [ "${checked}" -eq 2 ]
 }
+@test "run.sh keeps counting from the stored value when the target is past the 30-day cooldown" {
+    local old
+    old="$(date -u -d '40 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-40d +%Y-%m-%dT%H:%M:%SZ)"
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='rejected' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='2' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 4' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='pr_created' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='3' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 0' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+}
+
 @test "run.sh commits finalize_commit_paths with the state file" {
     printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
 

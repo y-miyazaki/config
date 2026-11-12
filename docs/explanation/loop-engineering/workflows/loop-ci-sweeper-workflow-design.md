@@ -101,15 +101,15 @@ The loop uses the shared states `S0`–`S5` from [Loop Workflow Design Template]
 
 The values that hold each state in this loop:
 
-| State | Values in this loop                                                                                                                                                                                               |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S0    | Detect returns `skip: false`: a failed run on the key's head that is not skipped by the ledger policy and whose head SHA is `last_sha` or a descendant of it                                                      |
-| S0a   | Ledger `runs[<run id>].outcome` is `watch` or `rejected` (`reject_count` + 1 on `rejected`); state `outcome` `watch` (counter kept) or `rejected` (`consecutive_failures` + 1)                                    |
-| S1    | The bot fix PR carries `loop-automation`; `pending` holds `{ sha, pr, … }`; run-log `pr_created`; ledger `outcome` `pr_created`; for `pull_request` keys, the marker comment on the human PR links the bot fix PR |
-| S2    | `on-loop-state-promote` sets `last_sha` to `pending.sha`, removes `pending`, and sets `outcome` `pr_merged`, `consecutive_failures` `0`, and `open_rejections` `[]`                                               |
-| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` and `consecutive_failures` do not change; the ledger keeps `pr_created`, so the same run ID is not processed again           |
-| S4    | The bot fix PR stays open; detect for that key skips it, and when no other key yields a target the run records `skipped` with `skip_reason` `pending_pr`                                                          |
-| S5    | `consecutive_failures` of the key is 3 or more; detect skips the key, and when no other key yields a target the run records `skipped` with `skip_reason` `circuit_breaker`                                        |
+| State | Values in this loop                                                                                                                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S0    | Detect returns `skip: false`: a failed run on the key's head that is not skipped by the ledger policy and whose head SHA is `last_sha` or a descendant of it                                                           |
+| S0a   | Ledger `runs[<run id>].outcome` is `watch` or `rejected` (`reject_count` + 1 on `rejected`); state `outcome` `watch` (counter kept) or `rejected` (`consecutive_failures` + 1)                                         |
+| S1    | The bot fix PR carries `loop-automation`; `pending` holds `{ sha, pr, … }`; run-log `pr_created`; ledger `outcome` `pr_created`; for `pull_request` keys, the marker comment on the human PR links the bot fix PR      |
+| S2    | `on-loop-state-promote` sets `last_sha` to `pending.sha`, removes `pending`, and sets `outcome` `pr_merged`, `consecutive_failures` `0`, and `open_rejections` `[]`                                                    |
+| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` and `consecutive_failures` do not change; the ledger keeps `pr_created`, so the same run ID is not processed again                |
+| S4    | The bot fix PR stays open; detect for that key skips it, and when no other key yields a target the run records `skipped` with `skip_reason` `pending_pr`                                                               |
+| S5    | `consecutive_failures` of the key is 3 or more and its `last_run` is less than 30 days old; detect skips the key, and when no other key yields a target the run records `skipped` with `skip_reason` `circuit_breaker` |
 
 Only `rejected` raises `consecutive_failures`; three in a row on one key move that key to S5. Other keys keep running. Retry limits and resets are in [State delivery](#state-delivery).
 
@@ -412,7 +412,7 @@ See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-p
 | `agent_loop_max_attempts` | Agent→Verify cycles inside one run (`3`); the last verdict decides the run outcome                                                                                                                                               |
 | Ledger retry policy       | `CI_SWEEPER_REJECT_RETRY_POLICY` `block`: a run ID in the ledger is never processed again                                                                                                                                        |
 | `consecutive_failures`    | Per key. `loop-finalize` adds 1 on `rejected`, keeps it on `watch` and `error`, and sets it to `0` on any other outcome; `on-loop-state-promote` sets it to `0` on merge and leaves it on close                                  |
-| Circuit breaker           | `loop-detect` skips a key whose `consecutive_failures` is 3 or more; `skip_reason` `circuit_breaker` is recorded when no other key yields a target                                                                               |
+| Circuit breaker           | `loop-detect` skips a key whose `consecutive_failures` is 3 or more and whose `last_run` is less than 30 days old; `skip_reason` `circuit_breaker` is recorded when no other key yields a target                                 |
 | Cooldown                  | On any finalize state write, an `integration:*` key whose `outcome` is `rejected` or `pr_closed` and whose `last_run` is older than 30 days gets `consecutive_failures` `0`; a `pull_request:*` key in that condition is deleted |
 | Pending PR                | `loop-detect` skips a key while its `pending.pr` is open (or its state cannot be read); a closed or merged `pending.pr` is treated as stale                                                                                      |
 | Concurrency               | Workflow group `loop-state-main` (`cancel-in-progress: false`, `queue: max`), shared with the other scheduled loops and `on-loop-state-promote`                                                                                  |

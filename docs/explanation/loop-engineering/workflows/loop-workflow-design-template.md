@@ -29,7 +29,7 @@ This section and the family section that does not apply are template-only; delet
 
 | #   | Section (H2)                                                                                                                                     | R/O | Content                                                                                        |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ---------------------------------------------------------------------------------------------- |
-| 0   | Title (H1), one-line summary, Layer table, `Artifacts:` line, shared-keys link                                                                   | R   | Same header shape in every document; header rules are in How to use this template |
+| 0   | Title (H1), one-line summary, Layer table, `Artifacts:` line, shared-keys link                                                                   | R   | Same header shape in every document; header rules are in How to use this template              |
 | 1   | `Purpose`                                                                                                                                        | R   | What the loop does, the level (L1 / L2), what it never does; behaviors to know as a short list |
 | 2   | `Use cases`                                                                                                                                      | R   | Each row: use case, trigger, outcome, Transition (state ID)                                    |
 | 3   | `Out of scope`                                                                                                                                   | R   | Exact heading text                                                                             |
@@ -40,7 +40,7 @@ This section and the family section that does not apply are template-only; delet
 | 8   | `Failure and recovery`                                                                                                                           | R   | Per failure kind: how it is recorded, who acts, what they do, how the loop resumes             |
 | 9   | `Caller inputs` (+ `Domain detect environment`)                                                                                                  | R   | Keys and defaults; shared keys link to the inputs reference                                    |
 | 10  | Mechanics: `Detect` / `Execute` / `Finalize` (scheduled), or `Caller shape` / `Detect contract` / `Skill contract` / `Delivery contract` (event) | R   | Same names within a family                                                                     |
-| 11  | One or more of `State delivery`, `Ledger`, `Operations` (`<name> and status` allowed for `Operations`) | O   | Where state is stored, retry limits, circuit breaker, concurrency                              |
+| 11  | One or more of `State delivery`, `Ledger`, `Operations` (`<name> and status` allowed for `Operations`)                                           | O   | Where state is stored, retry limits, circuit breaker, concurrency                              |
 | 12  | `Implementation Checklist`                                                                                                                       | R   | Loop-specific items                                                                            |
 | 13  | `References`                                                                                                                                     | R   | Links by document title                                                                        |
 
@@ -89,14 +89,14 @@ Transition is a real state change from one of these tables, never a free-text la
 
 Scheduled loops share this table. Each document defines it only through this link.
 
-| ID  | State                       | Trigger                                             | Next state       |
-| --- | --------------------------- | --------------------------------------------------- | ---------------- |
-| S0  | Target detected             | The scheduled detect job finds a target             | S1 / S4          |
-| S1  | PR or Issue open (pending)  | The loop opens the PR or Issue                      | S2 / S3 / S5     |
-| S2  | Merged or done              | A person merges the PR or resolves the Issue        | S0 (next target) |
-| S3  | Closed without merge (idle) | A person closes the PR or Issue without merging     | S0 / S4          |
-| S4  | Ignored (left open)         | A person does nothing and the output stays as it is | S2 / S3          |
-| S5  | Stopped (circuit breaker)   | Consecutive failures reach the loop's limit         | S0 (after reset) |
+| ID  | State                       | Trigger                                             | Next state                                                         |
+| --- | --------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
+| S0  | Target detected             | The scheduled detect job finds a target             | S1 / S4                                                            |
+| S1  | PR or Issue open (pending)  | The loop opens the PR or Issue                      | S2 / S3 / S5                                                       |
+| S2  | Merged or done              | A person merges the PR or resolves the Issue        | S0 (next target)                                                   |
+| S3  | Closed without merge (idle) | A person closes the PR or Issue without merging     | S0 / S4                                                            |
+| S4  | Ignored (left open)         | A person does nothing and the output stays as it is | S2 / S3                                                            |
+| S5  | Stopped (circuit breaker)   | Consecutive failures reach the loop's limit         | S0 (after a reset, or after the first run 30 days past `last_run`) |
 
 ## User actions
 

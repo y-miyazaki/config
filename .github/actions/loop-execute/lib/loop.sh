@@ -41,6 +41,7 @@ OPEN_REJECTIONS_JSON='[]'
 REJECT_FEEDBACK=""
 FINALIZE_OUTCOME_OVERRIDE=""
 MAKER_EXIT_NONZERO="false"
+MAKER_TOKENS_SPENT=0
 
 #######################################
 # initialize_loop_state: Prepare status directory and prompt defaults
@@ -174,6 +175,29 @@ function promote_has_changes_after_attempt {
 }
 
 #######################################
+# usage_tokens_total: Run-wide token total recorded so far
+#
+# Globals:
+#   USAGE_CACHE_READ_TOTAL - Cache read tokens (read; 0 when unset)
+#   USAGE_CACHE_WRITE_TOTAL - Cache write tokens (read; 0 when unset)
+#   USAGE_INPUT_TOTAL - Input tokens (read; 0 when unset)
+#   USAGE_OUTPUT_TOTAL - Output tokens (read; 0 when unset)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Token total to stdout
+#
+# Returns:
+#   0 always
+#
+#######################################
+function usage_tokens_total {
+    echo $((${USAGE_INPUT_TOTAL:-0} + ${USAGE_OUTPUT_TOTAL:-0} + ${USAGE_CACHE_READ_TOTAL:-0} + ${USAGE_CACHE_WRITE_TOTAL:-0}))
+}
+
+#######################################
 # write_loop_outputs: Write step outputs to GITHUB_OUTPUT
 #
 # Globals:
@@ -241,8 +265,9 @@ function write_loop_outputs {
 #   DENYLIST_BLOCKED - Whether the latest checked attempt hit the denylist (write)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
-#   FINALIZE_OUTCOME_OVERRIDE - watch (skill) or error (maker exited non-zero, no diff) when set (write)
+#   FINALIZE_OUTCOME_OVERRIDE - watch (skill) or error (maker exited non-zero with no tokens and no diff) when set (write)
 #   MAKER_EXIT_NONZERO - Whether the current attempt's maker exited non-zero (write)
+#   MAKER_TOKENS_SPENT - Tokens the current attempt's maker spent (write)
 #   REASON - Verdict reason for current attempt (read/write)
 #   REJECT_FEEDBACK - Checker feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
@@ -258,7 +283,7 @@ function write_loop_outputs {
 #
 #######################################
 function run_bounded_loop {
-    local attempt_dir agent_prompt attempt_committed branch_ahead_files pre_head
+    local attempt_dir agent_prompt attempt_committed branch_ahead_files pre_head tokens_before
 
     while [[ ${ATTEMPT} -lt ${AGENT_LOOP_MAX_ATTEMPTS} ]]; do
         ATTEMPT=$((ATTEMPT + 1))
@@ -297,10 +322,12 @@ function run_bounded_loop {
 
         echo "Running maker agent (fresh session)..."
         pre_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"
+        tokens_before="$(usage_tokens_total)"
         if ! run_agent_capture "${attempt_dir}/agent-output.txt" "true"; then
             echo "::warning::Maker agent exited non-zero on attempt ${ATTEMPT}"
             MAKER_EXIT_NONZERO="true"
         fi
+        MAKER_TOKENS_SPENT=$(($(usage_tokens_total) - tokens_before))
 
         if ! harvest_workspace_into_worktree; then
             echo "::error::Failed to harvest maker edits from GITHUB_WORKSPACE into worktree"
@@ -348,11 +375,13 @@ function run_bounded_loop {
             else
                 VERDICT="${AGENT_UNCHANGED_VERDICT}"
                 REASON="No file changes produced$(permission_denial_note "${attempt_dir}/agent-output.txt")"
-                if [[ ${MAKER_EXIT_NONZERO} == "true" ]]; then
-                    # A maker that failed to run is a bug, not wasted work: error is not
-                    # counted toward the circuit breaker (rejected is)
+                if [[ ${MAKER_EXIT_NONZERO} == "true" && ${MAKER_TOKENS_SPENT} -le 0 ]]; then
+                    # A maker that failed before spending any tokens (engine or credential
+                    # failure) is a bug, not wasted work: error is not counted toward the
+                    # circuit breaker. A non-zero exit after spending tokens (turn limit,
+                    # timeout) is wasted cost and stays rejected
                     FINALIZE_OUTCOME_OVERRIDE="error"
-                    REASON="${REASON}; maker agent exited non-zero"
+                    REASON="${REASON}; maker agent exited non-zero without spending tokens"
                 fi
             fi
             echo "No changes; verdict=${VERDICT} finalize_outcome_override=${FINALIZE_OUTCOME_OVERRIDE:-none}."

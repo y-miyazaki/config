@@ -18,8 +18,9 @@
 # - run_bounded_loop commits with AGENT_COMMIT_MESSAGE and resolves a no-change
 #   attempt with AGENT_UNCHANGED_VERDICT (legacy COMMIT_MESSAGE / NO_CHANGES_VERDICT ignored)
 # - run_bounded_loop sets the error override only when the final attempt's maker exited
-#   non-zero with no diff and no watch outcome (a zero exit, a diff, or a watch outcome
-#   keeps the override empty)
+#   non-zero without spending tokens, with no diff and no watch outcome (a zero exit, a
+#   diff, spent tokens, or a watch outcome keeps the override empty)
+# - usage_tokens_total sums the four usage counters and treats unset counters as 0
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -206,9 +207,15 @@ prepare_no_change_loop() {
 
 @test "run_bounded_loop keeps the override empty when the maker exits non-zero but produces a diff" {
     prepare_no_change_loop 1
-    function run_agent_capture { : > "$1"; return 1; }
+    function run_agent_capture {
+        : > "$1"
+        return 1
+    }
     function commit_worktree_if_needed { return 0; }
-    function run_verify { printf 'APPROVE\n' > "$1/verdict"; printf 'ok\n' > "$1/reason"; }
+    function run_verify {
+        printf 'APPROVE\n' > "$1/verdict"
+        printf 'ok\n' > "$1/reason"
+    }
     function promote_has_changes_after_attempt { :; }
 
     run_bounded_loop > /dev/null
@@ -218,7 +225,10 @@ prepare_no_change_loop() {
 
 @test "run_bounded_loop sets the error override when the maker exits non-zero with no diff" {
     prepare_no_change_loop 1
-    function run_agent_capture { : > "$1"; return 1; }
+    function run_agent_capture {
+        : > "$1"
+        return 1
+    }
 
     run_bounded_loop > /dev/null
     [ "${VERDICT}" = "REJECT" ]
@@ -226,9 +236,27 @@ prepare_no_change_loop() {
     [[ ${REASON} == *"maker agent exited non-zero"* ]]
 }
 
+@test "run_bounded_loop keeps the override empty when the maker exits non-zero after spending tokens" {
+    prepare_no_change_loop 1
+    USAGE_OUTPUT_TOTAL=0
+    function run_agent_capture {
+        : > "$1"
+        USAGE_OUTPUT_TOTAL=$((USAGE_OUTPUT_TOTAL + 500))
+        return 1
+    }
+
+    run_bounded_loop > /dev/null
+    [ "${VERDICT}" = "REJECT" ]
+    [ -z "${FINALIZE_OUTCOME_OVERRIDE}" ]
+    [ "${MAKER_TOKENS_SPENT}" -eq 500 ]
+}
+
 @test "run_bounded_loop keeps the watch override when the maker exits non-zero with a watch outcome" {
     prepare_no_change_loop 1
-    function run_agent_capture { printf '**Outcome:** watch\n' > "$1"; return 1; }
+    function run_agent_capture {
+        printf '**Outcome:** watch\n' > "$1"
+        return 1
+    }
 
     run_bounded_loop > /dev/null
     [ "${FINALIZE_OUTCOME_OVERRIDE}" = "watch" ]
@@ -263,6 +291,20 @@ prepare_no_change_loop() {
     run_bounded_loop > /dev/null
     [ "${VERDICT}" = "APPROVE" ]
     [ "${REASON}" = "No file changes produced; 1 tool call(s) denied by permission settings" ]
+}
+
+@test "usage_tokens_total sums the four usage counters and treats unset counters as 0" {
+    unset USAGE_INPUT_TOTAL USAGE_OUTPUT_TOTAL USAGE_CACHE_READ_TOTAL USAGE_CACHE_WRITE_TOTAL
+    run usage_tokens_total
+    [ "$status" -eq 0 ]
+    [ "$output" = "0" ]
+
+    USAGE_INPUT_TOTAL=1
+    USAGE_OUTPUT_TOTAL=20
+    USAGE_CACHE_READ_TOTAL=300
+    USAGE_CACHE_WRITE_TOTAL=4000
+    run usage_tokens_total
+    [ "$output" = "4321" ]
 }
 
 @test "permission_denial_note is empty without a denial warning" {
