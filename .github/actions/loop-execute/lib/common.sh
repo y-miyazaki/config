@@ -170,7 +170,7 @@ function materialize_matrix_handoff_context {
             _loop_action_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../lib/loop" && pwd)"
             # shellcheck source=../../lib/loop/verifier_context.sh disable=SC1091
             source "${_loop_action_lib}/verifier_context.sh"
-            VERIFIER_CONTEXT="$(build_verifier_context_from_result "${detect_json}")"
+            VERIFIER_CONTEXT="$(verifier_context_build_from_result "${detect_json}")"
         fi
     fi
 }

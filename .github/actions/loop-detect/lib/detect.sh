@@ -544,7 +544,7 @@ function append_detect_candidate {
         return 0
     fi
 
-    verifier_context="$(build_verifier_context_from_result "${detect_result}")"
+    verifier_context="$(verifier_context_build_from_result "${detect_result}")"
     assemble_detect_candidate \
         "${target_key}" "${head_branch}" "${current_sha}" "${last_sha}" "${target_state}" "${consecutive}" \
         "${detect_result}" "${verifier_context}" "${accept_log_extra}" "${target_json_builder}" "${builder_args[@]}"
@@ -656,7 +656,7 @@ function append_items_candidates {
         item_result="$(item_result_json "${item_json}")" || return 1
         verifier_context="$(jq -r '.verifier_context // "" | strings' <<< "${item_json}")"
         if [[ -z ${verifier_context} ]]; then
-            verifier_context="$(build_verifier_context_from_result "$(jq -c '.context // {}' <<< "${item_json}")")"
+            verifier_context="$(verifier_context_build_from_result "$(jq -c '.context // {}' <<< "${item_json}")")"
         fi
         entity_json="$(jq -c '.entity | if type == "object" then {kind, number} | with_entries(select(.value != null)) else null end' <<< "${item_json}")"
         assemble_detect_candidate \

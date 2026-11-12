@@ -249,7 +249,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 
 - [x] `refactor/scripts/detect_refactor.sh` (H1 facts output)
 - [x] `on-loop-refactor.yaml` dogfood caller via `ci-loop-caller`
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.hints` branch)
+- [x] `verifier_context` on execute path (`verifier_context_build_from_result` `.hints` branch)
 - [x] `refactor` skill + references
 - [x] Bats suite for detect script (TEST-00)
 

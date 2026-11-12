@@ -200,7 +200,7 @@ The script is a thin, language-agnostic detect. It emits facts and **never decid
 
 ### Why `verifier_context` is emitted
 
-`build_verifier_context_from_result` returns the explicit `.verifier_context` from the detect result first. Without it, a detect result that has no `failures` or `commits` yields an empty context and the Checker could not see the ledger. The explicit field is what makes Checker criterion 5 (ledger re-selection) checkable. The text ends with the rule that a target whose test path is listed must not be selected again unless a new reason is stated.
+`verifier_context_build_from_result` returns the explicit `.verifier_context` from the detect result first. Without it, a detect result that has no `failures` or `commits` yields an empty context and the Checker could not see the ledger. The explicit field is what makes Checker criterion 5 (ledger re-selection) checkable. The text ends with the rule that a target whose test path is listed must not be selected again unless a new reason is stated.
 
 ### Stable filters (platform)
 

@@ -275,7 +275,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 
 - [x] `docs-updater/scripts/detect_changes.sh` (facts output)
 - [x] `on-loop-docs-updater.yaml` dogfood caller via `ci-loop-caller`
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.affected_docs` branch)
+- [x] `verifier_context` on execute path (`verifier_context_build_from_result` `.affected_docs` branch)
 - [x] `docs-updater` skill automation path + references
 - [x] Bats suite for detect script (TEST-00)
 

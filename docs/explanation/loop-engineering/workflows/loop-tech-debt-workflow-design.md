@@ -298,7 +298,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 
 - [x] `tech-debt/scripts/detect_tech_debt.sh` (facts output)
 - [x] `on-loop-tech-debt.yaml` dogfood caller via `ci-loop-caller`
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.signals` branch)
+- [x] `verifier_context` on execute path (`verifier_context_build_from_result` `.signals` branch)
 - [x] Skill consolidated into `repo-maintenance`: `tech-debt` (was `loop-tech-debt` / `loop-report-tech-debt`)
 - [x] `.loop/loop-budget.json` entry for `tech-debt`
 

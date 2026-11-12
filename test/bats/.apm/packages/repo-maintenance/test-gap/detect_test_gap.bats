@@ -19,7 +19,7 @@
 # - detect_test_gap rejects unknown --scope
 # - detect_test_gap reports processed ledger entries within the retention window
 # - detect_test_gap treats a missing ledger file as empty
-# - detect_test_gap verifier_context is returned by build_verifier_context_from_result for a ledger with entries
+# - detect_test_gap verifier_context is returned by verifier_context_build_from_result for a ledger with entries
 # - detect_test_gap warns and continues on a corrupt ledger file
 # - detect_test_gap warns and falls back to 30 days when TEST_GAP_RETENTION_DAYS is not a non-negative integer
 # - detect_test_gap warns and returns empty hotspots when since is not a valid ref
@@ -146,7 +146,7 @@ make_churn_repo() {
     run jq -e '(.verifier_context // "") == ""' <<< "${det}"
     [ "$status" -eq 0 ]
     bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
-    run build_verifier_context_from_result "${det}"
+    run verifier_context_build_from_result "${det}"
     [ "$status" -eq 0 ]
     [ -z "${output}" ]
 }
@@ -159,7 +159,7 @@ make_churn_repo() {
     bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
     run detect_result_skip "${det}"
     [ "$status" -eq 1 ]
-    run build_verifier_context_from_result "${det}"
+    run verifier_context_build_from_result "${det}"
     [ "$status" -eq 0 ]
     [ -z "${output}" ]
 }
@@ -198,7 +198,7 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
 }
 
-@test "detect_test_gap verifier_context is returned by build_verifier_context_from_result for a ledger with entries" {
+@test "detect_test_gap verifier_context is returned by verifier_context_build_from_result for a ledger with entries" {
     make_churn_repo "src/a.sh" 1
     mkdir -p "${GIT_TEST_REPO}/.loop"
     printf '%s' '{"entries":{"test/bats/foo.bats":{"attempts":2,"last_loop_run_id":"7","outcome":"pr-created","processed_at":"2999-01-01T00:00:00Z"}}}' > "${GIT_TEST_REPO}/.loop/state-test-gap-ledger.json"
@@ -206,7 +206,7 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
     local det="${output}"
     bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
-    run build_verifier_context_from_result "${det}"
+    run verifier_context_build_from_result "${det}"
     [ "$status" -eq 0 ]
     [[ ${output} == *"test/bats/foo.bats"* ]]
     [[ ${output} == *"## test-gap ledger"* ]]

@@ -449,7 +449,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 
 - [x] `ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
 - [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller`
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.failures` branch)
+- [x] `verifier_context` on execute path (`verifier_context_build_from_result` `.failures` branch)
 - [x] Single detect path via `loop-detect` (no caller re-run)
 - [x] `detect_pr_enabled`
 - [x] Ledger via `finalize_script` in `loop-finalize`

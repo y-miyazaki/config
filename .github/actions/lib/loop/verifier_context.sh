@@ -5,7 +5,7 @@
 # Usage:
 #   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 #   source "${loop_action_lib}/verifier_context.sh"
-#   build_verifier_context_from_result "${detect_json}"
+#   verifier_context_build_from_result "${detect_json}"
 #
 # Output:
 #   Markdown context on stdout (may be empty)
@@ -16,7 +16,7 @@
 #######################################
 
 #######################################
-# build_verifier_context_from_result: Derive verifier_context markdown
+# verifier_context_build_from_result: Derive verifier_context markdown
 #
 # Globals:
 #   None
@@ -31,7 +31,7 @@
 #   0 on success
 #
 #######################################
-function build_verifier_context_from_result {
+function verifier_context_build_from_result {
     local detect_result="$1"
     local explicit
     explicit=$(jq -r '.verifier_context // empty' <<< "${detect_result}" 2> /dev/null || true)

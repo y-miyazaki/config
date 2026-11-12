@@ -266,7 +266,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 
 - [x] `changelog/scripts/detect_changelog_commits.sh` (facts output)
 - [x] `on-loop-changelog.yaml` dogfood caller via `ci-loop-caller`
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.commits` branch)
+- [x] `verifier_context` on execute path (`verifier_context_build_from_result` `.commits` branch)
 - [x] `detect_changelog_commits.sh` emits `releases[]` for tag-scoped entries
 - [x] Dogfood action pins @ v1.8.47
 

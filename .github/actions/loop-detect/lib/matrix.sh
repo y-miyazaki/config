@@ -27,7 +27,7 @@ if ! declare -f delivery_derive_pr_auto_merge > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
     source "${_loop_action_lib}/delivery.sh"
 fi
-if ! declare -f build_verifier_context_from_result > /dev/null 2>&1; then
+if ! declare -f verifier_context_build_from_result > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/verifier_context.sh disable=SC1091
     source "${_loop_action_lib}/verifier_context.sh"
 fi
