@@ -2,12 +2,12 @@
 
 Base template for every per-loop design document under `docs/explanation/loop-engineering/workflows/`. Copy the section skeleton, replace each guidance line with loop content, and omit optional sections that do not apply.
 
-| Layer        | Document                                                         |
-| ------------ | ---------------------------------------------------------------- |
-| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)     |
+| Layer        | Document                                                                  |
+| ------------ | ------------------------------------------------------------------------- |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)              |
 | Caller shell | [Loop Caller Reusable Workflow Design](../loop-caller-reusable-design.md) |
-| Spec         | The design spec of this loop (link by title)                     |
-| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)         |
+| Spec         | The design spec of this loop (link by title)                              |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                  |
 
 **Artifacts:** `on-loop-<name>.yaml` · skill `<name>` · detect script · other loop-specific scripts
 
@@ -18,7 +18,8 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 - Keep the H2 names and order in the table. `R` means required; `O` means optional and is omitted when it does not apply, never stubbed with `None`.
 - Write one-line guidance as content, not prose padding. Prefer tables for operations, states, and failures.
 - State IDs and rule bodies live in one place. Reference them; do not copy them.
-- When the document and the workflow YAML, entry skill, or scripts disagree, the implementation wins. Correct the document, and record the gap under `Unhandled cases` as `Follow-up` only when the implementation itself looks wrong.
+- When the document and the workflow YAML, entry skill, or scripts disagree, the implementation wins. Correct the document. For every such difference, also judge whether the implementation itself is wrong (a missing guard, a stuck state, a silent failure, or paths that behave inconsistently); when it is, record it under `Unhandled cases` as `Follow-up` with a one-line reason.
+- Put loop-specific subsections (for example a rollout stage or deferred checks) as H3 under the nearest template H2, and keep their anchors.
 
 ### Section order
 
@@ -28,7 +29,7 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 | 1   | `Purpose`                                                                                                                                        | R   | What the loop does, the level (L1 / L2), what it never does; behaviors to know as a short list |
 | 2   | `Use cases`                                                                                                                                      | R   | Each row: use case, trigger, outcome, Transition (state ID)                                    |
 | 3   | `Out of scope`                                                                                                                                   | R   | Exact heading text                                                                             |
-| 4   | `Intake paths`                                                                                                          | O   | Event family only: each path, its gating, who it handles                                       |
+| 4   | `Intake paths`                                                                                                                                   | O   | Event family only: each path, its gating, who it handles                                       |
 | 5   | `State model`                                                                                                                                    | R   | State IDs this loop uses and where they are defined                                            |
 | 6   | `User actions`                                                                                                                                   | R   | Table: User action / Loop response / Values changed / Result and next action / Transition      |
 | 7   | `Unhandled cases`                                                                                                                                | R   | Table: Case / Why nothing follows / Disposition (`Accepted`, `Limitation`, `Follow-up`)        |
@@ -78,7 +79,7 @@ List the state IDs this loop uses and where they are defined. Do not copy rule b
 - Scheduled loops: link to [Scheduled loop states](#scheduled-loop-states) and add only loop-specific rows with the suffix `S2a`, `S3a`, and so on.
 - Event loops without Issue state: define a table with the columns ID / State / Trigger / Next state, using prefix `V` (pr-revise) or `W` (pr-review).
 
-Transition is a real state change from one of these tables, never a free-text label. A row that changes no state uses `-`.
+Transition is a real state change from one of these tables, never a free-text label. A row that changes no state uses `-`. A Transition may span several states (`A0 -> A1 -> A2 -> A3`) or branch (`T2 -> T1 / T2 / T3`). In Issue loops, rows for Issues that the handoff table does not track use `-`, and `State model` says why.
 
 ### Scheduled loop states
 
