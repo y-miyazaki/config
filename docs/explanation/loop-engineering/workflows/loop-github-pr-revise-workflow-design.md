@@ -263,7 +263,7 @@ After detect proceeds on a comment webhook:
 
 Detect JSON includes `result.comment_id`, `result.event_name`, inline review fields, and `result.comments` (batched unclaimed `@mention` feedback). See [Detect result](#detect-result).
 
-## Concurrency and pr_push landing
+### Concurrency and pr_push landing
 
 Same-PR revise runs **serialize**; earlier product fixes must remain on the PR head.
 
