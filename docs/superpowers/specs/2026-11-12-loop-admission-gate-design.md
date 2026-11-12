@@ -1,0 +1,86 @@
+# Loop admission gate: one place for run and outcome judgements
+
+Date: 2026-11-12. Follows the backlog Issue #1235 (P4, P8, P9, P10, P12, P13 and the triage visibility bypass) and the Design Invariant 9 rewrite ("Admission is judged in one place").
+
+## Intent
+
+Abnormal-case judgements are spread over five layers and two detect paths with no contract for which layer owns what. Each backlog item is the same defect in a different place: a judgement exists in one layer and is missing or different in its sibling.
+
+| Concept                    | Where it lives today                                                                                                                                                                                                                                                                                    | Resulting defect                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Entity is open             | `loop-detect/lib/prs.sh` (only with a PR number), `detect_autofix.sh` (single mode added in #1238), `list_triage_issues.sh`; `detect_issue.sh` and `detect_pr_review.sh` have none                                                                                                                      | P13 and the pr-review / triage siblings   |
+| Bot actor                  | Four definitions: event `type == Bot`, gh `.author.is_bot`, login suffix `bot`, REST `user.type`                                                                                                                                                                                                        | P10                                       |
+| Trusted association        | Job `if` (pr-revise, triage), `detect_pr_revise.sh` (two copies, empty value allowed), `detect_autofix.sh`; none in `detect_issue.sh`                                                                                                                                                                   | P9, triage visibility bypass              |
+| Circuit breaker and budget | `loop-detect/lib/detect.sh` calls both; `loop-entity-detect/lib/detect.sh` calls only `budget_exceeded`. Triage and pr-review write `consecutive_failures` and never read it                                                                                                                            | An entity loop cannot trip its breaker    |
+| Outcome to counter         | `write_state.sh` (`rejected` / `pr_closed` count), `prune_targets.sh`, `loop-state-promote/lib/run.sh` (merge resets, close does not count). Nothing in `loop-execute`, `loop-finalize/action.yml` or `ci-loop-agent.yaml` emits `pr_closed` or `escalated`, so the `write_state.sh` branches never run | P4, P17                                   |
+| Push race retry            | Three implementations: `write_state.sh` (off when `finalize_commit_paths` is set), `loop-run-log/lib/append.sh` (rebuilds and re-appends), `loop-state-promote` (none)                                                                                                                                  | P8                                        |
+| Skip reason                | `loop-detect` vocabulary (`budget`, `circuit_breaker`, `pending_pr`, `no_changes`, ...); entity path has only `budget` and `detect_skip`; a detect script's own message is a `::notice::` and never reaches the run log                                                                                 | P7 and Invariant 8 (traceability) not met |
+
+The fix is one admission gate that every loop passes before a run, one outcome mapping table that every state writer reads, and one replaying push. All loops stay; no loop is dropped.
+
+## Decisions
+
+1. **Admission gate in the shared lib.** Move `loop-detect/lib/guards.sh` to `.github/actions/lib/loop/admission.sh` (shared logic lives under `lib/loop/` per `.github/workflows/CLAUDE.md`). `loop-detect` and `loop-entity-detect` both call `admission_evaluate` once, after the detect script returns and before emitting the matrix. It returns `{admit, skip_reason, detail}`.
+2. **Detect scripts return facts.** A detect script adds `result.gate` and makes no shared judgement:
+
+   ```json
+   {
+     "entity": { "kind": "issue|pr|range", "number": 12, "state": "open|closed|merged", "is_draft": false, "is_fork": false },
+     "actor": { "login": "x", "type": "User|Bot", "association": "MEMBER" },
+     "trigger": { "source": "webhook|dispatch|schedule", "mention_required": true, "mention_present": true },
+     "dedupe": { "key": "issue:12", "open_pr": null, "closed_pr_at": null },
+     "domain_skip": { "skip": false, "reason": "already_reviewed" }
+   }
+   ```
+
+   Domain-only skips (for example "already reviewed at this SHA") stay in the script as `domain_skip`; everything shared moves to the gate.
+
+3. **Gate order and rules.** One fixed order, first failure wins: facts present, entity open, actor trust, mention, pending, circuit breaker, budget, domain skip. A missing fact skips with `fact_missing` (fail closed).
+   - Actor trust is `association` in MEMBER, OWNER, COLLABORATOR on every repository. Repository visibility is never a trust signal. This aligns triage with the pr-revise fix of #1238.
+   - One bot definition: `actor.type == "Bot"`. Each detect script maps its source (`.author.is_bot`, `user.type`, login) to `type` once. Whether a login without `bot` suffix (for example `app/<slug>`) needs a rule is P10 and is checked on a real run before step 3.
+   - `dispatch` sources skip the mention and actor-trust checks that they skip today; they do not skip entity state, pending, circuit breaker or budget.
+4. **Skip vocabulary.** The gate's `skip_reason` is the only value written to the run log. The entity path's `detect_skip` is replaced by `domain:<reason>`, and the detect message is recorded as `detail` (Invariant 8). New values: `entity_closed`, `actor_untrusted`, `mention_missing`, `fact_missing`.
+5. **Outcome mapping table.** `lib/loop/outcome.sh` gets one table from outcome to effect; `write_state.sh`, `prune_targets.sh` and `loop-state-promote/lib/run.sh` read it instead of keeping their own `case`:
+
+   | Outcome                                                     | `consecutive_failures` | `last_sha` | `pending` | Prune eligible         |
+   | ----------------------------------------------------------- | ---------------------- | ---------- | --------- | ---------------------- |
+   | `rejected`                                                  | +1                     | keep       | keep      | yes (`pull_request:*`) |
+   | `pr_closed` (written by `loop-state-promote`)               | +1                     | keep       | clear     | yes (`pull_request:*`) |
+   | `pr_merged`                                                 | reset to 0             | advance    | clear     | no                     |
+   | `error`, `watch`                                            | keep                   | keep       | keep      | no                     |
+   | others (`pr_created`, `pr_pushed`, `unchanged`, `approved`) | reset to 0             | per mode   | per mode  | no                     |
+
+   Counting a close (P4) makes three closes of the same loop PR open the breaker, which stops the same PR returning every tick. The dead `pr_closed` and `escalated` branches in `write_state.sh` are removed; `escalated` is removed only if no emitter is found at implementation time.
+
+6. **Replaying push.** Extract the re-apply approach of `loop-run-log/lib/append.sh` into `lib/loop/commit_with_replay.sh`: the caller passes a jq filter (the change as a function), and every failed push fetches the latest remote file and applies the filter again. `write_state.sh`, `loop-run-log` and `loop-state-promote` use it. `finalize_commit_paths` files are written through the same function, which removes the "no retry when `finalize_commit_paths` is set" branch (P8). A ledger integration into the state file is out of this step and is optional (step 6 below); the replay contract is what removes the race, not the file merge.
+7. **Coarse job `if`.** `on-loop-*.yaml` `if` keeps static, cheap filters only (bot sender, event type, label name, `issue.pull_request`). Actor trust, mention and visibility move to the gate. A refused event still creates a run that skips in seconds; the `concurrency` queue wait is accepted, because serializing runs per entity is required and a skipped run releases its slot immediately (queue behavior of `queue: max` is not verified here).
+8. **Circuit breaker reset.** The step that installs the mapping table also sets `consecutive_failures` to 0 in every `.loop/state-*.json` target, in the same change, because the table changes what the counter means. `pending`, `last_sha` and `outcome` are untouched.
+9. **Enforcement.** The rules are in `docs/explanation/loop-engineering/CLAUDE.md` and Invariant 9. A bats test in `test/bats/github-actions/loop-caller-parity.bats` fails when an `on-loop-*.yaml` job `if` contains `author_association`, `repository.private` or a literal mention; it lands with step 5 so the current `if` expressions are fixed in the same change.
+
+## Non-goals
+
+- No loop is stopped, merged or removed.
+- P11 (the `eyes` claim marker), P18 (bot fix PR outliving a human PR), `resolve_consecutive_failures` stdout pollution, the changelog filter, copilot / codex usage and the #1019 checks stay as separate items.
+- No new notification destination (the circuit breaker decision 5 of the 2026-11-12 spec stands).
+- No change to the budget caps, the threshold of 3 or the 30-day half-open rule.
+
+## Migration
+
+Each step ships and is pinned on its own (`ci-loop-caller.yaml` pins its actions by SHA, so a merged change reaches dogfood only after the pin bump). Bats run only for the touched directories.
+
+| Step | Change                                                                                                                                            | Bats                                                                                                                                               | Docs                                                                         |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1    | Skip vocabulary and traceability: entity `detect_skip` becomes `domain:<reason>`; detect messages are recorded as `detail`. No judgement changes. | `test/bats/.github/actions/loop-entity-detect/`, `test/bats/github-actions/loop-entity-detect.bats`, `test/bats/.github/actions/loop-run-log/lib/` | `loop-caller-reusable-design.md`, `loop-engineering-design.md` (Invariant 8) |
+| 2    | Outcome mapping table, replaying push, state reset (decisions 5, 6, 8). `write_state`, `prune_targets` and `loop-state-promote` read the table.   | `loop-write-state.bats`, `loop-prune-targets.bats`, `loop-outcome.bats`, `loop-state-promote/lib/run.bats`, `lib/loop/`                            | Retry Policy, STATE Files, the P4 / P8 / P17 rows of each workflow design    |
+| 3    | Admission gate in `lib/loop/admission.sh`; entity loops get pending and circuit breaker; one bot definition (check P10 on a real run first).      | `loop-detect/lib/guards.bats` (moved), `detect.bats`, `prs.bats`, entity suites                                                                    | Design Invariants, Domain Isolation table                                    |
+| 4    | Detect scripts of autofix, triage, pr-review and pr-revise return `result.gate`; entity-state checks leave the scripts.                           | `test/bats/.apm/packages/github/*/`                                                                                                                | Each workflow design (`Unhandled cases`: the closed-entity rows are removed) |
+| 5    | Coarse job `if` and the parity bats; Invariant 9 text and the Intake Gating table are brought in line.                                            | `loop-caller-parity.bats`, `loop-pr-revise-intake.bats`, `loop-triage-schedule.bats`                                                               | Intake Gating table, the `if` descriptions of pr-revise and triage           |
+| 6    | Optional: fold the ledgers into `targets[key].domain`; `finalize_script` emits a jq filter and writes through `commit_with_replay`.               | `update_run_ledger.bats`, `detect_test_gap.bats`, `detect_ci_failures.bats`                                                                        | ci-sweeper and test-gap workflow designs                                     |
+
+## Risks and unknowns
+
+- Unknown: the `author_association` values GitHub reports on private and organization repositories. If a legitimate actor is refused, the fix is an explicit allow-list input to the gate, not a visibility bypass.
+- Unknown: whether a workflow-level `concurrency` evaluates before job `if`, and the exact `queue: max` limit. Decision 7 accepts the wait either way.
+- Risk: the mapping table changes the meaning of stored `consecutive_failures`; decision 8 resets it, so a loop that was stopped runs again once.
+- Risk: the gate runs after the detect script, so facts that cost an API call stay the script's job. A script that forgets a fact is refused with `fact_missing`, never admitted.
+- Not verified: no Bats suite was run for this spec; the evidence comes from reading the code and the review of the 2026-11-12 session.

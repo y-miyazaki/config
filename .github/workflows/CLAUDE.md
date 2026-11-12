@@ -184,6 +184,10 @@ Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engin
 | Landing contract      | `push_target.sh` checks out `origin/to.branch`, merges `origin/agent` with `--no-ff`, pushes without force — same merge shape as legacy inline finalize, with explicit auth, agent≠to guard, extracted tests, and fail-closed errors |
 | `pr_create` untouched | Changes to `pr_push` landing **MUST NOT** alter the `pr_create` create-PR path                                                                                                                                                       |
 
+## Loop judgements (MUST)
+
+Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../../docs/explanation/loop-engineering/CLAUDE.md#loop-judgements-go-through-the-gate-must). Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger filters; actor trust, mention and repository visibility checks belong to the gate.
+
 ## Verification
 
 Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00). `pr_push` landing changes **MUST** include `test/bats/.github/actions/loop-finalize/lib/push_target.bats`.
