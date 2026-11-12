@@ -41,11 +41,6 @@ on:
         description: Human revision instructions (required for manual dispatch)
         required: true
         type: string
-      mention:
-        description: Mention token required in comment body
-        required: false
-        type: string
-        default: "@loop"
       pr_number:
         description: Pull request number
         required: true
@@ -77,7 +72,6 @@ jobs:
         github.event.issue.pull_request != null
       ) &&
       (
-        github.event.repository.private == true ||
         github.event_name == 'workflow_dispatch' ||
         github.event_name == 'repository_dispatch' ||
         (
@@ -145,7 +139,7 @@ jobs:
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000
       delivery: ${{ inputs.delivery || 'pr_push' }}
-      detect_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+      detect_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', '@loop') }}
       detect_pr_denylist: fork,label:no-loop
       detect_pr_enabled: true
       detect_pr_number: ${{ fromJSON(github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0) }}

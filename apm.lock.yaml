@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-12T05:53:50.458870+00:00'
+generated_at: '2026-11-12T09:13:20.653538+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -338,7 +338,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:4a3c62137b0a52d887f81991e4b3dbcfec5416ef99692d0c1f4024980fc461f4
+  content_hash: sha256:6a9da078c28a07d3a876e2b3229801437f09950089510aa34ab23cb640e11b6c
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -678,7 +678,7 @@ dependencies:
     .agents/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .agents/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .agents/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:13c894b4246c606a9356c21b03efdeb739295ab76bd13296bf354c4b077712bc
+    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
     .agents/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -808,7 +808,7 @@ dependencies:
     .claude/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .claude/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .claude/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:13c894b4246c606a9356c21b03efdeb739295ab76bd13296bf354c4b077712bc
+    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
     .claude/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:901319c115065dab8c05a959e95505212afa4d77cb1a79cda86fa4d22f8d21ac
+  content_hash: sha256:da9f044bac9bb9669a1f98200f2f8fb2a7340475e1801434c96af8c9f0a0d04b
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -4720,7 +4720,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:13c894b4246c606a9356c21b03efdeb739295ab76bd13296bf354c4b077712bc
+  content_hash: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-autofix/scripts/lib/all.sh
@@ -10111,7 +10111,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:13c894b4246c606a9356c21b03efdeb739295ab76bd13296bf354c4b077712bc
+  content_hash: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-autofix/scripts/lib/all.sh
