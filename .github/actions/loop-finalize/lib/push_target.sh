@@ -84,7 +84,7 @@ function main {
     git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
 
     set +e
-    merge_err="$(git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]" 2>&1)"
+    merge_err="$(git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix" 2>&1)"
     merge_status=$?
     set -e
     if [[ ${merge_status} -ne 0 ]]; then

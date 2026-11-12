@@ -17,7 +17,11 @@
 #   - Outcome mapping table (single source for write_state.sh, prune_targets.sh and loop-state-promote):
 #       rejected, pr_closed  -> consecutive_failures +1; prune terminal
 #       watch, error         -> consecutive_failures kept; not terminal
-#       every other outcome  -> consecutive_failures reset to 0; not terminal
+#       pr_created, pr_pushed, pr_merged, issue_created, issue_commented, pr_reviewed,
+#       reported, unchanged, skipped
+#                            -> consecutive_failures reset to 0; not terminal
+#       unknown or empty     -> consecutive_failures kept with a warning (fail closed:
+#                               a missing mapping row never clears the circuit breaker)
 #     pr_closed is written by loop-state-promote when a loop PR closes without merging
 #
 # Output:
@@ -64,16 +68,23 @@ function outcome_normalize {
 #
 # Outputs:
 #   STDOUT: increment | keep | reset
+#   STDERR: warning when the outcome has no mapping row
 #
 # Returns:
 #   0 always
 #
 #######################################
 function outcome_counter_effect {
-    case "$(outcome_normalize "${1:-}")" in
+    local value
+    value="$(outcome_normalize "${1:-}")"
+    case "${value}" in
         rejected | pr_closed) echo "increment" ;;
         watch | error) echo "keep" ;;
-        *) echo "reset" ;;
+        issue_commented | issue_created | pr_created | pr_merged | pr_pushed | pr_reviewed | reported | skipped | unchanged) echo "reset" ;;
+        *)
+            echo "::warning::outcome_counter_effect: unmapped outcome '${value}'; keeping consecutive_failures (add a row to the outcome mapping table)" >&2
+            echo "keep"
+            ;;
     esac
 }
 

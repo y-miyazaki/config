@@ -8,17 +8,18 @@
 #   Runs on: issue_comment, pull_request_review_comment, repository_dispatch, workflow_dispatch
 #
 # Design Rules:
-#   None
+#   - Runs on one PR serialize in concurrency group loop-github-pr-revise-<pr_number> (cancel-in-progress false, queue max)
+#   - pr_push lands by merging the agent branch into the latest PR head; conflicts fail closed, no force push
 #
 # Dependencies:
-#   None
+#   - Requires repository secrets: AGENT_TOKEN (engine API key), MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY
 #
 # References:
-#   None
+#   - Design: docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md#concurrency-and-pr_push-landing
 #######################################
 name: on-loop-github-pr-revise
 
-run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}"
+run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number }}"
 
 on:
   issue_comment: # zizmor: ignore[dangerous-triggers]

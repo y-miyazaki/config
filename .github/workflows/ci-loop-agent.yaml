@@ -410,6 +410,7 @@ jobs:
     outputs:
       attempts: ${{ steps.execute.outputs.attempts }}
       branch: ${{ steps.worktree.outputs.branch }}
+      bundle_artifact_name: ${{ steps.target.outputs.bundle_artifact_name }}
       failure_message: ${{ steps.execute.outputs.failure_message }}
       failure_stage: ${{ steps.execute.outputs.failure_stage }}
       finalize_outcome_override: ${{ steps.execute.outputs.finalize_outcome_override }}
@@ -558,7 +559,6 @@ jobs:
           TARGET_JSON: ${{ inputs.target_json }}
         run: |
           set -euo pipefail
-          bundle_artifact_name=""
           from_ref=""
           key=""
           pr_number=""
@@ -567,11 +567,7 @@ jobs:
             key="$(jq -r '.key // empty' <<< "${TARGET_JSON}")"
             pr_number="$(jq -r '.to.pr_number // empty' <<< "${TARGET_JSON}")"
           fi
-          if [[ -n "${key}" ]]; then
-            bundle_artifact_name="loop-agent-bundle-${GITHUB_RUN_ATTEMPT}-$(printf '%s' "${key}" | sha256sum | cut -c1-16)"
-          fi
           {
-            echo "bundle_artifact_name=${bundle_artifact_name}"
             echo "from_ref=${from_ref}"
             echo "key=${key}"
             echo "pr_number=${pr_number}"
@@ -593,7 +589,8 @@ jobs:
         if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: ${{ steps.target.outputs.bundle_artifact_name }}
+          # The name comes from agent-l2: GITHUB_RUN_ATTEMPT differs after a re-run of failed jobs.
+          name: ${{ needs.agent-l2.outputs.bundle_artifact_name }}
           path: ${{ runner.temp }}/loop-agent-bundle
 
       # continue-on-error: a landing, PR, or delivery failure must not stop the

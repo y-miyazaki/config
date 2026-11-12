@@ -4,6 +4,7 @@
 # Tests for .apm/packages/github/.apm/skills/github-pr-revise/scripts/detect_pr_revise.sh
 #
 # Use cases:
+# - Gathered comments need a trusted author_association; a missing one is dropped (fail closed)
 # - Skip an empty body; report bots, mention and association as result.gate facts for the admission gate
 # - The admission gate refuses bot actors, a missing or wrong mention, and an untrusted association (webhook and dispatch)
 # - Proceed for mention-gated comment and trusted dispatch feedback
@@ -327,6 +328,34 @@ EOF
         and .status == "ok"
         and (.message | test("no open"))
     ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise drops gathered comments with a missing or untrusted author_association" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "api" && "$*" == *"issues/77/comments"* ]]; then
+    printf '%s\n' '[{"id":101,"body":"@loop no assoc","user":{"login":"maintainer","type":"User"},"reactions":{"eyes":0}},{"id":102,"body":"@loop outsider","user":{"login":"stranger","type":"User"},"author_association":"NONE","reactions":{"eyes":0}},{"id":103,"body":"@loop trusted","user":{"login":"maintainer","type":"User"},"author_association":"MEMBER","reactions":{"eyes":0}}]'
+    exit 0
+fi
+if [[ "$1" == "api" && "$*" == *"pulls/77/comments"* ]]; then
+    printf '%s\n' '[{"id":201,"body":"@loop no assoc","path":"a.go","line":1,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"reactions":{"eyes":0}}]'
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=77 PR_MENTION='@loop' PR_COMMENT_BODY='@loop trusted' \
+        PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=issue_comment \
+        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=token \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and ([.result.comments[].comment_id] | sort) == [103]' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

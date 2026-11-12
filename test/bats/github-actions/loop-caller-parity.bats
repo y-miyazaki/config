@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2016,SC2143
 
-# Tests for .github/workflows/ci-loop-caller.yaml, .github/workflows/ci-loop-caller-entity.yaml, .github/workflows/ci-loop-agent.yaml
+# Tests for .github/workflows/ci-loop-caller.yaml,.github/workflows/ci-loop-caller-entity.yaml, .github/workflows/ci-loop-agent.yaml
 #
 # Use cases:
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
@@ -374,19 +375,22 @@ dogfood_value() {
     [[ ${branch} == *"ci-loop-agent.yaml"* ]]
 }
 
-@test "both parse target steps name the bundle artifact the same way" {
-    local job script out
-    for job in agent-l2 finalize-l2; do
-        script="$(job_block "${AGENT}" "${job}" | step_block 'Parse Target' | run_script)"
-        [[ -n ${script} ]]
-        out="${BATS_TEST_TMPDIR}/github_output_${job}"
-        : > "${out}"
-        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
-            TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
-            bash -c "${script}"
-        [ "$status" -eq 0 ]
-        grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
-    done
+@test "finalize-l2 takes the bundle artifact name from agent-l2 so a re-run attempt cannot change it" {
+    local script out
+    script="$(job_block "${AGENT}" agent-l2 | step_block 'Parse Target' | run_script)"
+    [[ -n ${script} ]]
+    out="${BATS_TEST_TMPDIR}/github_output"
+    : > "${out}"
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
+        TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
+        bash -c "${script}"
+    [ "$status" -eq 0 ]
+    grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
+    # agent-l2 publishes the name as a job output; finalize-l2 computes none of its own.
+    job_block "${AGENT}" agent-l2 | grep -qF 'bundle_artifact_name: ${{ steps.target.outputs.bundle_artifact_name }}'
+    if job_block "${AGENT}" finalize-l2 | step_block 'Parse Target' | grep -q 'bundle_artifact_name\|GITHUB_RUN_ATTEMPT'; then
+        return 1
+    fi
 }
 
 @test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {
@@ -856,7 +860,7 @@ dogfood_value() {
         "        if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'" \
         '        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2' \
         '        with:' \
-        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          name: ${{ needs.agent-l2.outputs.bundle_artifact_name }}' \
         '          path: ${{ runner.temp }}/loop-agent-bundle')"
     [ "${step}" = "${expected}" ]
     # The bundle is fetched after the token is resolved and before Finalize runs.
@@ -909,12 +913,11 @@ dogfood_value() {
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_ref=def456 key=pull_request:7 pr_number=7)" ]
-    # An empty target_json names no bundle, so Download Agent Bundle cannot match one.
+    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref=def456 key=pull_request:7 pr_number=7)" ]
     : > "${out}"
     run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON='' bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name= from_ref= key= pr_number=)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref= key= pr_number=)" ]
 }
 
 @test "finalize-l2 runs loop-finalize with no step if" {

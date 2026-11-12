@@ -8,7 +8,7 @@
 # - inputs are the delivery contract (delivery, pr_auto_merge, state_branch, renamed
 #   finalize_* / agent_engine / pr_labels) in alphabetical order; removed inputs are gone
 # - push, PR creation, and branch deletion branch on inputs.delivery only
-# - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true'
+# - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true' and a gh failure warns without failing the step, so Write State still runs
 # - no step reads a finalize strategy or an old strategy value
 # - Create PR resolves detect JSON from the handoff (no detect_result_json input)
 # - Resolve Run Outcome always runs right before Export Failure Diagnostics and owns the outcome output
@@ -288,6 +288,23 @@ EOF2
     expected="Materialize Message, Parse Target, Push Agent Branch, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Fail Agent Push, Resolve Run Outcome, Export Failure Diagnostics"
     run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | paste -sd, - | sed 's/,/, /g'"
     [ "${output}" = "${expected}" ]
+}
+
+@test "enable auto-merge warns and succeeds when gh pr merge fails so state is still written" {
+    local script bin
+    script="$(step_run "Enable Auto-Merge")"
+    [ -n "${script}" ]
+    bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${bin}"
+    printf '#!/bin/bash\necho "gh: auto-merge is not allowed" >&2\nexit 1\n' > "${bin}/gh"
+    chmod +x "${bin}/gh"
+    run env PATH="${bin}:${PATH}" PR_URL="https://github.com/o/r/pull/1" bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"* ]]
+    # No PR url: nothing to merge, no warning.
+    run env PATH="${bin}:${PATH}" PR_URL="" bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [[ ${output} != *"::warning::"* ]]
 }
 
 @test "enable auto-merge runs only when pr_auto_merge is true" {

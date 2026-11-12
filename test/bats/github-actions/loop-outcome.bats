@@ -5,7 +5,7 @@
 # Use cases:
 # - outcome_normalize maps each old persisted outcome to its new name
 # - outcome_normalize passes new names, unknown values, and empty input through unchanged
-# - outcome_counter_effect maps rejected and pr_closed (old and new names) to increment, watch and error to keep, every other outcome to reset
+# - outcome_counter_effect maps rejected and pr_closed (old and new names) to increment, watch, error and any unmapped or empty outcome to keep, every listed success outcome to reset
 # - outcome_is_prune_terminal succeeds only for rejected and pr_closed (old and new names)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -14,6 +14,8 @@ while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
 done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
+
+bats_require_minimum_version 1.5.0
 
 OUTCOME_LIB="$(bats_workspace_root)/.github/actions/lib/loop/outcome.sh"
 
@@ -118,12 +120,22 @@ setup() {
     done
 }
 
-@test "outcome_counter_effect: every other outcome resets, including unknown and empty" {
+@test "outcome_counter_effect: listed success outcomes reset, including old names" {
     local value
-    for value in pr_created pr_pushed pr_merged merged unchanged approved reported escalated unknown ""; do
+    for value in pr_created pr_pushed pr_merged merged unchanged no-changes reported issue_created issue_commented pr_reviewed skipped; do
         run outcome_counter_effect "${value}"
         [ "$status" -eq 0 ]
         [ "$output" = "reset" ]
+    done
+}
+
+@test "outcome_counter_effect: unmapped and empty outcomes keep the counter and warn" {
+    local value
+    for value in unknown approved ""; do
+        run --separate-stderr outcome_counter_effect "${value}"
+        [ "$status" -eq 0 ]
+        [ "$output" = "keep" ]
+        [[ ${stderr} == *"unmapped outcome"* ]]
     done
 }
 

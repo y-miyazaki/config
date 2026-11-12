@@ -383,8 +383,10 @@ runs:
         PR_URL: ${{ steps.pr.outputs.url }}
       run: |
         set -euo pipefail
-        if [[ -n "${PR_URL}" ]]; then
-          gh pr merge "${PR_URL}" --auto --squash
+        # Non-critical: the PR already exists, so a failure here (auto-merge disabled,
+        # no required checks) must not skip Write State and lose the pending PR cursor.
+        if [[ -n "${PR_URL}" ]] && ! gh pr merge "${PR_URL}" --auto --squash; then
+          echo "::warning::loop-finalize: could not enable auto-merge for ${PR_URL}; continuing so state is still written"
         fi
 
     - name: Write State

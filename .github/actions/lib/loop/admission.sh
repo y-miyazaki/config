@@ -228,7 +228,7 @@ function admission_circuit_breaker_open {
 #   None
 #
 # Returns:
-#   0 when the type is Bot or the login is a bot login (suffix bot or [bot], prefix app/); 1 otherwise
+#   0 when the type is Bot or the login is a bot login (login bot, suffix -bot or [bot], prefix app/); 1 otherwise
 #
 #######################################
 function admission_actor_is_bot {
@@ -239,7 +239,7 @@ function admission_actor_is_bot {
     lowered_type="$(tr '[:upper:]' '[:lower:]' <<< "${type}")"
     lowered_login="$(tr '[:upper:]' '[:lower:]' <<< "${login}")"
     [[ ${lowered_type} == "bot" ]] && return 0
-    [[ ${lowered_login} == *"bot" || ${lowered_login} == *"[bot]" || ${lowered_login} == app/* ]] && return 0
+    [[ ${lowered_login} == "bot" || ${lowered_login} == *"-bot" || ${lowered_login} == *"[bot]" || ${lowered_login} == app/* ]] && return 0
     return 1
 }
 

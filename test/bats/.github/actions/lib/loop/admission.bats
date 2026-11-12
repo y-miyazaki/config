@@ -14,7 +14,7 @@
 # - admission_budget_exceeded applies a token-only limit when no run limit is configured
 # - admission_budget_exceeded excludes skipped entries from run and token aggregation
 # - admission_budget_exceeded still counts entries that carry target_key
-# - admission_actor_is_bot is the one bot definition (type Bot, login suffix bot or [bot], app/ prefix)
+# - admission_actor_is_bot is the one bot definition (type Bot, login bot, suffix -bot or [bot], app/ prefix; humans such as abbot are not bots)
 # - admission_actor_trusted accepts MEMBER, OWNER and COLLABORATOR on every repository and refuses the rest
 # - admission_evaluate admits a result without a gate, fails closed on an unknown entity state and skips the check when no state is reported
 # - admission_evaluate refuses a closed or merged entity, an untrusted or bot actor, a missing mention, an open PR, an open circuit breaker and a domain skip, in that order
