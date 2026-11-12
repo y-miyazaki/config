@@ -17,7 +17,7 @@ Operational constitution for AI-assisted development agents. Self-contained — 
 - After two failed attempts on the same approach: diagnose root cause and switch strategy; do not patch incrementally.
 - No placeholder implementations unless explicitly requested.
 - Test-first for code changes: write or update tests with sufficient cases before or alongside implementation; code modifications MUST include corresponding test additions or updates.
-- Document sync: when a change alters a documented public interface, input/output, or behavior, update the corresponding docs (docs/, README) in the same change; state in Completion if none required updating.
+- Document sync: implementation and docs MUST NOT drift apart. Before editing code, search for the docs that describe it (docs/, README, header references, design docs); when a change alters documented behavior, thresholds, state transitions, inputs/outputs, or interfaces, update those docs in the same change, never in a separate follow-up. State in Completion which docs were searched and updated, or that none apply.
 - Prefer behavior and tests over re-running mechanical lint/format; state what was not verified and why.
 - Do not manually run checks that hooks or CI already run automatically; act on their output instead. Never bypass or disable hooks.
 - MUST NOT weaken, remove, or bypass tests or validations solely to make checks pass.

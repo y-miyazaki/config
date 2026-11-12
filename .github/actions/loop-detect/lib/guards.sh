@@ -169,13 +169,21 @@ function read_budget_cost_limit {
 }
 
 #######################################
-# target_circuit_breaker_open: Return 0 when consecutive_failures >= 3
+# target_circuit_breaker_open: Return 0 while the circuit breaker blocks the target
+#
+# Description:
+#   Open when consecutive_failures >= 3, but only while last_run is inside the 30-day
+#   cooldown window (same window and field as prune_targets.sh). Once last_run is older,
+#   one run is allowed through (half-open): a rejected result reopens the breaker for
+#   another 30 days, an approved result resets the counter. A missing or invalid last_run
+#   keeps the breaker open (fail-safe, same as prune_targets.sh).
 #
 # Globals:
 #   None
 #
 # Arguments:
 #   $1 - Consecutive failure count
+#   $2 - Target last_run timestamp (optional; empty keeps the breaker open)
 #
 # Outputs:
 #   None
@@ -186,5 +194,12 @@ function read_budget_cost_limit {
 #######################################
 function target_circuit_breaker_open {
     local consecutive="$1"
-    [[ ${consecutive} -ge 3 ]]
+    local last_run="${2:-}"
+    local cutoff
+
+    [[ ${consecutive} -ge 3 ]] || return 1
+    [[ ${last_run} =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]] || return 0
+    cutoff="$(date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d)"
+    [[ ${last_run:0:10} < ${cutoff} ]] && return 1
+    return 0
 }

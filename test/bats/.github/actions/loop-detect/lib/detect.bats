@@ -34,6 +34,7 @@ bats_require_minimum_version 1.5.0
 # - detect_items true requires one literal branch and detect_pr_enabled false
 # - items mode builds one integration:<branch>#<key> candidate per item with only that item's context
 # - items mode gates each item by its own breaker / pending state, never the branch key
+# - items mode lets an item through once its open breaker is older than 30 days
 # - items mode orders by last_run (no state first) before the detect_max_targets cap
 # - items mode falls back to HEAD~10 for from.since without item state
 # - items mode treats an empty items array as skip and a missing, invalid, or duplicate key as an error
@@ -1134,6 +1135,16 @@ output_matrix_keys() {
     [[ ${output} == *"::warning::Circuit breaker open for integration:main#issue:1"* ]]
     grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
     grep -qx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode lets an item through once its open breaker is older than 30 days" {
+    local old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-31d +%Y-%m-%dT%H:%M:%SZ)"
+    make_items_repo "$(items_detect_json 1 2)" \
+        "{\"integration:main#issue:1\":{\"consecutive_failures\":3,\"last_run\":\"${old}\"}}"
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 0 ]
 }
 
 @test "items mode skips item with pending pr" {

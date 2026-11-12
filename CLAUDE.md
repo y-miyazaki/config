@@ -16,6 +16,8 @@
 
 **Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/workflows/CLAUDE.md`, `docs/explanation/loop-engineering/CLAUDE.md`) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
 
+**Docs sync (MUST):** code and docs move together (see Document sync in `AGENTS.md`). Search for the docs first; for `.github/workflows/**` and `.github/actions/**` the code-to-docs map is in [.github/workflows/CLAUDE.md](.github/workflows/CLAUDE.md#docs-sync-must).
+
 ## Permission parity (MUST)
 
 These four files express one permission policy for different agents. They are repo-owned and hand-edited: `apm install` does not materialize them, so the `.cursor/` sync-target row above does not apply to `cli.json` or `permissions.json`.

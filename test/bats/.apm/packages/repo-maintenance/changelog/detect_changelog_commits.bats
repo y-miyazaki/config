@@ -12,6 +12,7 @@
 # - is_loop_maintenance_commit skips chore changelog scope
 # - is_loop_maintenance_commit skips subject with loop-changelog marker
 # - is_loop_maintenance_commit allows regular feat commits
+# - is_loop_maintenance_commit skips promote and clear_pending state commits and only those
 # - detect_changelog_commits range scope returns feat commit
 # - detect_changelog_commits skips loop maintenance commit in range
 # - detect_changelog_commits reports changelog_exists false when missing
@@ -89,6 +90,19 @@ setup() {
 
 @test "is_loop_maintenance_commit allows human chore loop commits" {
     run is_loop_maintenance_commit "chore" "loop" "increase agent_maker_max_turns to 15"
+    [ "$status" -eq 1 ]
+}
+
+@test "is_loop_maintenance_commit skips promote and clear_pending state commits and only those" {
+    run is_loop_maintenance_commit "chore" "loop" "promote state for PR #12 [skip ci]"
+    [ "$status" -eq 0 ]
+    run is_loop_maintenance_commit "chore" "loop" "clear_pending state for PR #12 [skip ci]"
+    [ "$status" -eq 0 ]
+    run is_loop_maintenance_commit "chore" "loop" "promote state [skip ci]"
+    [ "$status" -eq 1 ]
+    run is_loop_maintenance_commit "feat" "loop" "promote state for PR #1"
+    [ "$status" -eq 1 ]
+    run is_loop_maintenance_commit "chore" "other" "promote state for PR #1"
     [ "$status" -eq 1 ]
 }
 

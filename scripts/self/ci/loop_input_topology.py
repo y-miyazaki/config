@@ -82,6 +82,7 @@ DECISIONS: dict[str, tuple[str, str, str]] = {
     "agent_maker_max_turns": ("—", "全", "変更なし"),
     "agent_maker_model": ("—", "全", "変更なし"),
     "agent_maker_skill_name": ("—", "全", "変更なし"),
+    "agent_report_check": ("—", "L2+", "新設。maker の報告を LLM checker の前に決定的に検査する"),
     "agent_tool_allowlist": ("agent_allowed_tools", "全", "改名"),
     "agent_tool_denylist": ("—", "L2+", "新設(code-review loop 第4節)。claude の L2/L3 だけで有効"),
     "agent_unchanged_verdict": ("no_changes_verdict", "L2+", "改名。第6節で検証"),
