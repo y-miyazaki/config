@@ -273,11 +273,13 @@ function admission_actor_trusted {
 # admission_evaluate: Decide whether a run may proceed from the facts of a detect result
 #
 # Description:
-#   Evaluates result.gate in one fixed order, first failure wins: facts present, entity open,
-#   actor trust (webhook only), mention (webhook only), open PR already handling the entity,
-#   circuit breaker, detect-script domain skip. A result without a gate is not evaluated
-#   (admit), so detect scripts can adopt the gate one at a time. A gate with an entity that
-#   lacks a readable state skips with fact_missing (fail closed).
+#   Evaluates result.gate in one fixed order, first failure wins: entity open, bot actor (every
+#   source but schedule), author association (required on a webhook, checked on other sources
+#   when reported), mention (webhook only), open PR
+#   already handling the entity, circuit breaker, detect-script domain skip. A result without a
+#   gate is not evaluated (admit), so detect scripts can adopt the gate one at a time. A fact
+#   the script does not report is not evaluated; a reported entity.state that is not open,
+#   closed or merged skips with fact_missing (fail closed).
 #
 # Globals:
 #   None
@@ -305,32 +307,38 @@ function admission_evaluate {
         return 0
     fi
 
-    state="$(jq -r '.entity.state // ""' <<< "${gate}")"
-    case "${state}" in
-        open) ;;
-        closed | merged)
-            admission_result false "entity_closed" "entity state is ${state}"
-            return 0
-            ;;
-        *)
-            admission_result false "fact_missing" "entity.state is missing or unknown"
-            return 0
-            ;;
-    esac
+    if jq -e '.entity | type == "object" and has("state")' <<< "${gate}" > /dev/null 2>&1; then
+        state="$(jq -r '.entity.state // ""' <<< "${gate}")"
+        case "${state}" in
+            open) ;;
+            closed | merged)
+                admission_result false "entity_closed" "entity state is ${state}"
+                return 0
+                ;;
+            *)
+                admission_result false "fact_missing" "entity.state is unknown (${state:-empty})"
+                return 0
+                ;;
+        esac
+    fi
 
     source="$(jq -r '.trigger.source // ""' <<< "${gate}")"
-    if [[ ${source} == "webhook" ]]; then
+    if [[ ${source} != "schedule" ]]; then
         type="$(jq -r '.actor.type // ""' <<< "${gate}")"
         login="$(jq -r '.actor.login // ""' <<< "${gate}")"
-        association="$(jq -r '.actor.association // ""' <<< "${gate}")"
         if admission_actor_is_bot "${type}" "${login}"; then
             admission_result false "actor_untrusted" "actor is a bot"
             return 0
         fi
+    fi
+    association="$(jq -r '.actor.association // ""' <<< "${gate}")"
+    if [[ ${source} == "webhook" || (${source} != "schedule" && -n ${association}) ]]; then
         if ! admission_actor_trusted "${association}"; then
             admission_result false "actor_untrusted" "author association is not trusted"
             return 0
         fi
+    fi
+    if [[ ${source} == "webhook" ]]; then
         mention_required="$(jq -r '.trigger.mention_required // false' <<< "${gate}")"
         mention_present="$(jq -r '.trigger.mention_present // false' <<< "${gate}")"
         if [[ ${mention_required} == "true" && ${mention_present} != "true" ]]; then

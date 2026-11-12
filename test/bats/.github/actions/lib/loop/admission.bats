@@ -16,9 +16,9 @@
 # - admission_budget_exceeded still counts entries that carry target_key
 # - admission_actor_is_bot is the one bot definition (type Bot, login suffix bot or [bot], app/ prefix)
 # - admission_actor_trusted accepts MEMBER, OWNER and COLLABORATOR on every repository and refuses the rest
-# - admission_evaluate admits a result without a gate and fails closed when the entity state is missing
+# - admission_evaluate admits a result without a gate, fails closed on an unknown entity state and skips the check when no state is reported
 # - admission_evaluate refuses a closed or merged entity, an untrusted or bot actor, a missing mention, an open PR, an open circuit breaker and a domain skip, in that order
-# - admission_evaluate applies actor and mention checks to webhooks only
+# - admission_evaluate applies the bot check to every source but schedule, the association check to webhooks (required) and to other sources (when reported), and the mention check to webhooks only
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -306,11 +306,13 @@ gate_json() {
     [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
 }
 
-@test "admission_evaluate fails closed when the entity state is missing" {
-    run admission_evaluate '{"entity":{"kind":"pr","number":1}}' '{}'
-    [ "$(jq -r '.skip_reason' <<< "${output}")" = "fact_missing" ]
+@test "admission_evaluate fails closed on an unknown entity state and skips the check when none is reported" {
     run admission_evaluate "$(gate_json weird)" '{}'
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "fact_missing" ]
+    run admission_evaluate '{"entity":{"kind":"pr","number":1,"state":""}}' '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "fact_missing" ]
+    run admission_evaluate '{"entity":{"kind":"pr","number":1}}' '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
 }
 
 @test "admission_evaluate refuses closed and merged entities" {
@@ -321,12 +323,18 @@ gate_json() {
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "entity_closed" ]
 }
 
-@test "admission_evaluate refuses bot and untrusted webhook actors, not dispatch or schedule" {
+@test "admission_evaluate refuses bot actors on webhook and dispatch, an untrusted association on webhook and dispatch, nothing on schedule" {
     run admission_evaluate "$(gate_json open webhook Bot bot-x MEMBER)" '{}'
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
     run admission_evaluate "$(gate_json open webhook User alice NONE)" '{}'
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
-    run admission_evaluate "$(gate_json open dispatch User alice NONE)" '{}'
+    run admission_evaluate "$(gate_json open dispatch Bot bot-x NONE)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
+    run admission_evaluate "$(gate_json open dispatch User alice CONTRIBUTOR)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
+    run admission_evaluate "$(gate_json open dispatch User alice MEMBER)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    run admission_evaluate "$(gate_json open dispatch User alice "")" '{}'
     [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
     run admission_evaluate "$(gate_json open schedule Bot bot-x NONE)" '{}'
     [ "$(jq -r '.admit' <<< "${output}")" = "true" ]

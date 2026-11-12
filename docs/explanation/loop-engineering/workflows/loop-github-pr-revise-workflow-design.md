@@ -18,7 +18,7 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 
 Single intake for PR revision from human feedback: conversation or review comments containing **`@loop`** + `repository_dispatch` / `workflow_dispatch` → **branch / PR-head** caller (L2, `agent_edit_target: fix`).
 
-Detect skips bots and comments without the mention token. Default delivery: `pr_push` (lands on the PR head); manual dispatch can pick `pr_create` (a new stacked PR). The loop never resolves review threads and never force-pushes.
+`detect_pr_revise.sh` reports the actor and the mention as facts (`result.gate`); the admission gate refuses bots, an untrusted association and a missing mention (`actor_untrusted`, `mention_missing`). Default delivery: `pr_push` (lands on the PR head); manual dispatch can pick `pr_create` (a new stacked PR). The loop never resolves review threads and never force-pushes.
 
 Behaviors to know:
 
@@ -122,7 +122,7 @@ Not applicable: 5 — the loop reads no Issue; PR close and reopen are covered a
 | A run fails after ACK (agent error, checker REJECT, conflict)                                       | The claimed comments keep `eyes` and are never gathered again. The reply reports the outcome; the person restates the feedback in a new `@loop` comment                       | Accepted    |
 | A comment contains `@loop` as part of a longer word (for example `@loopy`)                          | The job `if` uses a substring match, so the run queues; detect uses a word-boundary match and skips it                                                                        | Accepted    |
 | A person edits a claimed comment                                                                    | Edits are not intake events and claimed comments are not gathered again. The person posts a new `@loop` comment                                                               | Accepted    |
-| A user without MEMBER, OWNER or COLLABORATOR role mentions `@loop`                                  | Comments are untrusted input. The job `if` and detect refuse the author; a maintainer restates the request                                                                    | Accepted    |
+| A user without MEMBER, OWNER or COLLABORATOR role mentions `@loop`                                  | Comments are untrusted input. The job `if` and the admission gate refuse the author; a maintainer restates the request                                                        | Accepted    |
 | A Bot sender on the dispatch path                                                                   | Bot refusal applies on every path so no automation chains revise runs; the skill forbids agent-initiated dispatch                                                             | Accepted    |
 | A run starts on a PR from a fork                                                                    | `detect_pr_denylist` drops fork PRs; the loop cannot push to a fork head                                                                                                      | Accepted    |
 
@@ -202,7 +202,7 @@ on-loop-github-pr-revise.yaml
 
 ## Detect contract
 
-`detect_pr_revise.sh` skips when the PR number is missing, the actor is a Bot, or the actor's `author_association` is set and is not MEMBER, OWNER or COLLABORATOR. On comment webhooks it skips when the trigger body lacks the mention token (word-boundary match); on dispatch paths it skips when the feedback is empty. It then resolves `result.comments` (see [Comment batching](#comment-batching)) and skips when gather ran and found no unclaimed comment. A failed comment list call emits `status: error` and exits 1.
+`detect_pr_revise.sh` skips when the PR number is missing or the trigger body (webhook) or feedback (dispatch) is empty. It reports `result.gate` facts: the actor (`login`, `type`, `association`), the trigger source (`webhook` or `dispatch`) and, on comment webhooks, whether the mention token is present (word-boundary match). The admission gate refuses a Bot actor on every source, an untrusted or missing `author_association` on a webhook and an untrusted one on a dispatch, and a missing mention on a webhook. It then resolves `result.comments` (see [Comment batching](#comment-batching)) and skips when gather ran and found no unclaimed comment. A failed comment list call emits `status: error` and exits 1.
 
 ### Detect result
 
@@ -277,7 +277,7 @@ Same-PR revise runs **serialize**; earlier product fixes must remain on the PR h
 ## Implementation Checklist
 
 - [ ] Keep the `@loop` literal in the job `if` equal to the `PR_MENTION` default in `detect_env_json`.
-- [ ] Keep the job `if` refusing every class detect refuses (Bot author, missing mention, untrusted association).
+- [ ] Keep the job `if` refusing only classes the admission gate also refuses (Bot author, missing mention, untrusted association); it is an abuse guard, never a bypass.
 - [ ] Ship `pr_push` landing changes with `push_target.bats` and a `ci-loop-agent.yaml` pin bump (`.github/workflows/CLAUDE.md`).
 
 ## References

@@ -456,7 +456,7 @@ EOF
     run gate_blocks_candidate "k" "null" '{}'
     [ "$status" -eq 1 ]
     gate_blocks_candidate "k1" '{"entity":{"kind":"issue","state":"closed"}}' '{}'
-    gate_blocks_candidate "k2" '{"entity":{"kind":"issue"}}' '{}'
+    gate_blocks_candidate "k2" '{"entity":{"kind":"issue","state":"weird"}}' '{}'
     [ "${GATE_BLOCKED}" -eq 2 ]
     [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
     run gate_blocks_candidate "k3" '{"entity":{"kind":"issue","state":"open"}}' '{}'
