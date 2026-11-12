@@ -140,6 +140,41 @@ function parse_arguments {
 }
 
 #######################################
+# check_agent_config_json: Refuse to run apm install over an agent config file that is not valid JSON
+#
+# Description:
+#   apm install merges hooks into .claude/settings.json and .cursor/hooks.json. A file that does not
+#   parse (for example one with // comment lines) is rewritten with the hooks only, and every
+#   permission rule in it is lost. Failing early keeps the file untouched.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Repository root
+#
+# Outputs:
+#   ERROR line on stderr naming each invalid file
+#
+# Returns:
+#   0 when every existing file parses; 1 otherwise
+#
+#######################################
+function check_agent_config_json {
+    local root="$1"
+    local file rc=0
+
+    for file in .claude/settings.json .cursor/hooks.json; do
+        [[ -f ${root}/${file} ]] || continue
+        if ! jq -e . "${root}/${file}" > /dev/null 2>&1; then
+            echo "ERROR: ${file} is not valid JSON (comments are not allowed); apm install would overwrite it and drop its permissions. Fix it and rerun." >&2
+            rc=1
+        fi
+    done
+    return "${rc}"
+}
+
+#######################################
 # check_apm_skill_drift_component: Detect APM skill install drift
 #######################################
 function check_apm_skill_drift_component {
@@ -328,6 +363,7 @@ function run_apm_install_component {
         echo "ERROR: apm command not found; install APM CLI before running sync_apm_artifacts.sh" >&2
         return 1
     fi
+    check_agent_config_json "$(resolve_repo_root)" || return 1
     local -a install_args=(install --update)
 
     if [[ ${APM_FORCE} == "true" ]]; then

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-12T09:13:20.653538+00:00'
+generated_at: '2026-11-12T10:56:38.380739+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -678,7 +678,7 @@ dependencies:
     .agents/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .agents/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .agents/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
+    .agents/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:0950a842746d6b0c11f7a30b51e85adb382230754b0e4687ae62d413e431d868
     .agents/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -701,7 +701,7 @@ dependencies:
     .agents/skills/github-issue-triage/references/category-prompt-rules.md: sha256:d9803dad983458f547ae6a071c99f7fab9832ca5e0ae4c7507a284cbf0fc65be
     .agents/skills/github-issue-triage/references/common-checklist.md: sha256:4fad6b2c7ee0a815ee9d9777a8251244aea35e6ab5a8ec26b5075dd3ff73d66b
     .agents/skills/github-issue-triage/references/common-output-format.md: sha256:1977f0f4ef115ce743c28236df09c45715fecfe3821d10532b2e1f1d148d3149
-    .agents/skills/github-issue-triage/scripts/detect_issue.sh: sha256:15d2d63408a241542fa8f1253204496561bbb1590c2db1ad42aba7f21e9f3cb6
+    .agents/skills/github-issue-triage/scripts/detect_issue.sh: sha256:cc19c83e596ffc7fb73db2db5d789d5eedb8538adf3ca60ce732e834ae14bba8
     .agents/skills/github-issue-triage/scripts/issue_comment.sh: sha256:abee97c5cb2f018a0ac765449c39124f0cda5121b5e8a838efb98cac03bc7a23
     .agents/skills/github-issue-triage/scripts/label_fsm.sh: sha256:b4fe7d3b21aec402e0fbb7c56b1156b842023e0793d5da11dc64cc0e9fceed4b
     .agents/skills/github-issue-triage/scripts/labels.json: sha256:df7a567b6b08ca04392680d2cea769847401123dc3d3591a1dc28de5e53d4910
@@ -758,7 +758,7 @@ dependencies:
     .agents/skills/github-pr-review/references/category-review-rules.md: sha256:df1214859eb23ac3d644dadcbc9d2c45e6d345433141df00b66fa0fc1c4efb19
     .agents/skills/github-pr-review/references/common-checklist.md: sha256:0a86e21f8995d0b06d93619a203a474a5be04d8fbdd837e01f10335e24ed5a64
     .agents/skills/github-pr-review/references/common-output-format.md: sha256:c1f466de680580b0a299559bb79fc228eb3446d12f40c4b5c949146da4914239
-    .agents/skills/github-pr-review/scripts/detect_pr_review.sh: sha256:66faa513563cb22bef20bdf586da33c5c6644b7534811754402682935ea99817
+    .agents/skills/github-pr-review/scripts/detect_pr_review.sh: sha256:1bc4875c20ce4019c047942223227a04300f33918f7adb712d100bc34eaa228b
     .agents/skills/github-pr-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-pr-review/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .agents/skills/github-pr-review/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -808,7 +808,7 @@ dependencies:
     .claude/skills/github-issue-autofix/references/category-pr-body-links.md: sha256:0c1a6f396732fe72c39da35d06c116af0b7d30b28bfbda6c75925587c2bc5d32
     .claude/skills/github-issue-autofix/references/common-checklist.md: sha256:3d3b4aa2414d2d26850dfaf0b444d9c0b6e987e09afe227882998215ca106ecc
     .claude/skills/github-issue-autofix/references/common-output-format.md: sha256:40378fa54d157c37058b1f08ac09f1d20e54b732167a1e1d8f0d035c6c41f88c
-    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
+    .claude/skills/github-issue-autofix/scripts/detect_autofix.sh: sha256:0950a842746d6b0c11f7a30b51e85adb382230754b0e4687ae62d413e431d868
     .claude/skills/github-issue-autofix/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-issue-autofix/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-issue-autofix/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -831,7 +831,7 @@ dependencies:
     .claude/skills/github-issue-triage/references/category-prompt-rules.md: sha256:d9803dad983458f547ae6a071c99f7fab9832ca5e0ae4c7507a284cbf0fc65be
     .claude/skills/github-issue-triage/references/common-checklist.md: sha256:4fad6b2c7ee0a815ee9d9777a8251244aea35e6ab5a8ec26b5075dd3ff73d66b
     .claude/skills/github-issue-triage/references/common-output-format.md: sha256:1977f0f4ef115ce743c28236df09c45715fecfe3821d10532b2e1f1d148d3149
-    .claude/skills/github-issue-triage/scripts/detect_issue.sh: sha256:15d2d63408a241542fa8f1253204496561bbb1590c2db1ad42aba7f21e9f3cb6
+    .claude/skills/github-issue-triage/scripts/detect_issue.sh: sha256:cc19c83e596ffc7fb73db2db5d789d5eedb8538adf3ca60ce732e834ae14bba8
     .claude/skills/github-issue-triage/scripts/issue_comment.sh: sha256:abee97c5cb2f018a0ac765449c39124f0cda5121b5e8a838efb98cac03bc7a23
     .claude/skills/github-issue-triage/scripts/label_fsm.sh: sha256:b4fe7d3b21aec402e0fbb7c56b1156b842023e0793d5da11dc64cc0e9fceed4b
     .claude/skills/github-issue-triage/scripts/labels.json: sha256:df7a567b6b08ca04392680d2cea769847401123dc3d3591a1dc28de5e53d4910
@@ -888,7 +888,7 @@ dependencies:
     .claude/skills/github-pr-review/references/category-review-rules.md: sha256:df1214859eb23ac3d644dadcbc9d2c45e6d345433141df00b66fa0fc1c4efb19
     .claude/skills/github-pr-review/references/common-checklist.md: sha256:0a86e21f8995d0b06d93619a203a474a5be04d8fbdd837e01f10335e24ed5a64
     .claude/skills/github-pr-review/references/common-output-format.md: sha256:c1f466de680580b0a299559bb79fc228eb3446d12f40c4b5c949146da4914239
-    .claude/skills/github-pr-review/scripts/detect_pr_review.sh: sha256:66faa513563cb22bef20bdf586da33c5c6644b7534811754402682935ea99817
+    .claude/skills/github-pr-review/scripts/detect_pr_review.sh: sha256:1bc4875c20ce4019c047942223227a04300f33918f7adb712d100bc34eaa228b
     .claude/skills/github-pr-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-pr-review/scripts/lib/aws.sh: sha256:9378617c56fa762fe44fc13b84c0eb941c593228842f6ead60a3487391a8d9dc
     .claude/skills/github-pr-review/scripts/lib/common.sh: sha256:0c8d0891652260fda7e6e3b7e10f69b7346714522d8cfd1892fee7f255256109
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:da9f044bac9bb9669a1f98200f2f8fb2a7340475e1801434c96af8c9f0a0d04b
+  content_hash: sha256:4c7becba4c957b63aacdfa56c8476dcf0016d5b333052bfb19f569ac1b5244a7
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -4720,7 +4720,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
+  content_hash: sha256:0950a842746d6b0c11f7a30b51e85adb382230754b0e4687ae62d413e431d868
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-autofix/scripts/lib/all.sh
@@ -4936,7 +4936,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:15d2d63408a241542fa8f1253204496561bbb1590c2db1ad42aba7f21e9f3cb6
+  content_hash: sha256:cc19c83e596ffc7fb73db2db5d789d5eedb8538adf3ca60ce732e834ae14bba8
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-triage/scripts/issue_comment.sh
@@ -5467,7 +5467,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:66faa513563cb22bef20bdf586da33c5c6644b7534811754402682935ea99817
+  content_hash: sha256:1bc4875c20ce4019c047942223227a04300f33918f7adb712d100bc34eaa228b
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-review/scripts/lib/all.sh
@@ -10111,7 +10111,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:4b0b4df6423ddfa9e09d2f4b3beae01138648d482c4a7241bb7c1cb786c4c987
+  content_hash: sha256:0950a842746d6b0c11f7a30b51e85adb382230754b0e4687ae62d413e431d868
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-autofix/scripts/lib/all.sh
@@ -10327,7 +10327,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:15d2d63408a241542fa8f1253204496561bbb1590c2db1ad42aba7f21e9f3cb6
+  content_hash: sha256:cc19c83e596ffc7fb73db2db5d789d5eedb8538adf3ca60ce732e834ae14bba8
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-triage/scripts/issue_comment.sh
@@ -10858,7 +10858,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:66faa513563cb22bef20bdf586da33c5c6644b7534811754402682935ea99817
+  content_hash: sha256:1bc4875c20ce4019c047942223227a04300f33918f7adb712d100bc34eaa228b
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-review/scripts/lib/all.sh
