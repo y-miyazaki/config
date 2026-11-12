@@ -157,7 +157,7 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "finalize_pr" "${pr_err}" "${LOOP_FAILURE_FILE}"
+            failure_record_write "finalize_pr" "${pr_err}" "${LOOP_FAILURE_FILE}"
         fi
         printf '%s\n' "${pr_err}" >&2
         exit 1

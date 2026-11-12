@@ -86,7 +86,7 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${_LOOP_BUNDLE_LIB_DIR}/failure_record.sh"
-            loop_failure_record "bundle" "${bundle_err}" "${STATUS_DIR}/failure.json"
+            failure_record_write "bundle" "${bundle_err}" "${STATUS_DIR}/failure.json"
         fi
         printf '%s\n' "${bundle_err}" >&2
         exit 1

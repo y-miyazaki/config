@@ -167,7 +167,7 @@ function fail_push {
     local message="$1"
 
     write_outputs "${VALIDATED_BRANCH}" "false" "true"
-    if ! loop_failure_record "push" "${message}" "${LOOP_FAILURE_FILE}"; then
+    if ! failure_record_write "push" "${message}" "${LOOP_FAILURE_FILE}"; then
         echo "::warning::push_agent_branch: could not write the failure record"
     fi
     printf '::error::push_agent_branch: %s\n' "$(redact_sensitive_text "${message//$'\n'/ }")"

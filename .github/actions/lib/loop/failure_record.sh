@@ -5,9 +5,9 @@
 #
 # Usage:
 #   source failure_record.sh
-#   loop_failure_record STAGE MESSAGE FILE
-#   loop_failure_recorded FILE
-#   loop_failure_export_outputs FILE
+#   failure_record_write STAGE MESSAGE FILE
+#   failure_record_exists FILE
+#   failure_record_export_outputs FILE
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -26,7 +26,7 @@ _LOOP_FAILURE_RECORD_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${_LOOP_FAILURE_RECORD_LIB_DIR}/redact.sh"
 
 #######################################
-# loop_failure_export_outputs: Export recorded failure to GITHUB_OUTPUT
+# failure_record_export_outputs: Export recorded failure to GITHUB_OUTPUT
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file (optional)
@@ -41,14 +41,14 @@ source "${_LOOP_FAILURE_RECORD_LIB_DIR}/redact.sh"
 #   0 on success
 #
 #######################################
-function loop_failure_export_outputs {
+function failure_record_export_outputs {
     local failure_file="${1:?failure_file required}"
     local stage message delim
 
     if [[ -z ${GITHUB_OUTPUT:-} ]]; then
         return 0
     fi
-    if ! loop_failure_recorded "${failure_file}"; then
+    if ! failure_record_exists "${failure_file}"; then
         return 0
     fi
 
@@ -65,7 +65,7 @@ function loop_failure_export_outputs {
 }
 
 #######################################
-# loop_failure_record: Write failure_stage and failure_message JSON
+# failure_record_write: Write failure_stage and failure_message JSON
 #
 # Globals:
 #   None
@@ -82,7 +82,7 @@ function loop_failure_export_outputs {
 #   0 on success
 #
 #######################################
-function loop_failure_record {
+function failure_record_write {
     local stage="${1:?stage required}"
     local message="${2:-}"
     local failure_file="${3:?failure_file required}"
@@ -98,7 +98,7 @@ function loop_failure_record {
 }
 
 #######################################
-# loop_failure_recorded: Test whether a failure record with a stage exists
+# failure_record_exists: Test whether a failure record with a stage exists
 #
 # Globals:
 #   None
@@ -114,7 +114,7 @@ function loop_failure_record {
 #   1 otherwise (missing file, malformed JSON, or empty failure_stage)
 #
 #######################################
-function loop_failure_recorded {
+function failure_record_exists {
     local failure_file="${1:?failure_file required}"
     local stage
 

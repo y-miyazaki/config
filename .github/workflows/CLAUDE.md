@@ -142,7 +142,7 @@ File prefixes: `ci-*` / `cd-*` (reusable), `on-*` (event caller), `example/` (co
 When a loop step records failure metadata for run logs or action outputs:
 
 1. **MUST** redact sensitive text before persistence (shared `lib/loop/redact.sh` — do not duplicate patterns).
-2. **MUST** record via shared `lib/loop/failure_record.sh` (`loop_failure_record`).
+2. **MUST** record via shared `lib/loop/failure_record.sh` (`failure_record_write`).
 3. **MUST** export to `GITHUB_OUTPUT` via shared `lib/loop/export_failure_diag.sh` — do not add per-action export duplicates.
 4. **MUST NOT** write raw `git push`, `gh`, or CLI stderr to committed logs without redaction.
 

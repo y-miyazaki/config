@@ -80,7 +80,7 @@ step_run() {
     [ -n "${cmd}" ]
     # shellcheck disable=SC1091
     source "$(bats_workspace_root)/.github/actions/lib/loop/failure_record.sh"
-    loop_failure_record push "agent branch push failed" "${BATS_TEST_TMPDIR}/failure.json"
+    failure_record_write push "agent branch push failed" "${BATS_TEST_TMPDIR}/failure.json"
     run env GITHUB_ACTION_PATH="$(bats_workspace_root)/.github/actions/loop-finalize" \
         ACTION_STATUS=failure DELIVERED_OUTCOME=error AGENT_RESULT=success \
         LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json" \

@@ -8,7 +8,7 @@
 #   STATUS_DIR=/path/to/status bash export_failure_diag.sh
 #
 # Design Rules:
-#   - Reads JSON written by loop_failure_record
+#   - Reads JSON written by failure_record_write
 #   - No-op when failure file is missing or GITHUB_OUTPUT unset
 #
 # Output:
@@ -88,7 +88,7 @@ function main {
     source "${SCRIPT_DIR}/failure_record.sh"
 
     failure_file="$(export_failure_diag_resolve_file)"
-    loop_failure_export_outputs "${failure_file}"
+    failure_record_export_outputs "${failure_file}"
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

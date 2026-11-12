@@ -294,7 +294,7 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "notify_context" "detect result JSON is invalid (inline)" "${STATUS_DIR}/failure.json"
+            failure_record_write "notify_context" "detect result JSON is invalid (inline)" "${STATUS_DIR}/failure.json"
         fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1
@@ -310,7 +310,7 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "notify_context" "detect result JSON is invalid (handoff)" "${STATUS_DIR}/failure.json"
+            failure_record_write "notify_context" "detect result JSON is invalid (handoff)" "${STATUS_DIR}/failure.json"
         fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1

@@ -144,7 +144,7 @@ When loop composite steps record failure metadata for run logs or action outputs
 | Library                  | Role                                                                      |
 | ------------------------ | ------------------------------------------------------------------------- |
 | `redact.sh`              | Redact secrets/tokens before persistence                                  |
-| `failure_record.sh`      | Record latest `failure_stage` / `failure_message` (`loop_failure_record`) |
+| `failure_record.sh`      | Record latest `failure_stage` / `failure_message` (`failure_record_write`) |
 | `export_failure_diag.sh` | Export recorded diagnostics to `GITHUB_OUTPUT`                            |
 
 `loop-execute` diagnostics go into `loop-finalize`, and `loop-finalize` outputs go into the `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers. Do not write raw `git push`, `gh`, or CLI stderr into committed logs without redaction.

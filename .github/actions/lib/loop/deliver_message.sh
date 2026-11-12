@@ -27,7 +27,7 @@
 #   - Labels are applied before the post, so a failed label call leaves no stale text
 #   - The review event is always COMMENT; only HTTP 422 with inline comments retries,
 #     once, with fallback_body and no comments
-#   - gh stderr is only passed to loop_failure_record (which redacts it), never printed
+#   - gh stderr is only passed to failure_record_write (which redacts it), never printed
 #   - Every failure records failure_stage deliver_message and returns 1
 #   - issue_create: see deliver_issue_create.sh (duplicates, limit, body size, labels)
 #######################################
@@ -337,7 +337,7 @@ function deliver_message_send {
 #   LOOP_FAILURE_FILE - Failure record path (skipped when unset)
 #
 # Arguments:
-#   $1 - Failure message (may hold gh stderr; redacted by loop_failure_record)
+#   $1 - Failure message (may hold gh stderr; redacted by failure_record_write)
 #
 # Outputs:
 #   Error annotation on stdout
@@ -354,7 +354,7 @@ function deliver_message_fail {
 
     echo "::error::Deliver Message failed (failure_stage=deliver_message; see the loop-finalize failure_message output)"
     if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
-        loop_failure_record "deliver_message" "${message}" "${LOOP_FAILURE_FILE}"
+        failure_record_write "deliver_message" "${message}" "${LOOP_FAILURE_FILE}"
     fi
 }
 

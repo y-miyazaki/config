@@ -32,7 +32,7 @@ teardown() {
 @test "main exports failure diagnostics from LOOP_FAILURE_FILE" {
     local failure_file="${EXPORT_TMP}/failure.json"
 
-    loop_failure_record "finalize_pr" "already exists" "${failure_file}"
+    failure_record_write "finalize_pr" "already exists" "${failure_file}"
     LOOP_FAILURE_FILE="${failure_file}" STATUS_DIR="" run bash "${EXPORT_SCRIPT}"
     [ "$status" -eq 0 ]
     grep -q '^failure_stage=finalize_pr$' "${GITHUB_OUTPUT}"
@@ -43,7 +43,7 @@ teardown() {
     local status_dir="${EXPORT_TMP}/status"
 
     mkdir -p "${status_dir}"
-    loop_failure_record "push" "remote rejected" "${status_dir}/failure.json"
+    failure_record_write "push" "remote rejected" "${status_dir}/failure.json"
     LOOP_FAILURE_FILE="" STATUS_DIR="${status_dir}" run bash "${EXPORT_SCRIPT}"
     [ "$status" -eq 0 ]
     grep -q '^failure_stage=push$' "${GITHUB_OUTPUT}"
