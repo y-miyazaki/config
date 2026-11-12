@@ -5,6 +5,8 @@
 # Use cases:
 # - normalize_outcome maps each old persisted outcome to its new name
 # - normalize_outcome passes new names, unknown values, and empty input through unchanged
+# - outcome_counter_effect maps rejected and pr_closed (old and new names) to increment, watch and error to keep, every other outcome to reset
+# - outcome_is_prune_terminal succeeds only for rejected and pr_closed (old and new names)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -96,4 +98,43 @@ setup() {
     run normalize_outcome "watch"
     [ "$status" -eq 0 ]
     [ "$output" = "watch" ]
+}
+
+@test "outcome_counter_effect: rejected and pr_closed increment, old pr-closed too" {
+    local value
+    for value in rejected pr_closed pr-closed; do
+        run outcome_counter_effect "${value}"
+        [ "$status" -eq 0 ]
+        [ "$output" = "increment" ]
+    done
+}
+
+@test "outcome_counter_effect: watch and error keep the counter" {
+    local value
+    for value in watch error; do
+        run outcome_counter_effect "${value}"
+        [ "$status" -eq 0 ]
+        [ "$output" = "keep" ]
+    done
+}
+
+@test "outcome_counter_effect: every other outcome resets, including unknown and empty" {
+    local value
+    for value in pr_created pr_pushed pr_merged merged unchanged approved reported escalated unknown ""; do
+        run outcome_counter_effect "${value}"
+        [ "$status" -eq 0 ]
+        [ "$output" = "reset" ]
+    done
+}
+
+@test "outcome_is_prune_terminal: succeeds only for rejected and pr_closed" {
+    local value
+    for value in rejected pr_closed pr-closed; do
+        run outcome_is_prune_terminal "${value}"
+        [ "$status" -eq 0 ]
+    done
+    for value in watch error pr_merged pr_created unchanged ""; do
+        run outcome_is_prune_terminal "${value}"
+        [ "$status" -eq 1 ]
+    done
 }

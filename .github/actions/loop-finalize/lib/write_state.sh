@@ -36,6 +36,9 @@ source "${SCRIPT_DIR}/prune_targets.sh"
 # shellcheck source=../../lib/loop/outcome.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/outcome.sh"
+# shellcheck source=../../lib/loop/push_race.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/push_race.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
@@ -65,6 +68,8 @@ WRITE_STATE_MAX_RETRIES="${WRITE_STATE_MAX_RETRIES:-3}"
 READ_BRANCH=""
 PUSH_BRANCH=""
 STATE_TMP=""
+# Extra repo-relative paths committed with the state file (from FINALIZE_COMMIT_PATHS)
+STATE_EXTRA_PATHS=()
 
 #######################################
 # validate_finalize_commit_path: Reject unsafe finalize commit paths
@@ -110,7 +115,8 @@ function validate_finalize_commit_path {
 #   READ_BRANCH - STATE_BRANCH for direct push
 #   STATE_PR_SKIP - When true, skip PR fallback on push failure
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
-#   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths; non-empty disables push retry
+#   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths committed with the state file
+#   STATE_EXTRA_PATHS - Set from FINALIZE_COMMIT_PATHS; carried across a push retry only while unchanged on the remote
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
 #
@@ -142,6 +148,7 @@ function commit_and_push_state {
                 return 1
             fi
             paths_to_add+=("${item}")
+            STATE_EXTRA_PATHS+=("${item}")
         done
     fi
 
@@ -169,7 +176,7 @@ function commit_and_push_state {
     fi
     echo "${push_err}" >&2
 
-    if [[ -z ${FINALIZE_COMMIT_PATHS} ]] && is_push_race_error "${push_err}"; then
+    if is_push_race_error "${push_err}"; then
         if retry_state_write; then
             return 0
         fi
@@ -216,31 +223,6 @@ function open_state_pr_fallback {
         "chore(loop): update state [skip ci]" \
         "Automated loop state update (mode: ${STATE_WRITE_MODE}, outcome: ${OUTCOME}, sha: ${SHA})." \
         "State PR"
-}
-
-#######################################
-# is_push_race_error: Detect a push rejected because the remote moved
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - git push stderr text
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 for "! [rejected] ... (fetch first|non-fast-forward)" without "[remote rejected]", 1 otherwise
-#
-#######################################
-function is_push_race_error {
-    local text="$1"
-
-    if [[ ${text} == *"[remote rejected]"* ]]; then
-        return 1
-    fi
-    [[ ${text} =~ \!\ \[rejected\].*\((fetch\ first|non-fast-forward)\) ]]
 }
 
 #######################################
@@ -315,11 +297,11 @@ function resolve_consecutive_failures {
         OPEN_REJECTIONS='[]'
     fi
 
-    case "$(normalize_outcome "${OUTCOME}")" in
-        rejected | pr_closed)
+    case "$(outcome_counter_effect "${OUTCOME}")" in
+        increment)
             echo $((prev_consecutive + 1))
             ;;
-        watch | error | escalated)
+        keep)
             if [[ ${OUTCOME} != "watch" ]]; then
                 OPEN_REJECTIONS='[]'
             fi
@@ -361,15 +343,79 @@ function resolve_consecutive_failures {
 function resolve_consecutive_with_probe {
     local pre_prune="$1"
 
-    case "$(normalize_outcome "${OUTCOME}")" in
-        rejected | pr_closed)
-            if [[ ${pre_prune} =~ ^[0-9]+$ && ${pre_prune} -ge 4 ]]; then
-                echo "${pre_prune}"
-                return 0
-            fi
-            ;;
-    esac
+    if [[ $(outcome_counter_effect "${OUTCOME}") == "increment" ]]; then
+        if [[ ${pre_prune} =~ ^[0-9]+$ && ${pre_prune} -ge 4 ]]; then
+            echo "${pre_prune}"
+            return 0
+        fi
+    fi
     resolve_consecutive_failures
+}
+
+#######################################
+# carry_extra_paths_begin: Save the extra paths of the local state commit before a retry reset
+#
+# Globals:
+#   STATE_EXTRA_PATHS - Extra repo-relative paths committed with the state file
+#   PUSH_BRANCH - Remote branch the retry resets to
+#
+# Arguments:
+#   $1 - Directory that receives one saved copy per extra path
+#
+# Outputs:
+#   Warning on stdout when an extra path changed on the remote
+#
+# Returns:
+#   0 when every extra path is saved and unchanged on the remote since the local commit's parent;
+#   1 when one changed (a concurrent writer touched it, so overwriting it would lose that change)
+#
+#######################################
+function carry_extra_paths_begin {
+    local save_dir="$1"
+    local path base_blob remote_blob index=0
+
+    for path in "${STATE_EXTRA_PATHS[@]}"; do
+        base_blob="$(git rev-parse --verify --quiet "HEAD~1:${path}" 2> /dev/null || true)"
+        remote_blob="$(git rev-parse --verify --quiet "origin/${PUSH_BRANCH}:${path}" 2> /dev/null || true)"
+        if [[ ${base_blob} != "${remote_blob}" ]]; then
+            echo "::warning::${path} changed on ${PUSH_BRANCH} during the push race; not overwriting it."
+            return 1
+        fi
+        if git cat-file -e "HEAD:${path}" 2> /dev/null; then
+            git show "HEAD:${path}" > "${save_dir}/${index}"
+        fi
+        index=$((index + 1))
+    done
+}
+
+#######################################
+# carry_extra_paths_end: Restore saved extra paths and stage them after the retry reset
+#
+# Globals:
+#   STATE_EXTRA_PATHS - Extra repo-relative paths committed with the state file
+#
+# Arguments:
+#   $1 - Directory written by carry_extra_paths_begin
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 always
+#
+#######################################
+function carry_extra_paths_end {
+    local save_dir="$1"
+    local path index=0
+
+    for path in "${STATE_EXTRA_PATHS[@]}"; do
+        if [[ -f "${save_dir}/${index}" ]]; then
+            mkdir -p "$(dirname "${path}")"
+            cp "${save_dir}/${index}" "${path}"
+            git add "${path}"
+        fi
+        index=$((index + 1))
+    done
 }
 
 #######################################
@@ -395,11 +441,18 @@ function resolve_consecutive_with_probe {
 #
 #######################################
 function retry_state_write {
-    local attempt consecutive now push_err pre_prune_consecutive
+    local attempt consecutive now push_err pre_prune_consecutive carry_dir=""
 
+    if [[ ${#STATE_EXTRA_PATHS[@]} -gt 0 ]]; then
+        carry_dir="$(mktemp -d)"
+    fi
     for ((attempt = 1; attempt <= WRITE_STATE_MAX_RETRIES; attempt++)); do
         echo "Push race detected; retry ${attempt}/${WRITE_STATE_MAX_RETRIES}"
         git fetch origin "${READ_BRANCH}"
+        if [[ -n ${carry_dir} ]] && ! carry_extra_paths_begin "${carry_dir}"; then
+            rm -rf "${carry_dir}"
+            return 1
+        fi
         git reset --hard "origin/${PUSH_BRANCH}"
         rm -f "${STATE_TMP}" "${STATE_TMP}.next"
         load_state_tmp
@@ -417,20 +470,27 @@ function retry_state_write {
         mkdir -p "$(dirname "${STATE_FILE}")"
         cp "${STATE_TMP}" "${STATE_FILE}"
         git add "${STATE_FILE}"
-        if git diff --cached --quiet -- "${STATE_FILE}"; then
+        if [[ -n ${carry_dir} ]]; then
+            carry_extra_paths_end "${carry_dir}"
+        fi
+        if git diff --cached --quiet; then
             echo "No state changes to commit."
+            [[ -z ${carry_dir} ]] || rm -rf "${carry_dir}"
             return 0
         fi
         git commit -m "chore(loop): update state [skip ci]"
         if push_err="$(git push origin HEAD:"${PUSH_BRANCH}" 2>&1)"; then
             echo "State pushed to ${PUSH_BRANCH}."
+            [[ -z ${carry_dir} ]] || rm -rf "${carry_dir}"
             return 0
         fi
         echo "${push_err}" >&2
         if ! is_push_race_error "${push_err}"; then
+            [[ -z ${carry_dir} ]] || rm -rf "${carry_dir}"
             return 1
         fi
     done
+    [[ -z ${carry_dir} ]] || rm -rf "${carry_dir}"
     return 1
 }
 

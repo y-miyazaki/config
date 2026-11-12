@@ -75,7 +75,7 @@ The values that hold each state in this loop:
 | S0    | Detect returns `skip: false`: the repository-wide sensors return signals on `main`, whatever `last_sha` is                                                                              |
 | S1    | The report PR carries `loop-automation`; `pending` holds `{ sha, pr, … }`; run-log `pr_created`                                                                                         |
 | S2a   | `on-loop-state-promote` sets `last_sha` to `pending.sha`, removes `pending`, and sets `outcome` `pr_merged` and `consecutive_failures` `0`; the merged report becomes `previous_report` |
-| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` and `consecutive_failures` do not change                                                           |
+| S3    | `on-loop-state-promote` removes `pending` and sets `outcome` `pr_closed`; `last_sha` does not change and `consecutive_failures` rises by 1 (a close counts as a failure)                |
 | S4    | The PR stays open; every tick records run-log `skipped` with `skip_reason` `pending_pr`                                                                                                 |
 | S5    | `consecutive_failures` is 3 or more and `last_run` is under 30 days old; each tick within 30 days of `last_run` records run-log `skipped` with `skip_reason` `circuit_breaker`          |
 
