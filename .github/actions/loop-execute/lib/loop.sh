@@ -40,6 +40,7 @@ DENYLIST_BLOCKED="false"
 OPEN_REJECTIONS_JSON='[]'
 REJECT_FEEDBACK=""
 FINALIZE_OUTCOME_OVERRIDE=""
+MAKER_EXIT_NONZERO="false"
 
 #######################################
 # initialize_loop_state: Prepare status directory and prompt defaults
@@ -240,7 +241,8 @@ function write_loop_outputs {
 #   DENYLIST_BLOCKED - Whether the latest checked attempt hit the denylist (write)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
-#   FINALIZE_OUTCOME_OVERRIDE - Skill watch override when set (write)
+#   FINALIZE_OUTCOME_OVERRIDE - watch (skill) or error (maker exited non-zero, no diff) when set (write)
+#   MAKER_EXIT_NONZERO - Whether the current attempt's maker exited non-zero (write)
 #   REASON - Verdict reason for current attempt (read/write)
 #   REJECT_FEEDBACK - Checker feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
@@ -264,6 +266,7 @@ function run_bounded_loop {
         attempt_dir="${STATUS_DIR}/attempt-${ATTEMPT}"
         mkdir -p "${attempt_dir}"
         attempt_committed="false"
+        MAKER_EXIT_NONZERO="false"
         sync_reject_feedback
 
         synthesis_block=""
@@ -296,6 +299,7 @@ function run_bounded_loop {
         pre_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"
         if ! run_agent_capture "${attempt_dir}/agent-output.txt" "true"; then
             echo "::warning::Maker agent exited non-zero on attempt ${ATTEMPT}"
+            MAKER_EXIT_NONZERO="true"
         fi
 
         if ! harvest_workspace_into_worktree; then
@@ -344,6 +348,12 @@ function run_bounded_loop {
             else
                 VERDICT="${AGENT_UNCHANGED_VERDICT}"
                 REASON="No file changes produced$(permission_denial_note "${attempt_dir}/agent-output.txt")"
+                if [[ ${MAKER_EXIT_NONZERO} == "true" ]]; then
+                    # A maker that failed to run is a bug, not wasted work: error is not
+                    # counted toward the circuit breaker (rejected is)
+                    FINALIZE_OUTCOME_OVERRIDE="error"
+                    REASON="${REASON}; maker agent exited non-zero"
+                fi
             fi
             echo "No changes; verdict=${VERDICT} finalize_outcome_override=${FINALIZE_OUTCOME_OVERRIDE:-none}."
             echo "::endgroup::"

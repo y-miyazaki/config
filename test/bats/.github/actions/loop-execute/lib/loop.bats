@@ -17,6 +17,9 @@
 # - main requires AGENT_ENGINE and ignores the legacy ENGINE name
 # - run_bounded_loop commits with AGENT_COMMIT_MESSAGE and resolves a no-change
 #   attempt with AGENT_UNCHANGED_VERDICT (legacy COMMIT_MESSAGE / NO_CHANGES_VERDICT ignored)
+# - run_bounded_loop sets the error override only when the final attempt's maker exited
+#   non-zero with no diff and no watch outcome (a zero exit, a diff, or a watch outcome
+#   keeps the override empty)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -167,6 +170,68 @@ _commit_branch_ahead_of_main() {
     [ "$(cat "${commit_log}")" = "chore: new name (attempt 1)" ]
     [ "${VERDICT}" = "APPROVE" ]
     [ "${REASON}" = "No file changes produced" ]
+}
+
+# Prepare a no-change run: no commits, AGENT_UNCHANGED_VERDICT=REJECT, a stubbed maker.
+# $1 - max attempts; stubs run_agent_capture/commit_worktree_if_needed per test.
+prepare_no_change_loop() {
+    STATUS_DIR="${BATS_TEST_TMPDIR}/status-loop"
+    WORKTREE_PATH="${BATS_TEST_TMPDIR}/wt-loop"
+    bats_git_fresh_repo "${WORKTREE_PATH}"
+    printf 'x\n' > "${WORKTREE_PATH}/x.txt"
+    bats_git_commit "${WORKTREE_PATH}" "init"
+    AGENT_LOOP_MAX_ATTEMPTS="$1"
+    AGENT_MAKER_SKILL_NAME="changelog"
+    AGENT_MAKER_MAX_TURNS="5"
+    AGENT_MAKER_MODEL=""
+    HAS_CHANGES="false"
+    AGENT_COMMIT_MESSAGE="chore: new name"
+    AGENT_UNCHANGED_VERDICT="REJECT"
+    FINALIZE_OUTCOME_OVERRIDE=""
+    function sync_reject_feedback { :; }
+    function agent_report_requires_check { return 1; }
+    function build_agent_prompt { printf 'prompt'; }
+    function harvest_workspace_into_worktree { return 0; }
+    function commit_worktree_if_needed { return 1; }
+}
+
+@test "run_bounded_loop keeps the override empty when the maker exits zero with no diff" {
+    prepare_no_change_loop 1
+    function run_agent_capture { : > "$1"; }
+
+    run_bounded_loop > /dev/null
+    [ "${VERDICT}" = "REJECT" ]
+    [ -z "${FINALIZE_OUTCOME_OVERRIDE}" ]
+}
+
+@test "run_bounded_loop keeps the override empty when the maker exits non-zero but produces a diff" {
+    prepare_no_change_loop 1
+    function run_agent_capture { : > "$1"; return 1; }
+    function commit_worktree_if_needed { return 0; }
+    function run_verify { printf 'APPROVE\n' > "$1/verdict"; printf 'ok\n' > "$1/reason"; }
+    function promote_has_changes_after_attempt { :; }
+
+    run_bounded_loop > /dev/null
+    [ -z "${FINALIZE_OUTCOME_OVERRIDE}" ]
+    [ "${VERDICT}" = "APPROVE" ]
+}
+
+@test "run_bounded_loop sets the error override when the maker exits non-zero with no diff" {
+    prepare_no_change_loop 1
+    function run_agent_capture { : > "$1"; return 1; }
+
+    run_bounded_loop > /dev/null
+    [ "${VERDICT}" = "REJECT" ]
+    [ "${FINALIZE_OUTCOME_OVERRIDE}" = "error" ]
+    [[ ${REASON} == *"maker agent exited non-zero"* ]]
+}
+
+@test "run_bounded_loop keeps the watch override when the maker exits non-zero with a watch outcome" {
+    prepare_no_change_loop 1
+    function run_agent_capture { printf '**Outcome:** watch\n' > "$1"; return 1; }
+
+    run_bounded_loop > /dev/null
+    [ "${FINALIZE_OUTCOME_OVERRIDE}" = "watch" ]
 }
 
 @test "run_bounded_loop names permission denials in the no-change reason" {

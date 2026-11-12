@@ -6,6 +6,7 @@
 # Use cases:
 # - a failed agent push is error even with an outcome override
 # - an explicit override wins over every other input
+# - an error override is error for every delivery and verdict, including issue_create
 # - a failed or cancelled agent job is error
 # - no product diff is rejected on REJECT and unchanged otherwise, for every delivery
 # - APPROVE with changes follows the delivery table: pr_create is pr_created,
@@ -52,6 +53,19 @@ setup() {
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 4 ]
+}
+
+@test "error override is error for every delivery and verdict" {
+    local delivery verdict checked=0
+    for delivery in pr_create pr_push none issue_comment issue_create pr_review; do
+        for verdict in APPROVE REJECT ""; do
+            run determine_outcome error success false "${verdict}" "${delivery}" false
+            [ "$status" -eq 0 ]
+            [ "$output" = "error" ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 18 ]
 }
 
 @test "failed or cancelled agent job is error" {
