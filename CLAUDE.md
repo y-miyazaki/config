@@ -56,6 +56,7 @@ Applies when creating or editing `docs/explanation/loop-engineering/workflows/lo
 - `User actions` (with `Values changed` and `Transition` columns) and `Unhandled cases` are required.
 - Transition IDs come from `loop-issue-handoff.md`, the template's `S0–S5` (Scheduled loop states), or the document's own `State model`.
 - Behavior-changing findings found while documenting are recorded as `Follow-up`; do not fix them in the doc change.
+- When the design document and the implementation disagree, the implementation is the baseline and the document is corrected. Also judge whether the implementation is wrong, and record a `Follow-up` row when it is (full rule: the template's "How to use this template" section).
 
 ## Conventions
 

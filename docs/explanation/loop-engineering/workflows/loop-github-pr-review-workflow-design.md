@@ -68,7 +68,7 @@ With older pins, an APPROVE verdict can merge the agent branch, including `.loop
 
 | Stage               | Action                                                                                                                                                      |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before the pin bump | Do not run the workflow with older pins; the fixes above must be in the pinned release                                                                      |
+| Before the pin bump | Do not run the workflow with older pins; the fixes in [Rollout](#rollout) must be in the pinned release                                                                      |
 | After the pin bump  | The trigger is enabled and `zizmor` covers it; do not downgrade the pins                                                                                    |
 | Manual dispatch     | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `render_review.sh` come from the ref the run starts on |
 | Intake gate         | `jobs.loop.if` covers both events                                                                                                                           |
