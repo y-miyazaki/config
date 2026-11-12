@@ -537,7 +537,7 @@ jobs:
   record-skip:
     # Record every non-run (circuit_breaker, budget, no_changes) so a quiet
     # cron tick is distinguishable from a loop that never started. Skipped
-    # entries do not consume the daily budget (see loop-detect guards.sh).
+    # entries do not consume the daily budget (see lib/loop/admission.sh).
     if: >-
       needs.detect.result == 'success' &&
       needs.detect.outputs.should_run == 'false'

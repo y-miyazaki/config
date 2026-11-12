@@ -22,12 +22,12 @@ Applies when creating or editing `workflows/loop-*-workflow-design.md`.
 
 Applies when adding or changing any rule that decides whether a loop run proceeds, is skipped, or how an outcome is counted (`.github/**/loop-*`, `.github/actions/lib/loop/`, `.apm/packages/**/detect_*.sh`, `on-loop-*.yaml`). Background: Design Invariants 8 and 9 in [Loop Engineering Design](loop-engineering-design.md).
 
-| Kind of judgement                                                                    | Put it in                                                                      | Never in                                    |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------- |
-| Run admission (entity state, actor trust, mention, pending, circuit breaker, budget) | The admission gate (`loop-detect` `lib/guards.sh` until the gate design lands) | Job `if`, a detect script, finalize         |
-| Facts about the entity (state, author, labels, linked PRs)                           | The detect script, returned as data                                            | A skip decision inside the detect script    |
-| Outcome handling (counter change, `pending` clear, prune eligibility)                | The single outcome mapping table in `lib/loop/outcome.sh`                      | A per-action `case` on `OUTCOME`            |
-| Self-retrigger filter (bot sender, event type, label name)                           | Job `if`, static and cheap only                                                | Actor trust, mention, repository visibility |
+| Kind of judgement                                                                    | Put it in                                                    | Never in                                    |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------- |
+| Run admission (entity state, actor trust, mention, pending, circuit breaker, budget) | The admission gate (`.github/actions/lib/loop/admission.sh`) | Job `if`, a detect script, finalize         |
+| Facts about the entity (state, author, labels, linked PRs)                           | The detect script, returned as data                          | A skip decision inside the detect script    |
+| Outcome handling (counter change, `pending` clear, prune eligibility)                | The single outcome mapping table in `lib/loop/outcome.sh`    | A per-action `case` on `OUTCOME`            |
+| Self-retrigger filter (bot sender, event type, label name)                           | Job `if`, static and cheap only                              | Actor trust, mention, repository visibility |
 
 Rules:
 

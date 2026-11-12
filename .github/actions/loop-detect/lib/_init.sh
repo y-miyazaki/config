@@ -26,7 +26,7 @@ LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/branches.sh"
 # shellcheck disable=SC1091
-source "${LIB_DIR}/guards.sh"
+source "${LIB_DIR}/../../lib/loop/admission.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/state.sh"
 # shellcheck disable=SC1091

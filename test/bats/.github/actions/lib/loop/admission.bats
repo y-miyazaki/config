@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .github/actions/loop-detect/lib/guards.sh
+# Tests for .github/actions/lib/loop/admission.sh
 
 # Use cases:
 # - target_circuit_breaker_open trips at three consecutive failures
@@ -14,6 +14,11 @@
 # - budget_exceeded applies a token-only limit when no run limit is configured
 # - budget_exceeded excludes skipped entries from run and token aggregation
 # - budget_exceeded still counts entries that carry target_key
+# - admission_actor_is_bot is the one bot definition (type Bot, login suffix bot or [bot], app/ prefix)
+# - admission_actor_trusted accepts MEMBER, OWNER and COLLABORATOR on every repository and refuses the rest
+# - admission_evaluate admits a result without a gate and fails closed when the entity state is missing
+# - admission_evaluate refuses a closed or merged entity, an untrusted or bot actor, a missing mention, an open PR, an open circuit breaker and a domain skip, in that order
+# - admission_evaluate applies actor and mention checks to webhooks only
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -23,7 +28,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-detect/lib/_init.sh"
+    bats_source_rel ".github/actions/lib/loop/admission.sh"
     GUARDS_TMP="$(mktemp -d)"
     export GUARDS_TMP
 }
@@ -254,4 +259,113 @@ teardown() {
     run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -eq 0 ]
     [[ $output == *"Daily run budget exceeded"* ]]
+}
+
+gate_json() {
+    jq -nc --arg state "${1:-open}" --arg source "${2:-webhook}" --arg type "${3:-User}" --arg login "${4:-alice}" \
+        --arg association "${5:-MEMBER}" --argjson mention_required "${6:-false}" --argjson mention_present "${7:-false}" \
+        '{entity: {kind: "pr", number: 1, state: $state},
+          actor: {login: $login, type: $type, association: $association},
+          trigger: {source: $source, mention_required: $mention_required, mention_present: $mention_present},
+          dedupe: {open_pr: null},
+          domain_skip: {skip: false}}'
+}
+
+@test "admission_actor_is_bot is the one bot definition" {
+    run admission_actor_is_bot "Bot" "x"
+    [ "$status" -eq 0 ]
+    run admission_actor_is_bot "User" "renovate[bot]"
+    [ "$status" -eq 0 ]
+    run admission_actor_is_bot "" "repo-maintenance-bot"
+    [ "$status" -eq 0 ]
+    run admission_actor_is_bot "" "app/renovate"
+    [ "$status" -eq 0 ]
+    run admission_actor_is_bot "User" "alice"
+    [ "$status" -eq 1 ]
+    run admission_actor_is_bot "" ""
+    [ "$status" -eq 1 ]
+}
+
+@test "admission_actor_trusted accepts MEMBER OWNER COLLABORATOR only" {
+    local value
+    for value in MEMBER OWNER COLLABORATOR; do
+        run admission_actor_trusted "${value}"
+        [ "$status" -eq 0 ]
+    done
+    for value in CONTRIBUTOR NONE FIRST_TIME_CONTRIBUTOR ""; do
+        run admission_actor_trusted "${value}"
+        [ "$status" -eq 1 ]
+    done
+}
+
+@test "admission_evaluate admits a result without a gate" {
+    run admission_evaluate "" '{}'
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    run admission_evaluate "null" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+}
+
+@test "admission_evaluate fails closed when the entity state is missing" {
+    run admission_evaluate '{"entity":{"kind":"pr","number":1}}' '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "fact_missing" ]
+    run admission_evaluate "$(gate_json weird)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "fact_missing" ]
+}
+
+@test "admission_evaluate refuses closed and merged entities" {
+    run admission_evaluate "$(gate_json closed)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "false" ]
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "entity_closed" ]
+    run admission_evaluate "$(gate_json merged)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "entity_closed" ]
+}
+
+@test "admission_evaluate refuses bot and untrusted webhook actors, not dispatch or schedule" {
+    run admission_evaluate "$(gate_json open webhook Bot bot-x MEMBER)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
+    run admission_evaluate "$(gate_json open webhook User alice NONE)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "actor_untrusted" ]
+    run admission_evaluate "$(gate_json open dispatch User alice NONE)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    run admission_evaluate "$(gate_json open schedule Bot bot-x NONE)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+}
+
+@test "admission_evaluate refuses a webhook without the required mention" {
+    run admission_evaluate "$(gate_json open webhook User alice MEMBER true false)" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "mention_missing" ]
+    run admission_evaluate "$(gate_json open webhook User alice MEMBER true true)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+    run admission_evaluate "$(gate_json open dispatch User alice MEMBER true false)" '{}'
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+}
+
+@test "admission_evaluate refuses an entity an open PR already handles" {
+    local gate
+    gate="$(gate_json | jq -c '.dedupe.open_pr = 7')"
+    run admission_evaluate "${gate}" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "pending_pr" ]
+}
+
+@test "admission_evaluate refuses while the circuit breaker is open" {
+    local today
+    today="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    run admission_evaluate "$(gate_json)" "{\"consecutive_failures\":3,\"last_run\":\"${today}\"}"
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "circuit_breaker" ]
+    run admission_evaluate "$(gate_json)" "{\"consecutive_failures\":2,\"last_run\":\"${today}\"}"
+    [ "$(jq -r '.admit' <<< "${output}")" = "true" ]
+}
+
+@test "admission_evaluate reports a domain skip with a slug and checks in the fixed order" {
+    local gate
+    gate="$(gate_json | jq -c '.domain_skip = {skip: true, reason: "already_reviewed"}')"
+    run admission_evaluate "${gate}" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "domain:already_reviewed" ]
+    gate="$(gate_json closed | jq -c '.domain_skip = {skip: true, reason: "x"}')"
+    run admission_evaluate "${gate}" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "entity_closed" ]
+    gate="$(gate_json | jq -c '.domain_skip = {skip: true, reason: "Bad Reason"}')"
+    run admission_evaluate "${gate}" '{}'
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "domain:detect" ]
 }

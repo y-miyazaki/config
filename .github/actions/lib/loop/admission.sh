@@ -1,8 +1,8 @@
 #!/bin/bash
 #######################################
-# Description: Guard helpers for loop-detect (budget, circuit breaker)
+# Description: Admission helpers shared by loop-detect and loop-entity-detect (budget, circuit breaker, actor and entity gate)
 #
-# Usage: source "${LIB_DIR}/guards.sh"
+# Usage: source "${loop_action_lib}/admission.sh"
 #
 # Output:
 # - None (library file)
@@ -202,4 +202,182 @@ function target_circuit_breaker_open {
     cutoff="$(date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d)"
     [[ ${last_run:0:10} < ${cutoff} ]] && return 1
     return 0
+}
+
+#######################################
+# admission_actor_is_bot: Return 0 when the actor is a bot
+#
+# Description:
+#   The one bot definition. A detect script maps its source (event user.type, gh author.is_bot,
+#   REST user.type, login) to the actor type and login and asks here.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Actor type (User | Bot; empty when unknown)
+#   $2 - Actor login (optional)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the type is Bot or the login is a bot login (suffix bot or [bot], prefix app/); 1 otherwise
+#
+#######################################
+function admission_actor_is_bot {
+    local type="${1:-}"
+    local login="${2:-}"
+    local lowered_type lowered_login
+
+    lowered_type="$(tr '[:upper:]' '[:lower:]' <<< "${type}")"
+    lowered_login="$(tr '[:upper:]' '[:lower:]' <<< "${login}")"
+    [[ ${lowered_type} == "bot" ]] && return 0
+    [[ ${lowered_login} == *"bot" || ${lowered_login} == *"[bot]" || ${lowered_login} == app/* ]] && return 0
+    return 1
+}
+
+#######################################
+# admission_actor_trusted: Return 0 when the author association is trusted
+#
+# Description:
+#   Repository visibility is never a trust signal: the same association list applies to every repository.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - author_association (empty when unknown)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 for MEMBER, OWNER or COLLABORATOR; 1 otherwise, including empty
+#
+#######################################
+function admission_actor_trusted {
+    case "${1:-}" in
+        MEMBER | OWNER | COLLABORATOR) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+#######################################
+# admission_evaluate: Decide whether a run may proceed from the facts of a detect result
+#
+# Description:
+#   Evaluates result.gate in one fixed order, first failure wins: facts present, entity open,
+#   actor trust (webhook only), mention (webhook only), open PR already handling the entity,
+#   circuit breaker, detect-script domain skip. A result without a gate is not evaluated
+#   (admit), so detect scripts can adopt the gate one at a time. A gate with an entity that
+#   lacks a readable state skips with fact_missing (fail closed).
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - gate JSON (the detect result.gate object; empty or null means no gate)
+#   $2 - target state JSON ({} when the target has no state; optional)
+#
+# Outputs:
+#   STDOUT: {"admit":bool,"skip_reason":string,"detail":string}; skip_reason is empty when admitted
+#
+# Returns:
+#   0 always
+#
+#######################################
+function admission_evaluate {
+    local gate="${1:-}"
+    local target_state="${2:-}"
+    local state source type login association mention_required mention_present open_pr
+    local consecutive last_run domain_skip domain_reason
+
+    [[ -n ${target_state} ]] || target_state='{}'
+    if [[ -z ${gate} || ${gate} == "null" ]] || ! jq -e 'type == "object"' <<< "${gate}" > /dev/null 2>&1; then
+        admission_result true "" ""
+        return 0
+    fi
+
+    state="$(jq -r '.entity.state // ""' <<< "${gate}")"
+    case "${state}" in
+        open) ;;
+        closed | merged)
+            admission_result false "entity_closed" "entity state is ${state}"
+            return 0
+            ;;
+        *)
+            admission_result false "fact_missing" "entity.state is missing or unknown"
+            return 0
+            ;;
+    esac
+
+    source="$(jq -r '.trigger.source // ""' <<< "${gate}")"
+    if [[ ${source} == "webhook" ]]; then
+        type="$(jq -r '.actor.type // ""' <<< "${gate}")"
+        login="$(jq -r '.actor.login // ""' <<< "${gate}")"
+        association="$(jq -r '.actor.association // ""' <<< "${gate}")"
+        if admission_actor_is_bot "${type}" "${login}"; then
+            admission_result false "actor_untrusted" "actor is a bot"
+            return 0
+        fi
+        if ! admission_actor_trusted "${association}"; then
+            admission_result false "actor_untrusted" "author association is not trusted"
+            return 0
+        fi
+        mention_required="$(jq -r '.trigger.mention_required // false' <<< "${gate}")"
+        mention_present="$(jq -r '.trigger.mention_present // false' <<< "${gate}")"
+        if [[ ${mention_required} == "true" && ${mention_present} != "true" ]]; then
+            admission_result false "mention_missing" "required mention is absent"
+            return 0
+        fi
+    fi
+
+    open_pr="$(jq -r '.dedupe.open_pr // empty' <<< "${gate}")"
+    if [[ -n ${open_pr} ]]; then
+        admission_result false "pending_pr" "open PR #${open_pr} already handles the entity"
+        return 0
+    fi
+
+    consecutive="$(jq -r '.consecutive_failures // 0' <<< "${target_state}")"
+    last_run="$(jq -r '.last_run // ""' <<< "${target_state}")"
+    if [[ ${consecutive} =~ ^[0-9]+$ ]] && target_circuit_breaker_open "${consecutive}" "${last_run}"; then
+        admission_result false "circuit_breaker" "consecutive_failures ${consecutive}"
+        return 0
+    fi
+
+    domain_skip="$(jq -r '.domain_skip.skip // false' <<< "${gate}")"
+    if [[ ${domain_skip} == "true" ]]; then
+        domain_reason="$(jq -r '.domain_skip.reason // ""' <<< "${gate}")"
+        if [[ ! ${domain_reason} =~ ^[a-z0-9_]+$ ]]; then
+            domain_reason="detect"
+        fi
+        admission_result false "domain:${domain_reason}" "detect script skipped the entity"
+        return 0
+    fi
+
+    admission_result true "" ""
+}
+
+#######################################
+# admission_result: Print one admission result object
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - admit (true | false)
+#   $2 - skip_reason (empty when admitted)
+#   $3 - detail (one line)
+#
+# Outputs:
+#   STDOUT: {"admit":bool,"skip_reason":string,"detail":string}
+#
+# Returns:
+#   0 always
+#
+#######################################
+function admission_result {
+    jq -nc --argjson admit "${1}" --arg skip_reason "${2}" --arg detail "${3}" \
+        '{admit: $admit, skip_reason: $skip_reason, detail: $detail}'
 }
