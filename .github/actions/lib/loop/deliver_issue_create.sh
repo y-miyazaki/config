@@ -6,7 +6,7 @@
 #
 # Usage:
 #   source deliver_issue_create.sh   (from deliver_message.sh)
-#   deliver_issue_create
+#   deliver_issue_create_run
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -258,7 +258,7 @@ function deliver_issue_create_select_new_findings {
 }
 
 #######################################
-# deliver_issue_create: Open one Issue per new finding in issues.json
+# deliver_issue_create_run: Open one Issue per new finding in issues.json
 # Allowlist labels that do not exist yet are created first (needs issues: write); only when
 # at least one Issue will be filed.
 #
@@ -284,10 +284,10 @@ function deliver_issue_create_select_new_findings {
 #   0 on success (including nothing to create); 1 on failure (recorded)
 #
 # Usage:
-#   deliver_issue_create
+#   deliver_issue_create_run
 #
 #######################################
-function deliver_issue_create {
+function deliver_issue_create_run {
     local file="${LOOP_MESSAGE_DIR:-}/issues.json"
     local limit="${FINALIZE_ISSUE_LIMIT:-5}"
     local loop_name="${LOOP_NAME:-}"

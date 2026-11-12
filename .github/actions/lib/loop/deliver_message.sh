@@ -235,7 +235,7 @@ function deliver_message_send {
 
     case "${delivery}" in
         issue_create)
-            deliver_issue_create
+            deliver_issue_create_run
             return $?
             ;;
         issue_comment)

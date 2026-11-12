@@ -15,7 +15,7 @@
 #   - The body is carried verbatim (jq --rawfile / -j), so it round-trips byte-identical
 #   - message_labels.json is only read when message.md is present
 #   - issues.json (delivery issue_create) travels as {"issues": [...]}; only a JSON array
-#     is carried, anything else is ignored here (deliver_issue_create validates the shape)
+#     is carried, anything else is ignored here (deliver_issue_create_run validates the shape)
 #   - Invalid labels drop the whole delivery: a body without its labels would not match
 #
 # Output:
