@@ -190,7 +190,7 @@ jobs:
 
       - name: Setup jsonnetfmt
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
+        uses: y-miyazaki/config/.github/actions/install-github-release@ab1f8a2cd328e4335b9fde58f1569e528deb8799 # v1.9.9
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnetfmt
@@ -226,7 +226,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
+        uses: y-miyazaki/config/.github/actions/summary@ab1f8a2cd328e4335b9fde58f1569e528deb8799 # v1.9.9
         with:
           artifacts: |
             (none)
@@ -297,7 +297,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
+        uses: y-miyazaki/config/.github/actions/summary@ab1f8a2cd328e4335b9fde58f1569e528deb8799 # v1.9.9
         with:
           artifacts: |
             (none)
@@ -340,7 +340,7 @@ jobs:
 
       - name: Setup jsonnet
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
+        uses: y-miyazaki/config/.github/actions/install-github-release@ab1f8a2cd328e4335b9fde58f1569e528deb8799 # v1.9.9
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnet
@@ -408,7 +408,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@baafc3262f3fc1aceec2e5043cbf4f9de4c45d47 # v1.9.8
+        uses: y-miyazaki/config/.github/actions/summary@ab1f8a2cd328e4335b9fde58f1569e528deb8799 # v1.9.9
         with:
           artifacts: |
             (none)
