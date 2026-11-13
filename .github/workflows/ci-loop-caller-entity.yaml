@@ -325,7 +325,6 @@ jobs:
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@afefe9039498c217f204d19a4682c95deb6e4d69 # v1.9.10
-
     with:
       agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
       agent_checker_effort: ${{ inputs.agent_checker_effort }}
