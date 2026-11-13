@@ -103,7 +103,7 @@
       "git commit, checkout, reset --hard, clean -f, and branch -D require approval; git push --force and git push -f stay blocked unless the user asks for them.",
       "Do not read or write .env files, credentials, secrets/, private keys, or cloud credential paths.",
       "Do not dump environment variables (env, printenv); they carry tokens.",
-      "Do not write to dotfiles or dot-directories under the home directory (e.g. ~/.ssh, ~/.aws).",
+      "Do not write to credential, shell-startup, or tool-config dotfiles and dot-directories under the home directory (e.g. ~/.ssh, ~/.aws, ~/.config, ~/.bashrc, ~/.zshrc, ~/.gitconfig, ~/.claude/settings*.json, ~/.claude/hooks); ~/.claude/projects/-workspace/memory is the only exception.",
       "Do not call the codebase-memory-mcp delete_project tool.",
       "Do not run terraform apply, destroy, import, state mv, state rm, or force-unlock.",
       "Do not run aws CLI delete-* or put-* subcommands.",
