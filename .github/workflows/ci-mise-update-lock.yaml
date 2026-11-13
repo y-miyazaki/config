@@ -27,7 +27,7 @@ on:
         required: true
         type: string
       mise_version:
-        default: "2026.11.2"
+        default: "2026.11.3"
         description: "mise version to use"
         required: false
         type: string
