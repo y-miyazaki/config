@@ -1411,45 +1411,73 @@ backend = "aqua:jdx/usage"
 
 [tools."aqua:jdx/usage"."platforms.linux-arm64"]
 checksum = "sha256:b845455e5fda89983fe6860066b2f520ba28cb0a265d64f2fde0e950eb9e0d07"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-aarch64-unknown-linux-gnu.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715712902"
 
 [tools."aqua:jdx/usage"."platforms.linux-arm64-musl"]
 checksum = "sha256:3bfcf7b5cff0daec5629f54dd15f40001a09bab551663d6e937c99c5716ae094"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-aarch64-unknown-linux-musl.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715716415"
 
 [tools."aqua:jdx/usage"."platforms.linux-x64"]
 checksum = "sha256:78d9d765bb87c9377e95fd816ab436a5001d95d28b3b9bf7e405ed3eccfe025c"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-unknown-linux-gnu.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715713437"
 
 [tools."aqua:jdx/usage"."platforms.linux-x64-musl"]
 checksum = "sha256:9af5d220332a0178c38786eac6deb9fa67b767f4c3d4b2e4c8e6bd5659975e86"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-unknown-linux-musl.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715712996"
 
 [tools."aqua:jdx/usage"."platforms.macos-arm64"]
 checksum = "sha256:3201ab26da21e11cbbf3b75f81da65a502e7774e014bd77956cab13e61e73b87"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-universal-apple-darwin.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715718669"
 
 [tools."aqua:jdx/usage"."platforms.macos-x64"]
 checksum = "sha256:3201ab26da21e11cbbf3b75f81da65a502e7774e014bd77956cab13e61e73b87"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-universal-apple-darwin.tar.gz"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715718669"
 
 [tools."aqua:jdx/usage"."platforms.windows-x64"]
 checksum = "sha256:0156c5ff413cb49275b109a44b0bb388d8aebf4ce2f47db4902333d3fbee46cc"
-checksum_source = "mise-versions"
 url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/715723164"
+
+[[tools."aqua:jdx/usage"]]
+version = "7.3.0"
+backend = "aqua:jdx/usage"
+
+[tools."aqua:jdx/usage".options]
+"vars.lazy" = "true"
+
+[tools."aqua:jdx/usage"."platforms.linux-arm64"]
+checksum = "sha256:3bfcf7b5cff0daec5629f54dd15f40001a09bab551663d6e937c99c5716ae094"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-aarch64-unknown-linux-musl.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.linux-arm64-musl"]
+checksum = "sha256:3bfcf7b5cff0daec5629f54dd15f40001a09bab551663d6e937c99c5716ae094"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-aarch64-unknown-linux-musl.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.linux-x64"]
+checksum = "sha256:9af5d220332a0178c38786eac6deb9fa67b767f4c3d4b2e4c8e6bd5659975e86"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-unknown-linux-musl.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.linux-x64-musl"]
+checksum = "sha256:9af5d220332a0178c38786eac6deb9fa67b767f4c3d4b2e4c8e6bd5659975e86"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-unknown-linux-musl.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.macos-arm64"]
+checksum = "sha256:3201ab26da21e11cbbf3b75f81da65a502e7774e014bd77956cab13e61e73b87"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-universal-apple-darwin.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.macos-x64"]
+checksum = "sha256:3201ab26da21e11cbbf3b75f81da65a502e7774e014bd77956cab13e61e73b87"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-universal-apple-darwin.tar.gz"
+
+[tools."aqua:jdx/usage"."platforms.windows-x64"]
+checksum = "sha256:0156c5ff413cb49275b109a44b0bb388d8aebf4ce2f47db4902333d3fbee46cc"
+url = "https://github.com/jdx/usage/releases/download/v7.3.0/usage-x86_64-pc-windows-msvc.zip"
 
 [[tools."aqua:kayac/ecspresso"]]
 version = "2.8.8"
