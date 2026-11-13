@@ -534,7 +534,8 @@ function sync_guidelines_component {
         return 0
     fi
     echo "==> guidelines"
-    perl "${SCRIPT_DIR}/sync_guidelines_from_categories.pl"
+    # The generator resolves .apm/ paths against the current directory, so run it from the repository root
+    (cd "$(resolve_repo_root)" && perl "${SCRIPT_DIR}/sync_guidelines_from_categories.pl")
 }
 
 #######################################

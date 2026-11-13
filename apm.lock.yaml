@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-12T12:00:20.855057+00:00'
+generated_at: '2026-11-13T13:15:49.826201+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -252,7 +252,7 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/markdown-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
-    .claude/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
+    .claude/agents/test-engineer.md: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
     .claude/rules/agent-skills.md: sha256:8ed6b5a1d827010f9bf2c3dbfc51e931865f034bb636e3736cfff95a8e34c94d
     .claude/rules/instructions.md: sha256:27318b9c03647fba11a0ab2f1fe572e4cd0c5ade238e3e27989acb558f502ef4
     .claude/rules/markdown.md: sha256:67c019eba7931bf52778706d22a623568f1974239b65789d44630112179deae7
@@ -332,13 +332,13 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/markdown-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
-    .cursor/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
+    .cursor/agents/test-engineer.md: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
     .cursor/rules/agent-skills.mdc: sha256:bf1d491a9e6c43371389c304d28c2aae3c11d7e87a942e5ebd300d929970396b
     .cursor/rules/instructions.mdc: sha256:1e1080bb01e9172c6bba3c14e65599b7d77eff6bdf562d59585f5e470a0e4866
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:6a9da078c28a07d3a876e2b3229801437f09950089510aa34ab23cb640e11b6c
+  content_hash: sha256:721e0f4963187e7333c96ee21fbf95e16c3a2cd5418a7caf58d88e5c27e65811
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -714,7 +714,7 @@ dependencies:
     .agents/skills/github-issue-triage/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .agents/skills/github-issue-triage/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/github-issue-triage/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .agents/skills/github-pr-body/SKILL.md: sha256:4bd9a21feffad06e7bfa9a7e9e31f207d4d5933fc10f2bf4e04642888849fb93
+    .agents/skills/github-pr-body/SKILL.md: sha256:adb06eda513c0699e87d4d3725ebf4a247fb17b02fca4a0448ca0c501e767b2b
     .agents/skills/github-pr-body/eval.yaml: sha256:5052cd646d9e212af5cad3e420603d4924239c811ff59fbe9b1531c0624679a9
     .agents/skills/github-pr-body/evals/tasks/github-pr-body-basic.yaml: sha256:3dcf276dc4c535a575ba999233b735f2f08ad8fd4ee566b97c74fc6fb3024669
     .agents/skills/github-pr-body/evals/tasks/github-pr-body-boundary-guardrail.yaml: sha256:cdef87084c9559366191bf4fee57a6a08e775373189110e00f2ecb0f75ee8f08
@@ -844,7 +844,7 @@ dependencies:
     .claude/skills/github-issue-triage/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .claude/skills/github-issue-triage/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/github-issue-triage/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .claude/skills/github-pr-body/SKILL.md: sha256:4bd9a21feffad06e7bfa9a7e9e31f207d4d5933fc10f2bf4e04642888849fb93
+    .claude/skills/github-pr-body/SKILL.md: sha256:adb06eda513c0699e87d4d3725ebf4a247fb17b02fca4a0448ca0c501e767b2b
     .claude/skills/github-pr-body/eval.yaml: sha256:5052cd646d9e212af5cad3e420603d4924239c811ff59fbe9b1531c0624679a9
     .claude/skills/github-pr-body/evals/tasks/github-pr-body-basic.yaml: sha256:3dcf276dc4c535a575ba999233b735f2f08ad8fd4ee566b97c74fc6fb3024669
     .claude/skills/github-pr-body/evals/tasks/github-pr-body-boundary-guardrail.yaml: sha256:cdef87084c9559366191bf4fee57a6a08e775373189110e00f2ecb0f75ee8f08
@@ -926,7 +926,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:da9d5dbc196a9b59dc815e852575000f28fa3bc051f7a89245838489c7a7d31b
+  content_hash: sha256:02407ceb1c47fcf0c8e4ef4eed7eb13892b63c9c2a290f307c0658f3a13af0c6
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -1258,8 +1258,8 @@ dependencies:
     .agents/skills/go-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/go-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .agents/skills/go-validation/scripts/validate.sh: sha256:958cdfb65c2f58130cce87793a833c2ee037e8a9799ad9b7ee585d1c99d1ee07
-    .claude/rules/go-test.md: sha256:7e4f09cda4d15485003a85b66e690c0a9df5a6b434785c8f06bdaa13ac150b7d
-    .claude/rules/go.md: sha256:acc0e3f32e2127085645607c9b8345fe4122abaf4586fd54ed23836fb5e1e706
+    .claude/rules/go-test.md: sha256:db2078be511ec7d5ecfaeb475b404872364884c0d3d0d74760958c59e1b5bc16
+    .claude/rules/go.md: sha256:ed5a35f401902ca9157f559be6daf7549ba3193702d8a303b58e809aaf882a7f
     .claude/skills/go-review/SKILL.md: sha256:919619836eac90fee3f578a8cdff613da8d111a2875083419b10351578d7ea66
     .claude/skills/go-review/eval.yaml: sha256:c8e9abf238dd1a8628bc5610e25e62c36e547722cdf97f91c71781fb23cd2e4f
     .claude/skills/go-review/evals/tasks/go-review-basic.yaml: sha256:05308719ab7f564bcbd9f8dc66903e6da21dc703fa3094bc9ee71a555c59cf71
@@ -1306,11 +1306,11 @@ dependencies:
     .claude/skills/go-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/go-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/go-validation/scripts/validate.sh: sha256:958cdfb65c2f58130cce87793a833c2ee037e8a9799ad9b7ee585d1c99d1ee07
-    .cursor/rules/go-test.mdc: sha256:671bf17dbe428f2724234d1c36431625a033c7ab6ba3048a80fc9b50f2d15dc2
-    .cursor/rules/go.mdc: sha256:51b127da5f1dd539586242d4ab81c1107e54e500f19d16407e0360612f25e2dd
+    .cursor/rules/go-test.mdc: sha256:cf70fcbf338f5b9c3c2a3c37a221abbed6581ce20979fd98be4b64fbb8d4c744
+    .cursor/rules/go.mdc: sha256:db3727c7d217a05c187c36f640862606d5e2d19d22ac6d26e363aa6fe061f3b0
   source: local
   local_path: ./.apm/packages/go
-  content_hash: sha256:eacb40c206c8c1af5f0cc66ac9ab8031f8626651a6e89f4ec660779b1e8d9952
+  content_hash: sha256:7c936cd8c9c2ed2d4006aae175a89887b1d552acff817d1f8804caf81f4456a6
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-claude
   name: go-hooks-claude
@@ -2477,7 +2477,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:c8996fc182f607a11be33eac6d8a62e494461c1d0c45316bf224a2f216964b32
-    .claude/rules/bats.md: sha256:e9b8043aa6fd78fdfbbf1a335a1dd4fd53cba01cc645df0562a52615af7884da
+    .claude/rules/bats.md: sha256:1d17f095e9ced10a07b6a088c47de639f99f07f6d07647f592faa8373915d73d
     .claude/rules/shell-script.md: sha256:d8c780ac26e04ed0d24eb22972dfc0a879b85cab97762be8a692198ad05fae3b
     .claude/skills/shell-script-review/SKILL.md: sha256:73b023114f5238093d399dff71d348ef4a9cf1793a17362409fd98922a9c2755
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
@@ -2526,11 +2526,11 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:c8996fc182f607a11be33eac6d8a62e494461c1d0c45316bf224a2f216964b32
-    .cursor/rules/bats.mdc: sha256:46fa97003bbdfbe2a49c4e269c605ca920d2f652238be0f44f822d25a1f39b27
+    .cursor/rules/bats.mdc: sha256:f4cbb6ae99732d01905ae2b853475745ce3604f504abf3eb8a3d27fbe4a88f71
     .cursor/rules/shell-script.mdc: sha256:5a3d9d3a3e0f52b4f68267e3c5ae78afc439f264a80563444c1879dc17bb2855
   source: local
   local_path: ./.apm/packages/shell-script
-  content_hash: sha256:be9a99aa59e8d38b1966522ee75749a6e5980aea3c489ec4fd5aa78b0b801ba3
+  content_hash: sha256:39c9b6b03093f77a4804f2528d8087464dec2e71cce434f6178b20ae7dfaf9cd
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
   name: shell-script-hooks-claude
@@ -2569,7 +2569,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
+  content_hash: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/actionlint.sh
@@ -2677,7 +2677,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:e9b8043aa6fd78fdfbbf1a335a1dd4fd53cba01cc645df0562a52615af7884da
+  content_hash: sha256:1d17f095e9ced10a07b6a088c47de639f99f07f6d07647f592faa8373915d73d
 - kind: project-relative
   target: claude
   value: .claude/rules/github-actions-workflow.md
@@ -2695,7 +2695,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:7e4f09cda4d15485003a85b66e690c0a9df5a6b434785c8f06bdaa13ac150b7d
+  content_hash: sha256:db2078be511ec7d5ecfaeb475b404872364884c0d3d0d74760958c59e1b5bc16
 - kind: project-relative
   target: claude
   value: .claude/rules/go.md
@@ -2704,7 +2704,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:acc0e3f32e2127085645607c9b8345fe4122abaf4586fd54ed23836fb5e1e706
+  content_hash: sha256:ed5a35f401902ca9157f559be6daf7549ba3193702d8a303b58e809aaf882a7f
 - kind: project-relative
   target: claude
   value: .claude/rules/instructions.md
@@ -5062,7 +5062,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:4bd9a21feffad06e7bfa9a7e9e31f207d4d5933fc10f2bf4e04642888849fb93
+  content_hash: sha256:adb06eda513c0699e87d4d3725ebf4a247fb17b02fca4a0448ca0c501e767b2b
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-body/eval.yaml
@@ -10453,7 +10453,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:4bd9a21feffad06e7bfa9a7e9e31f207d4d5933fc10f2bf4e04642888849fb93
+  content_hash: sha256:adb06eda513c0699e87d4d3725ebf4a247fb17b02fca4a0448ca0c501e767b2b
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-body/eval.yaml
@@ -13522,7 +13522,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
+  content_hash: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh
@@ -13630,7 +13630,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:46fa97003bbdfbe2a49c4e269c605ca920d2f652238be0f44f822d25a1f39b27
+  content_hash: sha256:f4cbb6ae99732d01905ae2b853475745ce3604f504abf3eb8a3d27fbe4a88f71
 - kind: project-relative
   target: cursor
   value: .cursor/rules/github-actions-workflow.mdc
@@ -13648,7 +13648,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:671bf17dbe428f2724234d1c36431625a033c7ab6ba3048a80fc9b50f2d15dc2
+  content_hash: sha256:cf70fcbf338f5b9c3c2a3c37a221abbed6581ce20979fd98be4b64fbb8d4c744
 - kind: project-relative
   target: cursor
   value: .cursor/rules/go.mdc
@@ -13657,7 +13657,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:51b127da5f1dd539586242d4ab81c1107e54e500f19d16407e0360612f25e2dd
+  content_hash: sha256:db3727c7d217a05c187c36f640862606d5e2d19d22ac6d26e363aa6fe061f3b0
 - kind: project-relative
   target: cursor
   value: .cursor/rules/instructions.mdc

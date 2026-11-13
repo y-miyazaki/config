@@ -34,21 +34,21 @@ Rules:
 
 Applies to scripts under `.github/actions/**/lib/` and `.github/actions/lib/loop/`. The file stem tells the role, and the function prefix tells the file, so `grep` finds every judgement of one kind.
 
-| File stem                          | Role                                                                         | Rule                                                                                         |
-| ---------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `admission.sh`                     | The gate: every decision whether a run proceeds or is skipped                | Only `.github/actions/lib/loop/admission.sh`; functions start with `admission_`              |
-| `detect.sh`                        | Collects facts and builds the target set; makes no shared admission decision | `loop-detect/lib`, `loop-entity-detect/lib`; skill scripts are `detect_<loop>.sh`            |
-| `outcome.sh`                       | Maps an outcome to its effect (counter, prune); the one outcome table        | Only `.github/actions/lib/loop/outcome.sh`; functions start with `outcome_`                  |
-| `run.sh`                           | Action entry point; orchestrates, decides nothing itself                     | One per action, `<action>/lib/run.sh`                                                        |
-| `check_*.sh`                       | Validates inputs or a contract and returns a status; no side effects         | Validators use `check_`; no `validate_*.sh` remains in `lib/loop` |
-| `push_race.sh`, `state_pr.sh`, ... | One mechanism per file, named for the mechanism                              | Functions start with the file stem (`push_race_`, `state_pr_`)                               |
+| File stem                          | Role                                                                         | Rule                                                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `admission.sh`                     | The gate: every decision whether a run proceeds or is skipped                | Only `.github/actions/lib/loop/admission.sh`; functions start with `admission_`   |
+| `detect.sh`                        | Collects facts and builds the target set; makes no shared admission decision | `loop-detect/lib`, `loop-entity-detect/lib`; skill scripts are `detect_<loop>.sh` |
+| `outcome.sh`                       | Maps an outcome to its effect (counter, prune); the one outcome table        | Only `.github/actions/lib/loop/outcome.sh`; functions start with `outcome_`       |
+| `run.sh`                           | Action entry point; orchestrates, decides nothing itself                     | One per action, `<action>/lib/run.sh`                                             |
+| `check_*.sh`                       | Validates inputs or a contract and returns a status; no side effects         | Validators use `check_`, never `validate_`                                        |
+| `push_race.sh`, `state_pr.sh`, ... | One mechanism per file, named for the mechanism                              | Functions start with the file stem (`push_race_`, `state_pr_`)                    |
 
 Rules:
 
 - A function in a shared `lib/loop/<stem>.sh` file starts with `<stem>_`. `main` is the only exception. A new or renamed function that does not follow this is rejected in review.
 - A run or skip decision outside `admission.sh` is a defect (see Loop judgements go through the gate). A function named `admission_*` is the only kind of function that returns an admit or skip decision.
 - Facts are named for what they read (`detect_*`, `read_*`), decisions for what they refuse (`admission_*`), effects for what they write (`write_*`, `deliver_*`).
-- Every shared `lib/loop/<stem>.sh` follows this today; `test/bats/.github/actions/lib/loop/naming.bats` fails on a function that does not, so a rename is part of the change that adds or edits the function.
+- `test/bats/.github/actions/lib/loop/naming.bats` fails on a shared `lib/loop/<stem>.sh` function that does not follow this, so a rename is part of the change that adds or edits the function.
 
 Gate map (`.github/actions/lib/loop/admission.sh`):
 

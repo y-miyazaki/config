@@ -16,6 +16,7 @@
 # - apm install gets --force only with --apm-force, and a failed install prints the --apm-force recovery hint
 # - check_agent_config_json refuses an agent config file that is not valid JSON and accepts valid or absent files
 # - apm install is not started when an agent config file is not valid JSON
+# - the guidelines component runs the generator from the repository root whatever the caller's directory, and fails when the generator fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -194,4 +195,23 @@ function apm_install_run {
     run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && run_apm_install_component"
     [ "$status" -eq 1 ]
     [[ $output != *"apm-called"* ]]
+}
+
+@test "the guidelines component runs the generator from the repository root whatever the caller's directory" {
+    local root="${TEST_TMP}/root_guidelines" mock_bin="${TEST_TMP}/bin_guidelines" elsewhere="${TEST_TMP}/elsewhere"
+    mkdir -p "${root}" "${mock_bin}" "${elsewhere}"
+    printf '#!/bin/bash\npwd\n' > "${mock_bin}/perl"
+    chmod +x "${mock_bin}/perl"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && cd '${elsewhere}' && sync_guidelines_component"
+    [ "$status" -eq 0 ]
+    [ "${lines[-1]}" = "$(cd "${root}" && pwd)" ]
+}
+
+@test "the guidelines component fails when the generator fails" {
+    local root="${TEST_TMP}/root_guidelines_fail" mock_bin="${TEST_TMP}/bin_guidelines_fail"
+    mkdir -p "${root}" "${mock_bin}"
+    printf '#!/bin/bash\nexit 3\n' > "${mock_bin}/perl"
+    chmod +x "${mock_bin}/perl"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && sync_guidelines_component"
+    [ "$status" -eq 3 ]
 }
