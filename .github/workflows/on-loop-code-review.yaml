@@ -68,7 +68,7 @@ jobs:
         - Any file other than `.loop-code-review/findings.json` changed
       agent_checker_max_turns: 100
       agent_checker_model: claude-opus-5
-      agent_cli_version: 2.1.318
+      agent_cli_version: 2.1.319
       agent_edit_allowlist: .loop-code-review/findings.json
       agent_edit_target: report
       agent_engine: claude
