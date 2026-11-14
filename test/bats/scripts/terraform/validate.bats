@@ -9,6 +9,9 @@
 # - parse_arguments sets AUTO_FIX on -f
 # - parse_arguments collects positional args as TARGET_DIRS
 # - parse_arguments fails on unknown option
+# - parse_arguments sets GENERATE_DOCS on -g
+# - run_recursive_validation warns and skips a non-existent target directory
+# - show_usage example uses -g, not the deprecated -d
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -54,4 +57,22 @@ setup() {
 @test "parse_arguments fails on unknown option" {
     run parse_arguments --unknown
     [ "$status" -ne 0 ]
+}
+
+@test "parse_arguments sets GENERATE_DOCS on -g" {
+    parse_arguments -g
+    [ "$GENERATE_DOCS" = "true" ]
+}
+
+@test "run_recursive_validation warns and skips a non-existent target directory" {
+    run bash -c "source '$(bats_workspace_root)/scripts/terraform/validate.sh' && TARGET_DIRS=('${BATS_TEST_TMPDIR}/missing') && run_recursive_validation"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Skipping non-existent directory for validation"* ]]
+}
+
+@test "show_usage example uses -g, not the deprecated -d" {
+    run bash "$(bats_workspace_root)/scripts/terraform/validate.sh" --help
+    [ "$status" -eq 0 ]
+    [[ $output == *"-g modules/aws/vpc"* ]]
+    [[ $output != *"-d modules/aws/vpc"* ]]
 }

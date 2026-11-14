@@ -168,9 +168,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v bats >/dev/null 2>&1; then
+          missing=()
+          for tool in bats parallel; do
+            if ! command -v "${tool}" >/dev/null 2>&1; then
+              missing+=("${tool}")
+            fi
+          done
+          if [[ ${#missing[@]} -gt 0 ]]; then
             sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
           fi
           bats --version
 
@@ -208,7 +214,7 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t bats_files < /tmp/bats_files.txt
-          bats "${bats_files[@]}"
+          bats --jobs "$(nproc)" --no-parallelize-within-files "${bats_files[@]}"
 
       - name: Setup ShellSpec
         if: steps.discover.outputs.has_shellspec == 'true'
