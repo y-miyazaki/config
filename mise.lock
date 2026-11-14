@@ -361,9 +361,8 @@ version = "0.13.7"
 backend = "aqua:astral-sh/uv"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64"]
-checksum = "sha256:71279f8d3c67241e807b9d8db872d1bf541579fb9f08b7d1eb1682196d1e57dc"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/704009469"
+checksum = "sha256:2d3ec076a0c4c0e8250bb6418c44080828b544f1a3be0b6e46adf9fb6923de45"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-aarch64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64-musl"]
@@ -373,9 +372,8 @@ url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/704009487"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64"]
-checksum = "sha256:c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/704009823"
+checksum = "sha256:287491da03f2a785c70fa75b13e1f849918c2f2b5415fe84876b8214eeb792f9"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64-musl"]
@@ -2146,6 +2144,41 @@ url_api = "https://api.github.com/repos/shenwei356/rush/releases/assets/70006391
 checksum = "sha256:4b81911ebf7f4b7343fbe099c2f07947c7e75047342ad8ff207a952c0bb48656"
 url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_windows_amd64.exe.tar.gz"
 url_api = "https://api.github.com/repos/shenwei356/rush/releases/assets/700065723"
+
+[[tools."aqua:shenwei356/rush"]]
+version = "0.11.1"
+backend = "aqua:shenwei356/rush"
+
+[tools."aqua:shenwei356/rush".options]
+"vars.lazy" = "true"
+
+[tools."aqua:shenwei356/rush"."platforms.linux-arm64"]
+checksum = "sha256:5008abfafa8c2e7c69c0f8714c06ebd08899b0a082e95db14bae50495f695efc"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_linux_arm64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.linux-arm64-musl"]
+checksum = "sha256:5008abfafa8c2e7c69c0f8714c06ebd08899b0a082e95db14bae50495f695efc"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_linux_arm64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.linux-x64"]
+checksum = "sha256:1a08baa9f2751c8581f0655fe1aa40a15595ffe70d5f3377d113060329c58fc4"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_linux_amd64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.linux-x64-musl"]
+checksum = "sha256:1a08baa9f2751c8581f0655fe1aa40a15595ffe70d5f3377d113060329c58fc4"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_linux_amd64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.macos-arm64"]
+checksum = "sha256:bbcbf882da03ab06f17f6c5c8ee29dc50cd9515937dc8373d5b6cc25de19dcd9"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_darwin_arm64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.macos-x64"]
+checksum = "sha256:3e5f6f320fbbdd67a900705ed1486d9aecee6db7bc16d0eaf61b686b91b8f524"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_darwin_amd64.tar.gz"
+
+[tools."aqua:shenwei356/rush"."platforms.windows-x64"]
+checksum = "sha256:4b81911ebf7f4b7343fbe099c2f07947c7e75047342ad8ff207a952c0bb48656"
+url = "https://github.com/shenwei356/rush/releases/download/v0.11.1/rush_windows_amd64.exe.tar.gz"
 
 [[tools."aqua:suzuki-shunsuke/disable-checkout-persist-credentials"]]
 version = "1.0.2"
