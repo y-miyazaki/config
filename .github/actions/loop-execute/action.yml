@@ -123,7 +123,7 @@ inputs:
     description: "Target handoff key for artifact payload lookup"
     required: false
   node_version:
-    default: "24.22.2"
+    default: "26.13.0"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   prompt_implementer_feedback:
