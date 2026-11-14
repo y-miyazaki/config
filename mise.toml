@@ -110,7 +110,8 @@ claude = { version = "2.1.319", lazy = true, lazy_bins = ["claude"] }           
 
 # Shell / test tools (moved from env/common/Dockerfile apt packages)
 "aqua:bats-core/bats-core" = { version = "1.14.0", lazy = true, lazy_bins = ["bats"] }                             # Bats shell test runner
-"aqua:koalaman/shellcheck" = { version = "0.11.0", lazy = true, lazy_bins = ["shellcheck"] }                       # shell script linter
+"aqua:shenwei356/rush" = { version = "0.11.1", lazy = true, lazy_bins = ["rush"] }                                # parallel runner used by bats --jobs
+"aqua:koalaman/shellcheck" ={ version = "0.11.0", lazy = true, lazy_bins = ["shellcheck"] }                       # shell script linter
 "aqua:mvdan/sh" = { version = "3.14.1", lazy = true, lazy_bins = ["shfmt"] }                                       # shell script formatter (shfmt)
 "pipx:yamllint" = { version = "1.38.0", depends = ["python"], lazy = true, lazy_bins = ["yamllint"] }              # YAML linter
 
