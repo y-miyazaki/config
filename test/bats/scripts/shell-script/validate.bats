@@ -4,7 +4,7 @@
 # Tests for scripts/shell-script/validate.sh
 
 # Use cases:
-# - run_bats_tests passes --jobs and the rush runner when rush is installed
+# - run_bats_tests passes --jobs and a parallel runner when one is installed
 # - run_bats_tests stays serial when BATS_JOBS=1
 # - print_summary_overall_result prints success and failure outcomes
 # - print_summary_statistics prints validation counters
@@ -426,11 +426,11 @@ _mock_bats_env() {
     touch "${BATS_TEST_TMPDIR}/a.bats"
 }
 
-@test "run_bats_tests passes --jobs and the rush runner when rush is installed" {
+@test "run_bats_tests passes --jobs and a parallel runner when one is installed" {
     _mock_bats_env
     run bash -c "PATH='${BATS_TEST_TMPDIR}/bin':/usr/bin:/bin; BATS_JOBS=4; export BATS_JOBS; source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && TEST_PATHS=(x) && run_bats_tests '${BATS_TEST_TMPDIR}/a.bats'"
     [ "$status" -eq 0 ]
-    [[ $(cat "${BATS_TEST_TMPDIR}/bats_args") == *"--jobs 4 --parallel-binary-name rush --no-parallelize-within-files"* ]]
+    [[ $(cat "${BATS_TEST_TMPDIR}/bats_args") == *"--jobs 4 --parallel-binary-name "*" --no-parallelize-within-files"* ]]
 }
 
 @test "run_bats_tests stays serial when BATS_JOBS=1" {
