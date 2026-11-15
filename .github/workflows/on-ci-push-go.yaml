@@ -1,0 +1,85 @@
+#######################################
+# Description:
+#   CI workflow: Go CI on push/PR
+#   Tests, lints and runs govulncheck for the Go module in cmd/terraform.
+#
+# Usage:
+#   Runs on: push, pull_request
+#
+# Design Rules:
+#   - The Go version is read from cmd/terraform/go.mod so CI follows the module
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
+name: on-ci-push-go
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "cmd/terraform/**"
+      - ".golangci.yaml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "cmd/terraform/**"
+      - ".golangci.yaml"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  detect-go-version:
+    outputs:
+      go-version: ${{ steps.read-go-version.outputs.version }}
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read go version from go.mod
+        id: read-go-version
+        run: |
+          GO_VERSION=$(grep -E '^go ' cmd/terraform/go.mod | awk '{print $2}')
+          echo "version=$GO_VERSION" >> "$GITHUB_OUTPUT"
+    timeout-minutes: 5
+
+  go-ci:
+    needs: detect-go-version
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    uses: ./.github/workflows/ci-go.yaml
+    with:
+      component: "terraform"
+      go_project_path: "cmd/terraform"
+      go_version: ${{ needs.detect-go-version.outputs.go-version }}
