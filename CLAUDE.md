@@ -40,6 +40,7 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `actionlint`          | `Stop`                      |
 | `ghalint`             | `Stop`                      |
 | `gitleaks`            | `Stop`                      |
+| `go test`             | `Stop`                      |
 | `golangci-lint`       | `Stop`                      |
 | `markdown-link-check` | `Stop`                      |
 | `markdownlint-cli2`   | `Stop`                      |

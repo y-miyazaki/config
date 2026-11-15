@@ -107,9 +107,9 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   └── .apm/
 │       ├── instructions/  # 1 instruction file
 │       └── skills/        # 2 skills
-├── go-hooks-claude/       # Go hooks for Claude Code (1 hook)
-├── go-hooks-copilot/      # Go hooks for GitHub Copilot CLI (1 hook)
-├── go-hooks-cursor/       # Go hooks for Cursor (1 hook)
+├── go-hooks-claude/       # Go hooks for Claude Code (2 hooks)
+├── go-hooks-copilot/      # Go hooks for GitHub Copilot CLI (2 hooks)
+├── go-hooks-cursor/       # Go hooks for Cursor (2 hooks)
 ├── shell-script/    # Shell script development
 │   ├── apm.yml      # 0 MCP servers
 │   └── .apm/
@@ -172,6 +172,8 @@ Hooks invoke native binaries when present on `PATH`. Most hook tools are not ava
 ```bash
 command -v actionlint > /dev/null 2>&1 || exit 0
 ```
+
+Stop hooks block the agent at most `HOOK_BLOCK_LIMIT` times (default 2) per unchanged working-tree state: a hook compares the hash of the tracked diff plus untracked file content with the hash it last reported (stored with a report count per session and hook under `${TMPDIR:-/tmp}/hook-state-<uid>/`) and exits 0 without running the tool once the count reaches the limit. The session ID is read from the hook input (`session_id`, `conversation_id`, `sessionId`, or `conversationId`); when none is present, a shared `nosession` key is used. The `go_test.sh` hook runs `go test -short` (timeout from `GO_TEST_TIMEOUT`, default `90s`) only for packages that contain changed Go files.
 
 Hooks exit 0 when optional native tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit. lean-ctx agent hooks and shell integration are left to lean-ctx itself (not distributed via `common-hooks-*`).
 
