@@ -5,7 +5,7 @@ go 1.26.11
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/urfave/cli/v3 v3.14.0
-	github.com/zclconf/go-cty v1.19.0
+	github.com/zclconf/go-cty v1.20.0
 )
 
 require (
