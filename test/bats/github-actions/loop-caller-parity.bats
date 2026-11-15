@@ -1225,6 +1225,7 @@ Bash(gh run list:*)
 Bash(gh run view:*)
 Bash(git remote get-url:*)
 Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
 Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
 Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
 EOF

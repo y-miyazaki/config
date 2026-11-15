@@ -1,6 +1,9 @@
 site_name: Shared Config Distribution
 site_description: APM packages, reusable GitHub Actions workflows, and Renovate policy presets.
 docs_dir: docs
+# Agent rule files live next to the docs they govern but are not site pages; their links point outside docs_dir.
+exclude_docs: |
+  CLAUDE.md
 
 theme:
   name: material

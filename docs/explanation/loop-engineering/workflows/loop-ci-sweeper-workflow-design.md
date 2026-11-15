@@ -172,7 +172,7 @@ Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-Triggers: `workflow_run` (`completed`) on `on-cd-mkdocs`, `on-ci-push-apm-audit`, `on-ci-push-github-actions-workflow`, `on-ci-push-markdown`, `on-ci-push-mise-update-lock`, `on-ci-push-shell-script`, and `on-ci-security`, plus `workflow_dispatch`. No `schedule`. Concurrency group `loop-state-main` (`cancel-in-progress: false`, `queue: max`).
+Triggers: `workflow_run` (`completed`) on `on-cd-mkdocs`, `on-ci-push-apm-audit`, `on-ci-push-github-actions-workflow`, `on-ci-push-go`, `on-ci-push-markdown`, `on-ci-push-mise-update-lock`, `on-ci-push-shell-script`, and `on-ci-security`, plus `workflow_dispatch`. No `schedule`. Concurrency group `loop-state-main` (`cancel-in-progress: false`, `queue: max`).
 
 **Dogfood minimum (autonomy + delivery + PR watch):**
 
