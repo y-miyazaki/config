@@ -115,6 +115,19 @@ Path layout differs only in library import lines and `WORKSPACE_ROOT` depth for 
 
 ---
 
+## Hook scripts across targets (MUST)
+
+`*-hooks-claude`, `*-hooks-copilot`, and `*-hooks-cursor` ship the **same** `.apm/hooks/scripts/*.sh` for each hook. Only the hook definition JSON differs per target (event names, keys, and `version` are not interchangeable — see [apm-package-design.md](../docs/explanation/apm-package-design.md)).
+
+| Rule                  | Requirement                                                                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Byte-identical copies | A script is copy-pasted unchanged into every target package of the same hook family. Never fix or extend one target's copy alone — change one, then copy to all.              |
+| Agent differences     | Handle them inside the script by detecting the agent from the stdin event JSON and branching only the response (block vs warn, output format). Never fork the script.         |
+| Capability gaps       | When an agent cannot block (for example Copilot `userPromptSubmitted`, whose config-file hook output is dropped), the shared script warns for that agent instead of blocking. |
+| Enforcement           | `test/bats/scripts/self/apm/hook_gitleaks_prompt.bats` fails when any common-hooks script differs between targets.                                                            |
+
+---
+
 ## Pointers (not rules)
 
 | Topic                                 | Document                                                                           |

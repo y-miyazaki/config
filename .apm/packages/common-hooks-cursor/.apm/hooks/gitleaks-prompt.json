@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "./scripts/gitleaks_prompt.sh",
+        "timeout": 30
+      }
+    ]
+  },
+  "version": 1
+}

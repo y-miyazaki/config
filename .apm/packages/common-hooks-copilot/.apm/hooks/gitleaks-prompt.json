@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "./scripts/gitleaks_prompt.sh",
+        "timeoutSec": 30
+      }
+    ]
+  },
+  "version": 1
+}
