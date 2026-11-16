@@ -1,12 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-26T08:38:31Z",
-      "outcome": "rejected",
+      "last_run": "2026-11-16T08:36:39Z",
+      "outcome": "error",
       "consecutive_failures": 0,
       "last_sha": "b1ea71f18b3c65ed2042cd3267db583a2b5fdda1",
       "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
+      "last_reject_reason": "No file changes produced; maker agent exited non-zero without spending tokens"
     }
   }
 }
