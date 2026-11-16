@@ -1,5 +1,22 @@
-# Reusable workflow: AWS service control (unified interface)
-# Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#######################################
+# Description:
+#   Reusable workflow: AWS service control (unified interface)
+#   Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-service-control.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-service-control
 
 on:
@@ -198,8 +215,7 @@ jobs:
   # reusable-workflow reference per job (no dynamic uses: or shared job templates).
   control-ec2-instances:
     if: ${{ inputs.control_ec2 }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ec2 }}
@@ -217,8 +233,7 @@ jobs:
 
   control-ecs-services:
     if: ${{ inputs.control_ecs_service }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs }}
@@ -239,8 +254,7 @@ jobs:
 
   control-batch-job-queues:
     if: ${{ inputs.control_batch }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_batch }}
@@ -258,8 +272,7 @@ jobs:
 
   control-ecs-scheduled-tasks:
     if: ${{ inputs.control_ecs_scheduled_task }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs_scheduled_task }}
@@ -277,8 +290,7 @@ jobs:
 
   control-rds-clusters:
     if: ${{ inputs.control_rds }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_rds }}
@@ -296,8 +308,7 @@ jobs:
 
   control-redshift-clusters:
     if: ${{ inputs.control_redshift }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_redshift }}
@@ -369,8 +380,7 @@ jobs:
           echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Summary
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           outputs: |
             action: ${{ inputs.action }}

@@ -19,7 +19,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | 提供元                 | Google DeepMind                                             | Anthropic                                                            | OpenAI                                                                         | GitHub (Microsoft)                                                              | Anysphere                                        | AWS                                          | Microsoft (GitHub)                                                                    |
 | ドキュメント           | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [developers.openai.com/codex/hooks](https://developers.openai.com/codex/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
 | Session Start          | ❌                                                          | ✅ SessionStart                                                      | ✅ SessionStart                                                                | ✅ sessionStart                                                                 | ❌                                               | ❌                                           | ✅ SessionStart                                                                       |
-| User Prompt Submit     | ❌                                                          | ✅ UserPromptSubmit                                                  | ✅ UserPromptSubmit                                                            | ✅ userPromptSubmitted                                                          | ❌                                               | ✅ userPromptSubmit                          | ✅ UserPromptSubmit                                                                   |
+| User Prompt Submit     | ❌                                                          | ✅ UserPromptSubmit                                                  | ✅ UserPromptSubmit                                                            | ✅ userPromptSubmitted ※3                                                       | ✅ beforeSubmitPrompt ※3                         | ✅ userPromptSubmit                          | ✅ UserPromptSubmit                                                                   |
 | Pre Tool Use           | ✅ PreToolUse                                               | ✅ PreToolUse                                                        | ✅ PreToolUse                                                                  | ✅ preToolUse                                                                   | ✅ preToolUse / beforeShellExecution ※2          | ✅ preToolUse                                | ✅ PreToolUse                                                                         |
 | Post Tool Use          | ✅ PostToolUse ※1                                           | ✅ PostToolUse                                                       | ✅ PostToolUse                                                                 | ✅ postToolUse                                                                  | ✅ postToolUse / afterFileEdit ※2                | ✅ postToolUse                               | ✅ PostToolUse                                                                        |
 | Stop (Turn End)        | ✅ Stop                                                     | ✅ Stop                                                              | ✅ Stop                                                                        | ✅ agentStop                                                                    | ✅ stop ※2                                       | ✅ stop                                      | ✅ Stop                                                                               |
@@ -47,6 +47,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 - Cursor は camelCase の汎用イベント（`stop`, `preToolUse`, `postToolUse`）に加え、ツール種別ごとの細分化イベント（`beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` / `afterFileEdit` 等）を持つ。**`Stop` や `PreToolUse` など PascalCase キーは Cursor では一致せず、hook は発火しない**
 - ※1: Antigravity の PostToolUse は観測専用。stdout は `{}` のみ。agent へのフィードバックには PreInvocation を使用する
 - ※2: Cursor の hooks.json はイベント名のケースが厳密一致。`stop` / `preToolUse` / `postToolUse` が正。`Stop` / `PreToolUse` / `PostToolUse` は無視される（unknown event ではなく、単にマッチしない）
+- ※3: プロンプト送信前のシークレット検出（gitleaks）に使う。Claude Code は `UserPromptSubmit` の exit 2 または `{"decision":"block"}`、Cursor は `beforeSubmitPrompt` の `{"continue":false,"user_message":...}` または exit 2 でプロンプトをブロックできる。Copilot の `userPromptSubmitted` は設定ファイル型フックの出力が破棄され（`modifiedPrompt` は SDK フックのみ有効）、ブロック不可のため警告のみ
 
 ## hooks.json 設定方法
 
@@ -752,7 +753,18 @@ stdout — additionalContext のみ:
 - `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして扱う
 - apm 配布ではライブラリの自動コピーが非対応のため、関数はスクリプト本体に埋め込む
 - 実装例は `.apm/packages/*/.apm/hooks/scripts/*.sh` を参照。仕様の正は本ドキュメントと各 Agent の公式仕様とする
-- 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro CLI / Copilot CLI / Antigravity は上限が不明。スクリプト側で環境変数や一時ファイルを用いた最大試行回数（例: カウンター制限）のセーフガード実装を推奨する
+- 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro CLI / Copilot CLI / Antigravity は上限が不明。このため Stop 系 hook スクリプトは、同一のワーキングツリー状態（`git diff HEAD` + 未追跡ファイル内容のハッシュ）を同一セッション内で `HOOK_BLOCK_LIMIT` 回（既定 2）報告した時点で、ツールを実行せず exit 0 にする。状態は `${TMPDIR:-/tmp}/hook-state-<uid>/<session>__<hook>` にハッシュと回数で保存し、ファイル変更で回数をリセットし、hook が通ると状態を消す
+- セッション識別子のフィールドは Agent ごとに異なる（下表）。取得順は `session_id` → `conversation_id` → `sessionId` → `conversationId`、いずれも無ければ共有キー `nosession` を使う
+
+| Agent       | Stop stdin のセッション識別子                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------------------------- |
+| Antigravity | `conversationId`                                                                                               |
+| Claude Code | `session_id`                                                                                                   |
+| Codex       | `session_id`                                                                                                   |
+| Copilot CLI | `agentStop`（camelCase）は公式仕様で `sessionId`、`Stop`（VS Code 互換）は `session_id`。上の例は `session_id` |
+| Cursor      | `conversation_id`（`session_id` は `sessionStart` / `sessionEnd` のみ）                                        |
+| Kiro CLI    | `session_id`                                                                                                   |
+| VS Code     | `session_id`                                                                                                   |
 
 ## 必須評価軸 (MUST) 判定
 

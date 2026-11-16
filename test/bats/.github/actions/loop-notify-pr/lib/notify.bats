@@ -21,7 +21,7 @@
 # - resolve_actor uses login when gh api user succeeds
 # - resolve_actor falls back when gh api user fails with error JSON on stdout
 # - redact_sensitive_text redacts bearer tokens
-# - truncate_text truncates to max
+# - text_truncate truncates to max
 # - truncate_text_at_boundary returns short text unchanged
 # - truncate_text_at_boundary cuts at the last sentence end before max
 # - truncate_text_at_boundary cuts at a word boundary when no sentence end fits
@@ -265,8 +265,8 @@ EOF
     [ "$output" = "loop-bot[bot]" ]
 }
 
-@test "truncate_text truncates to max" {
-    run truncate_text "abcdefghij" 5
+@test "text_truncate truncates to max" {
+    run text_truncate "abcdefghij" 5
     [ "$status" -eq 0 ]
     [ "$output" = "abcde" ]
 }

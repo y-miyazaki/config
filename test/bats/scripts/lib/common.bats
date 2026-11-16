@@ -6,6 +6,10 @@ bats_require_minimum_version 1.5.0
 # Tests for scripts/lib/common.sh
 
 # Use cases:
+# - check_status maps failure flag 1 to FAIL and others to PASS
+# - print_validation_result prints one VALIDATION_RESULT line and key=value CHECK lines
+# - print_validation_result reports FAIL and returns non-zero when any check fails
+# - print_validation_result prints only the header when no checks are given
 # - execute_command executes the command and logs when VERBOSE=true
 # - execute_command in dry-run mode only logs planned command
 # - execute_command runs a single command without arguments
@@ -85,4 +89,36 @@ setup() {
     export DRY_RUN=true
     run execute_command
     [ "$status" -ne 0 ]
+}
+
+@test "check_status maps failure flag 1 to FAIL and others to PASS" {
+    run check_status 1
+    [ "$output" = "FAIL" ]
+    run check_status 0
+    [ "$output" = "PASS" ]
+    run check_status ""
+    [ "$output" = "PASS" ]
+}
+
+@test "print_validation_result prints one VALIDATION_RESULT line and key=value CHECK lines" {
+    run print_validation_result go 7 "go_build=PASS" "go_test_cover=WARN|71% (threshold 80%)" "govulncheck=SKIP"
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "VALIDATION_RESULT tool=go status=PASS elapsed=7s" ]
+    [ "${lines[1]}" = "CHECK name=go_build status=PASS" ]
+    [ "${lines[2]}" = 'CHECK name=go_test_cover status=WARN detail="71% (threshold 80%)"' ]
+    [ "${lines[3]}" = "CHECK name=govulncheck status=SKIP" ]
+}
+
+@test "print_validation_result reports FAIL and returns non-zero when any check fails" {
+    run print_validation_result nodejs 3 "npm_install=PASS" "tests=FAIL|2 failed"
+    [ "$status" -ne 0 ]
+    [ "${lines[0]}" = "VALIDATION_RESULT tool=nodejs status=FAIL elapsed=3s" ]
+    [ "${lines[2]}" = 'CHECK name=tests status=FAIL detail="2 failed"' ]
+}
+
+@test "print_validation_result prints only the header when no checks are given" {
+    run print_validation_result terraform 1
+    [ "$status" -eq 0 ]
+    [ "${#lines[@]}" -eq 1 ]
+    [ "$output" = "VALIDATION_RESULT tool=terraform status=PASS elapsed=1s" ]
 }

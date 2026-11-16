@@ -7,6 +7,8 @@
 # - extract_last_json_fence returns the last json block
 # - parse_verifier_output parses fenced JSON APPROVE
 # - parse_verifier_output parses fenced JSON REJECT with files array
+# - parse_verifier_output does not read prose starting with APPROVE as a verdict, and reads a bare verdict line with a colon reason
+# - parse_verifier_output uses an earlier verdict line when the last json fence has no verdict
 # - parse_verifier_output falls back to legacy VERDICT lines
 # - parse_verifier_output defaults to REJECT when unparsable
 # - parse_verifier_output parses cursor stream-json checker capture
@@ -89,6 +91,43 @@ EOF
     [ "${files}" = "docs/a.md,docs/b.md" ]
     [ "${issue}" = "scope" ]
     [ "${fix}" = "limit to allowlist" ]
+    rm -f "${tmpf}"
+}
+
+@test "parse_verifier_output does not read prose that starts with APPROVE as a verdict" {
+    tmpf=$(mktemp)
+    cat > "${tmpf}" << 'EOF'
+APPROVE requires criterion 3, which is not met
+EOF
+    parse_verifier_output "${tmpf}"
+    [ "${parsed}" = "false" ]
+    [ "${verdict}" = "REJECT" ]
+    rm -f "${tmpf}"
+}
+
+@test "parse_verifier_output reads a bare verdict line with a colon reason" {
+    tmpf=$(mktemp)
+    printf 'REJECT: missing tests\n' > "${tmpf}"
+    parse_verifier_output "${tmpf}"
+    [ "${parsed}" = "true" ]
+    [ "${verdict}" = "REJECT" ]
+    [ "${reason}" = "missing tests" ]
+    rm -f "${tmpf}"
+}
+
+@test "parse_verifier_output uses an earlier verdict line when the last json fence has no verdict" {
+    tmpf=$(mktemp)
+    cat > "${tmpf}" << 'EOF'
+{"verdict":"REJECT","reason":"real verdict"}
+Example of the format:
+```json
+{"example": true}
+```
+EOF
+    parse_verifier_output "${tmpf}"
+    [ "${parsed}" = "true" ]
+    [ "${verdict}" = "REJECT" ]
+    [ "${reason}" = "real verdict" ]
     rm -f "${tmpf}"
 }
 

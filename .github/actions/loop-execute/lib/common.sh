@@ -134,7 +134,7 @@ function materialize_matrix_handoff_context {
         fi
     fi
 
-    detect_json="$(loop_handoff_resolve_detect_result_json)"
+    detect_json="$(handoff_resolve_detect_result_json)"
 
     if [[ ${artifact_required} == true ]]; then
         if [[ -z ${detect_json} || ${detect_json} == "{}" ]]; then
@@ -155,22 +155,22 @@ function materialize_matrix_handoff_context {
         return 1
     fi
 
-    if [[ ${PROMPT_TEXT} == *'__LOOP_DETECT_RESULT_JSON__'* ]]; then
+    if [[ ${PROMPT_TEXT} == *"${LOOP_DETECT_RESULT_MARKER}"* ]]; then
         : "${STATUS_DIR:?}"
         DETECT_JSON_FILE="$(mktemp "${STATUS_DIR}/tmp.XXXXXX")"
         printf '%s' "${detect_json}" > "${DETECT_JSON_FILE}"
-        PROMPT_TEXT="${PROMPT_TEXT//__LOOP_DETECT_RESULT_JSON__/Structured detect JSON path: ${DETECT_JSON_FILE}}"
+        PROMPT_TEXT="${PROMPT_TEXT//${LOOP_DETECT_RESULT_MARKER}/Structured detect JSON path: ${DETECT_JSON_FILE}}"
     fi
 
     if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
         if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
-            VERIFIER_CONTEXT="$(loop_handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
+            VERIFIER_CONTEXT="$(handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
         fi
         if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
             _loop_action_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../lib/loop" && pwd)"
             # shellcheck source=../../lib/loop/verifier_context.sh disable=SC1091
             source "${_loop_action_lib}/verifier_context.sh"
-            VERIFIER_CONTEXT="$(build_verifier_context_from_result "${detect_json}")"
+            VERIFIER_CONTEXT="$(verifier_context_build_from_result "${detect_json}")"
         fi
     fi
 }
@@ -226,6 +226,36 @@ function render_template {
         shift 2
     done
     printf '%s' "${result}"
+}
+
+#######################################
+# validate_agent_report_check: Reject unknown agent_report_check values
+#
+# Description:
+#   An empty value skips the deterministic report check by design. Any other value
+#   must be paths or commits; a typo fails closed instead of silently skipping.
+#
+# Globals:
+#   AGENT_REPORT_CHECK - empty, paths, or commits (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when the value is unknown
+#
+# Returns:
+#   0 when the value is empty, paths, or commits; 1 otherwise
+#
+#######################################
+function validate_agent_report_check {
+    case "${AGENT_REPORT_CHECK:-}" in
+        "" | commits | paths) return 0 ;;
+        *)
+            echo "::error::agent_report_check must be empty, paths, or commits; got: '${AGENT_REPORT_CHECK}'" >&2
+            return 1
+            ;;
+    esac
 }
 
 #######################################

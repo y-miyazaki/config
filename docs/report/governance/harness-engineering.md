@@ -62,10 +62,13 @@ Instructions (`.apm/instructions/*.instructions.md`) define coding rules that AI
 
 ## Layer 2: Agent Hooks
 
-Hooks execute automatically during AI agent operation. Two trigger points:
+Hooks execute automatically during AI agent operation. Three trigger points:
 
+- **UserPromptSubmit** — runs when the user submits a prompt (secret detection with gitleaks)
 - **PostToolUse** — runs after the agent writes/edits a file (auto-formatting)
 - **Stop** — runs when the agent completes a task (validation gate)
+
+**Prompt secret detection**: Claude Code (`UserPromptSubmit`) and Cursor (`beforeSubmitPrompt`) block the prompt so it never reaches the model. Copilot (`userPromptSubmitted`) cannot block or rewrite the prompt from config-file hooks (output is dropped), so the hook only warns. A detected secret should be treated as exposed and rotated. Only rule IDs and line numbers are reported, never the matched value.
 
 **Multi-agent support**: Each hook script detects the active agent (Claude Code, Copilot CLI, Cursor, Kiro CLI, VS Code, Antigravity) from stdin JSON and responds in the expected format. Hook JSON definitions are packaged per-target (`common-hooks-claude`, `common-hooks-copilot`, `common-hooks-cursor`).
 

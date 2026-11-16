@@ -7,6 +7,7 @@
 # - determine_target_pattern fails for a missing directory instead of validating the whole repository
 # - determine_target_pattern fails for a scoped directory without Go files
 # - determine_target_pattern keeps ./... and accepts a scoped directory that contains Go files
+# - show_usage documents the optional directory argument
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -44,4 +45,10 @@ setup() {
     run bash -c "cd '${WORK_DIR}' && source '${VALIDATE_SCRIPT}' && determine_target_pattern 'pkg dir'"
     [ "$status" -eq 0 ]
     [ "$output" = "./pkg dir/..." ]
+}
+
+@test "show_usage documents the optional directory argument" {
+    run bash "${VALIDATE_SCRIPT}" --help
+    [ "$status" -eq 0 ]
+    [[ $output == *"[options] [directory]"* ]]
 }

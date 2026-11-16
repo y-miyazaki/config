@@ -8,14 +8,18 @@
 # - pr_excluded allows bot author listed in detect_pr_bot_allowlist
 # - pr_excluded allows bot author when scoped intake selected the PR explicitly
 # - pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty
+# - pr_excluded uses the one bot definition: app/<slug> and [bot] logins count as bots, a human login does not
 # - pr_excluded excludes bot authors when scoped intake is false
 # - list_open_prs admits bot-authored PRs under DETECT_PR_NUMBER
 # - list_open_prs keeps fork/draft/label exclusions for scoped bot PRs
 # - list_open_prs still drops bot-authored PRs when scanning without a scoped number
 # - pr_excluded excludes draft when draft token is set
 # - pr_excluded excludes fork when fork token is set
+# - pr_excluded fork token excludes a cross-repository PR whose fork was deleted
 # - pr_excluded excludes label match
 # - pr_excluded excludes wip_title when token is set
+# - list_open_prs warns when gh pr list fails instead of failing silently
+# - pr_excluded wip_title matches wip as a word in any case and not words that start with wip
 # - list_open_prs fails when gh missing and detect_pr_enabled is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -26,6 +30,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
+    bats_source_rel ".github/actions/lib/loop/admission.sh"
     bats_source_rel ".github/actions/loop-detect/lib/branches.sh"
     bats_source_rel ".github/actions/loop-detect/lib/prs.sh"
     DETECT_PR_ENABLED="false"
@@ -54,21 +59,33 @@ pr_json_with_labels() {
 
 @test "pr_excluded allows bot author listed in detect_pr_bot_allowlist" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "dependabot"
+    [ "$status" -eq 1 ]
+}
+
+@test "pr_excluded uses the one bot definition for app slug and bot suffix logins" {
+    local login pr
+    for login in "app/renovate" "renovate[bot]" "app/repo-maintenance-bot"; do
+        pr="{\"number\":1,\"title\":\"t\",\"isDraft\":false,\"author\":{\"login\":\"${login}\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "" "" "false"
+        [ "$status" -eq 0 ]
+    done
+    pr='{"number":1,"title":"t","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "" "" "false"
     [ "$status" -eq 1 ]
 }
 
 @test "pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" ""
     [ "$status" -eq 0 ]
 }
 
 @test "pr_excluded excludes bot authors when scoped intake is false" {
     local pr
-    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot","is_bot":true},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "" "false"
     [ "$status" -eq 0 ]
 }
@@ -87,6 +104,16 @@ pr_json_with_labels() {
     [ "$status" -eq 0 ]
 }
 
+@test "pr_excluded fork token excludes a cross-repository PR whose fork was deleted" {
+    local pr
+    pr='{"number":1,"title":"t","isDraft":false,"isCrossRepository":true,"author":{"login":"alice"},"labels":[],"headRepository":null}'
+    run pr_excluded "${pr}" "fork" ""
+    [ "$status" -eq 0 ]
+    pr='{"number":1,"title":"t","isDraft":false,"isCrossRepository":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "fork" ""
+    [ "$status" -eq 1 ]
+}
+
 @test "pr_excluded excludes label match" {
     local pr
     pr="$(pr_json_with_labels '[{"name":"no-loop"}]')"
@@ -99,6 +126,33 @@ pr_json_with_labels() {
     pr='{"number":1,"title":"WIP: auth refactor","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "wip_title" ""
     [ "$status" -eq 0 ]
+}
+
+@test "pr_excluded wip_title matches wip as a word in any case and not words that start with wip" {
+    local title pr
+    for title in "[wip] fix" "[WIP] fix" "Wip: fix" "wip fix" "WIP"; do
+        pr="{\"number\":1,\"title\":\"${title}\",\"isDraft\":false,\"author\":{\"login\":\"alice\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "wip_title" ""
+        [ "$status" -eq 0 ]
+    done
+    for title in "Wipe stale cache entries" "wiping tmp dir" "Add wipe command"; do
+        pr="{\"number\":1,\"title\":\"${title}\",\"isDraft\":false,\"author\":{\"login\":\"alice\"},\"labels\":[],\"headRepository\":{\"isFork\":false}}"
+        run pr_excluded "${pr}" "wip_title" ""
+        [ "$status" -eq 1 ]
+    done
+}
+
+@test "list_open_prs warns when gh pr list fails instead of failing silently" {
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\nexit 1\n' > "${mock_bin}/gh"
+    chmod +x "${mock_bin}/gh"
+    run env PATH="${mock_bin}:${PATH}" DETECT_PR_ENABLED=true bash -c '
+        set -euo pipefail
+        source "'"$(bats_workspace_root)"'/.github/actions/loop-detect/lib/_init.sh"
+        list_open_prs "" "" "tok"
+    '
+    [[ $output == *"gh pr list failed"* ]]
 }
 
 @test "list_open_prs fails when gh missing and detect_pr_enabled is true" {

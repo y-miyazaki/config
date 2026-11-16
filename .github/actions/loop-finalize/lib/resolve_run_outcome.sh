@@ -17,7 +17,7 @@
 #     empty, or a failure record exists; otherwise the delivered outcome as is
 #   - Outcome is resolved before the agent stage is recorded (a recorded agent stage
 #     must not turn a successful run into error)
-#   - Records via loop_failure_record only; the export to GITHUB_OUTPUT is done by
+#   - Records via failure_record_write only; the export to GITHUB_OUTPUT is done by
 #     export_failure_diag.sh (no export here)
 #
 # Output:
@@ -77,7 +77,7 @@ function record_run_failure {
     local delivered_outcome="${6:-}"
     local stage=""
 
-    if loop_failure_recorded "${failure_file}"; then
+    if failure_record_exists "${failure_file}"; then
         return 0
     fi
 
@@ -94,7 +94,7 @@ function record_run_failure {
     fi
 
     if [[ -n ${stage} ]]; then
-        loop_failure_record "${stage}" "${agent_message}" "${failure_file}"
+        failure_record_write "${stage}" "${agent_message}" "${failure_file}"
     fi
     return 0
 }
@@ -121,7 +121,7 @@ function resolve_run_outcome {
     local delivered_outcome="${2:-}"
     local failure_file="${3:?failure_file required}"
 
-    if [[ ${action_status} != "success" || -z ${delivered_outcome} ]] || loop_failure_recorded "${failure_file}"; then
+    if [[ ${action_status} != "success" || -z ${delivered_outcome} ]] || failure_record_exists "${failure_file}"; then
         echo "error"
     else
         echo "${delivered_outcome}"

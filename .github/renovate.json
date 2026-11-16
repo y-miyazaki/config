@@ -11,6 +11,16 @@
   "gitIgnoredAuthors": [
     "41898282+github-actions[bot]@users.noreply.github.com"
   ],
+  "customManagers": [
+    {
+      "description": "CustomManager: Track the pinned Claude Code CLI version of the on-loop-code-review caller (repo-local: the built-in code-review skill ships inside the CLI, so every update needs a human review)",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/on-loop-code-review\\.yaml$/"],
+      "matchStrings": ["agent_cli_version:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"],
+      "depNameTemplate": "@anthropic-ai/claude-code",
+      "datasourceTemplate": "npm"
+    }
+  ],
   "packageRules": [
     {
       "description": "Rules: Automerge minor/patch updates for grouped CLI tools (npm: mise deps and lean-ctx are excluded: their lockfile is updated by workflow and minimumReleaseAge is not enforced)",
@@ -70,6 +80,14 @@
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["y-miyazaki/config"],
       "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Rules: Never automerge the Claude Code CLI pin of the on-loop-code-review caller (a version change can silently change the built-in code-review skill)",
+      "automerge": false,
+      "matchDepNames": ["@anthropic-ai/claude-code"],
+      "matchFileNames": [".github/workflows/on-loop-code-review.yaml"],
+      "matchManagers": ["custom.regex"],
+      "platformAutomerge": false
     }
   ]
 }

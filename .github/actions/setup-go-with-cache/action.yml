@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: set up Go with cache
+#   Sets up Go and restores the module and build cache; returns the cache paths and hit status.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/setup-go-with-cache@<commit SHA>
+#   Called by: None in this repository (consumer-facing)
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs go_version, go_project_path, cache_prefix
+#   - actions/setup-go, actions/cache
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#######################################
 name: setup-go-with-cache
 description: "Setup Go with module and build cache. Returns cache paths and hit status."
 author: "GitHub Copilot"

@@ -7,6 +7,7 @@
 # - redact_sensitive_text redacts Bearer tokens
 # - redact_sensitive_text redacts a multi-word Authorization scheme value
 # - redact_sensitive_text redacts PEM blocks and JWTs
+# - redact_sensitive_text redacts a multi-line PEM block and fine-grained GitHub tokens
 # - redact_sensitive_text redacts GitHub and AWS access key patterns
 # - redact_sensitive_text redacts key=value secrets regardless of separator
 
@@ -37,7 +38,6 @@ setup() {
 }
 
 @test "redact_sensitive_text redacts PEM blocks and JWTs" {
-    # Single-line PEM: the redaction pipeline processes text line-by-line.
     # Marker is split so the detect-private-key pre-commit hook does not
     # flag this fixture as a real key.
     local kind="PRIVATE"" KEY"
@@ -50,6 +50,23 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED-JWT]"* ]]
     [[ $output != *"eyJhbGciOiJIUzI1NiJ9"* ]]
+}
+
+@test "redact_sensitive_text redacts a multi-line PEM block and fine-grained GitHub tokens" {
+    local kind="PRIVATE"" KEY"
+    local pem
+    pem="$(printf 'before\n-----BEGIN %s-----\nMIIEvQIBADANBgkq\nabc123def456\n-----END %s-----\nafter' "${kind}" "${kind}")"
+    run redact_sensitive_text "${pem}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"[REDACTED-PEM]"* ]]
+    [[ $output != *"MIIEvQIBADANBgkq"* ]]
+    [[ $output != *"abc123def456"* ]]
+    [[ $output == *"before"* && $output == *"after"* ]]
+
+    run redact_sensitive_text 'github_pat_11ABCDEFG0abcdefghijklmnopqrstuvwxyz0123456789' # pragma: allowlist secret
+    [ "$status" -eq 0 ]
+    [[ $output == *"[REDACTED]"* ]]
+    [[ $output != *"github_pat_11ABCDEFG0"* ]] # pragma: allowlist secret
 }
 
 @test "redact_sensitive_text redacts GitHub and AWS access key patterns" {

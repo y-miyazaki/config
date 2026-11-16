@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: resolve the push token
+#   Resolves the GitHub API token in order: App bot, github_token input, GITHUB_TOKEN.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@<commit SHA>
+#   Called by: ci-loop-caller.yaml, ci-loop-caller-entity.yaml, ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - Fail closed when the App is configured but minting the token fails
+#
+# Dependencies:
+#   - Optional bot_app_private_key
+#   - actions/create-github-app-token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: loop-resolve-push-token
 description: "Resolve GitHub API token: App bot → github_token input → GITHUB_TOKEN (fail closed if App configured but mint fails)."
 

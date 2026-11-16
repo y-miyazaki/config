@@ -13,9 +13,10 @@
 # - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH, DETECT_PR_NUMBER, or workflow_run event head is set
 # - Validates level/delivery inputs first; a validation failure exits 1 (fails the job)
 # - delivery pr_push without a PR number skips with skip_reason=pr_number_missing (exit 0)
-# - Every target kind must be allowed by delivery (validate_delivery_target)
+# - Every target kind must be allowed by delivery (delivery_validate_target)
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
+# - DETECT_ITEMS=true gates and orders result.items per item key; the branch key is not consulted
 # - Detect-script boundary: coupled only on the success-path interface (exit 0, valid JSON,
 #   skip flag, fields consumed for matrix/prompt). On non-zero exit, echo stdout verbatim and
 #   fail — do not interpret skill error JSON (status, message, schema). Multi-target scans
@@ -34,6 +35,7 @@
 #   AGENT_MAKER_INSTRUCTIONS
 #   DETECT_BRANCH_MATCH (empty = no integration targets), DETECT_BRANCH_MATCH_MODE, DETECT_PRIORITY
 #   DETECT_MAX_TARGETS, DETECT_PR_ENABLED, DETECT_PR_DENYLIST, DETECT_PR_BOT_ALLOWLIST, DETECT_PR_NUMBER
+#   DETECT_ITEMS - true: one integration:<branch>#<key> candidate per result.items element (single branch, no PR scan)
 #   BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
@@ -61,6 +63,79 @@ source "${SCRIPT_DIR}/_init.sh"
 STATE_BRANCH="${STATE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
 STATE_FILE="${STATE_FILE-}"
+# Run-scoped snapshot of the state file from the state branch (set by main); reads fall back to STATE_FILE
+STATE_READ_FILE="${STATE_READ_FILE-}"
+
+#######################################
+# record_admission_refusal: Record an admission verdict that refuses a target
+#
+# Description:
+#   Effect only: the decision is the verdict from admission.sh (admission_evaluate_target or
+#   admission_evaluate). A refusal is counted by reason class and its detail is kept for the skip
+#   output. When no candidate remains, write_empty_candidates_outputs picks the skip_reason in the
+#   order circuit_breaker, pending_pr, then the first other reason.
+#
+# Globals:
+#   CIRCUIT_BREAKER_BLOCKED, PENDING_PR_BLOCKED, GATE_BLOCKED - Incremented by reason class
+#   GATE_BLOCK_REASON - Set to the first reason that is neither circuit_breaker nor pending_pr
+#
+# Arguments:
+#   $1 - Target key (for the log line)
+#   $2 - Verdict JSON {"admit":bool,"skip_reason":string,"detail":string}
+#
+# Outputs:
+#   ::warning:: line on a refusal
+#
+# Returns:
+#   0 when the verdict refuses (recorded), 1 when it admits
+#
+#######################################
+function record_admission_refusal {
+    local target_key="$1"
+    local verdict="$2"
+    local reason detail
+
+    if [[ $(jq -r '.admit' <<< "${verdict}") == "true" ]]; then
+        return 1
+    fi
+    reason="$(jq -r '.skip_reason' <<< "${verdict}")"
+    detail="$(jq -r '.detail' <<< "${verdict}")"
+    echo "::warning::admission refused ${target_key}: ${reason} (${detail})"
+    case "${reason}" in
+        circuit_breaker) CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1)) ;;
+        pending_pr) PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1)) ;;
+        *)
+            GATE_BLOCKED=$((GATE_BLOCKED + 1))
+            if [[ -z ${GATE_BLOCK_REASON} ]]; then
+                GATE_BLOCK_REASON="${reason}"
+            fi
+            ;;
+    esac
+    record_skip_detail "${target_key}: ${detail}"
+    return 0
+}
+
+#######################################
+# record_skip_detail: Keep the first skip detail of the run for the run log
+#
+# Globals:
+#   SKIP_DETAIL - Set when empty
+#
+# Arguments:
+#   $1 - Detail text (one line is built from it)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 always
+#
+#######################################
+function record_skip_detail {
+    if [[ -z ${SKIP_DETAIL:-} ]]; then
+        SKIP_DETAIL="$(admission_skip_detail "${1:-}")"
+    fi
+}
 
 #######################################
 # resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
@@ -69,7 +144,7 @@ STATE_FILE="${STATE_FILE-}"
 # against the watched branch worktree (stale PR heads can ship older detect logic).
 #
 # Globals:
-#   DETECT_SCRIPT - Updated in place to an absolute path
+#   DETECT_SCRIPT - Updated in place to an absolute path; empty is left empty (built-in range detect)
 #
 # Arguments:
 #   None
@@ -85,8 +160,8 @@ function resolve_detect_script_path {
     local resolved
 
     if [[ -z ${DETECT_SCRIPT} ]]; then
-        log_detect_error "DETECT_SCRIPT is empty"
-        return 1
+        log_detect_notice "detect-script" "builtin" "range detect (detect_script omitted)"
+        return 0
     fi
 
     if [[ ${DETECT_SCRIPT} == /* ]]; then
@@ -326,6 +401,35 @@ function build_integration_target_json {
 }
 
 #######################################
+# build_item_target_json: Build integration target JSON for one result.items element
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Item target key (integration:<branch>#<key>)
+#   $2 - branch name
+#   $3 - current SHA
+#   $4 - Entity JSON ({kind, number}; "null" or empty to omit)
+#
+# Outputs:
+#   Target JSON to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function build_item_target_json {
+    local target_key="$1"
+    local branch="$2"
+    local current_sha="$3"
+    local entity_json="${4:-null}"
+
+    build_integration_target_json "${target_key}" "${branch}" "${current_sha}" \
+        | jq -c --argjson entity "${entity_json:-null}" 'if $entity == null then . else .entity = $entity end'
+}
+
+#######################################
 # build_pull_request_target_json: Build target JSON for pull_request mode
 #
 # Globals:
@@ -371,6 +475,7 @@ function build_pull_request_target_json {
 
 #######################################
 # append_detect_candidate: Shared detect/checkout/circuit/pending candidate pipeline
+# Order: checkout -> target state gate -> detect script -> assemble_detect_candidate.
 #
 # Globals:
 #   CANDIDATES_JSON - Candidate JSON strings appended on success
@@ -404,8 +509,8 @@ function append_detect_candidate {
     local target_json_builder="$5"
     shift 5
     local builder_args=("$@")
-    local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive pending_pr
-    local target_json candidate
+    local target_state last_sha current_sha detect_result verifier_context consecutive
+    local verify_reachable=""
 
     if [[ -n $checkout_ref ]]; then
         checkout_context "${head_branch}" "${checkout_ref}" || return 0
@@ -413,56 +518,36 @@ function append_detect_candidate {
         checkout_context "${head_branch}" || return 0
     fi
 
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
+    load_target_state "${target_key}"
+    target_state="${TARGET_STATE_JSON}"
     consecutive="$(target_consecutive_failures "${target_state}")"
-    if target_circuit_breaker_open "${consecutive}"; then
-        echo "::warning::Circuit breaker open for ${target_key}"
-        CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
+    if record_admission_refusal "${target_key}" "$(admission_evaluate_target "${target_state}" "${TARGET_PENDING_PR_STATE}")"; then
         return 0
     fi
 
-    if target_pending_blocks_detect "${target_state}"; then
-        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
-        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
-        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
-        return 0
-    fi
-
-    last_sha="$(target_last_sha "${target_state}" "${head_branch}")"
+    # Only the built-in range detect needs a reachable last_sha; custom detect scripts keep theirs.
+    [[ -z ${DETECT_SCRIPT} ]] && verify_reachable="true"
+    last_sha="$(target_last_sha "${target_state}" "${head_branch}" "${verify_reachable}")"
     current_sha="$(git rev-parse HEAD)"
     export CI_SWEEPER_HEAD_BRANCH="${head_branch}"
     export STATE_BRANCH
     detect_result="$(invoke_detect_script "${last_sha}" "${target_key}")"
 
     if detect_result_skip "${detect_result}"; then
+        record_skip_detail "${target_key}: $(jq -r '.message // "detect skip=true"' <<< "${detect_result}")"
         log_detect_notice "skip" "${target_key}" \
             "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
         return 0
     fi
 
-    open_prompt="$(target_open_rejections_prompt "${target_state}")"
-    verifier_context="$(build_verifier_context_from_result "${detect_result}")"
-
-    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
-    target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
-
-    prompt_text="$(build_prompt_text \
-        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
-        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
-        "${AGENT_EDIT_TARGET:-}" "")"
-
-    candidate="$(build_loop_candidate_json \
-        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
-        || return 0
-
-    if [[ -n $accept_log_extra ]]; then
-        log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
-    else
-        log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
+    if record_admission_refusal "${target_key}" "$(admission_evaluate "$(jq -c '.result.gate // null' <<< "${detect_result}")" "${target_state}")"; then
+        return 0
     fi
-    CANDIDATES_JSON+=("${candidate}")
+
+    verifier_context="$(verifier_context_build_from_result "${detect_result}")"
+    assemble_detect_candidate \
+        "${target_key}" "${head_branch}" "${current_sha}" "${last_sha}" "${target_state}" "${consecutive}" \
+        "${detect_result}" "${verifier_context}" "${accept_log_extra}" "${target_json_builder}" "${builder_args[@]}"
 }
 
 #######################################
@@ -490,6 +575,94 @@ function append_integration_candidate {
         "" \
         build_integration_target_json \
         "${branch}"
+}
+
+#######################################
+# append_items_candidates: Scan one integration branch in items mode (one candidate per result.items element)
+# Order: checkout -> detect script -> extract_items -> per-item state gate -> order by last_run
+# -> assemble_detect_candidate per item. The branch key integration:<branch> is never read.
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings appended per unblocked item
+#   CIRCUIT_BREAKER_BLOCKED, PENDING_PR_BLOCKED - Incremented per blocked item
+#   STATE_FILE, STATE_BRANCH, DETECT_SCRIPT - Read
+#
+# Arguments:
+#   $1 - Integration branch name
+#
+# Outputs:
+#   Warning/notice annotations; ::error:: on stderr when the detect result is not a valid items result
+#
+# Returns:
+#   0 on success or skip (including checkout failure); 1 when result.items is missing, invalid, or has
+#   duplicate keys; the detect script exit status when it fails (main then fails the job)
+#
+#######################################
+function append_items_candidates {
+    local branch="$1"
+    local detect_result items_json item_json key item_key item_state consecutive last_sha current_sha
+    local item_result verifier_context entity_json
+    local unblocked_json='[]'
+
+    checkout_context "${branch}" || return 0
+
+    # The branch key is not used in items mode: the detect script gets the HEAD~10 fallback range.
+    last_sha="$(target_last_sha '{}' "${branch}" "")"
+    current_sha="$(git rev-parse HEAD)"
+    export CI_SWEEPER_HEAD_BRANCH="${branch}"
+    export STATE_BRANCH
+    detect_result="$(invoke_detect_script "${last_sha}" "integration:${branch}")" || return
+
+    if detect_result_skip "${detect_result}"; then
+        record_skip_detail "integration:${branch}: $(jq -r '.message // "detect skip=true"' <<< "${detect_result}")"
+        log_detect_notice "skip" "integration:${branch}" "detect skip=true (items mode)"
+        return 0
+    fi
+
+    items_json="$(extract_items "$(jq -c '.result // {}' <<< "${detect_result}")")" || return 1
+    if [[ -z ${items_json} ]]; then
+        log_detect_error "detect_items is true but the detect result has no result.items (branch=${branch})"
+        return 1
+    fi
+    if [[ "$(jq 'length' <<< "${items_json}")" -eq 0 ]]; then
+        log_detect_notice "skip" "integration:${branch}" "result.items is empty (items mode)"
+        return 0
+    fi
+
+    local -A item_states=()
+    while IFS= read -r item_json; do
+        key="$(jq -r '.key' <<< "${item_json}")"
+        item_key="$(item_target_key "${branch}" "${key}")"
+        load_target_state "${item_key}"
+        item_state="${TARGET_STATE_JSON}"
+        item_states["${item_key}"]="${item_state}"
+        if record_admission_refusal "${item_key}" "$(admission_evaluate_target "${item_state}" "${TARGET_PENDING_PR_STATE}")"; then
+            continue
+        fi
+        if record_admission_refusal "${item_key}" "$(admission_evaluate "$(jq -c '.gate // null' <<< "${item_json}")" "${item_state}")"; then
+            continue
+        fi
+        unblocked_json="$(jq -c --argjson item "${item_json}" '. + [$item]' <<< "${unblocked_json}")"
+    done < <(jq -c '.[]' <<< "${items_json}")
+
+    unblocked_json="$(order_items_by_last_run "$(state_read_path)" "${branch}" "${unblocked_json}")" || return 1
+
+    while IFS= read -r item_json; do
+        key="$(jq -r '.key' <<< "${item_json}")"
+        item_key="$(item_target_key "${branch}" "${key}")"
+        item_state="${item_states[${item_key}]}"
+        consecutive="$(target_consecutive_failures "${item_state}")"
+        last_sha="$(target_last_sha "${item_state}" "${branch}" "")"
+        item_result="$(item_result_json "${item_json}")" || return 1
+        verifier_context="$(jq -r '.verifier_context // "" | strings' <<< "${item_json}")"
+        if [[ -z ${verifier_context} ]]; then
+            verifier_context="$(verifier_context_build_from_result "$(jq -c '.context // {}' <<< "${item_json}")")"
+        fi
+        entity_json="$(jq -c '.entity | if type == "object" then {kind, number} | with_entries(select(.value != null)) else null end' <<< "${item_json}")"
+        assemble_detect_candidate \
+            "${item_key}" "${branch}" "${current_sha}" "${last_sha}" "${item_state}" "${consecutive}" \
+            "${item_result}" "${verifier_context}" "" build_item_target_json "${entity_json}"
+    done < <(jq -c '.[]' <<< "${unblocked_json}")
 }
 
 #######################################
@@ -556,6 +729,73 @@ function apply_target_cap {
         capped+=("${CANDIDATES_JSON[$i]}")
     done
     CANDIDATES_JSON=("${capped[@]}")
+}
+
+#######################################
+# assemble_detect_candidate: Build one candidate from a detect result and append it
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings appended on success
+#   AGENT_MAKER_SKILL_NAME, LEVEL, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_TARGET, AGENT_MAKER_INSTRUCTIONS - Prompt inputs
+#
+# Arguments:
+#   $1 - Target key
+#   $2 - Head branch name
+#   $3 - Current SHA
+#   $4 - Last SHA (prompt Last SHA and integration from.since)
+#   $5 - Target state JSON (open rejections)
+#   $6 - Consecutive failure count
+#   $7 - Detect result JSON stored as the candidate result
+#   $8 - Verifier context markdown
+#   $9 - Optional accept-log extra text
+#   $10 - Target JSON builder function name
+#   $11+ - Extra args forwarded to the builder after common args
+#
+# Outputs:
+#   Notice annotations via helper loggers
+#
+# Returns:
+#   0 (a candidate that fails assembly is dropped)
+#
+#######################################
+function assemble_detect_candidate {
+    local target_key="$1"
+    local head_branch="$2"
+    local current_sha="$3"
+    local last_sha="$4"
+    local target_state="$5"
+    local consecutive="$6"
+    local detect_result="$7"
+    local verifier_context="$8"
+    local accept_log_extra="${9:-}"
+    local target_json_builder="${10}"
+    shift 10
+    local builder_args=("$@")
+    local prompt_text open_prompt target_json candidate
+
+    open_prompt="$(target_open_rejections_prompt "${target_state}")"
+
+    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
+    target_json="$(jq -c --arg since "${last_sha}" 'if .mode == "integration" then .from.since = $since else . end' <<< "${target_json}")"
+    target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
+
+    prompt_text="$(build_prompt_text \
+        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
+        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
+        "${AGENT_EDIT_TARGET:-}" "")"
+
+    candidate="$(build_loop_candidate_json \
+        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
+        || return 0
+
+    if [[ -n $accept_log_extra ]]; then
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
+    else
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
+    fi
+    CANDIDATES_JSON+=("${candidate}")
 }
 
 #######################################
@@ -656,7 +896,7 @@ function checkout_context {
     local attempt
     local fetch_ok=false
 
-    if ! [[ ${branch} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${branch}"; then
         echo "::error::Invalid branch name: ${branch}"
         return 1
     fi
@@ -801,7 +1041,8 @@ function enrich_target_json_with_ci_context {
 # invoke_detect_script: Run DETECT_SCRIPT; fatal failures exit the detect phase
 #
 # Globals:
-#   DETECT_SCRIPT - Detect script path
+#   DETECT_SCRIPT - Detect script path; empty runs the built-in range_detect
+#   STATE_FILE, RUN_LOG_FILE - Excluded from the built-in range detect
 #
 # Arguments:
 #   $1 - since ref for --scope range
@@ -820,7 +1061,11 @@ function invoke_detect_script {
     local detect_status=0
     local detect_result
 
-    detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+    if [[ -z ${DETECT_SCRIPT} ]]; then
+        detect_result="$(range_detect "${last_sha}" "$(git rev-parse HEAD)" "${STATE_FILE}" "${RUN_LOG_FILE:-}")" || detect_status=$?
+    else
+        detect_result="$(env "${LOOP_DETECT_ENV_ARGS[@]}" bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+    fi
     # set -e: without ||, a non-zero detect exit aborts before we can log context or echo stdout to stderr.
 
     if [[ ${detect_status} -ne 0 ]]; then
@@ -836,6 +1081,38 @@ function invoke_detect_script {
     fi
 
     printf '%s' "${detect_result}"
+}
+
+#######################################
+# load_target_state: Gather the facts about one target (stored state and the pending PR's live state)
+#
+# Description:
+#   Facts only. TARGET_STATE_JSON is the stored state with a MERGED pending PR already promoted
+#   in memory; TARGET_PENDING_PR_STATE is the live state of the pending PR as stored. The
+#   decision whether either blocks the run is admission_evaluate_target's.
+#
+# Globals:
+#   TARGET_STATE_JSON - Set to the target state JSON
+#   TARGET_PENDING_PR_STATE - Set to none | OPEN | CLOSED | MERGED | unknown
+#   STATE_BRANCH - Read
+#
+# Arguments:
+#   $1 - Target key
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 always
+#
+#######################################
+function load_target_state {
+    local target_key="$1"
+    local stored
+
+    stored="$(read_target_state "$(state_read_path)" "${target_key}" "${STATE_BRANCH}")"
+    TARGET_PENDING_PR_STATE="$(target_pending_pr_state "${stored}")"
+    TARGET_STATE_JSON="$(target_state_apply_merged_pending "${stored}" "${TARGET_PENDING_PR_STATE}")"
 }
 
 #######################################
@@ -915,6 +1192,27 @@ function log_detect_notice {
 }
 
 #######################################
+# state_read_path: Path the per-target state is read from
+#
+# Globals:
+#   STATE_READ_FILE - Snapshot of the state branch copy (read)
+#   STATE_FILE - Fallback when no snapshot was taken (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   STDOUT: the state file path
+#
+# Returns:
+#   0 always
+#
+#######################################
+function state_read_path {
+    printf '%s' "${STATE_READ_FILE:-${STATE_FILE}}"
+}
+
+#######################################
 # validate_branch_match: Return 0 when DETECT_BRANCH_MATCH_MODE is valid
 #
 # Globals:
@@ -962,7 +1260,7 @@ function validate_candidate_targets {
 
     for candidate in "${CANDIDATES_JSON[@]+"${CANDIDATES_JSON[@]}"}"; do
         target_json="$(jq -c '.target_json' <<< "${candidate}")"
-        validate_delivery_target "${DELIVERY}" "${target_json}" || return 1
+        delivery_validate_target "${DELIVERY}" "${target_json}" || return 1
     done
     return 0
 }
@@ -973,8 +1271,9 @@ function validate_candidate_targets {
 # Globals:
 #   LEVEL, DELIVERY - Decision inputs (read; no defaults)
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT - Read
-#   FINALIZE_SCRIPT, FINALIZE_LABEL_ALLOWLIST - Read (optional)
-#   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH - Read
+#   AGENT_ENGINE, AGENT_TOOL_DENYLIST - Read (optional; denylist needs L2/L3 and claude)
+#   FINALIZE_SCRIPT, FINALIZE_LABEL_ALLOWLIST, FINALIZE_ISSUE_LIMIT - Read (optional)
+#   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_ITEMS - Read
 #
 # Arguments:
 #   None
@@ -987,12 +1286,67 @@ function validate_candidate_targets {
 #
 #######################################
 function validate_detect_inputs {
-    validate_loop_write_contract \
+    check_loop_write_contract_all \
         "${LEVEL:-}" "${DELIVERY:-}" "${AGENT_EDIT_TARGET:-}" \
         "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_EDIT_DENYLIST:-}" "${AGENT_UNCHANGED_VERDICT:-}" \
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}" || return 1
-    validate_delivery_value "${DELIVERY:-}" || return 1
-    validate_delivery_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
+    check_loop_write_contract_finalize_issue_limit "${DELIVERY:-}" "${FINALIZE_ISSUE_LIMIT:-}" || return 1
+    check_loop_write_contract_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
+    delivery_validate_value "${DELIVERY:-}" || return 1
+    delivery_validate_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
+    validate_detect_items_config || return 1
+    return 0
+}
+
+#######################################
+# validate_detect_items_config: Validate the detect_items preconditions
+# Items mode needs exactly one literal integration branch (list or glob mode, no comma,
+# newline, or pattern characters) and no PR head scan, so the detect script runs once.
+#
+# Globals:
+#   DETECT_ITEMS, DETECT_BRANCH_MATCH, DETECT_BRANCH_MATCH_MODE, DETECT_PR_ENABLED, DETECT_SCRIPT - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when invalid
+#
+# Returns:
+#   0 when valid or items mode is off; 1 when invalid
+#
+#######################################
+function validate_detect_items_config {
+    local branch_match="${DETECT_BRANCH_MATCH:-}"
+    local trimmed
+
+    case "${DETECT_ITEMS:-}" in
+        "" | false) return 0 ;;
+        true) ;;
+        *)
+            echo "::error::detect_items must be true or false (got: ${DETECT_ITEMS})" >&2
+            return 1
+            ;;
+    esac
+
+    if [[ -z ${DETECT_SCRIPT:-} ]]; then
+        echo "::error::detect_items true requires detect_script (the built-in range detect never emits result.items)" >&2
+        return 1
+    fi
+    if [[ ${DETECT_PR_ENABLED:-} == "true" ]]; then
+        echo "::error::detect_items true requires detect_pr_enabled false" >&2
+        return 1
+    fi
+    if [[ ${DETECT_BRANCH_MATCH_MODE:-} != "list" && ${DETECT_BRANCH_MATCH_MODE:-} != "glob" ]]; then
+        echo "::error::detect_items true requires detect_branch_match_mode list or glob (got: ${DETECT_BRANCH_MATCH_MODE:-})" >&2
+        return 1
+    fi
+    trimmed="${branch_match#"${branch_match%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    if ! check_names_branch "${trimmed}"; then
+        echo "::error::detect_items true requires detect_branch_match to name exactly one branch (got: ${branch_match})" >&2
+        return 1
+    fi
     return 0
 }
 
@@ -1003,6 +1357,8 @@ function validate_detect_inputs {
 #   CHECKOUT_FAILED - Checkout failure count
 #   CIRCUIT_BREAKER_BLOCKED - Circuit breaker block count
 #   PENDING_PR_BLOCKED - Pending PR block count
+#   GATE_BLOCKED, GATE_BLOCK_REASON - Admission gate refusal count and first reason
+#   SKIP_DETAIL - First skip detail (published with a skip)
 #   GITHUB_OUTPUT - Written via write_detect_outputs / write_legacy_outputs
 #
 # Arguments:
@@ -1020,6 +1376,8 @@ function write_empty_candidates_outputs {
         write_detect_outputs "false" "circuit_breaker" "[]"
     elif [[ ${PENDING_PR_BLOCKED} -gt 0 ]]; then
         write_detect_outputs "false" "pending_pr" "[]"
+    elif [[ ${GATE_BLOCKED} -gt 0 ]]; then
+        write_detect_outputs "false" "${GATE_BLOCK_REASON}" "[]"
     elif [[ ${CHECKOUT_FAILED} -gt 0 ]]; then
         write_detect_outputs "false" "checkout_failed" "[]"
     else
@@ -1062,7 +1420,7 @@ function write_legacy_outputs {
     last_sha=$(jq -r '.result.since // .result.commit_range // empty' <<< "${first}")
     current_sha=$(jq -r '.target_json.from.ref' <<< "${first}")
     target_key=$(jq -r '.target_json.key' <<< "${first}")
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
+    target_state="$(read_target_state "$(state_read_path)" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
 
     {
@@ -1082,6 +1440,7 @@ function write_legacy_outputs {
 #
 # Globals:
 #   CANDIDATES_JSON, INTEGRATION_BRANCHES, OPEN_PRS_JSON - Populated during run
+#   DETECT_ITEMS - true routes integration branches through append_items_candidates
 #
 # Arguments:
 #   None
@@ -1090,11 +1449,11 @@ function write_legacy_outputs {
 #   None
 #
 # Returns:
-#   0 on success or skip; 1 when input or target validation fails
+#   0 on success or skip; 1 when input or target validation fails, or items mode
+#   gets a missing or invalid result.items
 #
 #######################################
 function main {
-    : "${DETECT_SCRIPT:?}"
     : "${STATE_FILE:?}"
     : "${LOOP_NAME:?}"
     : "${STATE_BRANCH:?}"
@@ -1104,14 +1463,19 @@ function main {
     if ! validate_detect_inputs; then
         return 1
     fi
+    if ! detect_env_build_args "${DETECT_ENV_JSON:-}"; then
+        return 1
+    fi
 
     # 0 is the workflow_call sentinel for "no PR number".
     if [[ ${DETECT_PR_NUMBER:-} == "0" ]]; then
         DETECT_PR_NUMBER=""
     fi
-    if delivery_requires_pr_number_skip "${DELIVERY}" "${DETECT_PR_NUMBER:-}"; then
-        log_detect_notice "skip" "${LOOP_NAME}" "delivery=pr_push without detect_pr_number"
-        write_detect_outputs "false" "pr_number_missing" "[]"
+    local delivery_verdict
+    delivery_verdict="$(admission_evaluate_delivery "${DELIVERY}" "${DETECT_PR_NUMBER:-}")"
+    if [[ $(jq -r '.admit' <<< "${delivery_verdict}") != "true" ]]; then
+        log_detect_notice "skip" "${LOOP_NAME}" "$(jq -r '.detail' <<< "${delivery_verdict}")"
+        write_detect_outputs "false" "$(jq -r '.skip_reason' <<< "${delivery_verdict}")" "[]"
         write_legacy_outputs "[]"
         return 0
     fi
@@ -1131,8 +1495,18 @@ function main {
         return 0
     fi
 
-    mkdir -p "$(dirname "${STATE_FILE}")"
-    migrate_state_targets "${STATE_FILE}" "${STATE_BRANCH}"
+    # Snapshot the state and the run log before any target checkout: the tracked copies on a PR head are stale.
+    local run_log_read_file
+    STATE_READ_FILE="$(mktemp)"
+    run_log_read_file="$(mktemp)"
+    if ! state_snapshot_from_branch "${STATE_BRANCH}" \
+        "${STATE_FILE}" "${STATE_READ_FILE}" \
+        "${RUN_LOG_FILE:-.loop/loop-run-log.md}" "${run_log_read_file}"; then
+        write_detect_outputs "false" "config_error" "[]"
+        write_legacy_outputs "[]"
+        return 0
+    fi
+    migrate_state_targets "${STATE_READ_FILE}" "${STATE_BRANCH}"
 
     if ! validate_branch_match; then
         write_detect_outputs "false" "config_error" "[]"
@@ -1140,7 +1514,8 @@ function main {
         return 0
     fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+    # The budget file is policy configuration: it is read from the trusted checkout, not the state snapshot.
+    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${run_log_read_file}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_detect_outputs "false" "budget" "[]"
         write_legacy_outputs "[]"
@@ -1170,7 +1545,12 @@ function main {
     fi
 
     for branch in "${INTEGRATION_BRANCHES[@]}"; do
-        append_integration_candidate "${branch}"
+        if [[ ${DETECT_ITEMS} == "true" ]]; then
+            # A missing or invalid result.items fails the job (items mode was declared).
+            append_items_candidates "${branch}" || return 1
+        else
+            append_integration_candidate "${branch}"
+        fi
     done
 
     for pr_json in "${OPEN_PRS_JSON[@]}"; do
@@ -1199,7 +1579,7 @@ function main {
     local -a slim_candidates=()
 
     full_matrix_json="$(printf '%s\n' "${CANDIDATES_JSON[@]}" | jq -sc '.')"
-    loop_handoff_write_bundle "${handoff_dir}" "${CANDIDATES_JSON[@]}"
+    handoff_write_bundle "${handoff_dir}" "${CANDIDATES_JSON[@]}"
 
     for candidate in "${CANDIDATES_JSON[@]}"; do
         slim_candidate="$(shrink_matrix_candidate_for_output "${candidate}")"

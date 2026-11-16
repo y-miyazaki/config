@@ -1,6 +1,23 @@
-# Reusable workflow: Build MkDocs site and upload as artifact
-# Installs mkdocs-material via pip and builds the site.
-# Use with cd-github-pages.yaml for deployment.
+#######################################
+# Description:
+#   Reusable workflow: Build MkDocs site and upload as artifact
+#   Installs mkdocs-material via pip and builds the site.
+#   Use with cd-github-pages.yaml for deployment.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-mkdocs
 
 on:

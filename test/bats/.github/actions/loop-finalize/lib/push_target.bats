@@ -6,8 +6,9 @@
 # Use cases:
 # - sequential agent merges preserve earlier product-file commits on to.branch
 # - merge conflicts fail closed without updating to.branch
+# - the landing merge commit carries no [skip ci] so PR checks run on the new head
 # - identical agent and to.branch names are rejected
-# - invalid branch names are rejected
+# - invalid branch names are rejected, including a leading dash that git would read as an option
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -73,6 +74,25 @@ push_target_run() {
     [ "${before}" = "${after}" ]
 }
 
+@test "push_target merge commit does not carry skip ci so PR checks run" {
+    push_target_git_setup
+
+    git -C "${PUSH_WORK}" checkout -q -b loop/github-pr-revise/ci origin/feature/pr-head
+    printf 'fix\n' > "${PUSH_WORK}/ci.txt"
+    git -C "${PUSH_WORK}" add ci.txt
+    git -C "${PUSH_WORK}" commit -q -m "fix: ci revise"
+    git -C "${PUSH_WORK}" push -q -u origin loop/github-pr-revise/ci
+
+    AGENT_BRANCH="loop/github-pr-revise/ci"
+    TO_BRANCH="feature/pr-head"
+    push_target_run
+    [ "$status" -eq 0 ]
+
+    subject="$(git -C "${PUSH_BARE}" log -1 --format=%s refs/heads/feature/pr-head)"
+    [[ ${subject} == "chore(loop): automated fix" ]]
+    [[ ${subject} != *"[skip ci]"* ]]
+}
+
 @test "push_target preserves earlier product commits when a later agent merges" {
     push_target_git_setup
 
@@ -124,4 +144,13 @@ push_target_run() {
     push_target_run
     [ "$status" -eq 1 ]
     [[ $output == *"invalid agent branch"* ]]
+}
+
+@test "push_target rejects a branch name with a leading dash" {
+    push_target_git_setup
+    AGENT_BRANCH="loop/ok"
+    TO_BRANCH="--upload-pack=x"
+    push_target_run
+    [ "$status" -eq 1 ]
+    [[ $output == *"invalid to.branch"* ]]
 }

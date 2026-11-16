@@ -1,3 +1,22 @@
+#######################################
+# Description:
+#   Composite action: SchemaSpy SSM port forward
+#   Starts an SSM port-forwarding session to the bastion database host.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@<commit SHA>
+#   Called by: cd-aws-schemaspy.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs bastion_id, db_host, db_port, db_type
+#   - Session Manager plugin installed by schemaspy-bastion-connect
+#
+# References:
+#   - docs/explanation/github-workflows-design.md
+#######################################
 name: schemaspy-ssm-port-forward
 description: "Start SSM port forwarding session from bastion to the database host."
 

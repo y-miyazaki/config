@@ -1,6 +1,23 @@
-# Reusable workflow: Deploy an artifact to GitHub Pages
-# Downloads a previously uploaded artifact and deploys it to GitHub Pages.
-# Callers build and upload the artifact; this workflow handles deployment only.
+#######################################
+# Description:
+#   Reusable workflow: Deploy an artifact to GitHub Pages
+#   Downloads a previously uploaded artifact and deploys it to GitHub Pages.
+#   Callers build and upload the artifact; this workflow handles deployment only.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-github-pages
 
 on:

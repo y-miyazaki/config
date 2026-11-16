@@ -1,8 +1,24 @@
-# CI workflow: Aqua checksum update on push
-# Usage: This workflow requires a GitHub App for auto-committing checksum updates.
-# 1. Create a GitHub App with "Contents: Read & Write" repository permission.
-# 2. Install the App on the target repository (or organization).
-# 3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
+#######################################
+# Description:
+#   CI workflow: Aqua checksum update on push
+#
+# Usage:
+#   Copy to .github/workflows/ in your repository and adjust the with: values.
+#   Runs on: push
+#   This workflow requires a GitHub App for auto-committing checksum updates.
+#   1. Create a GitHub App with "Contents: Read & Write" repository permission.
+#   2. Install the App on the target repository (or organization).
+#   3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-aqua-update-checksum
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -22,7 +38,7 @@ permissions:
 
 jobs:
   aqua-update-checksum:
-    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
+    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
 
     permissions:
       contents: read

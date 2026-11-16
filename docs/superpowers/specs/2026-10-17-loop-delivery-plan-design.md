@@ -94,14 +94,14 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 **`delivery` の値:** `delivery` は、「エージェントの出力を、どこへ、どう届けるか」を表す。閉じた集合とする。
 
-| 値              | 意味                                                                                           | 使えるターゲット        | 状態                                                                                      |
-| --------------- | ---------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------- |
-| `issue_comment` | 既存の Issue にコメントを投稿する                                                              | Issue の entity         | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                 |
-| `issue_create`  | レポートから Issue を新規作成する                                                              | すべて                  | 未実装。実装されるまで検証で拒否                                                          |
-| `none`          | プラットフォームは何も配信しない                                                               | すべて                  | 実装済み                                                                                  |
-| `pr_create`     | 新しいブランチと PR を作る(L3 では auto-merge を有効にする。draft にするかは `pr_draft`)       | すべて                  | 実装済み(現在の `open_pr`。PR ターゲットでは、現在の `git_landing_pull_request: open_pr`) |
-| `pr_push`       | 既存 PR の head ブランチへ、最新の head を merge して push する。新しい PR は作らない          | pull_request(既存の PR) | 実装済み(現在の `open_pr` + `git_landing_pull_request: push_head`)                        |
-| `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する | PR の entity            | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                 |
+| 値              | 意味                                                                                           | 使えるターゲット        | 状態                                                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `issue_comment` | 既存の Issue にコメントを投稿する                                                              | Issue の entity         | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                                             |
+| `issue_create`  | レポートから Issue を新規作成する                                                              | すべて                  | 実装済み(L2/L3 のみ。ターゲットは integration のみ。[loop-code-review-design](2026-11-09-loop-code-review-design.md)) |
+| `none`          | プラットフォームは何も配信しない                                                               | すべて                  | 実装済み                                                                                                              |
+| `pr_create`     | 新しいブランチと PR を作る(L3 では auto-merge を有効にする。draft にするかは `pr_draft`)       | すべて                  | 実装済み(現在の `open_pr`。PR ターゲットでは、現在の `git_landing_pull_request: open_pr`)                             |
+| `pr_push`       | 既存 PR の head ブランチへ、最新の head を merge して push する。新しい PR は作らない          | pull_request(既存の PR) | 実装済み(現在の `open_pr` + `git_landing_pull_request: push_head`)                                                    |
+| `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する | PR の entity            | 実装済み([Loop の投稿の配信](2026-10-18-loop-delivery-message-design.md))                                             |
 
 - 名前でソートすると、`issue_*` と `pr_*` が、それぞれ隣に並ぶ。
 - `log` と `notion` は enum から削除する。実装がなく、必要になったときに、複数の loop が使うと分かった時点で追加する。
@@ -195,10 +195,10 @@ caller の `permissions:` を `delivery` から導くことはしない。reusab
 
 `may_edit` を入力から外す(第7節)と、許容値を決めているのは `level` になる。`validate_loop_write_contract.sh` を、`level` を主キーにした表に書き直す。新しい入力名(第7節)で示す。
 
-| `level` | `delivery`                                                                                   | `agent_edit_target`     | `agent_edit_allowlist`                       | `agent_edit_denylist`     | `agent_unchanged_verdict`   |
-| ------- | -------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------- | ------------------------- | --------------------------- |
-| L1      | `none`、`issue_comment`                                                                      | 指定は拒否              | 指定は拒否                                   | 指定は拒否                | 指定は拒否                  |
-| L2 / L3 | `pr_create`、`pr_push`、`none`、`issue_comment`、`pr_review`(実装時に `issue_create` を追加) | `fix` か `report`(必須) | 必須(空は拒否)。制限しないときは `**` を書く | 任意(空は既定の denylist) | `APPROVE` か `REJECT`(必須) |
+| `level` | `delivery`                                                                                                  | `agent_edit_target`     | `agent_edit_allowlist`                       | `agent_edit_denylist`     | `agent_unchanged_verdict`   |
+| ------- | ----------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------- | ------------------------- | --------------------------- |
+| L1      | `none`、`issue_comment`                                                                                     | 指定は拒否              | 指定は拒否                                   | 指定は拒否                | 指定は拒否                  |
+| L2 / L3 | `pr_create`、`pr_push`、`none`、`issue_comment`、`pr_review`、`issue_create`(ターゲットは integration のみ) | `fix` か `report`(必須) | 必須(空は拒否)。制限しないときは `**` を書く | 任意(空は既定の denylist) | `APPROVE` か `REJECT`(必須) |
 
 - L1 で `pr_create` / `pr_push` を拒否するのは、現在の検証(L1 で `open_pr` を拒否)と同じである。L1 で `issue` / `log` / `notion` を通している現在の検証は、第1節の削除と fail closed により、`none` だけを通すようになる。
 - L1 で拒否する入力は、L1 では効かない。`agent_unchanged_verdict`(現在の `no_changes_verdict`)は、`agent-l2` の `loop-execute` にだけ渡る(`ci-loop-agent.yaml:508`)。L1 の outcome は、成功なら常に「差分なし」になる(`ci-loop-agent.yaml:365`、`:381`)。`agent_edit_allowlist` は、branch caller では L1 のプロンプトにも入る(`matrix.sh:100-106`、`detect.sh:459-462`)が、L1 のエージェントは編集しないので、効かない。

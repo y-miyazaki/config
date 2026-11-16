@@ -36,27 +36,13 @@ GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 TO_BRANCH="${TO_BRANCH:-}"
 
-#######################################
-# configure_git_auth: Set commit identity and HTTPS push credentials
-# Globals:
-#   GITHUB_TOKEN - Token used for http.extraheader
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#######################################
-function configure_git_auth {
-    : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
-
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
 
 #######################################
 # main: Merge agent branch into latest to.branch and push
@@ -82,11 +68,11 @@ function main {
     : "${TO_BRANCH:?TO_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 
-    if ! [[ ${AGENT_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${AGENT_BRANCH}"; then
         echo "::error::push_target: invalid agent branch: ${AGENT_BRANCH}" >&2
         exit 1
     fi
-    if ! [[ ${TO_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${TO_BRANCH}"; then
         echo "::error::push_target: invalid to.branch: ${TO_BRANCH}" >&2
         exit 1
     fi
@@ -95,13 +81,13 @@ function main {
         exit 1
     fi
 
-    configure_git_auth
+    git_auth_configure
 
     git fetch origin "${AGENT_BRANCH}" "${TO_BRANCH}" --prune
     git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
 
     set +e
-    merge_err="$(git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]" 2>&1)"
+    merge_err="$(git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix" 2>&1)"
     merge_status=$?
     set -e
     if [[ ${merge_status} -ne 0 ]]; then

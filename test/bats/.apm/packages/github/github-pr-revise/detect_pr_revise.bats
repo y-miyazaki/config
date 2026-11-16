@@ -4,7 +4,9 @@
 # Tests for .apm/packages/github/.apm/skills/github-pr-revise/scripts/detect_pr_revise.sh
 #
 # Use cases:
-# - Skip bots, missing mention, empty body, and untrusted association
+# - Gathered comments need a trusted author_association; a missing one is dropped (fail closed)
+# - Skip an empty body; report bots, mention and association as result.gate facts for the admission gate
+# - The admission gate refuses bot actors, a missing or wrong mention, and an untrusted association (webhook and dispatch)
 # - Proceed for mention-gated comment and trusted dispatch feedback
 # - Hydrate inline review path/line/side/diff_hunk/comment_id into result
 # - Keep path/line empty for issue_comment (compat)
@@ -21,6 +23,15 @@ done
 source "${_bats_support}/support/common.bash"
 
 DETECT_SCRIPT="$(apm_skill_script_path github-pr-revise detect_pr_revise.sh)"
+
+# gate_verdict: Evaluate the result.gate of the last detect output with the admission gate and print the skip reason
+gate_verdict() {
+    local gate
+    gate="$(jq -c '.result.gate // null' <<< "${DETECT_OUT}")"
+    # shellcheck disable=SC1091
+    source "$(bats_workspace_root)/.github/actions/lib/loop/admission.sh"
+    admission_evaluate "${gate}" '{}' | jq -r 'if .admit then "admit" else .skip_reason end'
+}
 
 @test "detect_pr_revise keeps path and line empty for issue_comment events" {
     cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
@@ -100,20 +111,24 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "detect_pr_revise skips bot actor" {
+@test "detect_pr_revise reports a bot actor as a gate fact and the gate refuses it" {
     run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix' \
-        PR_ACTOR_TYPE=Bot bash "${DETECT_SCRIPT}"
+        PR_ACTOR_TYPE=Bot PR_ACTOR_ASSOCIATION=MEMBER GITHUB_EVENT_NAME=issue_comment bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == true and .status == "ok"' <<< "${output}"
+    DETECT_OUT="${output}"
+    run jq -e '.skip == false and .result.gate.actor.type == "Bot"' <<< "${output}"
     [ "$status" -eq 0 ]
+    [ "$(gate_verdict)" = "actor_untrusted" ]
 }
 
-@test "detect_pr_revise skips human without mention" {
+@test "detect_pr_revise reports a missing mention as a gate fact and the gate refuses it" {
     run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='looks good' \
-        PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+        PR_ACTOR_TYPE=User PR_ACTOR_ASSOCIATION=MEMBER GITHUB_EVENT_NAME=issue_comment bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == true and .status == "ok"' <<< "${output}"
+    DETECT_OUT="${output}"
+    run jq -e '.skip == false and .result.gate.trigger.mention_required == true and .result.gate.trigger.mention_present == false' <<< "${output}"
     [ "$status" -eq 0 ]
+    [ "$(gate_verdict)" = "mention_missing" ]
 }
 
 @test "detect_pr_revise skips human with empty comment body" {
@@ -139,16 +154,18 @@ EOF
 
 @test "detect_pr_revise respects custom PR_MENTION" {
     run env PR_NUMBER=5 PR_MENTION='@waza' PR_COMMENT_BODY='@loop ignore' \
-        PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+        PR_ACTOR_TYPE=User PR_ACTOR_ASSOCIATION=MEMBER GITHUB_EVENT_NAME=issue_comment bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == true' <<< "${output}"
-    [ "$status" -eq 0 ]
+    DETECT_OUT="${output}"
+    [ "$(gate_verdict)" = "mention_missing" ]
 
     run env PR_NUMBER=5 PR_MENTION='@waza' PR_COMMENT_BODY='@waza please revise' \
-        PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+        PR_ACTOR_TYPE=User PR_ACTOR_ASSOCIATION=MEMBER GITHUB_EVENT_NAME=issue_comment bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
+    DETECT_OUT="${output}"
     run jq -e '.skip == false' <<< "${output}"
     [ "$status" -eq 0 ]
+    [ "$(gate_verdict)" = "admit" ]
 }
 
 @test "detect_pr_revise rejects invalid PR_NUMBER with structured error" {
@@ -160,10 +177,11 @@ EOF
 }
 
 @test "detect_pr_revise skips @loopback substring false positive" {
-    run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loopback please fix' PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+    run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loopback please fix' PR_ACTOR_TYPE=User \
+        PR_ACTOR_ASSOCIATION=MEMBER GITHUB_EVENT_NAME=issue_comment bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == true' <<< "${output}"
-    [ "$status" -eq 0 ]
+    DETECT_OUT="${output}"
+    [ "$(gate_verdict)" = "mention_missing" ]
 }
 
 @test "detect_pr_revise proceeds for workflow_dispatch without mention" {
@@ -222,7 +240,7 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "detect_pr_revise skips repository_dispatch from external contributor" {
+@test "detect_pr_revise reports an external contributor on repository_dispatch for the gate" {
     cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
 {
   "client_payload": {
@@ -240,8 +258,10 @@ EOF
         GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
         PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == true and (.message | test("maintainer association"))' <<< "${output}"
+    DETECT_OUT="${output}"
+    run jq -e '.skip == false and .result.gate.actor.association == "CONTRIBUTOR" and .result.gate.trigger.source == "dispatch"' <<< "${output}"
     [ "$status" -eq 0 ]
+    [ "$(gate_verdict)" = "actor_untrusted" ]
 }
 @test "detect_pr_revise emits comment_id and event_name from event" {
     cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
@@ -308,6 +328,34 @@ EOF
         and .status == "ok"
         and (.message | test("no open"))
     ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise drops gathered comments with a missing or untrusted author_association" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "api" && "$*" == *"issues/77/comments"* ]]; then
+    printf '%s\n' '[{"id":101,"body":"@loop no assoc","user":{"login":"maintainer","type":"User"},"reactions":{"eyes":0}},{"id":102,"body":"@loop outsider","user":{"login":"stranger","type":"User"},"author_association":"NONE","reactions":{"eyes":0}},{"id":103,"body":"@loop trusted","user":{"login":"maintainer","type":"User"},"author_association":"MEMBER","reactions":{"eyes":0}}]'
+    exit 0
+fi
+if [[ "$1" == "api" && "$*" == *"pulls/77/comments"* ]]; then
+    printf '%s\n' '[{"id":201,"body":"@loop no assoc","path":"a.go","line":1,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"reactions":{"eyes":0}}]'
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=77 PR_MENTION='@loop' PR_COMMENT_BODY='@loop trusted' \
+        PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=issue_comment \
+        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=token \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and ([.result.comments[].comment_id] | sort) == [103]' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

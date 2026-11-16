@@ -13,11 +13,13 @@
 # - repo_filter_paths preserves .github paths from git-diff-shaped input (regression)
 # - repo_path_should_skip returns expected status for dot directory exclusion paths
 # - repo_emit_tracked_paths filters tracked files
+# - repo_emit_tracked_paths emits non-ASCII paths unquoted (NUL-delimited git ls-files)
 # - repo_append_find_prune_args builds a find prune predicate
 # - repo_append_find_prune_args preserves github paths through repo_filter_paths
 # - REPO_PATHS_EXTRA_PRUNES applies to skip and find prune consistently
 # - REPO_PATHS_INCLUDE_AGENTS allows agent paths
 # - REPO_PATHS_INCLUDE_GITIGNORED skips gitignore exclusion
+# - REPO_PATHS_INCLUDE_BUILD_OUTPUT keeps dist/, build/, bin/ in skip and find prune while other exclusions stay
 # - repo_apply_git_rename records both-scannable renames and cross-zone fallbacks
 # - repo_path_should_skip excludes cursor and kiro root agent directories
 # - repo_path_is_gitignored keeps separate cache entries for paths that differ only by separator
@@ -46,138 +48,73 @@ setup() {
     bats_git_commit "${REPO_FIXTURE}" "init" docs/readme.md .gitignore
 }
 
-@test "repo_path_should_skip allows github workflows and root config dotfiles" {
-    run repo_path_should_skip ".github/workflows/ci.yaml"
+@test "REPO_PATHS_EXTRA_PRUNES excludes paths from skip and find prune" {
+    local -a find_args=(.)
+    local find_line
+
+    REPO_PATHS_EXTRA_PRUNES="docs/report"
+    run repo_path_should_skip "docs/report/2026-07-20.md"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip "docs/guide/overview.md"
     [ "$status" -eq 1 ]
 
-    run repo_path_should_skip ".gitignore"
-    [ "$status" -eq 1 ]
-
-    run repo_path_should_skip ".pre-commit-config.yaml"
-    [ "$status" -eq 1 ]
+    repo_append_find_prune_args find_args
+    find_line="$(printf '%s\n' "${find_args[@]}")"
+    [[ ${find_line} == *"./docs/report"* ]]
 }
 
-@test "repo_path_should_skip allows apm package source paths" {
-    run repo_path_should_skip ".apm/packages/common/foo.md"
-    [ "$status" -eq 1 ]
-
-    run repo_path_should_skip ".apm/CLAUDE.md"
-    [ "$status" -eq 1 ]
-}
-
-@test "repo_path_should_skip excludes agent and generated directories" {
+@test "REPO_PATHS_INCLUDE_AGENTS allows agent paths" {
+    REPO_PATHS_INCLUDE_AGENTS=true
     run repo_path_should_skip ".agents/skills/SKILL.md"
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip ".codex/skills/foo/SKILL.md"
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip "cursor/skills/foo/SKILL.md"
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip "kiro/skills/foo/SKILL.md"
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip "apm_modules/pkg/index.js"
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip "docs/readme.md"
     [ "$status" -eq 1 ]
 }
 
-@test "repo_path_should_skip_base honors extra prune roots" {
-    run repo_path_should_skip_base "docs/report/2026-07-20.md" docs/report
-    [ "$status" -eq 0 ]
-
-    run repo_path_should_skip_base "docs/guide/overview.md" docs/report
-    [ "$status" -eq 1 ]
-}
-
-@test "repo_path_should_skip respects gitignore in a git repository" {
+@test "REPO_PATHS_INCLUDE_BUILD_OUTPUT allows dist build and bin paths only" {
     (
         cd "${REPO_FIXTURE}" || exit 1
-        run repo_path_should_skip "tmp/ignored.txt"
-        [ "$status" -eq 0 ]
+        REPO_PATHS_INCLUDE_BUILD_OUTPUT=true
+        for path in dist/app.zip build/out.jar bin/tool; do
+            repo_path_should_skip "${path}" && exit 1
+        done
+        for path in node_modules/pkg/a.zip apm_modules/pkg/a.zip .agents/skills/a.zip; do
+            repo_path_should_skip "${path}" || exit 1
+        done
+        exit 0
+    )
+}
 
-        run repo_path_should_skip "docs/readme.md"
+@test "REPO_PATHS_INCLUDE_BUILD_OUTPUT keeps dist out of the find prune predicate" {
+    local -a find_args=(.)
+
+    REPO_PATHS_INCLUDE_BUILD_OUTPUT=true
+    repo_append_find_prune_args find_args
+    [[ " ${find_args[*]} " != *" ./dist "* ]]
+    [[ " ${find_args[*]} " == *" ./node_modules "* ]]
+}
+
+@test "REPO_PATHS_INCLUDE_GITIGNORED allows gitignored paths" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        REPO_PATHS_INCLUDE_GITIGNORED=true
+        run repo_path_should_skip "tmp/ignored.txt"
         [ "$status" -eq 1 ]
     )
 }
 
-@test "repo_filter_paths drops excluded stdin paths" {
-    local filtered
+@test "repo_append_find_prune_args builds a find prune predicate" {
+    local -a find_args=(.)
+    local output
 
-    filtered="$(printf '%s\n' \
-        'docs/readme.md' \
-        '.agents/skills/SKILL.md' \
-        'tmp/ignored.txt' \
-        | (
-            cd "${REPO_FIXTURE}" || exit 1
-            repo_filter_paths
-        ))"
-
-    [[ ${filtered} == *"docs/readme.md"* ]]
-    [[ ${filtered} != *".agents/skills/SKILL.md"* ]]
-}
-
-@test "repo_filter_paths preserves github paths from git diff shaped input" {
-    local filtered expected
-
-    expected=$'.github/actions/loop-detect/action.yml\n.github/workflows/ci.yaml\ndocs/readme.md'
-    filtered="$(printf '%s\n' \
-        '.github/workflows/ci.yaml' \
-        '.github/actions/loop-detect/action.yml' \
-        '.agents/skills/docs-updater/SKILL.md' \
-        'docs/readme.md' \
-        '.env/common/local.env' \
-        | (
-            cd "${REPO_FIXTURE}" || exit 1
-            repo_filter_paths
-        ) | sort)"
-
-    [ "${filtered}" = "$(printf '%s' "${expected}" | sort)" ]
-}
-
-@test "repo_path_should_skip returns expected status for dot directory exclusion paths" {
-    local path expect_scan status_code case_entry
-
-    # path:expect_scan — 1 = scannable (repo_path_should_skip returns 1), 0 = excluded (returns 0)
-    local -a cases=(
-        '.github/workflows/ci.yaml:1'
-        '.github/actions/foo/action.yml:1'
-        '.gitignore:1'
-        '.pre-commit-config.yaml:1'
-        '.golangci.yaml:1'
-        '.markdownlint-cli2.yaml:1'
-        '.apm/packages/common/foo.md:1'
-        '.agents/skills/SKILL.md:0'
-        '.cursor/rules/foo.mdc:0'
-        '.env/common/local.env:0'
-    )
-
-    for case_entry in "${cases[@]}"; do
-        path="${case_entry%%:*}"
-        expect_scan="${case_entry##*:}"
-        run repo_path_should_skip "${path}"
-        status_code="${status}"
-        if [[ ${expect_scan} -eq 1 ]]; then
-            [ "${status_code}" -eq 1 ]
-        else
-            [ "${status_code}" -eq 0 ]
-        fi
-    done
-}
-
-@test "repo_emit_tracked_paths filters tracked files" {
-    local emitted
-
-    emitted="$(
+    repo_append_find_prune_args find_args
+    find_args+=(-name '*.md' -type f -print)
+    output="$(
         cd "${REPO_FIXTURE}" || exit 1
-        repo_emit_tracked_paths '\.md$'
+        find "${find_args[@]}" 2> /dev/null | sed 's|^\./||' | sort
     )"
 
-    [[ ${emitted} == "docs/readme.md" ]]
-    [[ ${emitted} != *".agents"* ]]
+    [[ ${output} == "docs/readme.md" ]]
+    [[ ${output} != *".agents"* ]]
 }
 
 @test "repo_append_find_prune_args preserves github paths through repo_filter_paths" {
@@ -194,21 +131,6 @@ setup() {
     )"
 
     [[ ${output} == ".github/workflows/ci.yaml" ]]
-}
-
-@test "repo_append_find_prune_args builds a find prune predicate" {
-    local -a find_args=(.)
-    local output
-
-    repo_append_find_prune_args find_args
-    find_args+=(-name '*.md' -type f -print)
-    output="$(
-        cd "${REPO_FIXTURE}" || exit 1
-        find "${find_args[@]}" 2> /dev/null | sed 's|^\./||' | sort
-    )"
-
-    [[ ${output} == "docs/readme.md" ]]
-    [[ ${output} != *".agents"* ]]
 }
 
 @test "repo_apply_git_rename appends changed_files for agent to scannable cross-zone rename" {
@@ -243,35 +165,45 @@ setup() {
     [ "${#changed[@]}" -eq 0 ]
 }
 
-@test "REPO_PATHS_INCLUDE_AGENTS allows agent paths" {
-    REPO_PATHS_INCLUDE_AGENTS=true
-    run repo_path_should_skip ".agents/skills/SKILL.md"
-    [ "$status" -eq 1 ]
-}
+@test "repo_emit_tracked_paths emits non-ASCII tracked paths unquoted" {
+    local emitted
 
-@test "REPO_PATHS_INCLUDE_GITIGNORED allows gitignored paths" {
-    (
+    printf 'doc\n' > "${REPO_FIXTURE}/docs/日本語.md"
+    git -C "${REPO_FIXTURE}" add docs/日本語.md
+    emitted="$(
         cd "${REPO_FIXTURE}" || exit 1
-        REPO_PATHS_INCLUDE_GITIGNORED=true
-        run repo_path_should_skip "tmp/ignored.txt"
-        [ "$status" -eq 1 ]
-    )
+        repo_emit_tracked_paths '日本語\.md$'
+    )"
+
+    [[ ${emitted} == "docs/日本語.md" ]]
 }
 
-@test "REPO_PATHS_EXTRA_PRUNES excludes paths from skip and find prune" {
-    local -a find_args=(.)
-    local find_line
+@test "repo_emit_tracked_paths filters tracked files" {
+    local emitted
 
-    REPO_PATHS_EXTRA_PRUNES="docs/report"
-    run repo_path_should_skip "docs/report/2026-07-20.md"
-    [ "$status" -eq 0 ]
+    emitted="$(
+        cd "${REPO_FIXTURE}" || exit 1
+        repo_emit_tracked_paths '\.md$'
+    )"
 
-    run repo_path_should_skip "docs/guide/overview.md"
-    [ "$status" -eq 1 ]
+    [[ ${emitted} == "docs/readme.md" ]]
+    [[ ${emitted} != *".agents"* ]]
+}
 
-    repo_append_find_prune_args find_args
-    find_line="$(printf '%s\n' "${find_args[@]}")"
-    [[ ${find_line} == *"./docs/report"* ]]
+@test "repo_filter_paths drops excluded stdin paths" {
+    local filtered
+
+    filtered="$(printf '%s\n' \
+        'docs/readme.md' \
+        '.agents/skills/SKILL.md' \
+        'tmp/ignored.txt' \
+        | (
+            cd "${REPO_FIXTURE}" || exit 1
+            repo_filter_paths
+        ))"
+
+    [[ ${filtered} == *"docs/readme.md"* ]]
+    [[ ${filtered} != *".agents/skills/SKILL.md"* ]]
 }
 
 @test "repo_filter_paths excludes env paths after find enumeration" {
@@ -296,6 +228,24 @@ setup() {
     [[ ${filtered} == *"docs/readme.md"* ]]
 }
 
+@test "repo_filter_paths preserves github paths from git diff shaped input" {
+    local filtered expected
+
+    expected=$'.github/actions/loop-detect/action.yml\n.github/workflows/ci.yaml\ndocs/readme.md'
+    filtered="$(printf '%s\n' \
+        '.github/workflows/ci.yaml' \
+        '.github/actions/loop-detect/action.yml' \
+        '.agents/skills/docs-updater/SKILL.md' \
+        'docs/readme.md' \
+        '.env/common/local.env' \
+        | (
+            cd "${REPO_FIXTURE}" || exit 1
+            repo_filter_paths
+        ) | sort)"
+
+    [ "${filtered}" = "$(printf '%s' "${expected}" | sort)" ]
+}
+
 @test "repo_path_is_gitignored caches repeated lookups" {
     (
         cd "${REPO_FIXTURE}" || exit 1
@@ -307,20 +257,20 @@ setup() {
     )
 }
 
-@test "repo_path_is_gitignored keeps distinct cache entries for paths that differ only by separator" {
-    (
-        cd "${REPO_FIXTURE}" || exit 1
-        repo_path_should_skip "tmp/ignored.txt" || exit 1
-        ! repo_path_is_gitignored "tmp_ignored.txt"
-    )
-}
-
 @test "repo_path_is_gitignored does not change the caller's nounset option" {
     (
         cd "${REPO_FIXTURE}" || exit 1
         set +u
         repo_path_is_gitignored "tmp/ignored.txt" || true
         [[ $- != *u* ]]
+    )
+}
+
+@test "repo_path_is_gitignored keeps distinct cache entries for paths that differ only by separator" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        repo_path_should_skip "tmp/ignored.txt" || exit 1
+        ! repo_path_is_gitignored "tmp_ignored.txt"
     )
 }
 
@@ -335,5 +285,93 @@ setup() {
 
 @test "repo_path_is_gitignored returns 1 for an empty path" {
     run repo_path_is_gitignored ""
+    [ "$status" -eq 1 ]
+}
+
+@test "repo_path_should_skip allows apm package source paths" {
+    run repo_path_should_skip ".apm/packages/common/foo.md"
+    [ "$status" -eq 1 ]
+
+    run repo_path_should_skip ".apm/CLAUDE.md"
+    [ "$status" -eq 1 ]
+}
+
+@test "repo_path_should_skip allows github workflows and root config dotfiles" {
+    run repo_path_should_skip ".github/workflows/ci.yaml"
+    [ "$status" -eq 1 ]
+
+    run repo_path_should_skip ".gitignore"
+    [ "$status" -eq 1 ]
+
+    run repo_path_should_skip ".pre-commit-config.yaml"
+    [ "$status" -eq 1 ]
+}
+
+@test "repo_path_should_skip excludes agent and generated directories" {
+    run repo_path_should_skip ".agents/skills/SKILL.md"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip ".codex/skills/foo/SKILL.md"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip "cursor/skills/foo/SKILL.md"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip "kiro/skills/foo/SKILL.md"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip "apm_modules/pkg/index.js"
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip "docs/readme.md"
+    [ "$status" -eq 1 ]
+}
+
+@test "repo_path_should_skip respects gitignore in a git repository" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        run repo_path_should_skip "tmp/ignored.txt"
+        [ "$status" -eq 0 ]
+
+        run repo_path_should_skip "docs/readme.md"
+        [ "$status" -eq 1 ]
+    )
+}
+
+@test "repo_path_should_skip returns expected status for dot directory exclusion paths" {
+    local path expect_scan status_code case_entry
+
+    # path:expect_scan — 1 = scannable (repo_path_should_skip returns 1), 0 = excluded (returns 0)
+    local -a cases=(
+        '.github/workflows/ci.yaml:1'
+        '.github/actions/foo/action.yml:1'
+        '.gitignore:1'
+        '.pre-commit-config.yaml:1'
+        '.golangci.yaml:1'
+        '.markdownlint-cli2.yaml:1'
+        '.apm/packages/common/foo.md:1'
+        '.agents/skills/SKILL.md:0'
+        '.cursor/rules/foo.mdc:0'
+        '.env/common/local.env:0'
+    )
+
+    for case_entry in "${cases[@]}"; do
+        path="${case_entry%%:*}"
+        expect_scan="${case_entry##*:}"
+        run repo_path_should_skip "${path}"
+        status_code="${status}"
+        if [[ ${expect_scan} -eq 1 ]]; then
+            [ "${status_code}" -eq 1 ]
+        else
+            [ "${status_code}" -eq 0 ]
+        fi
+    done
+}
+
+@test "repo_path_should_skip_base honors extra prune roots" {
+    run repo_path_should_skip_base "docs/report/2026-07-20.md" docs/report
+    [ "$status" -eq 0 ]
+
+    run repo_path_should_skip_base "docs/guide/overview.md" docs/report
     [ "$status" -eq 1 ]
 }

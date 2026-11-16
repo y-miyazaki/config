@@ -4,16 +4,17 @@
 # Tests for .github/actions/loop-detect/lib/matrix.sh
 #
 # Use cases:
-# - build_verifier_context_from_result formats changelog commits
-# - build_verifier_context_from_result returns empty for empty commits array
-# - build_verifier_context_from_result prefers explicit verifier_context
-# - build_verifier_context_from_result still formats affected_docs
-# - build_verifier_context_from_result renders refactor hints markdown
-# - build_verifier_context_from_result returns empty string for empty hints array
-# - build_verifier_context_from_result renders tech-debt signals and hotspots markdown with agent_report_file
+# - verifier_context_build_from_result formats changelog commits
+# - verifier_context_build_from_result returns empty for empty commits array
+# - verifier_context_build_from_result prefers explicit verifier_context
+# - verifier_context_build_from_result still formats affected_docs
+# - verifier_context_build_from_result renders refactor hints markdown
+# - verifier_context_build_from_result returns empty string for empty hints array
+# - verifier_context_build_from_result renders tech-debt signals and hotspots markdown with agent_report_file
 # - candidate_priority_rank follows DETECT_PRIORITY order
 # - shrink_matrix_candidate_for_output strips result and sets handoff_key
 # - sort_candidates_by_priority puts integration before pull_request by default
+# - sort_candidates_by_priority keeps modes missing from DETECT_PRIORITY, last and in input order
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -27,7 +28,7 @@ setup() {
     bats_source_rel ".github/actions/loop-detect/lib/_init.sh"
 }
 
-@test "build_verifier_context_from_result formats changelog commits" {
+@test "verifier_context_build_from_result formats changelog commits" {
     local detect_result
     detect_result='{
       "changelog_file": "CHANGELOG.md",
@@ -48,7 +49,7 @@ setup() {
         }
       ]
     }'
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [[ $output == *"## Changelog Commits"* ]]
     [[ $output == *"file: CHANGELOG.md"* ]]
@@ -57,37 +58,37 @@ setup() {
     [[ $output == *"**renovate(mise)**: update pnpm"* ]]
 }
 
-@test "build_verifier_context_from_result returns empty for empty commits array" {
+@test "verifier_context_build_from_result returns empty for empty commits array" {
     local detect_result='{"commits": []}'
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "build_verifier_context_from_result prefers explicit verifier_context" {
+@test "verifier_context_build_from_result prefers explicit verifier_context" {
     local detect_result='{
       "verifier_context": "custom context",
       "commits": [{"sha": "abc", "type": "feat", "scope": "", "breaking": false, "subject": "x"}]
     }'
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [ "$output" = "custom context" ]
 }
 
-@test "build_verifier_context_from_result still formats affected_docs" {
+@test "verifier_context_build_from_result still formats affected_docs" {
     local detect_result='{
       "changed_files": ["src/a.go"],
       "deleted_files": [],
       "renamed_files": [],
       "affected_docs": ["docs/a.md"]
     }'
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [[ $output == *"## Change Detection"* ]]
     [[ $output == *"affected_docs: docs/a.md"* ]]
 }
 
-@test "build_verifier_context_from_result renders refactor hints markdown" {
+@test "verifier_context_build_from_result renders refactor hints markdown" {
     local detect_result
     detect_result="$(jq -nc '
         {
@@ -98,7 +99,7 @@ setup() {
             ]
         }
     ')"
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [[ $output == *"## Refactor Hints"* ]]
     [[ $output == *"oversized_unit"* ]]
@@ -106,15 +107,15 @@ setup() {
     [[ $output == *"file lines=450"* ]]
 }
 
-@test "build_verifier_context_from_result returns empty string for empty hints array" {
+@test "verifier_context_build_from_result returns empty string for empty hints array" {
     local detect_result
     detect_result="$(jq -nc '{scope: "all", commit_range: "", hints: []}')"
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [ -z "${output}" ]
 }
 
-@test "build_verifier_context_from_result renders tech-debt signals and hotspots markdown" {
+@test "verifier_context_build_from_result renders tech-debt signals and hotspots markdown" {
     local detect_result
     detect_result="$(jq -nc '
         {
@@ -134,7 +135,7 @@ setup() {
             warnings: ["sensor skipped"]
         }
     ')"
-    run build_verifier_context_from_result "${detect_result}"
+    run verifier_context_build_from_result "${detect_result}"
     [ "$status" -eq 0 ]
     [[ $output == *$'## Tech Debt Signals\n- agent_report_file: docs/report/tech-debt/2026-07-21.md\n'* ]]
     [[ $output == *"todo_comment"* ]]
@@ -178,6 +179,22 @@ setup() {
     shrunk="$(shrink_matrix_candidate_for_output "${candidate}")"
     run jq -e '.handoff_key == "integration:main" and .verifier_context == "" and (.result? | not)' <<< "${shrunk}"
     [ "$status" -eq 0 ]
+}
+
+@test "sort_candidates_by_priority keeps modes missing from DETECT_PRIORITY, last and in input order" {
+    DETECT_PRIORITY="integration"
+    CANDIDATES_JSON=(
+        '{"target_json":{"mode":"pull_request","key":"pull_request:1"},"prompt":"a"}'
+        '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"b"}'
+        '{"target_json":{"mode":"pull_request","key":"pull_request:2"},"prompt":"c"}'
+    )
+
+    sort_candidates_by_priority
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 3 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main" ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}")" = "pull_request:1" ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[2]}")" = "pull_request:2" ]
 }
 
 @test "sort_candidates_by_priority puts integration before pull_request by default" {

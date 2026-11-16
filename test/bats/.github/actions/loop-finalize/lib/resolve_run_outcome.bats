@@ -103,7 +103,7 @@ setup() {
 run_case() {
     rm -f "${LOOP_FAILURE_FILE}" "${GITHUB_OUTPUT}"
     if [[ -n ${5} ]]; then
-        loop_failure_record "${5}" "${6}" "${LOOP_FAILURE_FILE}"
+        failure_record_write "${5}" "${6}" "${LOOP_FAILURE_FILE}"
     fi
     run env \
         ACTION_STATUS="${4}" \
@@ -199,7 +199,7 @@ run_named_case() {
     local recorded src long
     long="$(printf 'a%.0s' {1..600})"
     for src in "auth failed: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz" "${long}"; do
-        loop_failure_record "push" "${src}" "${BATS_TEST_TMPDIR}/first.json"
+        failure_record_write "push" "${src}" "${BATS_TEST_TMPDIR}/first.json"
         recorded="$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")"
         rm -f "${LOOP_FAILURE_FILE}" "${GITHUB_OUTPUT}"
         run env ACTION_STATUS=success AGENT_FAILURE_MESSAGE="${recorded}" AGENT_FAILURE_STAGE=push AGENT_RESULT=success DELIVERED_OUTCOME=pr_created bash "${SCRIPT}"
@@ -208,7 +208,7 @@ run_named_case() {
     done
     [[ ${recorded} == *"aaaa"* ]]
     [ "${#recorded}" -eq 500 ]
-    loop_failure_record "push" "auth failed: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz" "${BATS_TEST_TMPDIR}/first.json"
+    failure_record_write "push" "auth failed: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz" "${BATS_TEST_TMPDIR}/first.json"
     [[ "$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")" == *"[REDACTED]"* ]]
     [[ "$(jq -r '.failure_message' "${BATS_TEST_TMPDIR}/first.json")" != *"ghp_"* ]]
 }
@@ -218,7 +218,7 @@ run_named_case() {
     for name in success_created rejected unchanged watch_override; do
         run_named_case "${name}"
         [ "${status}" -eq 0 ]
-        run loop_failure_recorded "${LOOP_FAILURE_FILE}"
+        run failure_record_exists "${LOOP_FAILURE_FILE}"
         [ "${status}" -eq 1 ]
     done
 }

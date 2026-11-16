@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/go_test.sh",
+        "timeoutSec": 120
+      }
+    ]
+  },
+  "version": 1
+}

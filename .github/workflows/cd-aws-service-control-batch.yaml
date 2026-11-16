@@ -1,5 +1,22 @@
-# Reusable workflow: AWS Batch job queue control (enable/disable)
-# Enables or disables AWS Batch job queues.
+#######################################
+# Description:
+#   Reusable workflow: AWS Batch job queue control (enable/disable)
+#   Enables or disables AWS Batch job queues.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-service-control-batch
 
 on:
@@ -138,7 +155,6 @@ jobs:
             DISCOVERED_JSON=$(printf '%s\n' "${FILTERED_QUEUES[@]}" | jq -s .)
           fi
 
-          # echo "discovered_queues=$DISCOVERED_JSON" >> "$GITHUB_OUTPUT"
           DISCOVERED_B64=$(printf '%s' "$DISCOVERED_JSON" | base64 -w0)
           echo "discovered_queues_b64=$DISCOVERED_B64" >> "$GITHUB_OUTPUT"
           echo "✅ Discovered ${#FILTERED_QUEUES[@]} Batch job queue(s)"
@@ -157,8 +173,7 @@ jobs:
     steps:
       - name: Validate inputs
         id: validate-inputs
-        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           action: ${{ env.ACTION }}
           auto_discover: ${{ env.AUTO_DISCOVER }}

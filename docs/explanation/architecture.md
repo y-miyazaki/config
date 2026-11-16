@@ -35,7 +35,7 @@ The architecture separates:
 - `.apm/packages/terraform-hooks-*`: target-specific Terraform hooks (2 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration (AWS-specific Terraform instructions + 1 MCP server; install together with `terraform`)
 - `.apm/packages/go/`: Go-focused instructions and skills (1 instruction, 2 skills)
-- `.apm/packages/go-hooks-*`: target-specific Go hooks (1 hook per target: Claude, Copilot, Cursor)
+- `.apm/packages/go-hooks-*`: target-specific Go hooks (2 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
 
@@ -96,6 +96,7 @@ This repository dogfoods the recommended tier for CI and local validation. Consu
 - Hooks are **not** a quality guarantee. They lint or format changed files when a native binary is on `PATH`.
 - Most hook tools (`actionlint`, `golangci-lint`, `shellcheck`, `terraform`, `tflint`) are native binaries — not `npx`/`uvx` packages.
 - When a tool is missing, hooks exit 0 so agent sessions are not blocked. Users may not notice enforcement was skipped unless the hook emits a stderr notice.
+- Stop hooks block the agent at most `HOOK_BLOCK_LIMIT` times (default 2) per unchanged working-tree state. Each hook hashes the tracked diff and untracked file content and keeps the hash plus a report count per session and hook (session ID fields per agent: see [Tool Comparison Matrix (AI Agent Hooks)](../report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md)) under `${TMPDIR:-/tmp}/hook-state-<uid>/`. Once the count reaches the limit for the same hash, the hook exits 0 without running the tool. Any file change re-runs the tool, and a passing run clears the stored state. This keeps a failing check (for example a red test during test-first development) from blocking every stop, and the OS temp cleanup removes stale state.
 
 ### Skills — Explicit Validation
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2016,SC2143
 
-# Tests for .github/workflows/ci-loop-caller.yaml, .github/workflows/ci-loop-caller-entity.yaml, .github/workflows/ci-loop-agent.yaml
+# Tests for .github/workflows/ci-loop-caller.yaml,.github/workflows/ci-loop-caller-entity.yaml, .github/workflows/ci-loop-agent.yaml
 #
 # Use cases:
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
 # - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
+# - jobs that hold a write token (both detect jobs, both record-skip jobs, finalize-l1, finalize-l2) check out the trusted state branch on PR events
 # - agent jobs hold only read GitHub permissions and no App or GH_TOKEN secret; agent-l2 hands the branch to finalize-l2 as a bundle artifact
 # - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the loop-finalize outcome and failure stage
 # - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
@@ -24,6 +26,7 @@
 # - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
 # - Dogfood callers declare every command rule their skill needs; host .claude/settings.json allow rules are never active in CI
 # - reusable agent_tool_allowlist descriptions state host allow rules are not applied
+# - detect_items is an optional branch-caller boolean (default false) that reaches loop-detect as DETECT_ITEMS
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -373,19 +376,35 @@ dogfood_value() {
     [[ ${branch} == *"ci-loop-agent.yaml"* ]]
 }
 
-@test "both parse target steps name the bundle artifact the same way" {
-    local job script out
-    for job in agent-l2 finalize-l2; do
-        script="$(job_block "${AGENT}" "${job}" | step_block 'Parse Target' | run_script)"
-        [[ -n ${script} ]]
-        out="${BATS_TEST_TMPDIR}/github_output_${job}"
-        : > "${out}"
-        run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
-            TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
-            bash -c "${script}"
-        [ "$status" -eq 0 ]
-        grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
-    done
+@test "finalize-l2 takes the bundle artifact name from agent-l2 so a re-run attempt cannot change it" {
+    local script out
+    script="$(job_block "${AGENT}" agent-l2 | step_block 'Parse Target' | run_script)"
+    [[ -n ${script} ]]
+    out="${BATS_TEST_TMPDIR}/github_output"
+    : > "${out}"
+    run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=2 \
+        TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
+        bash -c "${script}"
+    [ "$status" -eq 0 ]
+    grep -qxF 'bundle_artifact_name=loop-agent-bundle-2-d4cedacd722526b8' "${out}"
+    # agent-l2 publishes the name as a job output; finalize-l2 computes none of its own.
+    job_block "${AGENT}" agent-l2 | grep -qF 'bundle_artifact_name: ${{ steps.target.outputs.bundle_artifact_name }}'
+    if job_block "${AGENT}" finalize-l2 | step_block 'Parse Target' | grep -q 'bundle_artifact_name\|GITHUB_RUN_ATTEMPT'; then
+        return 1
+    fi
+}
+
+@test "jobs that hold a write token check out the trusted state branch on PR events" {
+    local expected
+    expected="ref: \${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}"
+    job_block "${BRANCH_CALLER}" detect | grep -qF "${expected}"
+    job_block "${ENTITY_CALLER}" detect | grep -qF "${expected}"
+    job_block "${AGENT}" finalize-l1 | grep -qF "${expected}"
+    job_block "${AGENT}" finalize-l2 | grep -qF "${expected}"
+    job_block "${BRANCH_CALLER}" record-skip | grep -qF "${expected}"
+    job_block "${ENTITY_CALLER}" record-skip | grep -qF "${expected}"
+    # Exactly six pins: the read-only agent jobs keep the event ref the maker edits.
+    [ "$(grep -c "${expected}" "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}" | awk -F: '{s+=$2} END {print s}')" -eq 6 ]
 }
 
 @test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {
@@ -570,7 +589,7 @@ dogfood_value() {
 }
 
 @test "ci-loop-agent passes agent_edit_denylist through unmodified for loop-execute to default" {
-    # apply_platform_denylist_default (lib/loop/edit_paths.sh) coerces an
+    # edit_paths_apply_platform_denylist_default (lib/loop/edit_paths.sh) coerces an
     # empty AGENT_EDIT_DENYLIST to the platform default at loop start, so the
     # reusable caller must not hardcode or coalesce a domain-specific default.
     # shellcheck disable=SC2016
@@ -657,6 +676,7 @@ dogfood_value() {
             github-pr-revise) expected="${revise}" ;;
             github-issue-triage) expected='issue_comment L1' ;;
             github-pr-review) expected='pr_review L2' ;;
+            code-review) expected='issue_create L2' ;;
             changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
                 expected='pr_create L2'
                 ;;
@@ -671,7 +691,7 @@ dogfood_value() {
         fi
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers pass only declared inputs and every required input of the local reusable" {
@@ -700,7 +720,7 @@ dogfood_value() {
         done
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers pass the level-dependent inputs only on L2 and above" {
@@ -725,7 +745,7 @@ dogfood_value() {
         fi
         count=$((count + 1))
     done
-    [ "${count}" -eq 10 ]
+    [ "${count}" -eq 11 ]
 }
 
 @test "dogfood callers repeat no reusable default and no removed input" {
@@ -854,7 +874,7 @@ dogfood_value() {
         "        if: needs.agent-l2.result == 'success' && needs.agent-l2.outputs.has_changes == 'true'" \
         '        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2' \
         '        with:' \
-        '          name: ${{ steps.target.outputs.bundle_artifact_name }}' \
+        '          name: ${{ needs.agent-l2.outputs.bundle_artifact_name }}' \
         '          path: ${{ runner.temp }}/loop-agent-bundle')"
     [ "${step}" = "${expected}" ]
     # The bundle is fetched after the token is resolved and before Finalize runs.
@@ -907,12 +927,11 @@ dogfood_value() {
         TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","base":{"branch":"main"},"from":{"branch":"feat","ref":"def456"},"to":{"branch":"feat","pr_number":7}}' \
         bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name=loop-agent-bundle-1-d4cedacd722526b8 from_ref=def456 key=pull_request:7 pr_number=7)" ]
-    # An empty target_json names no bundle, so Download Agent Bundle cannot match one.
+    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref=def456 key=pull_request:7 pr_number=7)" ]
     : > "${out}"
     run env GITHUB_OUTPUT="${out}" GITHUB_RUN_ATTEMPT=1 TARGET_JSON='' bash -c "${script}"
     [ "$status" -eq 0 ]
-    [ "$(cat "${out}")" = "$(printf '%s\n' bundle_artifact_name= from_ref= key= pr_number=)" ]
+    [ "$(cat "${out}")" = "$(printf '%s\n' from_ref= key= pr_number=)" ]
 }
 
 @test "finalize-l2 runs loop-finalize with no step if" {
@@ -1082,7 +1101,7 @@ dogfood_value() {
     # loop-execute / loop-finalize; the ci-loop-agent input check covers them.
     local wf name
     local -a old_names=(
-        ack_trigger_comment additional_commit_paths agent_allowed_tools allowlist
+        trigger_thread_ack_comment additional_commit_paths agent_allowed_tools allowlist
         auto_merge base_ref branch_match branch_match_mode branch_prefix branch_state
         cli_version commit_message denylist detect_domain_env_json dispatch_hook_script
         dispatch_hook_token domain_persistence_script effort engine finalize_enabled
@@ -1178,6 +1197,13 @@ triage_block() {
 expected_tool_allowlist() {
     case "$1" in
         changelog) ;;
+        code-review)
+            cat << 'EOF'
+Bash(git cat-file:*)
+Bash(git ls-files:*)
+Bash(git rev-parse:*)
+EOF
+            ;;
         docs-updater | tech-debt | test-gap)
             cat << 'EOF'
 Bash(git remote get-url:*)
@@ -1199,6 +1225,7 @@ Bash(gh run list:*)
 Bash(gh run view:*)
 Bash(git remote get-url:*)
 Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
 Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
 Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
 EOF
@@ -1247,7 +1274,7 @@ EOF
     esac
 }
 
-LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
+LOOP_AGENT_CALLERS=(changelog code-review docs-updater refactor tech-debt test-gap ci-sweeper github-issue-autofix github-pr-revise github-pr-review github-issue-triage)
 
 @test "callers declare the tool rules their skill needs without host allow rules" {
     local name wf actual expected
@@ -1337,4 +1364,102 @@ LOOP_AGENT_CALLERS=(changelog docs-updater refactor tech-debt test-gap ci-sweepe
         [[ ${desc} == *'allow rules are not applied in CI'* ]]
         [[ ${desc} == *'Bash(gh issue view:*)'* ]]
     done
+}
+
+@test "agent_tool_denylist is wired to detect and agent-l2 only and absent from the entity caller" {
+    local keys
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_tool_denylist'
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' agent_engine'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    run ! grep -q agent_tool_denylist "${ENTITY_CALLER}"
+    job_block "${AGENT}" agent-l2 | grep -q 'agent_tool_denylist: ${{ inputs.agent_tool_denylist }}'
+    run ! grep -q agent_tool_denylist <(job_block "${AGENT}" agent-l1)
+    workflow_inputs "${BRANCH_CALLER}" | grep -qx agent_tool_denylist
+    workflow_inputs "${AGENT}" | grep -qx agent_tool_denylist
+}
+
+@test "detect_items defaults to false in ci-loop-caller and loop-detect and reaches the detect env" {
+    local keys
+    input_block "${BRANCH_CALLER}" detect_items | grep -qx '        default: false'
+    input_block "${BRANCH_CALLER}" detect_items | grep -qx '        type: boolean'
+    [ -z "$(workflow_required_inputs "${BRANCH_CALLER}" | grep -x detect_items)" ]
+    action_inputs loop-detect | grep -qx detect_items
+    [ -z "$(action_required_inputs loop-detect | grep -x detect_items)" ]
+    awk '/^  detect_items:/ {f = 1; next} f && /^  [a-z]/ {exit} f' "${ACTIONS_DIR}/loop-detect/action.yml" \
+        | grep -qx '    default: "false"'
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' detect_items'
+    grep -qF "detect_items: \${{ inputs.detect_items && 'true' || 'false' }}" "${BRANCH_CALLER}"
+    grep -qF 'DETECT_ITEMS: ${{ inputs.detect_items }}' "${ACTIONS_DIR}/loop-detect/action.yml"
+    run ! grep -q detect_items "${ENTITY_CALLER}"
+}
+
+@test "detect_script is optional for the branch caller and loop-detect and required for the entity caller" {
+    [ -z "$(workflow_required_inputs "${BRANCH_CALLER}" | grep -x detect_script)" ]
+    [ -z "$(action_required_inputs loop-detect | grep -x detect_script)" ]
+    workflow_required_inputs "${ENTITY_CALLER}" | grep -qx detect_script
+    input_block "${BRANCH_CALLER}" detect_script | grep -qF 'default: ""'
+    input_block "${BRANCH_CALLER}" detect_script | grep -qi 'built-in'
+}
+
+@test "finalize_issue_limit defaults to 5 and reaches loop-detect and both finalize steps" {
+    local keys
+    input_block "${BRANCH_CALLER}" finalize_issue_limit | grep -q 'default: 5'
+    input_block "${AGENT}" finalize_issue_limit | grep -q 'default: 5'
+    keys="$(pinned_action_steps "${BRANCH_CALLER}")"
+    grep -P '^loop-detect\t' <<< "${keys}" | grep -q ' finalize_issue_limit'
+    agent_call_with_keys "${BRANCH_CALLER}" | grep -qx finalize_issue_limit
+    [ "$(grep -c 'finalize_issue_limit: ${{ format' "${AGENT}")" -eq 2 ]
+    action_inputs loop-finalize | grep -qx finalize_issue_limit
+    action_inputs loop-detect | grep -qx finalize_issue_limit
+    run ! grep -q finalize_issue_limit "${ENTITY_CALLER}"
+}
+
+@test "issue_create callers never apply an intake label" {
+    local wf block checked=0 label
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        [[ "$(dogfood_value "${wf}" delivery)" == "issue_create" ]] || continue
+        block="$(triage_block "${wf}" finalize_label_allowlist)"
+        [ -n "${block}" ]
+        for label in autofix needs-triage triage:needs-info; do
+            run ! grep -qx "${label}" <<< "${block}"
+        done
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -ge 1 ]
+}
+
+@test "on-loop-code-review uses L2 issue_create with REJECT on unchanged and denies Agent" {
+    local wf="${ROOT}/.github/workflows/on-loop-code-review.yaml"
+    [ -f "${wf}" ]
+    [ "$(dogfood_value "${wf}" level)" = "L2" ]
+    [ "$(dogfood_value "${wf}" delivery)" = "issue_create" ]
+    [ "$(dogfood_value "${wf}" agent_unchanged_verdict)" = "REJECT" ]
+    [ "$(dogfood_value "${wf}" agent_engine)" = "claude" ]
+    [ "$(dogfood_value "${wf}" loop_name)" = "code-review" ]
+    [ "$(dogfood_value "${wf}" finalize_issue_limit)" = "3" ]
+    [ "$(dogfood_value "${wf}" agent_edit_target)" = "report" ]
+    [ "$(dogfood_value "${wf}" agent_edit_allowlist)" = ".loop-code-review/findings.json" ]
+    [ "$(dogfood_value "${wf}" finalize_script)" = "scripts/self/loop/render_code_review_issues.sh" ]
+    [ -z "$(dogfood_value "${wf}" detect_script)" ]
+    [ "$(triage_block "${wf}" agent_tool_denylist)" = "Agent" ]
+    [ "$(triage_block "${wf}" finalize_label_allowlist)" = "loop:code-review" ]
+    run dogfood_value "${wf}" agent_cli_version
+    [[ $output =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    grep -qx '  group: loop-state-main' "${wf}"
+    grep -q 'cron:' "${wf}"
+}
+
+@test "loop-budget has a code-review entry with every cap" {
+    run jq -e '.loops["code-review"] | (.max_runs_per_day > 0) and (.max_tokens_per_day > 0) and (.max_cost_usd_per_day > 0) and (.max_attempts_per_run > 0)' "${ROOT}/.loop/loop-budget.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "renovate tracks the code-review claude CLI pin without automerge" {
+    run jq -e '
+        (.customManagers // [] | map(select(.depNameTemplate == "@anthropic-ai/claude-code" and .datasourceTemplate == "npm"
+            and (.managerFilePatterns | join(" ") | contains("on-loop-code-review")))) | length) == 1
+        and ((.packageRules | map(select((.matchDepNames // []) | index("@anthropic-ai/claude-code"))) | last | .automerge) == false)' "${ROOT}/.github/renovate.json"
+    [ "$status" -eq 0 ]
 }

@@ -1,5 +1,22 @@
-# Reusable workflow: repository security (Trivy + SBOM + dependency review)
-# Runs Trivy filesystem scanning, CycloneDX SBOM generation, and PR dependency review.
+#######################################
+# Description:
+#   Reusable workflow: repository security (Trivy + SBOM + dependency review)
+#   Runs Trivy filesystem scanning, CycloneDX SBOM generation, and PR dependency review.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-security.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-security
 
 on:
@@ -26,7 +43,7 @@ on:
         required: false
         type: string
       trivy_version:
-        default: v0.76.1
+        default: v0.76.2
         description: "Trivy version to use"
         required: false
         type: string
@@ -90,7 +107,7 @@ jobs:
     steps:
       - name: Detect SARIF Upload Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
 
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -133,7 +150,7 @@ jobs:
 
       - name: Upload Trivy SARIF to GitHub Security
         if: always() && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-fs.sarif') != ''
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: trivy-fs
           sarif_file: security/trivy-fs.sarif
@@ -166,8 +183,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             sbom-${{ env.ARTIFACT_PREFIX }}

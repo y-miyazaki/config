@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: detect loop work per entity
+#   Runs the detect script for Issue or PR entities and builds target_matrix.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-entity-detect@<commit SHA>
+#   Called by: ci-loop-caller-entity.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs loop_name, level, delivery, agent_maker_skill_name, detect_script, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#   - docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-github-pr-review-workflow-design.md
+#######################################
 name: loop-entity-detect
 description: >-
   Run one entity detect_script, apply light budget check, build single-target
@@ -41,6 +62,10 @@ inputs:
   delivery:
     description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
     required: true
+  detect_env_json:
+    default: ""
+    description: "JSON object of environment variables exported to the detect script only (not to later steps). Keys must match ^[A-Z_][A-Z0-9_]*$; reserved names (GITHUB_*, RUNNER_*, GIT_*, GH_*, PATH, BASH_*, LD_*, ...) and names that are already set are rejected; values must be scalars without newlines"
+    required: false
   detect_script:
     description: Path to domain detect_*.sh script (must write result.entity.kind issue | pr when skip is false)
     required: true
@@ -55,6 +80,10 @@ inputs:
   github_token:
     description: Resolved GitHub token for detect scripts and API calls
     required: true
+  handoff_artifact_suffix:
+    default: ""
+    description: "Optional suffix appended to the handoff artifact name loop-handoff-<run_id> (^[A-Za-z0-9._-]*$); set per matrix call to avoid upload name conflicts"
+    required: false
   level:
     description: "Autonomy level: L1 | L2 | L3 (no default; empty fails)"
     required: true
@@ -65,6 +94,9 @@ inputs:
     default: .loop/loop-run-log.md
     description: Path to loop run log
     required: false
+  state_branch:
+    description: Branch that stores .loop/* state; the state file and run log are read from it, not from the checked-out tree
+    required: true
   state_file:
     default: ""
     description: Optional state file path override
@@ -82,8 +114,11 @@ outputs:
   should_run:
     description: Whether the execute job should run
     value: ${{ steps.detect.outputs.should_run }}
+  skip_detail:
+    description: One-line, redacted detect message of a detect-script skip (empty otherwise)
+    value: ${{ steps.detect.outputs.skip_detail }}
   skip_reason:
-    description: Why execution was skipped (budget | detect_skip). Invalid level/delivery inputs, a missing or invalid result.entity.kind, and a target kind the delivery does not allow fail the step without skip_reason outputs.
+    description: Why execution was skipped (budget | domain:<reason>; domain:detect when the detect script gives no reason). Invalid level/delivery inputs, a missing or invalid result.entity.kind, and a target kind the delivery does not allow fail the step without skip_reason outputs.
     value: ${{ steps.detect.outputs.skip_reason }}
   state_file:
     description: Resolved loop state JSON path
@@ -104,7 +139,7 @@ runs:
         set -euo pipefail
         # shellcheck disable=SC1091
         source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
-        resolve_state_file
+        resolve_state_file_emit
 
     - name: Detect Entity Target
       id: detect
@@ -120,6 +155,7 @@ runs:
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
+        DETECT_ENV_JSON: ${{ inputs.detect_env_json }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
@@ -127,18 +163,22 @@ runs:
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
+        STATE_FILE: ${{ steps.paths.outputs.state_file }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name
       id: handoff
       if: steps.detect.outputs.should_run == 'true'
       shell: bash
-      run: echo "artifact_name=loop-handoff-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+      env:
+        HANDOFF_ARTIFACT_SUFFIX: ${{ inputs.handoff_artifact_suffix }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/handoff_name.sh"
 
     - name: Upload Loop Handoff Artifact
       if: steps.detect.outputs.should_run == 'true'
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: loop-handoff-${{ github.run_id }}
+        name: ${{ steps.handoff.outputs.artifact_name }}
         path: ${{ runner.temp }}/loop-handoff
         retention-days: 1

@@ -224,3 +224,7 @@ Resolve in the plan with tests:
 - Duplicate-issue lane.
 - Preview releases / reporter verification.
 - Mention triggers.
+
+## Update (2026-11-11): scheduled intake
+
+`on-loop-github-issue-triage.yaml` now also runs on a daily `schedule` for Issues that the code-review loop filed. The Webhook `issues` branch rejects Issues labeled `loop:code-review`, so the two paths handle disjoint Issues. See [Issue Triage Workflow Design](../../explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md#intake-paths) and [定期実行での取り込み(対象ごとのターゲット、triage / autofix の定期実行)](2026-11-11-loop-scheduled-intake-design.md).

@@ -80,6 +80,8 @@ Do **not** “fix only ci-sweeper” for envelope wording that all loop entry sk
 | Interactive | User prompt                               | Optional; gather from prompt if missing | Not required              |
 | Automation  | Caller prompt + detect JSON + Constraints | Caller-provided                         | Required in **this** repo |
 
+When the caller sets `detect_items: true`, the detect JSON `result` may carry `items[]` (each `{key, entity: {kind, number}, context, verifier_context}`), and the loop runs once per item. See [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#per-target-items-detect_items).
+
 `.apm/CLAUDE.md` Skill design: Interactive MUST run without loop callers.
 
 ## Related

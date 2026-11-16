@@ -4,23 +4,23 @@
 # Tests for .github/actions/lib/loop/trigger_thread.sh
 #
 # Use cases:
-# - build_done_reply_body leads with the agent report before any metadata
-# - build_done_reply_body promotes the reason to the lead when no report exists
-# - build_done_reply_body lists changed files and diff stat under the lead
-# - build_done_reply_body caps a long changed-files list
-# - build_done_reply_body collapses outcome verdict commit and run into details
-# - build_done_reply_body omits empty optional fields
-# - build_done_reply_body marks a REJECT verdict with the failure icon
-# - build_done_reply_body marks a no-changes outcome with the neutral icon
-# - build_done_reply_body blockquotes every line of a multi-line reason
-# - ack_trigger_comment no-ops without comment id
-# - ack_trigger_comment posts eyes on issue_comment
-# - ack_trigger_comment posts eyes on pull_request_review_comment
-# - ack_trigger_comment skips dispatch events
-# - ack_gathered_comments ACKs each comment by source
-# - ack_gathered_comments falls back to trigger when empty
-# - reply_trigger_comment posts review comment replies
-# - reply_trigger_comment posts issue comment follow-up
+# - trigger_thread_build_done_reply_body leads with the agent report before any metadata
+# - trigger_thread_build_done_reply_body promotes the reason to the lead when no report exists
+# - trigger_thread_build_done_reply_body lists changed files and diff stat under the lead
+# - trigger_thread_build_done_reply_body caps a long changed-files list
+# - trigger_thread_build_done_reply_body collapses outcome verdict commit and run into details
+# - trigger_thread_build_done_reply_body omits empty optional fields
+# - trigger_thread_build_done_reply_body marks a REJECT verdict with the failure icon
+# - trigger_thread_build_done_reply_body marks a no-changes outcome with the neutral icon
+# - trigger_thread_build_done_reply_body blockquotes every line of a multi-line reason
+# - trigger_thread_ack_comment no-ops without comment id
+# - trigger_thread_ack_comment posts eyes on issue_comment
+# - trigger_thread_ack_comment posts eyes on pull_request_review_comment
+# - trigger_thread_ack_comment skips dispatch events
+# - trigger_thread_ack_gathered_comments ACKs each comment by source
+# - trigger_thread_ack_gathered_comments falls back to trigger when empty
+# - trigger_thread_reply_comment posts review comment replies
+# - trigger_thread_reply_comment posts issue comment follow-up
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -60,46 +60,46 @@ MOCK
     chmod +x "${MOCK_BIN}/gh"
 }
 
-@test "ack_trigger_comment no-ops without comment id" {
+@test "trigger_thread_ack_comment no-ops without comment id" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="issue_comment"
     TRIGGER_COMMENT_ID=""
-    run ack_trigger_comment
+    run trigger_thread_ack_comment
     [ "$status" -eq 0 ]
     [ ! -f "${MOCK_BIN}/gh.log" ]
 }
 
-@test "ack_trigger_comment posts eyes on issue_comment" {
+@test "trigger_thread_ack_comment posts eyes on issue_comment" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="issue_comment"
     TRIGGER_COMMENT_ID="99"
-    run ack_trigger_comment
+    run trigger_thread_ack_comment
     [ "$status" -eq 0 ]
     grep -q "issues/comments/99/reactions" "${MOCK_BIN}/gh.log"
     grep -q "content=eyes" "${MOCK_BIN}/gh.log"
 }
 
-@test "ack_trigger_comment posts eyes on pull_request_review_comment" {
+@test "trigger_thread_ack_comment posts eyes on pull_request_review_comment" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="pull_request_review_comment"
     TRIGGER_COMMENT_ID="77"
-    run ack_trigger_comment
+    run trigger_thread_ack_comment
     [ "$status" -eq 0 ]
     grep -q "pulls/comments/77/reactions" "${MOCK_BIN}/gh.log"
 }
 
-@test "ack_trigger_comment skips dispatch events" {
+@test "trigger_thread_ack_comment skips dispatch events" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="workflow_dispatch"
     TRIGGER_COMMENT_ID="99"
-    run ack_trigger_comment
+    run trigger_thread_ack_comment
     [ "$status" -eq 0 ]
     [ ! -f "${MOCK_BIN}/gh.log" ]
 }
 
-@test "build_done_reply_body leads with the agent report before any metadata" {
+@test "trigger_thread_build_done_reply_body leads with the agent report before any metadata" {
     local lead_line details_line
-    run build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Added the durable-functions callout." "" ""
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Added the durable-functions callout." "" ""
     [ "$status" -eq 0 ]
     lead_line="$(grep -n "Added the durable-functions callout." <<< "${output}" | head -1 | cut -d: -f1)"
     details_line="$(grep -n "<details>" <<< "${output}" | head -1 | cut -d: -f1)"
@@ -111,9 +111,9 @@ MOCK
     [[ $output != *"not auto-resolved"* ]]
 }
 
-@test "build_done_reply_body promotes the reason to the lead when no report exists" {
+@test "trigger_thread_build_done_reply_body promotes the reason to the lead when no report exists" {
     local lead_line details_line
-    run build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
+    run trigger_thread_build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
     [ "$status" -eq 0 ]
     lead_line="$(grep -n "No file changes produced" <<< "${output}" | head -1 | cut -d: -f1)"
     details_line="$(grep -n "<details>" <<< "${output}" | head -1 | cut -d: -f1)"
@@ -122,8 +122,8 @@ MOCK
     [ "$(grep -c "No file changes produced" <<< "${output}")" -eq 1 ]
 }
 
-@test "build_done_reply_body lists changed files and diff stat under the lead" {
-    run build_done_reply_body "push" "APPROVE" "ok" "" "" "" "Report." "docs/a.md,docs/b.md" " 2 files changed, 8 insertions(+)"
+@test "trigger_thread_build_done_reply_body lists changed files and diff stat under the lead" {
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "ok" "" "" "" "Report." "docs/a.md,docs/b.md" " 2 files changed, 8 insertions(+)"
     [ "$status" -eq 0 ]
     [[ $output == *"**Files changed**"* ]]
     [[ $output == *"- \`docs/a.md\`"* ]]
@@ -131,25 +131,25 @@ MOCK
     [[ $output == *"2 files changed, 8 insertions(+)"* ]]
 }
 
-@test "build_done_reply_body links changed files to the commit when its URL is known" {
-    run build_done_reply_body "push" "APPROVE" "ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "" "Report." "docs/a.md" ""
+@test "trigger_thread_build_done_reply_body links changed files to the commit when its URL is known" {
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "" "Report." "docs/a.md" ""
     [ "$status" -eq 0 ]
     [[ $output == *"- [docs/a.md](https://github.com/o/r/blob/abcdef012345/docs/a.md)"* ]]
     [[ $output != *"- \`docs/a.md\`"* ]]
 }
 
-@test "build_done_reply_body caps a long changed-files list" {
+@test "trigger_thread_build_done_reply_body caps a long changed-files list" {
     local files
     files="f1.md,f2.md,f3.md,f4.md,f5.md,f6.md,f7.md,f8.md,f9.md,f10.md,f11.md,f12.md"
-    run build_done_reply_body "push" "APPROVE" "" "" "" "" "Report." "${files}" ""
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "" "" "" "" "Report." "${files}" ""
     [ "$status" -eq 0 ]
     [[ $output == *"- \`f10.md\`"* ]]
     [[ $output != *"- \`f11.md\`"* ]]
     [[ $output == *"2 more"* ]]
 }
 
-@test "build_done_reply_body collapses outcome verdict commit and run into details" {
-    run build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Report." "" ""
+@test "trigger_thread_build_done_reply_body collapses outcome verdict commit and run into details" {
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Report." "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"| outcome | push |"* ]]
@@ -160,67 +160,67 @@ MOCK
     [[ $output == *"</details>"* ]]
 }
 
-@test "build_done_reply_body omits empty optional fields" {
-    run build_done_reply_body "no-changes" "" "" "" "" "" "" "" ""
+@test "trigger_thread_build_done_reply_body omits empty optional fields" {
+    run trigger_thread_build_done_reply_body "no-changes" "" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
     [[ $output != *"| verdict |"* ]]
     [[ $output != *"| commit |"* ]]
     [[ $output != *"**Files changed**"* ]]
 }
 
-@test "build_done_reply_body records a REJECT outcome in the meta table" {
-    run build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
+@test "trigger_thread_build_done_reply_body records a REJECT outcome in the meta table" {
+    run trigger_thread_build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"| outcome | rejected |"* ]]
 }
 
-@test "build_done_reply_body records a no-changes outcome in the meta table" {
-    run build_done_reply_body "no-changes" "APPROVE" "" "" "" "" "" "" ""
+@test "trigger_thread_build_done_reply_body records a no-changes outcome in the meta table" {
+    run trigger_thread_build_done_reply_body "no-changes" "APPROVE" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"| outcome | no-changes |"* ]]
 }
 
-@test "build_done_reply_body blockquotes every line of a multi-line reason" {
-    run build_done_reply_body "push" "APPROVE" "$(printf 'first line\nsecond line')" "" "" "" "Report." "" ""
+@test "trigger_thread_build_done_reply_body blockquotes every line of a multi-line reason" {
+    run trigger_thread_build_done_reply_body "push" "APPROVE" "$(printf 'first line\nsecond line')" "" "" "" "Report." "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"> first line"* ]]
     [[ $output == *"> second line"* ]]
 }
 
-@test "reply_trigger_comment posts review comment replies" {
+@test "trigger_thread_reply_comment posts review comment replies" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="pull_request_review_comment"
     TRIGGER_COMMENT_ID="55"
-    run reply_trigger_comment "### Loop done"
+    run trigger_thread_reply_comment "### Loop done"
     [ "$status" -eq 0 ]
     grep -q "pulls/42/comments/55/replies" "${MOCK_BIN}/gh.log"
 }
 
-@test "reply_trigger_comment posts issue comment follow-up" {
+@test "trigger_thread_reply_comment posts issue comment follow-up" {
     install_gh_mock 0
     GITHUB_EVENT_NAME="issue_comment"
     TRIGGER_COMMENT_ID="55"
-    run reply_trigger_comment "### Loop done"
+    run trigger_thread_reply_comment "### Loop done"
     [ "$status" -eq 0 ]
     grep -q "issues/42/comments" "${MOCK_BIN}/gh.log"
 }
 
-@test "ack_gathered_comments ACKs each comment by source" {
+@test "trigger_thread_ack_gathered_comments ACKs each comment by source" {
     install_gh_mock 0
     ACK_COMMENTS_JSON='[{"comment_id":11,"source":"issue_comment"},{"comment_id":22,"source":"pull_request_review_comment"}]'
-    run ack_gathered_comments
+    run trigger_thread_ack_gathered_comments
     [ "$status" -eq 0 ]
     grep -q "issues/comments/11/reactions" "${MOCK_BIN}/gh.log"
     grep -q "pulls/comments/22/reactions" "${MOCK_BIN}/gh.log"
 }
 
-@test "ack_gathered_comments falls back to trigger when empty" {
+@test "trigger_thread_ack_gathered_comments falls back to trigger when empty" {
     install_gh_mock 0
     ACK_COMMENTS_JSON='[]'
     GITHUB_EVENT_NAME="issue_comment"
     TRIGGER_COMMENT_ID="99"
-    run ack_gathered_comments
+    run trigger_thread_ack_gathered_comments
     [ "$status" -eq 0 ]
     grep -q "issues/comments/99/reactions" "${MOCK_BIN}/gh.log"
 }

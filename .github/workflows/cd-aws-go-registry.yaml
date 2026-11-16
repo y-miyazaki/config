@@ -1,5 +1,22 @@
-# Reusable workflow: Build and push Docker images to Amazon ECR
-# Builds Go application Docker images and pushes them to ECR.
+#######################################
+# Description:
+#   Reusable workflow: Build and push Docker images to Amazon ECR
+#   Builds Go application Docker images and pushes them to ECR.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-aws-go-registry.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-aws-go-registry
 
 on:
@@ -49,7 +66,7 @@ on:
         required: false
         type: boolean
       trivy_version:
-        default: v0.76.1
+        default: v0.76.2
         description: "Trivy version for image scanning"
         required: false
         type: string
@@ -180,11 +197,11 @@ jobs:
       - name: Detect SARIF Upload Support
         id: detect
         if: env.TRIVY_IMAGE_SCAN == 'true'
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
 
       - name: Upload Trivy image SARIF to GitHub Security
         if: always() && env.TRIVY_IMAGE_SCAN == 'true' && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-image.sarif') != ''
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: trivy-image
           sarif_file: security/trivy-image.sarif
@@ -199,8 +216,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             trivy-image-${{ env.COMPONENT }}

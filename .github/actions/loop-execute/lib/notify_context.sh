@@ -196,33 +196,9 @@ function parse_agent_summary {
 _LOOP_NOTIFY_REDACT_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/redact.sh disable=SC1091
 source "${_LOOP_NOTIFY_REDACT_LIB}/redact.sh"
-
-#######################################
-# truncate_text: Truncate text to max length
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#   $2 - Maximum length
-#
-# Outputs:
-#   Truncated text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function truncate_text {
-    local text="$1"
-    local max="$2"
-    if [[ ${#text} -le ${max} ]]; then
-        printf '%s' "${text}"
-    else
-        printf '%s' "${text:0:max}"
-    fi
-}
+# shellcheck source=../../lib/loop/text.sh
+# shellcheck disable=SC1091
+source "${_LOOP_NOTIFY_REDACT_LIB}/text.sh"
 
 #######################################
 # validate_required_inputs: Validate required notify_context environment
@@ -318,13 +294,13 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "notify_context" "detect result JSON is invalid (inline)" "${STATUS_DIR}/failure.json"
+            failure_record_write "notify_context" "detect result JSON is invalid (inline)" "${STATUS_DIR}/failure.json"
         fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1
     fi
 
-    detect_json="$(loop_handoff_resolve_detect_result_json)"
+    detect_json="$(handoff_resolve_detect_result_json)"
 
     validate_required_inputs
 
@@ -334,7 +310,7 @@ function main {
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "notify_context" "detect result JSON is invalid (handoff)" "${STATUS_DIR}/failure.json"
+            failure_record_write "notify_context" "detect result JSON is invalid (handoff)" "${STATUS_DIR}/failure.json"
         fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1
@@ -356,7 +332,7 @@ function main {
     fi
 
     fix_summary="$(build_fix_summary "${detect_json}")"
-    fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
+    fix_summary="$(text_truncate "$(redact_sensitive_text "${fix_summary}")" 2000)"
 
     changed_files_json='[]'
     diff_stat=""
@@ -390,20 +366,20 @@ function main {
         else
             diff_stat="$(git diff --stat "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null | tail -1 || true)"
         fi
-        diff_stat="$(truncate_text "$(redact_sensitive_text "${diff_stat}")" 500)"
+        diff_stat="$(text_truncate "$(redact_sensitive_text "${diff_stat}")" 500)"
     fi
 
     if [[ -n ${STATUS_DIR} && -d ${STATUS_DIR} ]]; then
         last_output="$(find "${STATUS_DIR}" -name 'agent-output.txt' 2> /dev/null | sort -V | tail -1 || true)"
         if [[ -n ${last_output} ]]; then
             agent_summary="$(parse_agent_summary "${last_output}")"
-            agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
+            agent_summary="$(text_truncate "$(redact_sensitive_text "${agent_summary}")" 2000)"
             agent_report_overview="$(extract_agent_report_overview "${last_output}")"
-            agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
+            agent_report_overview="$(text_truncate "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
             agent_report_summary="$(extract_agent_report_summary "${last_output}")"
-            agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
+            agent_report_summary="$(text_truncate "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
             agent_report_verification="$(extract_agent_report_verification "${last_output}")"
-            agent_report_verification="$(truncate_text "$(redact_sensitive_text "${agent_report_verification}")" 2000)"
+            agent_report_verification="$(text_truncate "$(redact_sensitive_text "${agent_report_verification}")" 2000)"
         fi
     fi
 

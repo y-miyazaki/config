@@ -1,3 +1,23 @@
+#######################################
+# Description:
+#   Composite action: append the loop run log
+#   Appends one JSONL entry to .loop/loop-run-log.md, prunes entries older than 30 days, and commits to the state branch.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-run-log@<commit SHA>
+#   Called by: ci-loop-caller.yaml, ci-loop-caller-entity.yaml, ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs loop_name, outcome, state_branch, github_token
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#######################################
 name: loop-run-log
 description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the state branch."
 
@@ -37,7 +57,7 @@ inputs:
     description: "GitHub Actions workflow run ID"
     required: false
   outcome:
-    description: "Run outcome (pr_created | pr_pushed | reported | issue_commented | pr_reviewed | unchanged | rejected | error | skipped)"
+    description: "Run outcome (pr_created | pr_pushed | reported | issue_commented | issue_created | pr_reviewed | unchanged | rejected | error | skipped)"
     required: true
   run_log_file:
     default: ".loop/loop-run-log.md"
@@ -47,13 +67,21 @@ inputs:
     default: ""
     description: "Workflow run start timestamp (ISO 8601) for duration calculation"
     required: false
+  skip_detail:
+    default: ""
+    description: "One-line detect message recorded as skip_detail in run log JSON (empty when none)"
+    required: false
   skip_reason:
     default: "none"
-    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing)"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing | domain:<reason>)"
     required: false
   state_branch:
     description: "Branch hosting .loop/* state files; the run log commit is pushed here"
     required: true
+  target_key:
+    default: ""
+    description: "Target key recorded as target_key in run log JSON (empty when the run has no target)"
+    required: false
   usage_json:
     default: ""
     description: "Measured token usage JSON from loop-execute (empty when unavailable)"
@@ -87,8 +115,10 @@ runs:
         OUTCOME: ${{ inputs.outcome }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
+        SKIP_DETAIL: ${{ inputs.skip_detail }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         STATE_BRANCH: ${{ inputs.state_branch }}
+        TARGET_KEY: ${{ inputs.target_key }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

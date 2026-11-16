@@ -1,9 +1,22 @@
-# Loop workflow: CI sweeper
-# Reacts to failed CI workflow runs (workflow_run), runs bounded Agent→Verify loop, then finalizes.
-# Design doc: docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
-# Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
-# Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#######################################
+# Description:
+#   Loop workflow: CI sweeper
+#   Reacts to failed CI workflow runs (workflow_run), runs bounded Agent→Verify loop, then finalizes.
+#
+# Usage:
+#   Runs on: workflow_dispatch, workflow_run
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   - Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+#   - Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
+#   - Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: on-loop-ci-sweeper
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -17,6 +30,7 @@ on:
       - on-cd-mkdocs
       - on-ci-push-apm-audit
       - on-ci-push-github-actions-workflow
+      - on-ci-push-go
       - on-ci-push-markdown
       - on-ci-push-mise-update-lock
       - on-ci-push-shell-script
@@ -94,6 +108,7 @@ jobs:
         | ----------------------------------- | ----------------------------------------------- |
         | on-ci-push-apm-audit              | (apm install/audit; run affected CI checks)     |
         | on-ci-push-github-actions-workflow  | github-actions-validation                       |
+        | on-ci-push-go                       | go-validation                                   |
         | on-ci-push-shell-script             | shell-script-validation                         |
         | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
         | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
@@ -105,6 +120,7 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: ci-sweeper
+      agent_report_check: paths
       # Sweeper reads failing workflow runs and job logs; it never writes to GitHub.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
@@ -112,6 +128,7 @@ jobs:
         Bash(gh run view:*)
         Bash(git remote get-url:*)
         Bash(bash .claude/skills/github-actions-validation/scripts/validate.sh:*)
+        Bash(bash .claude/skills/go-validation/scripts/validate.sh:*)
         Bash(bash .claude/skills/markdown-validation/scripts/validate.sh:*)
         Bash(bash .claude/skills/shell-script-validation/scripts/validate.sh:*)
       agent_unchanged_verdict: REJECT

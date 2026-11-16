@@ -43,7 +43,7 @@
 #     still shows its old path. .loop/ is not excluded.
 #   - .github/workflows/ changes need an allowlist pattern starting with
 #     .github/; ** or an empty allowlist does not allow them.
-#   - Changed paths come from list_diff_paths (-z, core.quotePath=false), so
+#   - Changed paths come from edit_paths_list_diff_paths (-z, core.quotePath=false), so
 #     non-ASCII names are checked unquoted; a path with a control character,
 #     double quote, or backslash fails the push.
 #   - Never force-push; an existing remote branch fails. The ls-remote check
@@ -72,10 +72,15 @@ umask 027
 export LC_ALL=C.UTF-8
 
 _LOOP_PUSH_AGENT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh disable=SC1091
+source "${_LOOP_PUSH_AGENT_LIB_DIR}/check_names.sh"
 # shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
 source "${_LOOP_PUSH_AGENT_LIB_DIR}/edit_paths.sh"
 # shellcheck source=../../lib/loop/failure_record.sh disable=SC1091
 source "${_LOOP_PUSH_AGENT_LIB_DIR}/failure_record.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${_LOOP_PUSH_AGENT_LIB_DIR}/git_auth.sh"
 
 #######################################
 # Global variables
@@ -131,7 +136,7 @@ function collect_workflow_violations {
         [[ ${file} == .github/workflows/* ]] || continue
         matched="false"
         for pattern in "${github_patterns[@]}"; do
-            if path_matches_glob "${file}" "${pattern}"; then
+            if edit_paths_path_matches_glob "${file}" "${pattern}"; then
                 matched="true"
                 break
             fi
@@ -140,27 +145,6 @@ function collect_workflow_violations {
             printf '%s\n' "${file}"
         fi
     done <<< "${changed_files}"
-}
-
-#######################################
-# configure_git_auth: Set commit identity and HTTPS push credentials
-#
-# Globals:
-#   GITHUB_TOKEN - Token used for http.extraheader
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 on success, non-zero when git config fails
-#######################################
-function configure_git_auth {
-    git config user.name "github-actions[bot]" \
-        && git config user.email "github-actions[bot]@users.noreply.github.com" \
-        && git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 }
 
 #######################################
@@ -183,7 +167,7 @@ function fail_push {
     local message="$1"
 
     write_outputs "${VALIDATED_BRANCH}" "false" "true"
-    if ! loop_failure_record "push" "${message}" "${LOOP_FAILURE_FILE}"; then
+    if ! failure_record_write "push" "${message}" "${LOOP_FAILURE_FILE}"; then
         echo "::warning::push_agent_branch: could not write the failure record"
     fi
     printf '::error::push_agent_branch: %s\n' "$(redact_sensitive_text "${message//$'\n'/ }")"
@@ -206,7 +190,7 @@ function fail_push {
 #
 # Returns:
 #   0 on success, 1 when git diff fails, 2 when a path has unsafe characters
-#   (see list_diff_paths)
+#   (see edit_paths_list_diff_paths)
 #######################################
 function list_changed_files {
     local from_ref="$1"
@@ -219,7 +203,7 @@ function list_changed_files {
     else
         range="refs/remotes/origin/${base_branch}...refs/heads/${branch}"
     fi
-    list_diff_paths "${range}" --
+    edit_paths_list_diff_paths "${range}" --
 }
 
 #######################################
@@ -239,7 +223,7 @@ function list_changed_files {
 #   None
 #
 # Returns:
-#   0 when the name is <prefix>/<skill>/YYYYMMDD-HHMMSS, is a valid ref, and
+#   0 when the name is <prefix>/<skill>/YYYYMMDD-HHMMSS[-slug], is a valid ref, and
 #   differs from to.branch and the state branch; 1 otherwise (also when the
 #   prefix or skill is empty)
 #######################################
@@ -252,11 +236,11 @@ function validate_agent_branch {
     local head suffix
 
     [[ -n ${branch} && -n ${prefix} && -n ${skill} ]] || return 1
-    [[ ${branch} =~ ^[A-Za-z0-9/_.-]+$ && ${branch} != -* ]] || return 1
+    check_names_branch "${branch}" || return 1
     head="${prefix}/${skill}/"
     [[ ${branch} == "${head}"* ]] || return 1
     suffix="${branch#"${head}"}"
-    [[ ${suffix} =~ ^[0-9]{8}-[0-9]{6}$ ]] || return 1
+    [[ ${suffix} =~ ^[0-9]{8}-[0-9]{6}(-[A-Za-z0-9._-]{1,48})?$ ]] || return 1
     [[ ${branch} != "${to_branch}" && ${branch} != "${state_branch}" ]] || return 1
     git check-ref-format "refs/heads/${branch}" || return 1
 }
@@ -325,7 +309,7 @@ function main {
     # 2. Branch name
     if ! validate_agent_branch "${AGENT_BRANCH}" "${AGENT_BRANCH_PREFIX}" "${AGENT_MAKER_SKILL_NAME}" "${TO_BRANCH}" "${STATE_BRANCH}"; then
         printf -v quoted '%q' "${AGENT_BRANCH}"
-        fail_push "invalid agent branch ${quoted}: expected ${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/YYYYMMDD-HHMMSS, different from to.branch and the state branch"
+        fail_push "invalid agent branch ${quoted}: expected ${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/YYYYMMDD-HHMMSS[-slug], different from to.branch and the state branch"
     fi
     branch="${AGENT_BRANCH}"
     VALIDATED_BRANCH="${branch}"
@@ -344,7 +328,7 @@ function main {
     if [[ -z ${BASE_BRANCH} ]]; then
         fail_push "base branch is empty"
     fi
-    if ! [[ ${BASE_BRANCH} =~ ^[A-Za-z0-9/_.-]+$ ]] || [[ ${BASE_BRANCH} == -* ]]; then
+    if ! check_names_branch "${BASE_BRANCH}"; then
         printf -v quoted '%q' "${BASE_BRANCH}"
         fail_push "invalid base branch ${quoted}"
     fi
@@ -353,7 +337,7 @@ function main {
     fi
 
     # 5. Fetch base, verify the bundle, import only the agent branch
-    if ! configure_git_auth; then
+    if ! git_auth_configure; then
         fail_push "git auth configuration failed"
     fi
     if ! err="$(git fetch --no-tags origin "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}" 2>&1)"; then
@@ -371,7 +355,7 @@ function main {
         fail_push "target_json is not valid JSON: ${from_ref}"
     fi
     if [[ -n ${from_ref} ]]; then
-        if ! [[ ${from_ref} =~ ^[A-Za-z0-9/_.-]+$ ]] || [[ ${from_ref} == -* ]]; then
+        if ! check_names_branch "${from_ref}"; then
             printf -v quoted '%q' "${from_ref}"
             fail_push "invalid from.ref ${quoted}"
         fi
@@ -381,7 +365,7 @@ function main {
     fi
 
     # 7. Denylist, allowlist, and workflow re-check on the --no-renames diff
-    apply_platform_denylist_default
+    edit_paths_apply_platform_denylist_default
     if ! err_file="$(mktemp)"; then
         fail_push "could not create a temporary file for the diff"
     fi
@@ -396,8 +380,8 @@ function main {
         fail_push "diff of ${branch} failed: ${err}"
     fi
     if ! violations="$(
-        collect_denylist_violations "${changed}" \
-            && collect_allowlist_violations "${changed}" \
+        edit_paths_collect_denylist_violations "${changed}" \
+            && edit_paths_collect_allowlist_violations "${changed}" \
             && collect_workflow_violations "${changed}"
     )"; then
         fail_push "edit path check failed"

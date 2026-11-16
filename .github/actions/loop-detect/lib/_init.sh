@@ -26,22 +26,35 @@ LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/branches.sh"
 # shellcheck disable=SC1091
-source "${LIB_DIR}/guards.sh"
+source "${LIB_DIR}/../../lib/loop/admission.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/state.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/items.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh disable=SC1091
+source "${_loop_action_lib}/check_names.sh"
+# shellcheck source=../../lib/loop/state_snapshot.sh disable=SC1091
+source "${_loop_action_lib}/state_snapshot.sh"
+# shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+source "${_loop_action_lib}/detect_env.sh"
+# shellcheck source=../../lib/loop/edit_paths.sh disable=SC1091
+source "${_loop_action_lib}/edit_paths.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/range_detect.sh"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"
-# shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
-source "${_loop_action_lib}/validate_loop_write_contract.sh"
+# shellcheck source=../../lib/loop/check_loop_write_contract.sh disable=SC1091
+source "${_loop_action_lib}/check_loop_write_contract.sh"
 
 # Plumbing defaults only; decision inputs (DELIVERY, LEVEL) and the level-keyed
 # AGENT_* inputs have no default and are validated in detect.sh.
 DETECT_BRANCH_MATCH_MODE="${DETECT_BRANCH_MATCH_MODE:-glob}"
+DETECT_ITEMS="${DETECT_ITEMS:-false}"
 DETECT_MAX_TARGETS="${DETECT_MAX_TARGETS:-3}"
 DETECT_PRIORITY="${DETECT_PRIORITY:-integration,pull_request}"
 DETECT_PR_DENYLIST="${DETECT_PR_DENYLIST:-fork,draft,label:no-loop}"
@@ -71,3 +84,13 @@ declare -a OPEN_PRS_JSON=()
 CIRCUIT_BREAKER_BLOCKED=0
 # shellcheck disable=SC2034
 PENDING_PR_BLOCKED=0
+# shellcheck disable=SC2034
+GATE_BLOCKED=0
+# shellcheck disable=SC2034
+TARGET_PENDING_PR_STATE="none"
+# shellcheck disable=SC2034
+TARGET_STATE_JSON="{}"
+# shellcheck disable=SC2034
+GATE_BLOCK_REASON=""
+# shellcheck disable=SC2034
+SKIP_DETAIL=""

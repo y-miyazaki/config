@@ -128,9 +128,11 @@ function target_consecutive_failures {
 # Arguments:
 #   $1 - Target state JSON
 #   $2 - Branch ref for git fallback
+#   $3 - verify_reachable (true | empty): when true, a stored sha that is not a
+#        commit in this checkout falls back like a missing sha, with a warning
 #
 # Outputs:
-#   Commit SHA on stdout
+#   Commit SHA on stdout; the unreachable-sha warning on stderr
 #
 # Returns:
 #   0 on success
@@ -139,12 +141,16 @@ function target_consecutive_failures {
 function target_last_sha {
     local target_state="$1"
     local branch_ref="$2"
+    local verify_reachable="${3:-}"
     local last_sha
 
     last_sha=$(jq -r '.last_sha // empty' <<< "${target_state}")
     if [[ -n ${last_sha} ]]; then
-        printf '%s' "${last_sha}"
-        return 0
+        if [[ ${verify_reachable} != "true" ]] || git cat-file -e "${last_sha}^{commit}" 2> /dev/null; then
+            printf '%s' "${last_sha}"
+            return 0
+        fi
+        echo "::warning::loop-detect: stored last_sha ${last_sha} is not reachable; falling back to HEAD~10" >&2
     fi
 
     git checkout -q "${branch_ref}" 2> /dev/null || true
@@ -153,52 +159,88 @@ function target_last_sha {
 }
 
 #######################################
-# target_pending_blocks_detect: Return 0 when an open pending fix PR blocks detect
+# target_pending_pr_state: Fact - the live state of the pending fix PR (one lookup per target)
+#
+# Description:
+#   Detect only gathers this fact. Whether an OPEN or unresolved pending PR blocks the run is decided by
+#   admission_evaluate_target (lib/loop/admission.sh).
 #
 # Globals:
-#   GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
+#   GITHUB_TOKEN - Used for the live PR state lookup
 #
 # Arguments:
 #   $1 - Target state JSON
 #
 # Outputs:
-#   None
+#   STDOUT: none (no pending.pr number) | OPEN | CLOSED | MERGED | unknown (no gh or token, or the lookup failed)
+#   STDERR: warning when the state is unknown
 #
 # Returns:
-#   0 when pending.pr refers to an OPEN PR (or PR state cannot be resolved),
-#   1 when pending is absent or the PR is CLOSED/MERGED (stale cursor)
+#   0 always
 #
 #######################################
-function target_pending_blocks_detect {
+function target_pending_pr_state {
     local target_state="$1"
-    local pending_pr pr_state github_token
+    local pending_pr pr_state
 
     if ! jq -e '(.pending.pr | type) == "number"' <<< "${target_state}" > /dev/null 2>&1; then
-        return 1
-    fi
-
-    pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
-    github_token="${GITHUB_TOKEN:-}"
-    if [[ -z ${github_token} ]] || ! command -v gh > /dev/null 2>&1; then
-        echo "::warning::Pending PR #${pending_pr} present but gh/token unavailable; blocking detect"
+        printf 'none'
         return 0
     fi
-
-    export GITHUB_TOKEN="${github_token}"
+    pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
+    if [[ -z ${GITHUB_TOKEN:-} ]] || ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::Pending PR #${pending_pr} present but gh/token unavailable" >&2
+        printf 'unknown'
+        return 0
+    fi
     pr_state="$(gh pr view "${pending_pr}" --json state --jq '.state' 2> /dev/null || true)"
     case "${pr_state}" in
-        OPEN)
-            return 0
-            ;;
-        CLOSED | MERGED)
-            echo "::warning::Pending PR #${pending_pr} is ${pr_state}; treating pending as stale (promote should clear it)"
-            return 1
+        OPEN | CLOSED | MERGED)
+            printf '%s' "${pr_state}"
             ;;
         *)
-            echo "::warning::Pending PR #${pending_pr} state unresolved (${pr_state:-empty}); blocking detect"
-            return 0
+            echo "::warning::Pending PR #${pending_pr} state unresolved (${pr_state:-empty})" >&2
+            printf 'unknown'
             ;;
     esac
+}
+
+#######################################
+# target_state_apply_merged_pending: Treat a merged pending fix PR as promoted
+#
+# Description:
+#   loop-state-promote promotes pending to last_sha only for a PR that carries the loop label. A
+#   merged pending PR whose label was removed would leave last_sha behind, so detect would scan the
+#   range the PR already covered. This function applies the promotion to the in-memory state only
+#   (detect never writes state): last_sha becomes pending.sha and pending is dropped.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Target state JSON
+#   $2 - Pending PR state fact from target_pending_pr_state
+#
+# Outputs:
+#   Target state JSON on stdout (promoted when the pending PR is MERGED, unchanged otherwise)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function target_state_apply_merged_pending {
+    local target_state="$1"
+    local pending_pr_state="${2:-none}"
+    local pending_pr
+
+    if [[ ${pending_pr_state} == "MERGED" ]] \
+        && jq -e '(.pending.pr | type) == "number" and (.pending.sha | type) == "string"' <<< "${target_state}" > /dev/null 2>&1; then
+        pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
+        echo "::notice::Pending PR #${pending_pr} is MERGED; promoting pending.sha to last_sha for this run" >&2
+        jq -c '.last_sha = .pending.sha | del(.pending)' <<< "${target_state}"
+        return 0
+    fi
+    printf '%s' "${target_state}"
 }
 
 #######################################

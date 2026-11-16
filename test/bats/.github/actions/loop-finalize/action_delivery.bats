@@ -8,7 +8,7 @@
 # - inputs are the delivery contract (delivery, pr_auto_merge, state_branch, renamed
 #   finalize_* / agent_engine / pr_labels) in alphabetical order; removed inputs are gone
 # - push, PR creation, and branch deletion branch on inputs.delivery only
-# - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true'
+# - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true' and a gh failure warns without failing the step, so Write State still runs
 # - no step reads a finalize strategy or an old strategy value
 # - Create PR resolves detect JSON from the handoff (no detect_result_json input)
 # - Resolve Run Outcome always runs right before Export Failure Diagnostics and owns the outcome output
@@ -80,7 +80,7 @@ step_run() {
     [ -n "${cmd}" ]
     # shellcheck disable=SC1091
     source "$(bats_workspace_root)/.github/actions/lib/loop/failure_record.sh"
-    loop_failure_record push "agent branch push failed" "${BATS_TEST_TMPDIR}/failure.json"
+    failure_record_write push "agent branch push failed" "${BATS_TEST_TMPDIR}/failure.json"
     run env GITHUB_ACTION_PATH="$(bats_workspace_root)/.github/actions/loop-finalize" \
         ACTION_STATUS=failure DELIVERED_OUTCOME=error AGENT_RESULT=success \
         LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json" \
@@ -101,7 +101,7 @@ step_run() {
     expected="$(printf '%s\n' \
         agent_branch_prefix agent_bundle_dir agent_edit_allowlist agent_edit_denylist agent_engine \
         agent_failure_message agent_failure_stage agent_maker_skill_name agent_result branch current_sha delivery \
-        finalize_commit_paths finalize_label_allowlist finalize_outcome_override \
+        finalize_commit_paths finalize_issue_limit finalize_label_allowlist finalize_outcome_override \
         finalize_script github_token handoff_dir handoff_key has_changes level \
         loop_name message_json notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
         pr_labels pr_title reject_reason skip_reason state_branch state_file \
@@ -129,7 +129,7 @@ step_run() {
 
 @test "delete agent branch keys on REJECT or a delivery that never lands the branch" {
     run step_if "Delete Agent Branch"
-    [ "${output}" = "always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')" ]
+    [ "${output}" = "always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'issue_create' || inputs.delivery == 'pr_review')" ]
 }
 
 @test "determine outcome and state mode receive the push failure" {
@@ -202,6 +202,7 @@ step_run() {
         cat << 'EOF2'
 AGENT_ENGINE: ${{ inputs.agent_engine }}
 DELIVERY: ${{ inputs.delivery }}
+FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
 FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
 GH_TOKEN: ${{ inputs.github_token }}
 GITHUB_REPOSITORY: ${{ github.repository }}
@@ -218,9 +219,14 @@ EOF2
     [ "${output}" = "${expected}" ]
 }
 
-@test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent" {
+@test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent and for issue_create after APPROVE" {
     run step_if "Deliver Message"
-    [ "${output}" = "(inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.agent_result == 'success' && inputs.verdict != 'REJECT' && steps.agent_push.outputs.failed != 'true'" ]
+    [ "${output}" = "((inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.verdict != 'REJECT' || inputs.delivery == 'issue_create' && inputs.verdict == 'APPROVE') && inputs.agent_result == 'success' && steps.agent_push.outputs.failed != 'true'" ]
+}
+
+@test "write state never runs under always() so a failed hook or delivery leaves state untouched" {
+    run step_if "Write State"
+    [[ ${output} != *"always()"* ]]
 }
 
 @test "fail agent push runs after delete agent branch and before resolve run outcome" {
@@ -282,6 +288,23 @@ EOF2
     expected="Materialize Message, Parse Target, Push Agent Branch, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Fail Agent Push, Resolve Run Outcome, Export Failure Diagnostics"
     run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | paste -sd, - | sed 's/,/, /g'"
     [ "${output}" = "${expected}" ]
+}
+
+@test "enable auto-merge warns and succeeds when gh pr merge fails so state is still written" {
+    local script bin
+    script="$(step_run "Enable Auto-Merge")"
+    [ -n "${script}" ]
+    bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${bin}"
+    printf '#!/bin/bash\necho "gh: auto-merge is not allowed" >&2\nexit 1\n' > "${bin}/gh"
+    chmod +x "${bin}/gh"
+    run env PATH="${bin}:${PATH}" PR_URL="https://github.com/o/r/pull/1" bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"* ]]
+    # No PR url: nothing to merge, no warning.
+    run env PATH="${bin}:${PATH}" PR_URL="" bash -c "${script}"
+    [ "$status" -eq 0 ]
+    [[ ${output} != *"::warning::"* ]]
 }
 
 @test "enable auto-merge runs only when pr_auto_merge is true" {

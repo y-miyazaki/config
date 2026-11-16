@@ -6,7 +6,8 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-execute/lib/validate_agent_report.sh
 
 # Use cases:
-# - agent_report_skill_requires_format_check matches fix skills only
+# - agent_report_requires_check matches only the paths and commits modes
+# - validate_agent_report skips all checks when the report check is empty
 # - validate_agent_report accepts canonical apply output with matching git diff
 # - validate_agent_report accepts survey output with Candidates and Watch
 # - validate_agent_report accepts survey no-op without Candidates
@@ -30,13 +31,15 @@ setup() {
     mkdir -p "${TEST_TMP}"
 }
 
-@test "agent_report_skill_requires_format_check matches fix skills only" {
-    for skill in changelog ci-sweeper docs-updater refactor tech-debt test-gap; do
-        run agent_report_skill_requires_format_check "${skill}"
+@test "agent_report_requires_check matches only the paths and commits modes" {
+    for format in commits paths; do
+        run agent_report_requires_check "${format}"
         [ "$status" -eq 0 ]
     done
-    run agent_report_skill_requires_format_check "unknown-skill"
-    [ "$status" -eq 1 ]
+    for format in "" none unknown-format changelog; do
+        run agent_report_requires_check "${format}"
+        [ "$status" -eq 1 ]
+    done
 }
 
 @test "validate_agent_report accepts canonical output with matching git diff" {
@@ -62,7 +65,7 @@ Refactor scan found duplicated diff logic; this run deduplicated one call.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "refactor"
+    run validate_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -77,7 +80,7 @@ No actionable CI failures after triage; no edits applied.
 ## Summary
 
 EOF
-    run validate_agent_report "${out}" "" "ci-sweeper"
+    run validate_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -103,7 +106,7 @@ Debt scan over abc..def found broken links in docs/guide; no edits applied.
 | ------ | -------- | ----------- |
 | scripts/foo.sh | TODO marker | low urgency |
 EOF
-    run validate_agent_report "${out}" "" "tech-debt"
+    run validate_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -123,7 +126,7 @@ Infra flake on workflow lint; logged as Watch; no edits applied.
 | ------ | -------- | ----------- |
 | ci/lint | runner timeout | infra flake |
 EOF
-    run validate_agent_report "${out}" "" "ci-sweeper"
+    run validate_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -155,7 +158,7 @@ Docs drift found stale inventory; updated specification only.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/reference/specification.md\ndocs/index.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/reference/specification.md\ndocs/index.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"docs/index.md"* ]]
 }
@@ -187,7 +190,7 @@ Fixed docs/foo.md heading style.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/foo.md\n' "ci-sweeper"
+    run validate_agent_report "${out}" $'docs/foo.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Candidates"* ]]
 }
@@ -219,7 +222,7 @@ Fixed docs/foo.md heading style.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/foo.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/foo.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Watch"* ]]
 }
@@ -245,7 +248,7 @@ Updated one doc file.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"docs/b.md"* ]]
 }
@@ -276,7 +279,7 @@ Refactored the rootfs entrypoint and checker script.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "refactor"
+    run validate_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -302,7 +305,7 @@ Fixed a script.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'a.sh\n' "refactor"
+    run validate_agent_report "${out}" $'a.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -334,8 +337,8 @@ Fixed mkdocs strict link failure.
 | ----- | ------ |
 | mkdocs build --strict | pass |
 EOF
-    reconcile_agent_report_with_branch_diff "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
-    run validate_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/explanation/apm-package-design.md\n' "paths"
+    run validate_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "paths"
     [ "$status" -eq 0 ]
     # Placeholder row must follow existing data rows, not sit between header and separator.
     python3 - "${out}" << 'PY'
@@ -386,8 +389,8 @@ Updated one doc file.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    reconcile_agent_report_with_branch_diff "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
-    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
+    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
     [ "$status" -eq 0 ]
     grep -q 'docs/b.md' "${out}"
     # Placeholder row must follow existing data rows, not sit between header and separator.
@@ -420,8 +423,8 @@ Updated evaluation report.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    reconcile_agent_report_with_branch_diff "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
-    run validate_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "paths"
+    run validate_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "paths"
     [ "$status" -eq 0 ]
     run ! grep -q 'Updated in an earlier loop attempt' "${out}"
 }
@@ -459,8 +462,8 @@ Added changelog entries.
 | ----- | ------ |
 | CHANGELOG.md structure | pass |
 EOF
-    reconcile_agent_report_with_branch_diff "${out}" $'CHANGELOG.md\n' "changelog"
-    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    reconcile_agent_report_with_branch_diff "${out}" $'CHANGELOG.md\n' "commits"
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "commits"
     [ "$status" -eq 0 ]
     run grep -q 'Updated in an earlier loop attempt' "${out}"
     [ "$status" -eq 1 ]
@@ -494,7 +497,7 @@ Processed commits since abc..def; added Unreleased bullets and promoted releases
 | ----- | ------ |
 | CHANGELOG.md structure | pass |
 EOF
-    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "commits"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -522,7 +525,7 @@ Loop done.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/a.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"Fixes Applied"* ]]
     [[ $output == *"Outcome"* ]]
@@ -549,7 +552,7 @@ Survey only.
 | ------ | ------------ |
 | docs/b.md | later |
 EOF
-    run validate_agent_report "${out}" "" "tech-debt"
+    run validate_agent_report "${out}" "" "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"use ### Watch"* ]]
 }
@@ -575,7 +578,7 @@ Survey only.
 | ------ | ----------- |
 | def5678 | chore only |
 EOF
-    run validate_agent_report "${out}" "" "changelog"
+    run validate_agent_report "${out}" "" "commits"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Skipped"* ]]
 }
@@ -601,7 +604,7 @@ Survey only.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" "" "tech-debt"
+    run validate_agent_report "${out}" "" "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ## Verification"* ]]
 }
@@ -621,8 +624,16 @@ Survey only.
 | ------ | -------- | ------------------ | -------- |
 | docs/a.md | stale | fix | high |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\n' "tech-debt"
+    run validate_agent_report "${out}" $'docs/a.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"Apply output must not include ### Candidates"* ]]
     [[ $output == *"Missing ### Changes under ## Summary while branch has file changes"* ]]
+}
+
+@test "validate_agent_report skips all checks when the report check is empty" {
+    local out="${TEST_TMP}/none.txt"
+    printf '%s\n' '# Anything' 'not a fix report' > "${out}"
+    run validate_agent_report "${out}" $'docs/a.md\n' ""
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }

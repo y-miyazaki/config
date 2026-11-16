@@ -1,9 +1,22 @@
-# Loop workflow: Changelog maintenance
-# Detects unreleased conventional commits, runs bounded Agent→Verify loop, then finalizes.
-# Design doc: docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
-# Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
-# Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#######################################
+# Description:
+#   Loop workflow: Changelog maintenance
+#   Detects unreleased conventional commits, runs bounded Agent→Verify loop, then finalizes.
+#
+# Usage:
+#   Runs on: schedule, workflow_dispatch
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   - Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+#   - Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
+#   - Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: on-loop-changelog
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"
@@ -76,6 +89,7 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: changelog
+      agent_report_check: commits
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 1000000

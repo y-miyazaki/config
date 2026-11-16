@@ -8,7 +8,7 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Delivery none, issue_comment, and pr_review always delete: nothing is merged or
+# - Delivery none, issue_comment, issue_create, and pr_review always delete: nothing is merged or
 #   opened as a PR, and the finalize script has already read the branch
 # - Otherwise delete only empty-vs-base REJECT runs (has_changes is not true)
 # - Keep the branch when REJECT still has a product diff vs base (open PR / retries)
@@ -23,7 +23,7 @@
 # Arguments:
 #   $1 - Verdict (APPROVE or REJECT; may be empty)
 #   $2 - has_changes flag (true/false)
-#   $3 - Delivery (pr_create, pr_push, none, issue_comment, pr_review)
+#   $3 - Delivery (pr_create, pr_push, none, issue_comment, issue_create, pr_review)
 #
 # Outputs:
 #   None
@@ -37,7 +37,7 @@ function should_delete_rejected_branch {
     local has_changes="$2"
     local delivery="${3:-}"
     case "${delivery}" in
-        none | issue_comment | pr_review) return 0 ;;
+        none | issue_comment | issue_create | pr_review) return 0 ;;
     esac
     if [[ ${verdict} == "REJECT" && ${has_changes} != "true" ]]; then
         return 0

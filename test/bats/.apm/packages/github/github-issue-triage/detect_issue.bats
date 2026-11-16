@@ -7,6 +7,7 @@
 # - emits issue facts, handoff_key entity:issue:N, and result.entity.kind issue
 # - skips Bot actors, Bot comments, and triage:failed issues
 # - hydrates issue facts from GITHUB_EVENT_PATH and gh api
+# - reports the Issue state as result.gate.entity only when the state is known
 # - emits no dispatch_* fields for any event (autofix starts from its own intake)
 # - rejects invalid input with structured errors
 
@@ -71,6 +72,25 @@ NO_DISPATCH_FIELDS='([.result | keys[] | select(startswith("dispatch_"))] == [])
     [ "$status" -eq 0 ]
 }
 
+@test "reports the event Issue state as the gate entity fact" {
+    local event="${BATS_TEST_TMPDIR}/event.json"
+    printf '%s' '{"action":"opened","issue":{"number":8,"title":"t","body":"b","state":"closed","labels":[{"name":"needs-triage"}]},"sender":{"login":"alice","type":"User"}}' > "${event}"
+    run env GITHUB_EVENT_PATH="${event}" GITHUB_EVENT_NAME=issues bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result.gate == {entity:{kind:"issue",number:8,state:"closed"}}' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "omits the gate when the Issue state is not known" {
+    run env ISSUE_NUMBER=42 ISSUE_TITLE='Crash on save' ISSUE_BODY='steps' \
+        ISSUE_LABELS_JSON='[]' ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=opened \
+        ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result | has("gate") | not' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "skips when triage:failed label present" {
     run env ISSUE_NUMBER=1 ISSUE_TITLE=t ISSUE_BODY=b \
         ISSUE_LABELS_JSON='["needs-triage","triage:failed"]' \
@@ -127,6 +147,58 @@ EOF
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.issue_number == 55 and .result.title == "From API" and .result.body == "body text" and .result.labels == ["bug"]' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+# schedule_detect: run detect with schedule env; gh api stub returns labels in $1 (JSON array)
+function schedule_detect {
+    local labels="$1"
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << EOF2
+#!/bin/bash
+if [[ "\$1" == "api" ]]; then
+    printf '%s\n' '{"title":"Sched title","body":"sched body","labels":$(jq -c '[.[] | {name: .}]' <<< "${labels}")}'
+    exit 0
+fi
+exit 1
+EOF2
+    chmod +x "${mock_bin}/gh"
+    run env PATH="${mock_bin}:${PATH}" ISSUE_NUMBER=7 ISSUE_EVENT_NAME=schedule \
+        GITHUB_EVENT_NAME=schedule GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token \
+        bash "${DETECT_SCRIPT}"
+}
+
+@test "schedule hydrates from gh api and does not skip without triage labels" {
+    schedule_detect '["loop:code-review"]'
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.title == "Sched title" and .result.labels == ["loop:code-review"]' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "schedule does not skip needs-triage only" {
+    schedule_detect '["needs-triage"]'
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "schedule skips when any triage label is present" {
+    local labels
+    for labels in '["loop:code-review","triage:ready"]' '["loop:code-review","triage:needs-info"]' '["triage:failed"]'; do
+        schedule_detect "${labels}"
+        [ "$status" -eq 0 ]
+        run jq -e '.skip == true' <<< "${output}"
+        [ "$status" -eq 0 ]
+    done
+}
+
+@test "workflow_dispatch still does not skip when triage:ready is present" {
+    run env ISSUE_NUMBER=8 ISSUE_TITLE=t ISSUE_BODY=b ISSUE_LABELS_JSON='["triage:ready"]' \
+        ISSUE_EVENT_NAME=workflow_dispatch ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

@@ -65,6 +65,12 @@ source "${_LOOP_CREATED_BY_LIB}/loop_meta.sh"
 # shellcheck source=../../lib/loop/outcome.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/outcome.sh"
+# shellcheck source=../../lib/loop/redact.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/redact.sh"
+# shellcheck source=../../lib/loop/text.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/text.sh"
 # shellcheck source=../../lib/loop/trigger_thread.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
@@ -165,11 +171,11 @@ function build_comment_body {
         changed_files=""
     fi
 
-    agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
-    agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
-    fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
-    agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
-    reject_display="$(truncate_text "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
+    agent_report_overview="$(text_truncate "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
+    agent_report_summary="$(text_truncate "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
+    fix_summary="$(text_truncate "$(redact_sensitive_text "${fix_summary}")" 2000)"
+    agent_summary="$(text_truncate "$(redact_sensitive_text "${agent_summary}")" 2000)"
+    reject_display="$(text_truncate "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
     # Keep Reason on one table row (newlines / pipes break markdown tables).
     reject_display="${reject_display//$'\n'/ }"
     reject_display="${reject_display//|/\\|}"
@@ -209,7 +215,7 @@ function build_comment_body {
     fi
 
     next_step=""
-    if [[ $(normalize_outcome "${OUTCOME}") == "pr_created" && -n ${FIX_PR_URL} ]]; then
+    if [[ $(outcome_normalize "${OUTCOME}") == "pr_created" && -n ${FIX_PR_URL} ]]; then
         if [[ ${PR_AUTO_MERGE} == "true" ]]; then
             next_step="**Next step (L3):** Bot fix PR will auto-merge when checks pass. Wait for CI on this PR after merge."
         else
@@ -302,7 +308,7 @@ EOF
     loop_meta_row "Branch" "${branch_display}"
     loop_meta_row "Commit" "${commit_display}"
     loop_meta_row "Attempt" "${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—}"
-    printf '\n%s\n' "$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
+    printf '\n%s\n' "$(loop_meta_build_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
 }
 
 #######################################
@@ -351,7 +357,7 @@ function find_existing_comment {
 #   None
 #
 # Outputs:
-#   Warning/notice annotations via reply_trigger_comment
+#   Warning/notice annotations via trigger_thread_reply_comment
 #
 # Returns:
 #   0 always
@@ -385,66 +391,9 @@ function post_trigger_done_reply {
     overview="$(truncate_text_at_boundary "$(redact_sensitive_text "${overview}")" 1200)"
     summary="${overview}"
 
-    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${AGENT_ENGINE}" "${USAGE_JSON}")"
+    body="$(trigger_thread_build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${AGENT_ENGINE}" "${USAGE_JSON}")"
 
-    reply_trigger_comment "${body}"
-}
-
-#######################################
-# redact_sensitive_text: Redact common secret patterns
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#
-# Outputs:
-#   Redacted text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function redact_sensitive_text {
-    local text="$1"
-    # Keep patterns aligned with loop-ci-sweeper sanitize_log_excerpt.
-    text=$(sed -E 's/gh[pousr]_[A-Za-z0-9_]{20,}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/(password|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*[^[:space:]\"]+/\1=[REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/x-access-token:[A-Za-z0-9._-]+/x-access-token:[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Bearer[[:space:]]+[A-Za-z0-9._-]+/Bearer [REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Authorization:[[:space:]]*[^[:space:]\"]+/Authorization: [REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[REDACTED-JWT]/g' <<< "${text}")
-    text=$(sed -E 's/-----BEGIN [A-Z ]+-----[^-]*-----END [A-Z ]+-----/[REDACTED-PEM]/g' <<< "${text}")
-    printf '%s' "${text}"
-}
-
-#######################################
-# truncate_text: Truncate text to max length
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#   $2 - Maximum length
-#
-# Outputs:
-#   Truncated text to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function truncate_text {
-    local text="$1"
-    local max="$2"
-    if [[ ${#text} -le ${max} ]]; then
-        printf '%s' "${text}"
-    else
-        printf '%s' "${text:0:max}"
-    fi
+    trigger_thread_reply_comment "${body}"
 }
 
 #######################################

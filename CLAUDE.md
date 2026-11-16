@@ -4,17 +4,19 @@
 
 ## Edit routing (MUST)
 
-| Edit here (source of truth)                                                                                          | Sync targets (commit; do not hand-edit)                                                                                                                                  |
-| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.apm/packages/<pkg>/` (instructions, skills, hooks, MCP config)                                                     | `.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`, `.vscode/`, `apm_modules/` — materialized by `apm install`; commit after sync, edit only under `.apm/packages/` |
-| `scripts/lib/`                                                                                                       | `.apm/packages/*/.apm/skills/*/scripts/lib/`                                                                                                                             |
-| `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`                  | Paired skill `scripts/` copy                                                                                                                                             |
-| `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                            | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync)                                                                                      |
-| Repo-only paths (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                                                                                                        |
+| Edit here (source of truth)                                                                                                                                                                           | Sync targets (commit; do not hand-edit)                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.apm/packages/<pkg>/` (instructions, skills, hooks, MCP config)                                                                                                                                      | `.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`, `.vscode/`, `apm_modules/` — materialized by `apm install`; commit after sync, edit only under `.apm/packages/` |
+| `scripts/lib/`                                                                                                                                                                                        | `.apm/packages/*/.apm/skills/*/scripts/lib/`                                                                                                                             |
+| `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`                                                                                                   | Paired skill `scripts/` copy                                                                                                                                             |
+| `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                                                                                                             | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync)                                                                                      |
+| Repo-only paths (for example `cmd/terraform/` (source of the committed `scripts/terraform/module_updater` binary — rebuild with `make build` there), `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                                                                                                        |
 
 **Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/CLAUDE.md](.apm/CLAUDE.md) or this file, never package sources.
 
-**Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/workflows/CLAUDE.md`) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
+**Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/actions/CLAUDE.md` (imports `.github/workflows/CLAUDE.md` and holds the loop code rules), `.github/workflows/CLAUDE.md`, `docs/explanation/loop-engineering/CLAUDE.md` (design-doc rules)) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
+
+**Docs sync (MUST):** code and docs move together (see Document sync in `AGENTS.md`). Search for the docs first; for `.github/workflows/**` and `.github/actions/**` the code-to-docs map is in [.github/workflows/CLAUDE.md](.github/workflows/CLAUDE.md#docs-sync-must).
 
 ## Permission parity (MUST)
 
@@ -38,6 +40,7 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `actionlint`          | `Stop`                      |
 | `ghalint`             | `Stop`                      |
 | `gitleaks`            | `Stop`                      |
+| `go test`             | `Stop`                      |
 | `golangci-lint`       | `Stop`                      |
 | `markdown-link-check` | `Stop`                      |
 | `markdownlint-cli2`   | `Stop`                      |
@@ -46,7 +49,7 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `shfmt`               | `PostToolUse` (Edit, Write) |
 | `zizmor`              | `Stop`                      |
 
-`shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
+`shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool). The sync is hook-covered too: do not run `apm install`/sync by hand, and omit the sync targets (`.claude/`, `.cursor/`, `.github/hooks`, `apm_modules/`) from Completion — no "not yet synced", "pending sync", or "uncommitted" notes.
 
 ## Conventions
 

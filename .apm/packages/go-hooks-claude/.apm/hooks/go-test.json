@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/go_test.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -90,28 +90,14 @@ function parse_verifier_output {
     fi
 
     json_blob="$(extract_last_json_fence "${parse_file}")"
-    if [[ -n ${json_blob} ]] && jq -e '.verdict' > /dev/null 2>&1 <<< "${json_blob}"; then
-        verdict=$(jq -r '.verdict' <<< "${json_blob}")
-        reason=$(jq -r '.reason // empty' <<< "${json_blob}")
-        issue=$(jq -r '.issue // empty' <<< "${json_blob}")
-        fix=$(jq -r '.fix // empty' <<< "${json_blob}")
-        files=$(jq -r '
-            if (.files | type) == "array" then (.files | map(select(type == "string")) | join(","))
-            elif (.files | type) == "string" then .files
-            else empty end
-        ' <<< "${json_blob}")
-        parsed="true"
-        if [[ -n ${normalized_file} ]]; then
-            rm -f "${normalized_file}"
-        fi
-        return 0
+    if [[ -z ${json_blob} ]] || ! jq -e '.verdict' > /dev/null 2>&1 <<< "${json_blob}"; then
+        json_blob=""
+        while IFS= read -r line; do
+            if jq -e '.verdict' > /dev/null 2>&1 <<< "${line}"; then
+                json_blob="${line}"
+            fi
+        done < <(tail -30 "${parse_file}")
     fi
-
-    while IFS= read -r line; do
-        if jq -e '.verdict' > /dev/null 2>&1 <<< "${line}"; then
-            json_blob="${line}"
-        fi
-    done < <(tail -30 "${parse_file}")
 
     if [[ -n ${json_blob} ]]; then
         verdict=$(jq -r '.verdict' <<< "${json_blob}")
@@ -148,7 +134,7 @@ function parse_verifier_output {
     fi
 
     local legacy_line
-    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${parse_file}" | tail -1 || true)
+    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]]*|:.*)$' "${parse_file}" | tail -1 || true)
     if [[ -n ${legacy_line} ]]; then
         verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
         reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')
@@ -193,7 +179,7 @@ function write_verifier_output_contract {
 # Description:
 #   Writes verdict/reason/reject-* files under the attempt directory. On a
 #   denylist violation or a changed path with unsafe characters (see
-#   list_diff_paths) also writes denylist_blocked=true there so loop.sh can
+#   edit_paths_list_diff_paths) also writes denylist_blocked=true there so loop.sh can
 #   force bundle.sh to skip bundling the branch, even if HAS_CHANGES is true.
 #
 # Globals:
@@ -201,7 +187,7 @@ function write_verifier_output_contract {
 #   AGENT_UNCHANGED_VERDICT - Verdict for an empty branch diff (APPROVE|REJECT)
 #   AGENT_CHECKER_EFFORT, AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS
 #   AGENT_CHECKER_MODEL
-#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, VERIFIER_CONTEXT
+#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, AGENT_REPORT_CHECK, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
 # Arguments:
@@ -232,7 +218,7 @@ function run_verify {
     # "no changes" and approve an unreviewed branch.
     git fetch origin "${BASE_BRANCH}" 2> /dev/null || true
     local diff_status=0
-    changed_files="$(list_diff_paths "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
+    changed_files="$(edit_paths_list_diff_paths "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
         2> "${attempt_dir}/branch-diff-error.txt")" || diff_status=$?
     if [[ ${diff_status} -eq 2 ]]; then
         local unsafe_error
@@ -274,7 +260,7 @@ function run_verify {
         return 0
     fi
 
-    violations="$(collect_denylist_violations "${changed_files}")"
+    violations="$(edit_paths_collect_denylist_violations "${changed_files}")"
     if [[ -n ${violations} ]]; then
         local denylist_files
         denylist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)
@@ -289,7 +275,7 @@ function run_verify {
         return 0
     fi
 
-    violations="$(collect_allowlist_violations "${changed_files}")"
+    violations="$(edit_paths_collect_allowlist_violations "${changed_files}")"
     if [[ -n ${violations} ]]; then
         local allowlist_files
         allowlist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)
@@ -304,9 +290,9 @@ function run_verify {
     local agent_output_file="${attempt_dir}/agent-output.txt"
     local format_violations=""
     if [[ -f ${agent_output_file} ]] \
-        && agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
-        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}"
-        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}" || true)"
+        && agent_report_requires_check "${AGENT_REPORT_CHECK:-}"; then
+        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}"
+        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
                 "Agent report output format or Changes/Deferred consistency failed" \
@@ -329,7 +315,7 @@ function run_verify {
     if [[ -z ${criteria} && -z ${VERIFIER_SKILL_ROOT:-} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
     fi
-    if agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
+    if agent_report_requires_check "${AGENT_REPORT_CHECK:-}"; then
         local format_criteria_file="${LIB_DIR}/agent_output_format_criteria.md"
         if [[ -f ${format_criteria_file} ]]; then
             criteria="${criteria}"$'\n\n'"$(cat "${format_criteria_file}")"

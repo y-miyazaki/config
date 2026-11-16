@@ -15,6 +15,7 @@
 # - hydrates workflow_dispatch facts, reviews, and paginated changed files via a stub gh
 # - does not fetch changed files for a skipped PR
 # - treats an event with a missing repository name as a fork
+# - reports the PR state (open, closed, merged) as result.gate.entity only when it is known
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -151,6 +152,27 @@ PR_VIEW_OK='{"author":{"is_bot":false},"isDraft":false,"isCrossRepository":false
     run_detect PR_NUMBER=77 PR_REVIEWS_JSON='[]' PR_BASE_SHA=b1 PR_HEAD_SHA=h1
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.entity == {"kind": "pr"}' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "reports the PR state as the gate entity fact and omits it when unknown" {
+    run_detect PR_NUMBER=77 PR_REVIEWS_JSON='[]' PR_BASE_SHA=b1 PR_HEAD_SHA=h1
+    [ "$status" -eq 0 ]
+    run jq -e '.result | has("gate") | not' <<< "${output}"
+    [ "$status" -eq 0 ]
+
+    run_detect PR_NUMBER=77 PR_REVIEWS_JSON='[]' PR_BASE_SHA=b1 PR_HEAD_SHA=h1 PR_STATE=closed
+    [ "$status" -eq 0 ]
+    run jq -e '.result.gate == {entity:{kind:"pr",number:77,state:"closed"}}' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "derives merged from the pull_request event" {
+    local event="${BATS_TEST_TMPDIR}/event.json"
+    printf '%s' '{"action":"closed","number":77,"pull_request":{"number":77,"state":"closed","merged":true,"draft":false,"user":{"type":"User"},"head":{"sha":"h1","repo":{"full_name":"o/r"}},"base":{"sha":"b1"},"labels":[]},"repository":{"full_name":"o/r"}}' > "${event}"
+    run_detect GITHUB_EVENT_PATH="${event}" GITHUB_EVENT_NAME=pull_request_target PR_REVIEWS_JSON='[]'
+    [ "$status" -eq 0 ]
+    run jq -e '.result.gate.entity.state == "merged"' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

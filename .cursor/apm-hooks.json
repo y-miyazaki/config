@@ -31,6 +31,11 @@
       "_apm_source": "_local/common-hooks-cursor"
     },
     {
+      "command": ".cursor/hooks/go-hooks-cursor/scripts/go_test.sh",
+      "timeout": 120,
+      "_apm_source": "_local/go-hooks-cursor"
+    },
+    {
       "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
       "timeout": 120,
       "_apm_source": "_local/go-hooks-cursor"
@@ -51,6 +56,13 @@
       "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
       "timeout": 120,
       "_apm_source": "_local/shell-script-hooks-cursor"
+    }
+  ],
+  "beforeSubmitPrompt": [
+    {
+      "command": ".cursor/hooks/common-hooks-cursor/scripts/gitleaks_prompt.sh",
+      "timeout": 30,
+      "_apm_source": "_local/common-hooks-cursor"
     }
   ]
 }

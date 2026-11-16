@@ -6,6 +6,7 @@
 # Use cases:
 # - state_branch is a required input with no default; base_branch is gone
 # - Append Run Log Entry passes STATE_BRANCH
+# - target_key input is optional with an empty default and reaches TARGET_KEY
 # - the outcome and skip_reason descriptions list the current values
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -21,9 +22,14 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-run-log/action.yml"
 
 @test "action outcome and skip_reason descriptions list current values" {
     run action_yml_input_field "${ACTION_YML}" outcome description
-    [ "${output}" = '"Run outcome (pr_created | pr_pushed | reported | issue_commented | pr_reviewed | unchanged | rejected | error | skipped)"' ]
+    [ "${output}" = '"Run outcome (pr_created | pr_pushed | reported | issue_commented | issue_created | pr_reviewed | unchanged | rejected | error | skipped)"' ]
     run action_yml_input_field "${ACTION_YML}" skip_reason description
-    [ "${output}" = '"Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing)"' ]
+    [ "${output}" = '"Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing | domain:<reason>)"' ]
+}
+
+@test "action passes SKIP_DETAIL from skip_detail" {
+    run grep -F 'inputs.skip_detail' "${ACTION_YML}"
+    [ "$status" -eq 0 ]
 }
 
 @test "action passes STATE_BRANCH from state_branch" {
@@ -41,4 +47,13 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-run-log/action.yml"
     [ "${output}" = "true" ]
     run action_yml_input_field "${ACTION_YML}" state_branch default
     [ -z "${output}" ]
+}
+
+@test "action target_key input defaults to empty and is passed as TARGET_KEY" {
+    run action_yml_input_names "${ACTION_YML}"
+    [[ ${output} == *"target_key"* ]]
+    run action_yml_input_field "${ACTION_YML}" target_key default
+    [ "${output}" = '""' ]
+    run action_yml_step_env "${ACTION_YML}" "Append Run Log Entry"
+    [[ ${output} == *'TARGET_KEY: ${{ inputs.target_key }}'* ]]
 }

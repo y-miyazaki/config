@@ -1,4 +1,19 @@
-# CI workflow: GitHub Actions workflow lint on push/PR
+#######################################
+# Description:
+#   CI workflow: GitHub Actions workflow lint on push/PR
+#
+# Usage:
+#   Runs on: push, pull_request
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: on-ci-push-github-actions-workflow
 
 run-name: "${{ github.workflow }} (${{ github.event_name }})"

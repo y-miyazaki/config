@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: create the agent worktree
+#   Creates an isolated git worktree from from_ref on from_branch for loop agent changes.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-worktree-setup@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs agent_maker_skill_name, github_token
+#   - git
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: loop-worktree-setup
 description: "Create an isolated git worktree at from_ref on from_branch for loop agent modifications."
 
@@ -24,6 +45,10 @@ inputs:
   github_token:
     description: "Read-only GitHub token for fetch"
     required: true
+  target_key:
+    default: ""
+    description: "Target key (target_json.key); per-item keys (containing #) append -<slug>-<hash8> to the generated branch name"
+    required: false
 outputs:
   branch:
     description: "Created branch name"
@@ -45,18 +70,21 @@ runs:
         FROM_BRANCH: ${{ inputs.from_branch }}
         FROM_REF: ${{ inputs.from_ref }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        TARGET_KEY: ${{ inputs.target_key }}
       run: |
         set -euo pipefail
 
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/git_auth.sh"
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
+        git_auth_configure
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""
 
         if [[ -n "${FROM_BRANCH}" ]]; then
-          if ! [[ "${FROM_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${FROM_BRANCH}"; then
             echo "::error::Invalid from branch: ${FROM_BRANCH}"
             exit 1
           fi
@@ -64,7 +92,7 @@ runs:
         fi
 
         if [[ -n "${FROM_REF}" ]]; then
-          if ! [[ "${FROM_REF}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${FROM_REF}"; then
             echo "::error::Invalid from ref: ${FROM_REF}"
             exit 1
           fi
@@ -74,7 +102,7 @@ runs:
         fi
 
         if [[ -n "${BRANCH}" ]]; then
-          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${BRANCH}"; then
             echo "::error::Invalid branch name: ${BRANCH}"
             exit 1
           fi
@@ -84,8 +112,14 @@ runs:
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
           BRANCH="${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/${DATE}"
+          # Only per-item keys (containing '#') get a slug suffix; other keys keep the plain name.
+          if [[ ${TARGET_KEY:-} == *"#"* ]]; then
+            # shellcheck disable=SC1091
+            source "${GITHUB_ACTION_PATH}/../lib/loop/target_slug.sh"
+            BRANCH="${BRANCH}-$(target_slug_from_key "${TARGET_KEY}")"
+          fi
 
-          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! check_names_branch "${BRANCH}"; then
             echo "::error::Invalid branch name: ${BRANCH}"
             exit 1
           fi

@@ -23,6 +23,16 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/check_names.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/git_auth.sh"
+# shellcheck source=../../lib/loop/retention.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/retention.sh"
+
 #######################################
 # Global variables
 #######################################
@@ -62,7 +72,7 @@ function loop_run_log_append_entry {
     local entry_json="${2:?entry_json required}"
     local cutoff tmp_dir kept_lines
 
-    cutoff="$(loop_run_log_prune_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     tmp_dir="$(mktemp -d)"
     kept_lines="${tmp_dir}/kept.jsonl"
 
@@ -171,6 +181,8 @@ function loop_run_log_resolve_cost_usd {
 #   $10 - agent_result (optional)
 #   $11 - failure_stage (optional)
 #   $12 - failure_message (optional)
+#   $13 - target_key (optional, appended when non-empty)
+#   $14 - skip_detail (optional, appended last when non-empty)
 #
 # Outputs:
 #   JSON object to stdout
@@ -192,6 +204,8 @@ function loop_run_log_build_entry {
     local agent_result="${10:-}"
     local failure_stage="${11:-}"
     local failure_message="${12:-}"
+    local target_key="${13:-}"
+    local skip_detail="${14:-}"
     local run_id resolved_tokens resolved_cost
 
     run_id="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -214,6 +228,8 @@ function loop_run_log_build_entry {
         --arg failure_stage "${failure_stage}" \
         --arg failure_message "${failure_message}" \
         --arg cost_usd "${resolved_cost}" \
+        --arg target_key "${target_key}" \
+        --arg skip_detail "${skip_detail}" \
         '{
       run_id: $run_id,
       loop_name: $loop_name,
@@ -227,10 +243,55 @@ function loop_run_log_build_entry {
     + (if ($attempts | length) > 0 then {attempts: ($attempts | tonumber)} else {} end)
     + (if ($has_changes | length) > 0 then {has_changes: ($has_changes == "true")} else {} end)
     + (if ($verdict | length) > 0 then {verdict: $verdict} else {} end)
-    + (if ($usage_json | length) > 0 then {usage: ($usage_json | fromjson)} else {} end)
+    + ((try ($usage_json | fromjson) catch null) as $usage | if $usage != null then {usage: $usage} else {} end)
     + (if ($agent_result | length) > 0 then {agent_result: $agent_result} else {} end)
     + (if ($failure_stage | length) > 0 then {failure_stage: $failure_stage} else {} end)
-    + (if ($failure_message | length) > 0 then {failure_message: $failure_message} else {} end)'
+    + (if ($failure_message | length) > 0 then {failure_message: $failure_message} else {} end)
+    + (if ($target_key | length) > 0 then {target_key: $target_key} else {} end)
+    + (if ($skip_detail | length) > 0 then {skip_detail: $skip_detail} else {} end)'
+}
+
+#######################################
+# loop_run_log_checkout_state_branch: Check out the state branch tip before the run log is appended
+#
+# Description:
+#   The run log is committed on the current HEAD and pushed as HEAD:<base_branch>. After a pr_push
+#   landing HEAD is the PR head, so without this switch an unreviewed PR head would be pushed to the
+#   state branch (and the run log would be read from the wrong tree).
+#
+# Globals:
+#   GITHUB_TOKEN - Exported from the token argument for git auth
+#
+# Arguments:
+#   $1 - State branch name
+#   $2 - GitHub token
+#
+# Outputs:
+#   STDOUT: a workflow warning when the branch cannot be checked out
+#
+# Returns:
+#   0 when the state branch tip is checked out, 1 otherwise
+#
+#######################################
+function loop_run_log_checkout_state_branch {
+    local base_branch="${1:?base_branch required}"
+    local token="${2:?token required}"
+
+    if ! check_names_branch "${base_branch}"; then
+        echo "::warning::loop-run-log: invalid state branch ${base_branch}; the run log entry is not written"
+        return 1
+    fi
+    export GITHUB_TOKEN="${token}"
+    git_auth_configure
+    if git fetch origin "${base_branch}" > /dev/null 2>&1; then
+        # Finalize leftovers in the tree must not drop the entry: retry once discarding them (last step of the job).
+        if git checkout -q -B "${base_branch}" "origin/${base_branch}" 2> /dev/null \
+            || git checkout -q -f -B "${base_branch}" "origin/${base_branch}"; then
+            return 0
+        fi
+    fi
+    echo "::warning::loop-run-log: could not check out ${base_branch}; the run log entry is not written"
+    return 1
 }
 
 #######################################
@@ -266,9 +327,7 @@ function loop_run_log_commit_and_push {
     local attempt push_error=""
 
     export GITHUB_TOKEN="${token}"
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+    git_auth_configure
 
     for attempt in 1 2 3; do
         if [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then
@@ -327,22 +386,3 @@ function loop_run_log_compute_duration {
     echo $((now_epoch - started_epoch))
 }
 
-#######################################
-# loop_run_log_prune_cutoff_date: Return UTC date string for 30-day prune window
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   YYYY-MM-DD cutoff date to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function loop_run_log_prune_cutoff_date {
-    date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d
-}

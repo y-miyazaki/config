@@ -1,5 +1,22 @@
-# Reusable workflow: Go application release with GoReleaser
-# Builds cross-platform binaries and creates GitHub releases.
+#######################################
+# Description:
+#   Reusable workflow: Go application release with GoReleaser
+#   Builds cross-platform binaries and creates GitHub releases.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: cd-go-releaser
 
 on:
@@ -35,7 +52,7 @@ on:
         required: false
         type: string
       goreleaser_version:
-        default: "v2.19.0"
+        default: "v2.20.0"
         description: "GoReleaser version to use"
         required: false
         type: string
@@ -118,8 +135,7 @@ jobs:
           echo "✅ Version format is valid: $VERSION"
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -148,8 +164,7 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: clear
@@ -196,7 +211,7 @@ jobs:
           echo "✅ Dependencies downloaded"
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       - name: Install syft
         uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
@@ -247,8 +262,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             goreleaser-dist-${{ env.COMPONENT }}-${{ steps.check-tag.outputs.version }}

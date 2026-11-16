@@ -7,7 +7,7 @@ bats_require_minimum_version 1.5.0
 #
 # Use cases:
 # - action.yml declares the renamed inputs and no removed inputs (may_edit, git_landing_*, loop_*)
-# - action.yml maps every renamed input to its uppercase environment variable
+# - action.yml maps every renamed input (and detect_items) to its uppercase environment variable
 # - action.yml has no default for delivery or level and exposes the pr_auto_merge output
 # - validate_detect_inputs fails on write-contract, delivery value, and detect-config errors
 # - validate_candidate_targets rejects target kinds the delivery does not allow
@@ -54,8 +54,10 @@ setup() {
     expected="agent_edit_allowlist
 agent_edit_denylist
 agent_edit_target
+agent_engine
 agent_maker_instructions
 agent_maker_skill_name
+agent_tool_denylist
 agent_unchanged_verdict
 budget_file
 budget_max_runs_per_day
@@ -63,6 +65,8 @@ budget_max_tokens_per_day
 delivery
 detect_branch_match
 detect_branch_match_mode
+detect_env_json
+detect_items
 detect_max_targets
 detect_pr_bot_allowlist
 detect_pr_denylist
@@ -70,6 +74,7 @@ detect_pr_enabled
 detect_pr_number
 detect_priority
 detect_script
+finalize_issue_limit
 finalize_label_allowlist
 finalize_script
 github_token
@@ -106,7 +111,7 @@ state_file"
 @test "action.yml maps every renamed input to its uppercase environment variable" {
     local name upper checked=0
     for name in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict \
-        delivery detect_branch_match detect_branch_match_mode detect_max_targets detect_pr_bot_allowlist \
+        delivery detect_branch_match detect_branch_match_mode detect_items detect_max_targets detect_pr_bot_allowlist \
         detect_pr_denylist detect_pr_enabled detect_pr_number detect_priority \
         finalize_label_allowlist finalize_script level state_branch; do
         upper="$(tr '[:lower:]' '[:upper:]' <<< "${name}")"
@@ -114,7 +119,7 @@ state_file"
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 17 ]
+    [ "${checked}" -eq 18 ]
 }
 
 @test "build_integration_target_json emits no finalize key" {
@@ -157,9 +162,9 @@ state_file"
 @test "validate_detect_inputs fails on each invalid configuration" {
     local -a cases=(
         'LEVEL=|::error::level is required (L1, L2, or L3)'
-        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
-        'DELIVERY=open_pr|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: open_pr)'
-        'DELIVERY=issue_create|::error::delivery issue_create is not implemented'
+        'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
+        'DELIVERY=open_pr|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: open_pr)'
+        'DELIVERY=issue_create FINALIZE_SCRIPT=x.sh FINALIZE_LABEL_ALLOWLIST=loop:x DETECT_PR_ENABLED=true|::error::delivery issue_create does not allow detect_pr_enabled true'
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
         'AGENT_UNCHANGED_VERDICT=|::error::agent_unchanged_verdict is required at L2 (APPROVE or REJECT)'
         'DETECT_BRANCH_MATCH=|::error::detect_branch_match or detect_pr_enabled true is required'

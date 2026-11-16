@@ -7,6 +7,8 @@ bats_require_minimum_version 1.5.0
 # Use cases:
 # - run_agent_capture preserves USAGE_* unlike pipe to tee
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
+# - harvest_workspace_into_worktree copies files inside a new untracked directory
+# - harvest_workspace_into_worktree copies a non-ASCII file name and a name containing an arrow
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree is a no-op when workspace equals worktree
 # - harvest_workspace_into_worktree harvests a renamed file instead of failing
@@ -143,6 +145,48 @@ STUB
     harvest_workspace_into_worktree
     [[ "$(cat "${wt}/foo.txt")" == "edited" ]]
     [[ "$(cat "${wt}/added.txt")" == "new" ]]
+}
+
+@test "harvest_workspace_into_worktree copies files inside a new untracked directory" {
+    local ws wt
+
+    ws="${BATS_TEST_TMPDIR}/ws-newdir"
+    wt="${BATS_TEST_TMPDIR}/wt-newdir"
+    bats_git_fresh_repo "${ws}"
+    bats_git_fresh_repo "${wt}"
+    printf 'orig\n' > "${ws}/foo.txt"
+    printf 'orig\n' > "${wt}/foo.txt"
+    bats_git_commit "${ws}" "init"
+    bats_git_commit "${wt}" "init"
+    mkdir -p "${ws}/docs/new-guide"
+    printf 'guide\n' > "${ws}/docs/new-guide/a.md"
+
+    GITHUB_WORKSPACE="${ws}"
+    WORKTREE_PATH="${wt}"
+    harvest_workspace_into_worktree
+    [[ "$(cat "${wt}/docs/new-guide/a.md")" == "guide" ]]
+}
+
+@test "harvest_workspace_into_worktree copies a non-ASCII file name and a name containing an arrow" {
+    local ws wt
+
+    ws="${BATS_TEST_TMPDIR}/ws-utf8"
+    wt="${BATS_TEST_TMPDIR}/wt-utf8"
+    bats_git_fresh_repo "${ws}"
+    bats_git_fresh_repo "${wt}"
+    printf 'orig\n' > "${ws}/foo.txt"
+    printf 'orig\n' > "${wt}/foo.txt"
+    bats_git_commit "${ws}" "init"
+    bats_git_commit "${wt}" "init"
+    printf 'jp\n' > "${ws}/日本語メモ.md"
+    printf 'arrow\n' > "${ws}/a -> b.txt"
+
+    GITHUB_WORKSPACE="${ws}"
+    WORKTREE_PATH="${wt}"
+    run harvest_workspace_into_worktree
+    [ "$status" -eq 0 ]
+    [ "$(cat "${wt}/日本語メモ.md")" = "jp" ]
+    [ "$(cat "${wt}/a -> b.txt")" = "arrow" ]
 }
 
 @test "harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE" {
@@ -352,6 +396,20 @@ STUB
     AGENT_TOOL_ALLOWLIST="$(printf '%s\n' 'Bash(gh issue view:*)' '' 'Bash(gh label list:*)')"
     run_agent "false" > /dev/null
     grep -qF -- "--allowedTools ${EXPECTED_ALLOW_BASELINE} Bash(gh issue view:*) Bash(gh label list:*) --disallowedTools " "${args_file}"
+}
+
+@test "run_agent claude appends the caller denylist after the fixed deny rules" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-denylist-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_TOOL_DENYLIST="$(printf '%s\n' 'Agent' '' 'Bash(rm:*)')"
+    run_agent "true" > /dev/null
+    grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} Agent Bash(rm:*) --max-turns 5" "${args_file}"
+    AGENT_TOOL_DENYLIST=""
+    : > "${args_file}"
+    run_agent "true" > /dev/null
+    grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} --max-turns 5" "${args_file}"
 }
 
 @test "run_agent claude checker session runs in dontAsk mode with the read baseline" {

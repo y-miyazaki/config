@@ -79,3 +79,10 @@ setup() {
     done
     [ "${checked}" -eq 3 ]
 }
+
+@test "issue_create always deletes the agent branch" {
+    run should_delete_rejected_branch APPROVE true issue_create
+    [ "$status" -eq 0 ]
+    run should_delete_rejected_branch REJECT true issue_create
+    [ "$status" -eq 0 ]
+}

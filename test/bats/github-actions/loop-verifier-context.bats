@@ -22,22 +22,22 @@ setup() {
     source "${VERIFIER_CONTEXT_LIB}"
 }
 
-@test "build_verifier_context_from_result returns explicit verifier_context" {
-    run build_verifier_context_from_result '{"verifier_context":"custom context"}'
+@test "verifier_context_build_from_result returns explicit verifier_context" {
+    run verifier_context_build_from_result '{"verifier_context":"custom context"}'
     [ "$status" -eq 0 ]
     [ "$output" = "custom context" ]
 }
 
-@test "build_verifier_context_from_result renders failures markdown" {
-    run build_verifier_context_from_result '{"failures":[{"workflow_name":"ci","workflow_run_id":"1","job_name":"test","head_branch":"main","failure_type":"test","log_excerpt":"boom"}]}'
+@test "verifier_context_build_from_result renders failures markdown" {
+    run verifier_context_build_from_result '{"failures":[{"workflow_name":"ci","workflow_run_id":"1","job_name":"test","head_branch":"main","failure_type":"test","log_excerpt":"boom"}]}'
     [ "$status" -eq 0 ]
     [[ $output == *"## CI Failures"* ]]
     [[ $output == *"**ci** run 1 job test"* ]]
     [[ $output == *"boom"* ]]
 }
 
-@test "build_verifier_context_from_result returns empty for unknown shape" {
-    run build_verifier_context_from_result '{"foo":"bar"}'
+@test "verifier_context_build_from_result returns empty for unknown shape" {
+    run verifier_context_build_from_result '{"foo":"bar"}'
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }

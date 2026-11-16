@@ -1,5 +1,22 @@
-# Reusable workflow: Node.js CI (test, security)
-# Discovers workspace directories, then runs install/test/audit for each package.json found recursively within each workspace.
+#######################################
+# Description:
+#   Reusable workflow: Node.js CI (test, security)
+#   Discovers workspace directories, then runs install/test/audit for each package.json found recursively within each workspace.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-nodejs.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-nodejs
 
 on:
@@ -426,8 +443,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)
@@ -576,8 +592,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             pkg-audit-${{ env.COMPONENT }}

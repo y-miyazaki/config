@@ -66,9 +66,15 @@ _Avoid_: Entry skill references (for named skill coupling)
 Rules that defer certain failure kinds (coverage threshold, dependency breakage) to Watch or future domain skills. **Generic defer rules** in entry skill (`DO NOT USE FOR`, checklist). **Named skills and REJECT criteria** in caller `agent_checker_instructions` appendix.
 _Avoid_: Detect gate (for defer policy alone); named skills in entry skill references
 
-**GitHub API Action (Execute)**:
-Issue labels, comments, or PR comments applied during **Execute** by the entry skill (via `gh` / API) — not Finalize. Caller supplies permissions; the Checker confirms API outcome fit. Finalize records state cursor and run-log.
-_Avoid_: Finalize (for label/comment delivery)
+**Deliver Message**:
+The `loop-finalize` step that posts the agent's output to GitHub once, with the App token: one Issue comment (`issue_comment`), one PR review (`pr_review`), or new Issues (`issue_create`), plus labels from `finalize_label_allowlist`. The agent job holds no write credential and only writes message files (`message.md`, `review.json`, `issues.json`) through `finalize_script` or the L1 `message_json`. Other API actions (close, stale handling) still run in Execute via the entry skill; the Checker confirms API outcome fit.
+_Avoid_: Execute (for comment, review, or Issue-creation delivery)
+
+**Fingerprint** (`issue_create`):
+A string the maker gives each finding, determined by the location and the kind of defect, not by wording. Deliver Message hashes it with `loop_name` into the marker `<!-- <loop_name>:fp:<hash16> -->` and skips a finding when an open or closed Issue with every `finalize_label_allowlist` label already holds the marker.
+
+**Built-in Range Detect**:
+The detect used when `detect_script` is omitted: changed files between `last_sha` and `HEAD`, excluding `.loop/`, the state file, and the run-log file. See [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#built-in-range-detect).
 
 **Maker / Checker** (roles):
 Two agent sessions in one `loop-execute` run. **Maker** edits (or surveys) in Execute (`agent_maker_*`). **Checker** APPROVE/REJECTs in Verify (`agent_checker_*`, skill often `loop-verifier`). Same agent session must not hold both roles.

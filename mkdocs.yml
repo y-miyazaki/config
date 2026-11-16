@@ -1,6 +1,9 @@
 site_name: Shared Config Distribution
 site_description: APM packages, reusable GitHub Actions workflows, and Renovate policy presets.
 docs_dir: docs
+# Agent rule files live next to the docs they govern but are not site pages; their links point outside docs_dir.
+exclude_docs: |
+  CLAUDE.md
 
 theme:
   name: material
@@ -77,8 +80,10 @@ nav:
               - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
               - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
               - Loop-Capable Skills: explanation/loop-engineering/loop-capable-skills.md
+              - Loop Issue Handoff: explanation/loop-engineering/loop-issue-handoff.md
           - Per-loop workflows:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+              - Loop Workflow Design Template: explanation/loop-engineering/workflows/loop-workflow-design-template.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
               - CI Sweeper: explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
               - Docs Updater: explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md
@@ -89,6 +94,7 @@ nav:
               - Issue Autofix: explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md
               - PR Revise: explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md
               - PR Review: explanation/loop-engineering/workflows/loop-github-pr-review-workflow-design.md
+              - Code Review: explanation/loop-engineering/workflows/loop-code-review-workflow-design.md
           - Cross-cutting contracts:
               - Loop PR Body Skill Contract: explanation/loop-engineering/loop-pr-body-skill-contract.md
               - Loop Automation Report Format: explanation/loop-engineering/common-loop-triage-format.md

@@ -25,12 +25,18 @@ _LOOP_ENTITY_DETECT_LIB_LOADED=true
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck disable=SC1091
-source "${LIB_DIR}/../../loop-detect/lib/guards.sh"
+source "${LIB_DIR}/../../lib/loop/admission.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/../../lib/loop/check_names.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/../../lib/loop/state_snapshot.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/outputs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/entity_target.sh"
 
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/detect_env.sh disable=SC1091
+source "${_loop_action_lib}/detect_env.sh"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"

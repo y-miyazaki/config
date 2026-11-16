@@ -9,9 +9,11 @@
 #
 # Design Rules:
 #   - Merged PRs promote pending.sha to last_sha
-#   - Closed-without-merge PRs clear pending only
+#   - Closed-without-merge PRs clear pending and add the pr_closed effect to consecutive_failures
 #   - Never push state commits onto fix-PR heads (avoids [skip ci] pollution)
 #   - Prefer direct push to branch_state; open auto-merge state PR when push is blocked
+#   - A push that loses a race is replayed on the latest state (up to PROMOTE_MAX_RETRIES attempts)
+#   - A close without merge counts as a failure through the outcome mapping table (lib/loop/outcome.sh)
 #
 # Output:
 #   Commits updated state files to branch_state when matches exist
@@ -36,6 +38,27 @@ STATE_BRANCH="${STATE_BRANCH:-}"
 STATE_PR_SKIP="${STATE_PR_SKIP:-false}"
 OUTCOME=""
 WRITE_MODE=""
+# Replays of the state update after a lost push race (the state PR fallback follows the last one)
+PROMOTE_ATTEMPT=1
+PROMOTE_MAX_RETRIES="${PROMOTE_MAX_RETRIES:-3}"
+PUSH_RACE_RETRY_STATUS=75
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../../lib/loop/check_names.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
+# shellcheck source=../../lib/loop/git_auth.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
+# shellcheck source=../../lib/loop/outcome.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/outcome.sh"
+# shellcheck source=../../lib/loop/push_race.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/push_race.sh"
+# shellcheck source=../../lib/loop/state_pr.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/state_pr.sh"
 
 #######################################
 # apply_pending_update: Apply promote or clear_pending jq transform for one target
@@ -88,6 +111,7 @@ function apply_pending_update {
             ;;
         clear_pending)
             jq \
+                --arg effect "$(outcome_counter_effect "${outcome}")" \
                 --arg key "${target_key}" \
                 --argjson pr "${PR_NUMBER}" \
                 --arg last_run "${now}" \
@@ -100,6 +124,12 @@ function apply_pending_update {
                       del(.pending)
                       | .last_run = $last_run
                       | .outcome = $outcome
+                      | .consecutive_failures = (
+                          if $effect == "increment" then ((.consecutive_failures // 0) + 1)
+                          elif $effect == "reset" then 0
+                          else (.consecutive_failures // 0)
+                          end
+                        )
                     end
                 )
                 ' "${state_tmp}" > "${state_tmp}.next"
@@ -114,6 +144,8 @@ function apply_pending_update {
 # Globals:
 #   PR_NUMBER - Pull request number for commit message
 #   WRITE_MODE - promote|clear_pending
+#   PROMOTE_ATTEMPT, PROMOTE_MAX_RETRIES - Replay counters
+#   PUSH_RACE_RETRY_STATUS - Status returned when the caller should replay
 #
 # Arguments:
 #   $1 - State push branch
@@ -123,13 +155,15 @@ function apply_pending_update {
 #   None
 #
 # Returns:
-#   Exits 0 when there is nothing to push
+#   0 when pushed, skipped or handed to the state PR fallback; PUSH_RACE_RETRY_STATUS when the push
+#   lost a race and attempts remain (the caller replays the update on the latest state)
 #
 #######################################
 function commit_changed_state_files {
     local push_branch="$1"
     shift
     local -a changed_files=("$@")
+    local push_err
 
     git add "${changed_files[@]}"
     if git diff --cached --quiet; then
@@ -138,9 +172,16 @@ function commit_changed_state_files {
     fi
 
     git commit -m "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]"
-    if git push origin HEAD:"${push_branch}" 2> /dev/null; then
+    if push_err="$(git push origin HEAD:"${push_branch}" 2>&1)"; then
         echo "State ${WRITE_MODE} pushed to ${push_branch} for PR #${PR_NUMBER}."
         return 0
+    fi
+    echo "${push_err}" >&2
+
+    # A push that lost a race is replayed: the caller fetches the latest state and applies
+    # the update again, so a concurrent state write is never overwritten
+    if push_race_is_error "${push_err}" && [[ ${PROMOTE_ATTEMPT} -lt ${PROMOTE_MAX_RETRIES} ]]; then
+        return "${PUSH_RACE_RETRY_STATUS}"
     fi
 
     if [[ ${STATE_PR_SKIP} == "true" ]]; then
@@ -173,52 +214,12 @@ function commit_changed_state_files {
 #######################################
 function open_state_pr_fallback {
     local push_branch="$1"
-    local state_branch pr_url
 
     echo "Direct push blocked; opening state promote PR."
-    state_branch="loop/state-promote-${GITHUB_RUN_ID:-0}-${GITHUB_RUN_ATTEMPT:-0}-$(openssl rand -hex 4)"
-    git checkout -B "${state_branch}"
-    if ! git push origin "${state_branch}"; then
-        echo "::error::Failed to push state branch ${state_branch}"
-        exit 1
-    fi
-    pr_url=$(gh pr create \
-        --repo "${GITHUB_REPOSITORY}" \
-        --base "${push_branch}" \
-        --head "${state_branch}" \
-        --title "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
-        --body "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed.")
-    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
-        echo "State promote PR queued for auto-merge: ${pr_url}"
-    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
-        echo "State promote PR merged: ${pr_url}"
-    else
-        echo "::warning::State promote PR requires manual merge: ${pr_url}"
-    fi
-}
-
-#######################################
-# configure_git_auth: Configure git identity and GitHub auth header
-#
-# Globals:
-#   GITHUB_TOKEN - GitHub token
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-#######################################
-function configure_git_auth {
-    : "${GITHUB_TOKEN:?}"
-
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+    state_pr_open "${push_branch}" "loop/state-promote" \
+        "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
+        "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed." \
+        "State promote PR"
 }
 
 #######################################
@@ -240,8 +241,12 @@ function configure_git_auth {
 function list_state_files {
     local branch="$1"
 
-    git ls-tree -r --name-only "origin/${branch}" -- .loop 2> /dev/null \
-        | grep -E '^\.loop/state-[^/]+\.json$' || true
+    local path
+    while IFS= read -r path; do
+        if check_names_state_file "${path}"; then
+            printf '%s\n' "${path}"
+        fi
+    done < <(git ls-tree -r --name-only "origin/${branch}" -- .loop 2> /dev/null || true)
 }
 
 #######################################
@@ -261,7 +266,7 @@ function list_state_files {
 #
 #######################################
 function validate_state_push_branch {
-    if ! [[ ${STATE_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+    if ! check_names_branch "${STATE_BRANCH}"; then
         echo "::error::Invalid state push branch: ${STATE_BRANCH}"
         exit 1
     fi
@@ -282,7 +287,8 @@ function validate_state_push_branch {
 #   None
 #
 # Returns:
-#   Exits 0 when there is nothing to push on this branch
+#   0 when there is nothing to push on this branch or the update landed; PUSH_RACE_RETRY_STATUS when
+#   the push lost a race and attempts remain
 #
 #######################################
 function process_state_push_branch {
@@ -363,7 +369,7 @@ function process_state_push_branch {
 function main {
     : "${STATE_BRANCH:?STATE_BRANCH is required}"
 
-    configure_git_auth
+    git_auth_configure
 
     if [[ ${MERGED} == "true" ]]; then
         OUTCOME="pr_merged"
@@ -373,7 +379,15 @@ function main {
         WRITE_MODE="clear_pending"
     fi
 
-    process_state_push_branch "${STATE_BRANCH}"
+    local rc
+    for ((PROMOTE_ATTEMPT = 1; PROMOTE_ATTEMPT <= PROMOTE_MAX_RETRIES; PROMOTE_ATTEMPT++)); do
+        rc=0
+        process_state_push_branch "${STATE_BRANCH}" || rc=$?
+        if [[ ${rc} -ne ${PUSH_RACE_RETRY_STATUS} ]]; then
+            return "${rc}"
+        fi
+        echo "Push race detected; replaying state ${WRITE_MODE} (${PROMOTE_ATTEMPT}/${PROMOTE_MAX_RETRIES})"
+    done
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

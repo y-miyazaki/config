@@ -7,11 +7,11 @@ bats_require_minimum_version 1.5.0
 
 # Use cases:
 # - validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE
-# - resolve_detect_script_path fails on empty or missing DETECT_SCRIPT
+# - resolve_detect_script_path leaves an empty DETECT_SCRIPT and fails on a missing one
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
 # - apply_scoped_pr_number_filter drops integration and keeps matching PR only
 # - apply_target_cap truncates candidates to fan-out cap
-# - target_circuit_breaker_open blocks append_integration_candidate before detect
+# - admission_circuit_breaker_open blocks append_integration_candidate before detect
 # - build_integration_target_json emits integration mode payload
 # - append_detect_candidate blocks detect when pending PR is open
 # - append_detect_candidate appends candidate when detect reports failures
@@ -26,6 +26,24 @@ bats_require_minimum_version 1.5.0
 # - main exits 1 without skip outputs when input validation fails
 # - main skips pr_push without a PR number (empty or 0) with pr_number_missing and exit 0
 # - main yields no integration targets when detect_branch_match is empty (no state_branch fallback)
+# - an empty DETECT_SCRIPT uses the built-in range detect instead of a config_error
+# - the built-in range detect replaces an unreachable last_sha in the prompt Last SHA line
+# - a custom detect_script keeps the stored last_sha without a reachability check
+# - integration target_json carries from.since with the last_sha
+# - detect_items false or unset keeps the branch path and ignores result.items
+# - detect_items true requires one literal branch and detect_pr_enabled false
+# - items mode builds one integration:<branch>#<key> candidate per item with only that item's context
+# - items mode gates each item by its own breaker / pending state, never the branch key
+# - items mode lets an item through once its open breaker is older than 30 days
+# - items mode orders by last_run (no state first) before the detect_max_targets cap
+# - items mode falls back to HEAD~10 for from.since without item state
+# - items mode treats an empty items array as skip and a missing, invalid, or duplicate key as an error
+# - record_admission_refusal ignores an admit and counts a refusal by reason class, keeping the first other reason
+# - load_target_state gathers the stored state and promotes a MERGED pending PR in memory
+# - append_detect_candidate drops a candidate whose detect result carries a closed gate
+# - items mode drops an item whose gate refuses it and reports the gate reason when none remains
+# - record_skip_detail keeps the first detail on one redacted line
+# - write_detect_outputs publishes skip_detail only for a skip
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -375,11 +393,10 @@ EOF
     run require_scoped_head_for_workflow_run "feature/auth"
     [ "$status" -eq 0 ]
 }
-@test "resolve_detect_script_path fails when DETECT_SCRIPT is empty" {
+@test "resolve_detect_script_path leaves an empty DETECT_SCRIPT for the built-in range detect" {
     DETECT_SCRIPT=""
-    run resolve_detect_script_path
-    [ "$status" -eq 1 ]
-    [[ $output == *"DETECT_SCRIPT is empty"* ]]
+    resolve_detect_script_path > /dev/null
+    [ -z "${DETECT_SCRIPT}" ]
 }
 @test "resolve_detect_script_path fails when script file is missing" {
     DETECT_SCRIPT="${DETECT_TMP}/missing-detect.sh"
@@ -432,6 +449,123 @@ EOF
     run grep -Fx 'skip_reason=checkout_failed' "${github_output}"
     [ "$status" -eq 0 ]
 }
+@test "record_admission_refusal ignores an admit and counts a refusal by reason class keeping the first other reason" {
+    local admit='{"admit":true,"skip_reason":"","detail":""}'
+    CIRCUIT_BREAKER_BLOCKED=0
+    PENDING_PR_BLOCKED=0
+    GATE_BLOCKED=0
+    GATE_BLOCK_REASON=""
+    run record_admission_refusal "k" "${admit}"
+    [ "$status" -eq 1 ]
+
+    record_admission_refusal "k1" '{"admit":false,"skip_reason":"circuit_breaker","detail":"consecutive_failures 3"}'
+    record_admission_refusal "k2" '{"admit":false,"skip_reason":"pending_pr","detail":"pending PR #4 is open"}'
+    record_admission_refusal "k3" '{"admit":false,"skip_reason":"entity_closed","detail":"entity state is closed"}'
+    record_admission_refusal "k4" '{"admit":false,"skip_reason":"fact_missing","detail":"entity.state is unknown"}'
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 1 ]
+    [ "${PENDING_PR_BLOCKED}" -eq 1 ]
+    [ "${GATE_BLOCKED}" -eq 2 ]
+    [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
+}
+
+@test "load_target_state gathers the stored state and promotes a MERGED pending PR in memory" {
+    local state_file="${DETECT_TMP}/state-load.json"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"old","pending":{"pr":42,"sha":"new"}}}}' > "${state_file}"
+    STATE_FILE="${state_file}"
+    STATE_READ_FILE=""
+    STATE_BRANCH="main"
+    export GITHUB_TOKEN="test-token"
+    local mock_bin="${DETECT_TMP}/bin"
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\necho MERGED\n' > "${mock_bin}/gh"
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
+
+    load_target_state "integration:main"
+
+    [ "${TARGET_PENDING_PR_STATE}" = "MERGED" ]
+    [ "$(jq -r '.last_sha' <<< "${TARGET_STATE_JSON}")" = "new" ]
+    [ "$(jq -r 'has("pending")' <<< "${TARGET_STATE_JSON}")" = "false" ]
+}
+
+@test "append_detect_candidate drops a candidate whose detect result carries a closed gate" {
+    local repo_root state_file
+
+    repo_root="${DETECT_TMP}/repo"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-x.json"
+    printf '%s\n' '{"targets":{}}' > "${state_file}"
+    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
+    cat > "${DETECT_SCRIPT}" << EOF
+#!/usr/bin/env bash
+printf '%s\\n' '{"status":"ok","skip":false,"result":{"gate":{"entity":{"kind":"issue","number":3,"state":"closed"}}}}'
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+    STATE_FILE="${state_file}"
+    STATE_BRANCH="main"
+    export AGENT_MAKER_SKILL_NAME="loop-x"
+    LEVEL="L2"
+    AGENT_EDIT_ALLOWLIST="*"
+    AGENT_MAKER_INSTRUCTIONS=""
+    PENDING_PR_BLOCKED=0
+    CIRCUIT_BREAKER_BLOCKED=0
+    GATE_BLOCKED=0
+    GATE_BLOCK_REASON=""
+    CANDIDATES_JSON=()
+    stub_checkout_context "${repo_root}"
+
+    append_detect_candidate "integration:main" "main" "" "" build_integration_target_json
+
+    [ "${GATE_BLOCKED}" -eq 1 ]
+    [ "${GATE_BLOCK_REASON}" = "entity_closed" ]
+    [ "${#CANDIDATES_JSON[@]}" -eq 0 ]
+}
+
+@test "empty candidates emit the gate reason when the gate refused every candidate" {
+    local github_output
+
+    CANDIDATES_JSON=()
+    CHECKOUT_FAILED=0
+    CIRCUIT_BREAKER_BLOCKED=0
+    PENDING_PR_BLOCKED=0
+    GATE_BLOCKED=1
+    GATE_BLOCK_REASON="entity_closed"
+    github_output="$(mktemp)"
+    GITHUB_OUTPUT="${github_output}"
+
+    write_empty_candidates_outputs
+
+    run grep -Fx 'skip_reason=entity_closed' "${github_output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "record_skip_detail keeps the first detail on one redacted line" {
+    SKIP_DETAIL=""
+    record_skip_detail $'first line\nsecond token=abc123secret'
+    record_skip_detail "later detail"
+    [ "${SKIP_DETAIL}" = "first line second token=[REDACTED]" ]
+}
+
+@test "write_detect_outputs publishes skip_detail only for a skip" {
+    local github_output
+    github_output="$(mktemp)"
+    GITHUB_OUTPUT="${github_output}"
+    SKIP_DETAIL="detect said no"
+
+    write_detect_outputs "false" "no_changes" "[]"
+    run grep -Fx 'skip_detail=detect said no' "${github_output}"
+    [ "$status" -eq 0 ]
+
+    : > "${github_output}"
+    write_detect_outputs "true" "none" '[{"target_json":{}}]'
+    run grep -Fx 'skip_detail=' "${github_output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "validate_branch_match accepts list glob and regex" {
     for mode in list glob regex; do
         DETECT_BRANCH_MATCH_MODE="${mode}"
@@ -691,7 +825,7 @@ EOF
 @test "main exits 1 without skip outputs when input validation fails" {
     local -a cases=(
         'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
-        'DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
+        'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
         'LEVEL=|::error::level is required (L1, L2, or L3)'
         'DETECT_BRANCH_MATCH=main|::error::delivery pr_push does not allow detect_branch_match (got: main)'
     )
@@ -715,6 +849,7 @@ EOF
     local pr_number normalized expected entry checked=0
     expected="should_run=false
 skip_reason=pr_number_missing
+skip_detail=
 delivery=pr_push
 pr_auto_merge=false
 target_matrix<<TARGET_MATRIX_X
@@ -760,4 +895,408 @@ prompt="
     [ "$status" -eq 0 ]
     [ -s "${DETECT_TMP}/gh_calls" ]
     [ ! -s "${DETECT_TMP}/detect_calls" ]
+}
+
+# make_range_repo: repository whose state points at SINCE and whose HEAD changes src/a.sh
+make_range_repo() {
+    local state_sha="${1:-}"
+
+    RANGE_REPO="${DETECT_TMP}/repo"
+    mkdir -p "${RANGE_REPO}/.loop" "${RANGE_REPO}/src"
+    git init -q "${RANGE_REPO}"
+    git -C "${RANGE_REPO}" config user.email "test@example.com"
+    git -C "${RANGE_REPO}" config user.name "Test User"
+    printf 'one\n' > "${RANGE_REPO}/src/a.sh"
+    git -C "${RANGE_REPO}" add -A
+    git -C "${RANGE_REPO}" commit -q -m base
+    RANGE_SINCE="$(git -C "${RANGE_REPO}" rev-parse HEAD)"
+    printf 'two\n' >> "${RANGE_REPO}/src/a.sh"
+    git -C "${RANGE_REPO}" add -A
+    git -C "${RANGE_REPO}" commit -q -m change
+    printf '{"targets":{"integration:main":{"last_sha":"%s","consecutive_failures":0,"open_rejections":[]}}}\n' \
+        "${state_sha:-${RANGE_SINCE}}" > "${RANGE_REPO}/.loop/state-x.json"
+    STATE_FILE="${RANGE_REPO}/.loop/state-x.json"
+    RUN_LOG_FILE="${RANGE_REPO}/.loop/run-log.md"
+    STATE_BRANCH="main"
+    LEVEL="L2"
+    AGENT_EDIT_ALLOWLIST="*"
+    AGENT_MAKER_INSTRUCTIONS=""
+    AGENT_EDIT_TARGET="report"
+    AGENT_MAKER_SKILL_NAME="code-review"
+    stub_checkout_context "${RANGE_REPO}"
+}
+
+@test "append_detect_candidate builds the integration target with from.since" {
+    make_range_repo
+    DETECT_SCRIPT=""
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "${RANGE_SINCE}" ]
+}
+
+@test "append_detect_candidate keeps the stored last_sha for a custom detect_script" {
+    make_range_repo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    DETECT_SCRIPT="${DETECT_TMP}/detect-custom.sh"
+    printf '#!/usr/bin/env bash\nprintf %%s %s\n' "'{\"skip\":false,\"failures\":[]}'" > "${DETECT_SCRIPT}"
+    chmod +x "${DETECT_SCRIPT}"
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[0]}")" == *"Last SHA: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"* ]]
+}
+
+@test "append_detect_candidate range detect replaces an unreachable last_sha in the prompt" {
+    local fallback
+    make_range_repo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    fallback="$(git -C "${RANGE_REPO}" rev-list --max-parents=0 HEAD | head -1)"
+    DETECT_SCRIPT=""
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[0]}")" == *"Last SHA: ${fallback}"* ]]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "${fallback}" ]
+}
+
+@test "main does not report config_error for an empty DETECT_SCRIPT" {
+    export_main_env
+    export DETECT_SCRIPT=""
+    export DETECT_PR_NUMBER=""
+    run_detect_main
+    [ "$status" -eq 0 ]
+    grep -qx 'skip_reason=pr_number_missing' "${GITHUB_OUTPUT}"
+}
+
+# items_detect_json N...: detect JSON whose result.items holds one issue item per number
+items_detect_json() {
+    printf '%s\n' "$@" | jq -sc '{status: "ok", skip: false, result: {items: map({
+        key: ("issue:" + tostring),
+        entity: {kind: "issue", number: ., handoff_key: ("entity:issue:" + tostring)},
+        context: {issue_number: .},
+        verifier_context: ""
+    })}}'
+}
+
+# make_items_repo DETECT_JSON [STATE_TARGETS_JSON]: repo with 11 commits, a detect script
+# that prints DETECT_JSON, the state targets, and the environment for an items mode run.
+make_items_repo() {
+    local detect_json="$1"
+    local targets_json="${2:-}"
+    local i
+
+    [[ -n ${targets_json} ]] || targets_json='{}'
+    ITEMS_REPO="${DETECT_TMP}/items-repo"
+    mkdir -p "${ITEMS_REPO}/.loop"
+    git init -q "${ITEMS_REPO}"
+    git -C "${ITEMS_REPO}" config user.email "test@example.com"
+    git -C "${ITEMS_REPO}" config user.name "Test User"
+    for i in 0 1 2 3 4 5 6 7 8 9 10; do
+        git -C "${ITEMS_REPO}" commit -q --allow-empty -m "c${i}"
+    done
+    jq -nc --argjson t "${targets_json}" '{targets: $t}' > "${ITEMS_REPO}/.loop/state-items.json"
+    printf '%s\n' "${detect_json}" > "${DETECT_TMP}/items-detect.json"
+    : > "${DETECT_TMP}/detect_calls"
+    printf '#!/usr/bin/env bash\necho called >> %q\ncat %q\n' \
+        "${DETECT_TMP}/detect_calls" "${DETECT_TMP}/items-detect.json" > "${DETECT_TMP}/detect-items.sh"
+    chmod +x "${DETECT_TMP}/detect-items.sh"
+
+    export AGENT_EDIT_ALLOWLIST="**"
+    export AGENT_EDIT_DENYLIST=""
+    export AGENT_EDIT_TARGET="fix"
+    export AGENT_MAKER_INSTRUCTIONS=""
+    export AGENT_MAKER_SKILL_NAME="github-issue-autofix"
+    export AGENT_UNCHANGED_VERDICT="REJECT"
+    export BUDGET_FILE="${ITEMS_REPO}/.loop/loop-budget.json"
+    export DELIVERY="pr_create"
+    export DETECT_BRANCH_MATCH="main"
+    export DETECT_BRANCH_MATCH_MODE="list"
+    export DETECT_ITEMS="true"
+    export DETECT_MAX_TARGETS="3"
+    export DETECT_PR_ENABLED="false"
+    export DETECT_PR_NUMBER=""
+    export DETECT_SCRIPT="${DETECT_TMP}/detect-items.sh"
+    export GITHUB_OUTPUT="${DETECT_TMP}/github_output"
+    export GITHUB_TOKEN=""
+    export LEVEL="L2"
+    export LOOP_NAME="items"
+    export RUNNER_TEMP="${DETECT_TMP}"
+    export RUN_LOG_FILE="${ITEMS_REPO}/.loop/loop-run-log.md"
+    export STATE_BRANCH="main"
+    export STATE_FILE="${ITEMS_REPO}/.loop/state-items.json"
+    : > "${GITHUB_OUTPUT}"
+    unset CI_SWEEPER_WORKFLOW_RUN_ID LOOP_SCOPED_HEAD_BRANCH
+    stub_checkout_context "${ITEMS_REPO}"
+}
+
+# run_items_main runs detect.sh main with checkout_context entering ITEMS_REPO.
+run_items_main() {
+    run --separate-stderr bash -c "
+        source '$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh'
+        checkout_context() { cd '${ITEMS_REPO}' || return 1; }
+        cd '${ITEMS_REPO}'
+        main
+    "
+}
+
+# output_matrix_keys prints the comma-joined target keys of the target_matrix output.
+output_matrix_keys() {
+    awk '/^target_matrix<</ {f = 1; next} f && /^TARGET_MATRIX_/ {exit} f' "${GITHUB_OUTPUT}" \
+        | jq -r '[.[].target_json.key] | join(",")'
+}
+
+@test "items empty array behaves like skip" {
+    local detect_json
+
+    for detect_json in \
+        '{"status":"ok","skip":false,"result":{"items":[]}}' \
+        '{"status":"ok","skip":true}'; do
+        make_items_repo "${detect_json}"
+        run_items_main
+        [ "$status" -eq 0 ]
+        grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+        grep -qx 'skip_reason=no_changes' "${GITHUB_OUTPUT}"
+        rm -rf "${ITEMS_REPO}"
+    done
+}
+
+@test "items ignored when detect_items false" {
+    local detect_json value
+
+    detect_json="$(items_detect_json 1 2)"
+    for value in false ""; do
+        make_items_repo "${detect_json}"
+        export DETECT_ITEMS="${value}"
+        run_items_main
+        [ "$status" -eq 0 ]
+        [ "$(output_matrix_keys)" = "integration:main" ]
+        rm -rf "${ITEMS_REPO}"
+    done
+
+    make_items_repo "${detect_json}"
+    DETECT_ITEMS="false"
+    append_integration_candidate "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[0]}")" = "${detect_json}" ]
+    [ "$(jq -r '.target_json.entity // "none"' <<< "${CANDIDATES_JSON[0]}")" = "none" ]
+}
+
+@test "items mode candidate result contains only that item's context" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1,"title":"one"},"verifier_context":"## Issue 1"},
+        {"key":"issue:2","context":{"issue_number":2}}]}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[0]}")" = '{"status":"ok","skip":false,"result":{"issue_number":1,"title":"one","key":"issue:1"}}' ]
+    [ "$(jq -c '.result' <<< "${CANDIDATES_JSON[1]}")" = '{"status":"ok","skip":false,"result":{"issue_number":2,"key":"issue:2"}}' ]
+    [ "$(jq -r '.verifier_context' <<< "${CANDIDATES_JSON[0]}")" = "## Issue 1" ]
+    [ "$(jq -r '.verifier_context' <<< "${CANDIDATES_JSON[1]}")" = "" ]
+}
+
+@test "items mode caps at detect_max_targets" {
+    make_items_repo "$(items_detect_json 1 2 3 4)"
+    export DETECT_MAX_TARGETS="3"
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'should_run=true' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=target_budget' "${GITHUB_OUTPUT}"
+    [ "$(output_matrix_keys)" = "integration:main#issue:1,integration:main#issue:2,integration:main#issue:3" ]
+    [ "$(wc -l < "${DETECT_TMP}/detect_calls")" -eq 1 ]
+}
+
+@test "items mode creates one candidate per item with per-item key" {
+    make_items_repo "$(items_detect_json 1 2)"
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(wc -l < "${DETECT_TMP}/detect_calls")" -eq 1 ]
+    run jq -c '.target_json | {mode, key, from: .from.branch, to: .to.branch, entity}' <<< "${CANDIDATES_JSON[0]}"
+    [ "$output" = '{"mode":"integration","key":"integration:main#issue:1","from":"main","to":"main","entity":{"kind":"issue","number":1}}' ]
+    run jq -c '.target_json | {mode, key, entity}' <<< "${CANDIDATES_JSON[1]}"
+    [ "$output" = '{"mode":"integration","key":"integration:main#issue:2","entity":{"kind":"issue","number":2}}' ]
+    [ "$(jq -r '.target_json.from.ref' <<< "${CANDIDATES_JSON[0]}")" = "$(git -C "${ITEMS_REPO}" rev-parse HEAD)" ]
+}
+
+@test "items mode exits the detect phase when the detect script fails" {
+    make_items_repo '{"status":"error","message":"items detect failed"}'
+    printf '#!/usr/bin/env bash\ncat %q\nexit 3\n' "${DETECT_TMP}/items-detect.json" > "${DETECT_SCRIPT}"
+    run_items_main
+    [ "$status" -ne 0 ]
+    [[ ${stderr} == *"items detect failed"* ]]
+    [[ ${stderr} == *"loop-detect: detect script failed"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode fails on invalid or duplicate item key" {
+    local entry expected
+
+    for entry in \
+        '{"status":"ok","skip":false,"result":{"items":[{"key":"issue:1"},{"key":"issue:1"}]}}|duplicate item key' \
+        '{"status":"ok","skip":false,"result":{"items":[{"key":"a b"}]}}|invalid item key'; do
+        expected="${entry#*|}"
+        make_items_repo "${entry%%|*}"
+        run_items_main
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"*"${expected}"* ]]
+        run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+        rm -rf "${ITEMS_REPO}"
+    done
+}
+
+@test "items mode ignores branch-level circuit breaker" {
+    make_items_repo "$(items_detect_json 1)" \
+        '{"integration:main":{"last_sha":"deadbeef","consecutive_failures":3,"pending":{"pr":7}}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:1" ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 0 ]
+    [ "${PENDING_PR_BLOCKED}" -eq 0 ]
+}
+
+@test "items mode missing items key is an error" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"issue_number":1}}'
+    run_items_main
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"::error::"*"items"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode orders by last_run oldest first before cap" {
+    make_items_repo "$(items_detect_json 1 2 3)" \
+        '{"integration:main#issue:1":{"last_run":"2026-11-10T00:00:00Z","consecutive_failures":0},
+          "integration:main#issue:2":{"last_run":"2026-11-01T00:00:00Z","consecutive_failures":0}}'
+    export DETECT_MAX_TARGETS="2"
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'skip_reason=target_budget' "${GITHUB_OUTPUT}"
+    [ "$(output_matrix_keys)" = "integration:main#issue:3,integration:main#issue:2" ]
+}
+
+@test "items mode requires single branch and detect_pr_enabled false" {
+    local -a cases=(
+        'DETECT_BRANCH_MATCH=main,develop'
+        $'DETECT_BRANCH_MATCH=main\ndevelop'
+        'DETECT_BRANCH_MATCH=release/*'
+        'DETECT_BRANCH_MATCH_MODE=regex'
+        'DETECT_PR_ENABLED=true'
+        'DETECT_ITEMS=yes'
+    )
+    local assignment checked=0
+
+    make_items_repo "$(items_detect_json 1)"
+    run validate_detect_inputs
+    [ "$status" -eq 0 ]
+    DETECT_BRANCH_MATCH_MODE="glob"
+    run validate_detect_inputs
+    [ "$status" -eq 0 ]
+    rm -rf "${ITEMS_REPO}"
+
+    for assignment in "${cases[@]}"; do
+        make_items_repo "$(items_detect_json 1)"
+        export "${assignment?}"
+        run --separate-stderr validate_detect_inputs
+        [ "$status" -eq 1 ]
+        [[ ${stderr} == *"::error::"*"detect_items"* ]]
+        rm -rf "${ITEMS_REPO}"
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 6 ]
+
+    make_items_repo "$(items_detect_json 1)"
+    export DETECT_BRANCH_MATCH="main,develop"
+    run_items_main
+    [ "$status" -eq 1 ]
+    [ ! -s "${GITHUB_OUTPUT}" ]
+    [ ! -s "${DETECT_TMP}/detect_calls" ]
+}
+
+@test "items mode fails the job when order_items_by_last_run fails" {
+    make_items_repo "$(items_detect_json 1 2)"
+    run --separate-stderr bash -c "
+        source '$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh'
+        checkout_context() { cd '${ITEMS_REPO}' || return 1; }
+        order_items_by_last_run() { echo 'ordering broke' >&2; return 1; }
+        main
+    "
+    [ "$status" -ne 0 ]
+    [[ ${stderr} == *"ordering broke"* ]]
+    run ! grep -q 'should_run=' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode requires a non-empty detect_script" {
+    make_items_repo "$(items_detect_json 1)"
+    export DETECT_SCRIPT=""
+    run --separate-stderr validate_detect_inputs
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"::error::"*"detect_items"*"detect_script"* ]]
+}
+
+@test "items mode since falls back to HEAD~10 without state" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:2":{"last_sha":"cafebabecafebabecafebabecafebabecafebabe","consecutive_failures":0}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[0]}")" = "$(git -C "${ITEMS_REPO}" rev-parse HEAD~10)" ]
+    [ "$(jq -r '.target_json.from.since' <<< "${CANDIDATES_JSON[1]}")" = "cafebabecafebabecafebabecafebabecafebabe" ]
+    [[ "$(jq -r '.prompt' <<< "${CANDIDATES_JSON[1]}")" == *"Last SHA: cafebabecafebabecafebabecafebabecafebabe"* ]]
+}
+
+@test "items mode skips item with open breaker and reports circuit_breaker skip_reason when all blocked" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:1":{"consecutive_failures":3}}'
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:2" ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 1 ]
+    rm -rf "${ITEMS_REPO}"
+
+    make_items_repo "$(items_detect_json 1)" \
+        '{"integration:main#issue:1":{"consecutive_failures":3}}'
+    run_items_main
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::admission refused integration:main#issue:1: circuit_breaker"* ]]
+    grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=circuit_breaker' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode lets an item through once its open breaker is older than 30 days" {
+    local old
+    old="$(date -u -d '31 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-31d +%Y-%m-%dT%H:%M:%SZ)"
+    make_items_repo "$(items_detect_json 1 2)" \
+        "{\"integration:main#issue:1\":{\"consecutive_failures\":3,\"last_run\":\"${old}\"}}"
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    [ "${CIRCUIT_BREAKER_BLOCKED}" -eq 0 ]
+}
+
+@test "items mode drops an item whose gate refuses it and reports the gate reason when none remains" {
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}},
+        {"key":"issue:2","context":{"issue_number":2},"gate":{"entity":{"kind":"issue","number":2,"state":"open"}}}]}}'
+    append_items_candidates "main"
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:2" ]
+    [ "${GATE_BLOCKED}" -eq 1 ]
+    rm -rf "${ITEMS_REPO}"
+
+    make_items_repo '{"status":"ok","skip":false,"result":{"items":[
+        {"key":"issue:1","context":{"issue_number":1},"gate":{"entity":{"kind":"issue","number":1,"state":"closed"}}}]}}'
+    run_items_main
+    [ "$status" -eq 0 ]
+    grep -qx 'should_run=false' "${GITHUB_OUTPUT}"
+    grep -qx 'skip_reason=entity_closed' "${GITHUB_OUTPUT}"
+}
+
+@test "items mode skips item with pending pr" {
+    make_items_repo "$(items_detect_json 1 2)" \
+        '{"integration:main#issue:2":{"consecutive_failures":0,"pending":{"pr":42}}}'
+
+    append_items_candidates "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    [ "$(jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}")" = "integration:main#issue:1" ]
+    [ "${PENDING_PR_BLOCKED}" -eq 1 ]
 }

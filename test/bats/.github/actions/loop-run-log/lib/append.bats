@@ -6,10 +6,13 @@
 # Use cases:
 # - loop_run_log_build_entry includes tokens_total zero by default
 # - loop_run_log_build_entry sets tokens_total from measured usage_json
+# - loop_run_log_build_entry omits usage and still writes an entry when usage_json is invalid
 # - loop_run_log_append_entry writes JSONL entry with expected format
+# - loop_run_log_build_entry ignores target_key when empty
+# - loop_run_log_build_entry appends target_key last
+# - loop_run_log_build_entry records skip_detail only when non-empty
 # - loop_run_log_compute_duration returns zero for empty start
 # - loop_run_log_compute_duration returns elapsed seconds
-# - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
 # - loop_run_log_append_entry prunes entries older than 30 days
 # - budget token selection prefers measured usage over tokens_total
 # - loop_run_log_build_entry carries the per-model usage breakdown through unchanged
@@ -81,6 +84,12 @@ _push_concurrent_entry() {
     [ "$(jq -r '.usage // empty' <<< "${result}")" = "" ]
 }
 
+@test "loop_run_log_build_entry omits usage and still writes an entry when usage_json is invalid" {
+    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "error" "none" "APPROVE" "999" '{"truncated":')"
+    [ "$(jq -r '.outcome' <<< "${result}")" = "error" ]
+    [ "$(jq -r 'has("usage")' <<< "${result}")" = "false" ]
+}
+
 @test "loop_run_log_build_entry sets tokens_total from usage_json" {
     local usage='{"total_input_tokens":1842,"total_output_tokens":17,"model":"composer-2.5"}'
     result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "pr_created" "none" "APPROVE" "999" "${usage}")"
@@ -98,6 +107,31 @@ _push_concurrent_entry() {
     [ "$(jq -r '.agent_result' <<< "${result}")" = "failure" ]
     [ "$(jq -r '.failure_stage' <<< "${result}")" = "push" ]
     [ "$(jq -r '.failure_message' <<< "${result}")" = "remote rejected" ]
+}
+
+@test "loop_run_log_build_entry ignores target_key when empty" {
+    local without with_empty
+
+    without="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected")"
+    with_empty="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected" "")"
+    [ "$(jq -c 'del(.run_id)' <<< "${with_empty}")" = "$(jq -c 'del(.run_id)' <<< "${without}")" ]
+    [ "$(jq -r 'has("target_key")' <<< "${with_empty}")" = "false" ]
+}
+
+@test "loop_run_log_build_entry appends target_key last" {
+    result="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected" "entity:issue:7")"
+    [ "$(jq -r '.target_key' <<< "${result}")" = "entity:issue:7" ]
+    [ "$(jq -r 'keys_unsorted | last' <<< "${result}")" = "target_key" ]
+}
+
+@test "loop_run_log_build_entry records skip_detail only when non-empty" {
+    run loop_run_log_build_entry "" 1 "" "loop" "skipped" "domain:detect" "" "1" "" "" "" "" "" "marker review exists"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.skip_detail' <<< "${output}")" = "marker review exists" ]
+    [ "$(jq -r '.skip_reason' <<< "${output}")" = "domain:detect" ]
+    run loop_run_log_build_entry "" 1 "" "loop" "skipped" "budget" "" "1" "" "" "" "" "" ""
+    [ "$status" -eq 0 ]
+    [ "$(jq 'has("skip_detail")' <<< "${output}")" = "false" ]
 }
 
 @test "loop_run_log_append_entry writes JSONL entry with expected format" {
@@ -127,16 +161,11 @@ _push_concurrent_entry() {
     [ "${result}" -le 15 ]
 }
 
-@test "loop_run_log_prune_cutoff_date returns YYYY-MM-DD" {
-    result="$(loop_run_log_prune_cutoff_date)"
-    [[ ${result} =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
-}
-
 @test "loop_run_log_append_entry prunes entries older than 30 days" {
     local log_file="${TEST_DIR}/loop-run-log.md"
     local cutoff old_date recent_date new_entry
 
-    cutoff="$(loop_run_log_prune_cutoff_date)"
+    cutoff="$(retention_cutoff_date)"
     old_date="$(date -u -d "${cutoff} - 1 day" +%Y-%m-%dT%H:%M:%SZ)"
     recent_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     new_entry='{"run_id":"'"${recent_date}"'","loop_name":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_total":0,"workflow_run":"1"}'

@@ -30,13 +30,13 @@ Handoff-only (not in that diagram):
 
 ### Required outputs
 
-| Output                  | Source                                                                                                                  |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                  |
-| `skip_reason`           | `loop-detect`                                                                                                           |
-| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                      |
-| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact)) |
-| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                             |
+| Output                  | Source                                                                                                                                                                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                                                                                                                                   |
+| `skip_reason`           | `loop-detect`; entity callers publish `budget`, an admission reason (`entity_closed`, `actor_untrusted`, `mention_missing`, `pending_pr`, `circuit_breaker`, `fact_missing`) or `domain:<reason>`, and a one-line redacted `skip_detail` |
+| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                                                                                                                                       |
+| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact))                                                                                                                  |
+| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                                                                                                                                              |
 
 Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `result` and `verifier_context` live in the **loop-handoff** artifact (`payloads/<sanitized-key>.json`).
 
@@ -46,7 +46,7 @@ Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `res
 
 ### Target selection (inside `loop-detect`)
 
-1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`branch_match`, `pr_enabled`, `level`, …).
+1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`detect_branch_match`, `detect_pr_enabled`, `level`, …).
 2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
 3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
 4. Cap at `detect_max_targets`; excess → `target_budget` on next cron.

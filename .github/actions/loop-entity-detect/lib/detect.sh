@@ -13,7 +13,7 @@
 # - Large payloads live in loop-handoff artifact; matrix output stays slim
 # - Detect-script boundary: non-zero exit fails the step without skip_reason
 # - level and delivery have no defaults; invalid level-keyed inputs fail the step
-# - skip=false requires result.entity.kind issue | pr, allowed by delivery (validate_delivery_target)
+# - skip=false requires result.entity.kind issue | pr, allowed by delivery (delivery_validate_target)
 #
 # Dependencies:
 # - bash, jq, openssl
@@ -21,7 +21,7 @@
 # Optional environment:
 #   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
-#   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
+#   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE, STATE_FILE
 #   GITHUB_TOKEN (detect token)
 #######################################
 
@@ -54,6 +54,38 @@ AGENT_EDIT_DENYLIST="${AGENT_EDIT_DENYLIST-}"
 AGENT_UNCHANGED_VERDICT="${AGENT_UNCHANGED_VERDICT-}"
 HANDOFF_DIR="${RUNNER_TEMP:-/tmp}/loop-handoff"
 DETECT_OUT="${RUNNER_TEMP:-/tmp}/entity-detect.json"
+
+#######################################
+# read_entity_target_state: Read one target's state from a state file snapshot
+#
+# Description:
+#   Reads the given file (the state-branch snapshot made by main). A missing file, an unreadable file or a missing
+#   target gives {} (no state), so the circuit breaker is not open for a target without history.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - State file path (may be empty)
+#   $2 - Target key
+#
+# Outputs:
+#   Target state JSON on stdout ({} when none)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function read_entity_target_state {
+    local state_file="${1:-}"
+    local target_key="$2"
+
+    if [[ -z ${state_file} || ! -f ${state_file} ]]; then
+        printf '{}'
+        return 0
+    fi
+    jq -c --arg key "${target_key}" '.targets[$key] // {}' "${state_file}" 2> /dev/null || printf '{}'
+}
 
 #######################################
 # resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
@@ -107,6 +139,7 @@ function resolve_detect_script_path {
 #
 # Arguments:
 #   $1 - skip_reason
+#   $2 - skip_detail (optional)
 #
 # Outputs:
 #   should_run=false on GITHUB_OUTPUT
@@ -117,8 +150,9 @@ function resolve_detect_script_path {
 #######################################
 function write_entity_skip_outputs {
     local skip_reason="$1"
+    local skip_detail="${2:-}"
 
-    write_entity_detect_outputs "false" "${skip_reason}" "[]"
+    write_entity_detect_outputs "false" "${skip_reason}" "[]" "${skip_detail}"
     exit 0
 }
 
@@ -130,6 +164,7 @@ function write_entity_skip_outputs {
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
 #   GITHUB_TOKEN
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
+#   STATE_BRANCH, STATE_FILE - The state file and run log are read from origin/<STATE_BRANCH>
 #   HANDOFF_DIR, DETECT_OUT
 #
 # Arguments:
@@ -143,7 +178,7 @@ function write_entity_skip_outputs {
 #
 #######################################
 function main {
-    local full_matrix target_matrix candidate detect_status skip_reason
+    local full_matrix target_matrix candidate detect_status handoff_key skip_reason verdict
 
     if [[ -z ${LOOP_NAME} || -z ${AGENT_MAKER_SKILL_NAME} ]]; then
         echo "::error::LOOP_NAME and AGENT_MAKER_SKILL_NAME are required" >&2
@@ -152,29 +187,48 @@ function main {
 
     local loop_action_lib
     loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
-    # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
-    source "${loop_action_lib}/validate_loop_write_contract.sh"
+    # shellcheck source=../../lib/loop/check_loop_write_contract.sh disable=SC1091
+    source "${loop_action_lib}/check_loop_write_contract.sh"
     # A configuration error fails the job (no outputs written).
-    if ! validate_loop_write_contract "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
+    if ! check_loop_write_contract_all "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
         "${AGENT_EDIT_ALLOWLIST}" "${AGENT_EDIT_DENYLIST}" "${AGENT_UNCHANGED_VERDICT}" \
         "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         exit 1
     fi
-    if ! validate_delivery_value "${DELIVERY}"; then
+    if ! delivery_validate_value "${DELIVERY}"; then
         exit 1
     fi
 
     if ! resolve_detect_script_path; then
         exit 1
     fi
+    if ! detect_env_build_args "${DETECT_ENV_JSON:-}"; then
+        exit 1
+    fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
-        "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+    # Snapshot the state and the run log from the state branch; the budget file is policy and stays on the trusted checkout.
+    local state_read_file run_log_read_file
+    local -a snapshot_pairs=("${RUN_LOG_FILE:-.loop/loop-run-log.md}" "")
+    state_read_file="$(mktemp)"
+    run_log_read_file="$(mktemp)"
+    snapshot_pairs[1]="${run_log_read_file}"
+    if [[ -n ${STATE_FILE:-} ]]; then
+        snapshot_pairs+=("${STATE_FILE}" "${state_read_file}")
+    fi
+    if ! state_snapshot_from_branch "${STATE_BRANCH:?STATE_BRANCH is required}" "${snapshot_pairs[@]}"; then
+        exit 1
+    fi
+
+    if admission_budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" \
+        "${run_log_read_file}" \
         "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_entity_skip_outputs "budget"
     fi
 
-    bash "${DETECT_SCRIPT}" > "${DETECT_OUT}"
+    if ! env "${LOOP_DETECT_ENV_ARGS[@]}" bash "${DETECT_SCRIPT}" > "${DETECT_OUT}"; then
+        echo "::error::entity detect script failed: ${DETECT_SCRIPT}" >&2
+        exit 1
+    fi
     detect_status="$(jq -r '.status // "error"' "${DETECT_OUT}")"
     if [[ ${detect_status} != "ok" ]]; then
         echo "::error::entity detect failed: status=$(jq -r '.status // "error"' "${DETECT_OUT}") message=$(jq -r '.message // ""' "${DETECT_OUT}")" >&2
@@ -194,17 +248,26 @@ function main {
         exit 1
     fi
     if [[ $(jq 'length' <<< "${full_matrix}") -gt 0 ]] \
-        && ! validate_delivery_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
+        && ! delivery_validate_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
         exit 1
     fi
 
     if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
-        write_entity_skip_outputs "detect_skip"
+        write_entity_skip_outputs "$(resolve_entity_skip_reason "${DETECT_OUT}")" \
+            "$(resolve_entity_skip_detail "${DETECT_OUT}")"
     fi
 
-    loop_handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
+    handoff_key="$(jq -r '.[0].target_json.key' <<< "${full_matrix}")"
+    verdict="$(admission_evaluate "$(jq -c '.result.gate // null' "${DETECT_OUT}")" \
+        "$(read_entity_target_state "${state_read_file}" "${handoff_key}")")"
+    if [[ $(jq -r '.admit' <<< "${verdict}") != "true" ]]; then
+        write_entity_skip_outputs "$(jq -r '.skip_reason' <<< "${verdict}")" \
+            "$(jq -r '.detail' <<< "${verdict}")"
+    fi
+
+    handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
     candidate="$(jq -c '.[0]' <<< "${full_matrix}")"
-    if ! loop_handoff_write_candidate_payload "${HANDOFF_DIR}" "${candidate}"; then
+    if ! handoff_write_candidate_payload "${HANDOFF_DIR}" "${candidate}"; then
         echo "::error::failed to write entity handoff payload" >&2
         exit 1
     fi

@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: bounded Agent to Verify loop
+#   Runs the maker and checker in one job: installs the CLI once and retries with checker feedback.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-execute@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - Reaches a sibling action only through ${GITHUB_ACTION_PATH}/../<sibling>/lib/ for that sibling's owned behavior
+#
+# Dependencies:
+#   - Required inputs agent_engine, agent_maker_skill_name, agent_token, branch, github_token, prompt_text, worktree_path
+#   - Node.js, uv, git, gh
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#######################################
 name: loop-execute
 description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
 
@@ -64,12 +85,20 @@ inputs:
   agent_maker_skill_name:
     description: "Maker skill name (context only for the checker)"
     required: true
+  agent_report_check:
+    default: ""
+    description: 'Deterministic check applied to the maker report before the LLM checker: "paths" (### Changes lists repository paths), "commits" (### Changes lists commits; ### Skipped replaces ### Deferred), or empty to skip the check'
+    required: false
   agent_token:
     description: "Authentication token for the selected engine"
     required: true
   agent_tool_allowlist:
     default: ""
     description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). The host repository''s .claude/settings.json allow rules are not applied (no workspace trust); claude adds a fixed read-only git baseline (git diff/log/show/status), runs makers in acceptEdits and checkers in dontAsk, and always denies a fixed list of GitHub-write, push, network, and env commands. Engines without a per-tool allowlist warn and ignore it.'
+    required: false
+  agent_tool_denylist:
+    default: ""
+    description: 'Newline-separated permission rules the maker must never use, in claude syntax (for example "Agent"). Applied after the fixed deny list, so they outrank every allow rule. claude only, L2/L3 branch callers only: validated at detect (any other engine or level with a non-empty value fails closed)'
     required: false
   agent_unchanged_verdict:
     default: ""
@@ -125,7 +154,7 @@ inputs:
     description: "Checker task section inserted before criteria"
     required: false
   uv_version:
-    default: "0.13.6"
+    default: "0.13.7"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
   verifier_context:
@@ -217,8 +246,10 @@ runs:
         AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_REPORT_CHECK: ${{ inputs.agent_report_check }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
         AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        AGENT_TOOL_DENYLIST: ${{ inputs.agent_tool_denylist }}
         AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}

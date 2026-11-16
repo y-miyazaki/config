@@ -13,6 +13,10 @@
 # - --force, --check, explicit components and --skip-* flags never skip
 # - only a successful default run records the fingerprint
 # - the fingerprint lives in the git dir and ignores files outside the watched paths
+# - apm install gets --force only with --apm-force, and a failed install prints the --apm-force recovery hint
+# - check_agent_config_json refuses an agent config file that is not valid JSON and accepts valid or absent files
+# - apm install is not started when an agent config file is not valid JSON
+# - the guidelines component runs the generator from the repository root whatever the caller's directory, and fails when the generator fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -130,4 +134,84 @@ function fp_decide {
     [ -s "${FP_REPO}/.git/apm-sync-fingerprint" ]
     run git -C "${FP_REPO}" status --porcelain
     [[ $output != *"apm-sync-fingerprint"* ]]
+}
+
+# apm_install_run: Source the script with a mock apm and run the install component
+function apm_install_run {
+    local mock_bin="${BATS_TEST_TMPDIR}/mock_bin"
+    local apm_exit="$1"
+    shift
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\nprintf "apm-args:%%s\\n" "$*"\nexit %s\n' "${apm_exit}" > "${mock_bin}/apm"
+    chmod +x "${mock_bin}/apm"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && check_agent_config_json() { return 0; } && $* && run_apm_install_component"
+}
+
+@test "apm install runs without --force by default" {
+    apm_install_run 0 "parse_arguments apm-install"
+    [ "$status" -eq 0 ]
+    [[ $output == *"apm-args:install --update"* ]]
+    [[ $output != *"--force"* ]]
+}
+
+@test "--apm-force passes --force to apm install" {
+    apm_install_run 0 "parse_arguments --apm-force apm-install"
+    [ "$status" -eq 0 ]
+    [[ $output == *"apm-args:install --update --force"* ]]
+}
+
+@test "a failed apm install prints the --apm-force recovery hint" {
+    apm_install_run 1 "parse_arguments apm-install"
+    [ "$status" -eq 1 ]
+    [[ $output == *"--apm-force"* ]]
+}
+
+@test "check_agent_config_json refuses an agent config file that is not valid JSON" {
+    local root="${TEST_TMP}/root"
+    mkdir -p "${root}/.claude"
+    printf '{\n  // "Bash(git push:*)",\n  "permissions": {}\n}\n' > "${root}/.claude/settings.json"
+    run bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && check_agent_config_json '${root}'"
+    [ "$status" -eq 1 ]
+    [[ $output == *".claude/settings.json is not valid JSON"* ]]
+}
+
+@test "check_agent_config_json accepts valid and absent agent config files" {
+    local root="${TEST_TMP}/root_ok"
+    mkdir -p "${root}/.claude"
+    printf '{"permissions":{}}\n' > "${root}/.claude/settings.json"
+    run bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && check_agent_config_json '${root}'"
+    [ "$status" -eq 0 ]
+    rm -f "${root}/.claude/settings.json"
+    run bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && check_agent_config_json '${root}'"
+    [ "$status" -eq 0 ]
+}
+
+@test "apm install is not started when an agent config file is not valid JSON" {
+    local root="${TEST_TMP}/root_bad" mock_bin="${TEST_TMP}/bin_bad"
+    mkdir -p "${root}/.claude" "${mock_bin}"
+    printf '{ // comment\n}\n' > "${root}/.claude/settings.json"
+    printf '#!/bin/bash\necho apm-called\n' > "${mock_bin}/apm"
+    chmod +x "${mock_bin}/apm"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && run_apm_install_component"
+    [ "$status" -eq 1 ]
+    [[ $output != *"apm-called"* ]]
+}
+
+@test "the guidelines component runs the generator from the repository root whatever the caller's directory" {
+    local root="${TEST_TMP}/root_guidelines" mock_bin="${TEST_TMP}/bin_guidelines" elsewhere="${TEST_TMP}/elsewhere"
+    mkdir -p "${root}" "${mock_bin}" "${elsewhere}"
+    printf '#!/bin/bash\npwd\n' > "${mock_bin}/perl"
+    chmod +x "${mock_bin}/perl"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && cd '${elsewhere}' && sync_guidelines_component"
+    [ "$status" -eq 0 ]
+    [ "${lines[-1]}" = "$(cd "${root}" && pwd)" ]
+}
+
+@test "the guidelines component fails when the generator fails" {
+    local root="${TEST_TMP}/root_guidelines_fail" mock_bin="${TEST_TMP}/bin_guidelines_fail"
+    mkdir -p "${root}" "${mock_bin}"
+    printf '#!/bin/bash\nexit 3\n' > "${mock_bin}/perl"
+    chmod +x "${mock_bin}/perl"
+    run env PATH="${mock_bin}:${PATH}" bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && resolve_repo_root() { echo '${root}'; } && sync_guidelines_component"
+    [ "$status" -eq 3 ]
 }

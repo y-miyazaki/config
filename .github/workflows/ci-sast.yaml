@@ -1,5 +1,22 @@
-# Reusable workflow: static application security testing (SAST)
-# Runs CodeQL and Semgrep. Language-specific; keep govulncheck in ci-go.
+#######################################
+# Description:
+#   Reusable workflow: static application security testing (SAST)
+#   Runs CodeQL and Semgrep. Language-specific; keep govulncheck in ci-go.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-sast
 
 on:
@@ -21,12 +38,12 @@ on:
         required: false
         type: string
       semgrep_version:
-        default: 1.183.0
+        default: 1.184.0
         description: "Semgrep Python package version"
         required: false
         type: string
       uv_version:
-        default: "0.13.6"
+        default: "0.13.7"
         description: "uv version for Semgrep install; keep aligned with loop composite actions"
         required: false
         type: string
@@ -58,7 +75,7 @@ jobs:
     steps:
       - name: Detect CodeQL Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-codeql-support@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
+        uses: y-miyazaki/config/.github/actions/detect-codeql-support@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
 
       - name: Checkout Code
         if: steps.detect.outputs.skip != 'true'
@@ -68,17 +85,17 @@ jobs:
 
       - name: Initialize CodeQL
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/autobuild@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/autobuild@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
 
       - name: Perform CodeQL Analysis
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: codeql-${{ matrix.language }}
 
@@ -91,7 +108,7 @@ jobs:
     steps:
       - name: Detect SARIF Upload Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
 
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -176,7 +193,7 @@ jobs:
 
       - name: Upload Semgrep SARIF to GitHub Security
         if: always() && steps.detect.outputs.supported == 'true' && hashFiles('security/semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: semgrep
           sarif_file: security/semgrep.sarif
@@ -194,8 +211,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             semgrep-report

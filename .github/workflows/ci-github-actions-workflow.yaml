@@ -1,5 +1,22 @@
-# Reusable workflow: GitHub Actions workflow lint and validation
-# Uses actionlint, ghalint, and zizmor for syntax, security, and static analysis.
+#######################################
+# Description:
+#   Reusable workflow: GitHub Actions workflow lint and validation
+#   Uses actionlint, ghalint, and zizmor for syntax, security, and static analysis.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-github-actions-workflow
 
 on:
@@ -33,7 +50,7 @@ on:
         required: false
         type: string
       zizmor_version:
-        default: "1.31.1"
+        default: "1.32.0"
         description: "zizmor version to use"
         required: false
         type: string
@@ -62,8 +79,7 @@ jobs:
 
       # GitHub Actions workflow linter
       - name: Setup actionlint
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           binary: actionlint
           checksum: ${{ env.ACTIONLINT_CHECKSUM }}
@@ -72,8 +88,7 @@ jobs:
 
       # Security and settings validation (persist-credentials, timeout-minutes, etc.)
       - name: Setup ghalint
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           binary: ghalint
           checksum: ${{ env.GHALINT_CHECKSUM }}
@@ -96,7 +111,7 @@ jobs:
         run: echo "::warning::ghalint reported policy violations (ghalint_soft_fail=true; job continues)"
       # Static analysis tool for GitHub Actions security
       - name: Exec zizmor
-        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           advanced-security: false
           min-severity: medium
@@ -104,8 +119,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)

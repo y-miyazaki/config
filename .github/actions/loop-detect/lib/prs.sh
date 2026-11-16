@@ -11,6 +11,7 @@
 # - Applies DETECT_PR_DENYLIST tokens
 # - Applies DETECT_PR_BOT_ALLOWLIST opt-in when scanning
 # - Bypasses the bot-author heuristic when DETECT_PR_NUMBER names the PR
+# - Bot authors are identified by admission_actor_is_bot (lib/loop/admission.sh, sourced by _init.sh), fed the gh author.is_bot fact as the actor type
 #######################################
 
 #######################################
@@ -57,7 +58,7 @@ function list_open_prs {
             return 1
         fi
         pr_line="$(gh pr view "${DETECT_PR_NUMBER}" --json \
-            number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository,state \
+            number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository,state \
             2> /dev/null || true)"
         if [[ -z ${pr_line} ]]; then
             return 0
@@ -73,8 +74,11 @@ function list_open_prs {
         return 0
     fi
 
-    prs_json="$(gh pr list --state open --limit 50 --json \
-        number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
+    if ! prs_json="$(gh pr list --state open --limit 50 --json \
+        number,title,headRefName,headRefOid,baseRefName,isCrossRepository,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null)"; then
+        echo "::warning::loop-detect/prs: gh pr list failed; no pull requests were scanned this run"
+        prs_json='[]'
+    fi
 
     while IFS= read -r pr_line; do
         [[ -z ${pr_line} ]] && continue
@@ -115,7 +119,8 @@ function pr_excluded {
     split_csv "${exclude_csv}" exclude_tokens
     author_login=$(jq -r '.author.login // ""' <<< "${pr_json}")
     is_draft=$(jq -r '.isDraft // false' <<< "${pr_json}")
-    is_fork=$(jq -r '.headRepository.isFork // false' <<< "${pr_json}")
+    # isCrossRepository also covers a deleted fork, whose headRepository is null
+    is_fork=$(jq -r '(.isCrossRepository // false) or (.headRepository.isFork // false)' <<< "${pr_json}")
     labels_json=$(jq -c '.labels // []' <<< "${pr_json}")
 
     for token in "${exclude_tokens[@]}"; do
@@ -130,7 +135,8 @@ function pr_excluded {
             wip_title)
                 local title
                 title=$(jq -r '.title // ""' <<< "${pr_json}")
-                if [[ ${title} =~ ^[[:space:]]*(wip|WIP|\[WIP\]) ]]; then
+                title="${title,,}"
+                if [[ ${title} =~ ^[[:space:]]*(\[wip\]|wip([[:space:]:]|$)) ]]; then
                     return 0
                 fi
                 ;;
@@ -148,7 +154,9 @@ function pr_excluded {
     # number selected this target (a human mention on that PR), the human has
     # already chosen it, so author provenance must not veto them. Token
     # exclusions above (fork / draft / wip_title / label:*) still apply.
-    if [[ ${scoped_intake} != "true" && ${author_login} == *[bB][oO][tT] ]]; then
+    local author_type=""
+    [[ $(jq -r '.author.is_bot // false' <<< "${pr_json}") == "true" ]] && author_type="Bot"
+    if [[ ${scoped_intake} != "true" ]] && admission_actor_is_bot "${author_type}" "${author_login}"; then
         local -a include_bots=()
         local bot allowed="false"
         split_csv "${include_bots_csv}" include_bots

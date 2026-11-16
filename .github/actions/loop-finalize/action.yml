@@ -1,3 +1,25 @@
+#######################################
+# Description:
+#   Composite action: finalize a loop run
+#   Delivers the result (push, PR, Issue comment, or PR review), writes state, and runs the optional finalize hook.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-finalize@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#   - pr_push MUST land by merge into the latest to.branch and fail closed (see .github/workflows/CLAUDE.md)
+#
+# Dependencies:
+#   - Required inputs current_sha, delivery, github_token, state_branch, target_json
+#   - gh
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#######################################
 name: loop-finalize
 description: "Finalize a loop run per delivery: push, PR, Issue comment, or PR review, state, optional finalize hook."
 
@@ -46,15 +68,19 @@ inputs:
     description: "SHA to record in per-target state"
     required: true
   delivery:
-    description: "Declared delivery (pr_create | pr_push | issue_comment | pr_review | none); every step branches on this value only"
+    description: "Declared delivery (pr_create | pr_push | issue_comment | issue_create | pr_review | none); every step branches on this value only"
     required: true
   finalize_commit_paths:
     default: ""
     description: "Comma-separated paths to commit with state after the finalize hook"
     required: false
+  finalize_issue_limit:
+    default: "5"
+    description: "Maximum Issues a delivery issue_create run opens; findings beyond it are dropped and listed in the step summary. Used only with delivery issue_create"
+    required: false
   finalize_label_allowlist:
     default: ""
-    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
+    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | issue_create | pr_review; for issue_create: labels put on created Issues and used for duplicate lookup)"
     required: false
   finalize_outcome_override:
     default: ""
@@ -219,7 +245,7 @@ runs:
         set -euo pipefail
         # shellcheck disable=SC1091
         source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
-        resolve_state_file
+        resolve_state_file_emit
 
     - name: Determine Outcome
       id: outcome
@@ -275,14 +301,15 @@ runs:
     - name: Deliver Message
       id: deliver
       if: >-
-        (inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') &&
+        ((inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.verdict != 'REJECT' ||
+        inputs.delivery == 'issue_create' && inputs.verdict == 'APPROVE') &&
         inputs.agent_result == 'success' &&
-        inputs.verdict != 'REJECT' &&
         steps.agent_push.outputs.failed != 'true'
       shell: bash
       env:
         AGENT_ENGINE: ${{ inputs.agent_engine }}
         DELIVERY: ${{ inputs.delivery }}
+        FINALIZE_ISSUE_LIMIT: ${{ inputs.finalize_issue_limit }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
@@ -305,7 +332,7 @@ runs:
         source "${loop_action_lib}/failure_record.sh"
         # shellcheck disable=SC1091
         source "${loop_action_lib}/deliver_message.sh"
-        deliver_loop_message
+        deliver_message_send
 
     - name: Push to Target Branch
       id: push_target
@@ -356,8 +383,10 @@ runs:
         PR_URL: ${{ steps.pr.outputs.url }}
       run: |
         set -euo pipefail
-        if [[ -n "${PR_URL}" ]]; then
-          gh pr merge "${PR_URL}" --auto --squash
+        # Non-critical: the PR already exists, so a failure here (auto-merge disabled,
+        # no required checks) must not skip Write State and lose the pending PR cursor.
+        if [[ -n "${PR_URL}" ]] && ! gh pr merge "${PR_URL}" --auto --squash; then
+          echo "::warning::loop-finalize: could not enable auto-merge for ${PR_URL}; continuing so state is still written"
         fi
 
     - name: Write State
@@ -381,7 +410,7 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Agent Branch
-      if: always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')
+      if: always() && steps.agent_push.outputs.pushed == 'true' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'issue_create' || inputs.delivery == 'pr_review')
       shell: bash
       env:
         AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}
@@ -397,7 +426,9 @@ runs:
           echo "Skipping branch delete: delivery=${DELIVERY} verdict=${VERDICT} has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
-        if ! [[ "${AGENT_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+        # shellcheck source=../lib/loop/check_names.sh
+        source "${GITHUB_ACTION_PATH}/../lib/loop/check_names.sh"
+        if ! check_names_branch "${AGENT_BRANCH}"; then
           echo "::error::Invalid branch name: ${AGENT_BRANCH}"
           exit 1
         fi

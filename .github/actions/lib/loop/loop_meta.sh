@@ -11,7 +11,7 @@
 #   source loop_meta.sh   (sources outcome.sh itself)
 #   loop_meta_reset
 #   loop_meta_row "Level" "L2"
-#   build_loop_meta_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
+#   loop_meta_build_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
 #
 # Output:
 #   None (library file, sourced by other scripts)
@@ -39,7 +39,7 @@ LOOP_META_FOOTER="<sub>Written by Loop Engineering (LE), an automation — not b
 LOOP_META_ROWS=()
 
 #######################################
-# build_loop_meta_block: Render the collapsed loop meta block
+# loop_meta_build_block: Render the collapsed loop meta block
 #
 # Globals:
 #   LOOP_META_MARKER - Idempotency marker emitted as the first line
@@ -60,11 +60,11 @@ LOOP_META_ROWS=()
 #   0 on success
 #
 # Usage:
-#   block="$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "${REASON}" \
+#   block="$(loop_meta_build_block "${OUTCOME}" "${VERDICT}" "${REASON}" \
 #       "${ENGINE}" "${USAGE_JSON}" "${run_url}")"
 #
 #######################################
-function build_loop_meta_block {
+function loop_meta_build_block {
     local outcome="${1:-}"
     local verdict="${2:-}"
     local reason="${3:-}"
@@ -84,19 +84,19 @@ function build_loop_meta_block {
 
     model=""
     tokens=""
-    if declare -F usage_model_label > /dev/null 2>&1; then
-        model="$(usage_model_label "${usage_json}")"
+    if declare -F created_by_usage_model_label > /dev/null 2>&1; then
+        model="$(created_by_usage_model_label "${usage_json}")"
     fi
-    if declare -F usage_tokens_label > /dev/null 2>&1; then
-        tokens="$(usage_tokens_label "${usage_json}")"
+    if declare -F created_by_usage_tokens_label > /dev/null 2>&1; then
+        tokens="$(created_by_usage_tokens_label "${usage_json}")"
     fi
 
     [[ -n ${engine} ]] && rows+=("| engine | ${engine} |")
     [[ -n ${model} ]] && rows+=("| model | ${model} |")
     if [[ -n ${tokens} ]]; then
         cache=""
-        if declare -F usage_cache_label > /dev/null 2>&1; then
-            cache="$(usage_cache_label "${usage_json}")"
+        if declare -F created_by_usage_cache_label > /dev/null 2>&1; then
+            cache="$(created_by_usage_cache_label "${usage_json}")"
         fi
         if [[ -n ${cache} ]]; then
             rows+=("| tokens | In/Out ${tokens} (cache ${cache}) |")
@@ -104,8 +104,8 @@ function build_loop_meta_block {
             rows+=("| tokens | In/Out ${tokens} |")
         fi
     fi
-    if declare -F usage_rounds_label > /dev/null 2>&1; then
-        rounds="$(usage_rounds_label "${usage_json}" "${verdict}")"
+    if declare -F created_by_usage_rounds_label > /dev/null 2>&1; then
+        rounds="$(created_by_usage_rounds_label "${usage_json}" "${verdict}")"
         [[ -n ${rounds} ]] && rows+=("| rounds | ${rounds} |")
     fi
     if [[ -n ${run_url} && ${run_url} != "-" ]]; then

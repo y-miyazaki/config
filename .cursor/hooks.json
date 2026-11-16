@@ -30,6 +30,10 @@
         "timeout": 120
       },
       {
+        "command": ".cursor/hooks/go-hooks-cursor/scripts/go_test.sh",
+        "timeout": 120
+      },
+      {
         "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
         "timeout": 120
       },
@@ -46,6 +50,12 @@
       {
         "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
         "timeout": 120
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": ".cursor/hooks/common-hooks-cursor/scripts/gitleaks_prompt.sh",
+        "timeout": 30
       }
     ]
   },

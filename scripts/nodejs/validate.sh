@@ -290,10 +290,14 @@ function find_nodejs_projects {
 # run_npm_install: Install dependencies
 #
 # Description:
-#   Installs npm dependencies for the project
+#   Installs npm dependencies for the project (npm ci; npm install with --fix)
 #
 # Globals:
-#   None
+#   DRY_RUN - Whether running in dry-run mode
+#   FIX_MODE - Use npm install instead of npm ci when true
+#   VERBOSE - Whether to show npm output
+#   INSTALL_FAILED - Set to 1 on failure
+#   EXIT_CODE - Set to 1 on failure
 #
 # Arguments:
 #   $1 - Project directory
@@ -315,37 +319,35 @@ function run_npm_install {
 
     pushd "$project_dir" > /dev/null || return 1
 
+    # npm ci installs exactly what package-lock.json pins and never rewrites it;
+    # only --fix may use npm install (which can update the lockfile).
+    local -a install_cmd=(npm ci)
+    if [[ $FIX_MODE == "true" ]]; then
+        install_cmd=(npm install)
+    fi
+
     if [[ $DRY_RUN == "true" ]]; then
-        log "INFO" "  🔍 [DRY-RUN] Would run: npm install"
+        log "INFO" "  🔍 [DRY-RUN] Would run: ${install_cmd[*]}"
         popd > /dev/null
         return 0
     fi
 
+    local install_status=0
     if [[ $VERBOSE == "true" ]]; then
-        if npm install; then
-            log "INFO" "  ✅ Dependencies installed"
-            popd > /dev/null
-            return 0
-        else
-            log "ERROR" "  ❌ Failed to install dependencies"
-            INSTALL_FAILED=1
-            EXIT_CODE=1
-            popd > /dev/null
-            return 1
-        fi
+        "${install_cmd[@]}" || install_status=$?
     else
-        if npm install > /dev/null 2>&1; then
-            log "INFO" "  ✅ Dependencies installed"
-            popd > /dev/null
-            return 0
-        else
-            log "ERROR" "  ❌ Failed to install dependencies"
-            INSTALL_FAILED=1
-            EXIT_CODE=1
-            popd > /dev/null
-            return 1
-        fi
+        "${install_cmd[@]}" > /dev/null 2>&1 || install_status=$?
     fi
+    popd > /dev/null
+
+    if [[ $install_status -eq 0 ]]; then
+        log "INFO" "  ✅ Dependencies installed (${install_cmd[*]})"
+        return 0
+    fi
+    log "ERROR" "  ❌ Failed to install dependencies (${install_cmd[*]})"
+    INSTALL_FAILED=1
+    EXIT_CODE=1
+    return 1
 }
 
 #######################################
@@ -475,7 +477,7 @@ function run_security_audit {
 
     # Count remaining vulnerabilities from the latest audit output.
     local vuln_count
-    vuln_count=$(echo "$audit_output" | grep -E "^[0-9]+ vulnerabilities" | awk '{print $1}' || echo "0")
+    vuln_count=$(echo "$audit_output" | grep -E "^[0-9]+ vulnerabilit(y|ies)" | awk '{print $1}' || echo "0")
 
     if [[ $vuln_count -gt 0 ]]; then
         log "ERROR" "  ❌ Security vulnerabilities found: $vuln_count"
@@ -710,27 +712,16 @@ function main {
         echo ""
     fi
 
-    if [[ $EXIT_CODE -eq 0 ]]; then
-        echo_section "All checks completed successfully in ${elapsed} seconds"
-        log "INFO" "✅ All validations passed"
-    else
-        echo_section "Result (completed in ${elapsed} seconds)"
-        echo "Result:" >&2
-        [[ $INSTALL_FAILED == "1" ]] && echo "❌ npm install" >&2 || echo "✅ npm install" >&2
-        [[ $LOCKFILE_FAILED == "1" ]] && echo "❌ package-lock.json" >&2 || echo "✅ package-lock.json" >&2
-        [[ $SYNC_FAILED == "1" ]] && echo "❌ package sync" >&2 || echo "✅ package sync" >&2
-        if [[ $AUDIT_FAILED == "1" ]]; then
-            if [[ $AUDIT_VULNERABILITIES -gt 0 ]]; then
-                echo "❌ security audit ($AUDIT_VULNERABILITIES vulnerabilities)" >&2
-            else
-                echo "❌ security audit" >&2
-            fi
-        else
-            echo "✅ security audit" >&2
-        fi
-        [[ $TEST_FAILED == "1" ]] && echo "❌ tests" >&2 || echo "✅ tests" >&2
-        log "ERROR" "❌ Some validations failed"
+    local audit_detail=""
+    if [[ $AUDIT_VULNERABILITIES -gt 0 ]]; then
+        audit_detail="|${AUDIT_VULNERABILITIES} vulnerabilities"
     fi
+    print_validation_result nodejs "$elapsed" \
+        "npm_install=$(check_status "$INSTALL_FAILED")" \
+        "package_lock=$(check_status "$LOCKFILE_FAILED")" \
+        "package_sync=$(check_status "$SYNC_FAILED")" \
+        "security_audit=$(check_status "$AUDIT_FAILED")${audit_detail}" \
+        "tests=$(check_status "$TEST_FAILED")" || true
 
     exit $EXIT_CODE
 }

@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "./scripts/go_test.sh",
+        "timeout": 120
+      }
+    ]
+  },
+  "version": 1
+}

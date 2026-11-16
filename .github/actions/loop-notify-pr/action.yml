@@ -1,3 +1,24 @@
+#######################################
+# Description:
+#   Composite action: notify a pull request
+#   Posts or updates the marker PR comment for a finalized loop run on pull_request targets.
+#
+# Usage:
+#   uses: y-miyazaki/config/.github/actions/loop-notify-pr@<commit SHA>
+#   Called by: ci-loop-agent.yaml
+#
+# Design Rules:
+#   - Leaf composite: MUST NOT call another config composite via uses: (third-party actions are allowed; pin by full SHA)
+#
+# Dependencies:
+#   - Required inputs loop_name, outcome, pr_number, github_token
+#   - Node.js
+#
+# References:
+#   - docs/explanation/loop-engineering/loop-engineering-design.md
+#   - docs/explanation/loop-engineering/loop-pr-body-skill-contract.md
+#   - docs/explanation/loop-engineering/multi-branch-loops-design.md
+#######################################
 name: loop-notify-pr
 description: "Post or update a marker PR comment after loop finalize on pull_request targets."
 

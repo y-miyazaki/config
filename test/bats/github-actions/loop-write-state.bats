@@ -8,6 +8,9 @@
 # - advance mode: last_sha + outcome; reset consecutive_failures on pr_created
 # - issue_commented and pr_reviewed reset consecutive_failures
 # - rejected, pr_closed, and persisted old pr-closed outcomes increment consecutive_failures
+# - a rejected run on an aged terminal target at 3 or more keeps counting from the stored
+#   value (the 30-day prune cooldown does not erase it); an approved or error run, and a
+#   rejected run on a target below 3, still get the cooldown reset
 # - finalize_commit_paths are committed with the state file
 # - no-op when unchanged
 # - metadata mode: outcome without advancing last_sha
@@ -21,6 +24,19 @@
 # - refuses PR fallback for advance + pr_pushed when push is blocked
 # - opens the state PR fallback for advance + pr_created (the refusal keys on pr_pushed only)
 # - state_pr_skip warns when direct push is blocked
+# - push_race_is_error matches fetch first / non-fast-forward and rejects remote rejected
+# - write_state retries a raced push (non-fast-forward) and keeps both targets
+# - write_state gives up after WRITE_STATE_MAX_RETRIES and opens the state PR fallback
+# - write_state does not retry on remote rejected
+# - write_state retries a raced push and carries the FINALIZE_COMMIT_PATHS files when they did not change on the remote
+# - write_state does not overwrite a FINALIZE_COMMIT_PATHS file that a rival changed to a conflicting value, and opens the state PR instead
+# - write_state merges a keyed JSON FINALIZE_COMMIT_PATHS file that a rival changed with the local version and pushes both
+# - prepare_open_rejections (called directly, never in a subshell) clears stale open_rejections for a non-rejection outcome and replaces invalid JSON with []
+# - resolve_consecutive_failures prints only the count on stdout
+# - run.sh persists an empty open_rejections for an error outcome and survives invalid open_rejections JSON
+# - validate_state_file_path accepts only .loop/state-<name>.json (the pattern loop-state-promote lists)
+# - write_state retry leaves no stale temp state file
+# - write_state retry rewrites state when the remote tip lacks the state file
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -43,6 +59,42 @@ state_write_git_setup() {
     git init -q --bare "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" remote add origin "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" push -q -u origin main
+}
+
+state_write_race_setup() {
+    local count="$1"
+    local mode="${2:-add_key}"
+    STATE_WRITE_COMP="${BATS_TEST_TMPDIR}/competitor"
+    STATE_WRITE_RACE_COUNT="${BATS_TEST_TMPDIR}/race_count"
+    rm -rf "${STATE_WRITE_COMP}"
+    git clone -q "${STATE_WRITE_BARE}" "${STATE_WRITE_COMP}"
+    printf '%s\n' "${count}" > "${STATE_WRITE_RACE_COUNT}"
+    cat > "${STATE_WRITE_WORK}/.git/hooks/post-commit" << EOF
+#!/bin/sh
+unset GIT_DIR GIT_WORK_TREE
+n=\$(cat '${STATE_WRITE_RACE_COUNT}')
+[ "\${n}" -gt 0 ] || exit 0
+echo \$((n - 1)) > '${STATE_WRITE_RACE_COUNT}'
+cd '${STATE_WRITE_COMP}' || exit 1
+git fetch -q origin main > /dev/null 2>&1
+git reset -q --hard origin/main > /dev/null 2>&1
+if [ '${mode}' = remove_file ]; then
+    git rm -q .loop/state-test.json
+elif [ '${mode}' = add_ledger_keyed ]; then
+    printf '%s\\n' '{"runs":{"rival":{"outcome":"pr_created"}}}' > .loop/state-test-ledger.json
+    git add .loop/state-test-ledger.json
+elif [ '${mode}' = add_ledger ]; then
+    printf '%s\\n' '{"entries":["rival"]}' > .loop/state-test-ledger.json
+    git add .loop/state-test-ledger.json
+else
+    jq --arg k "race-\${n}" '.targets[\$k] = {last_sha: "x"}' .loop/state-test.json > .loop/tmp.json
+    mv .loop/tmp.json .loop/state-test.json
+fi
+git -c user.name=rival -c user.email=rival@example.com commit -q -am "rival \${n}" > /dev/null 2>&1
+git push -q origin HEAD:main > /dev/null 2>&1
+exit 0
+EOF
+    chmod +x "${STATE_WRITE_WORK}/.git/hooks/post-commit"
 }
 
 state_write_run() {
@@ -118,6 +170,21 @@ setup() {
     [ "$status" -eq 0 ]
     rm -f "${STATE_TMP}"
 }
+@test "push_race_is_error matches fetch first" {
+    state_write_source_helpers
+    run push_race_is_error " ! [rejected]        HEAD -> main (fetch first)"
+    [ "$status" -eq 0 ]
+}
+@test "push_race_is_error matches non-fast-forward" {
+    state_write_source_helpers
+    run push_race_is_error " ! [rejected]        HEAD -> main (non-fast-forward)"
+    [ "$status" -eq 0 ]
+}
+@test "push_race_is_error rejects remote rejected" {
+    state_write_source_helpers
+    run push_race_is_error " ! [remote rejected] HEAD -> main (pre-receive hook declined)"
+    [ "$status" -eq 1 ]
+}
 @test "run.sh clear_pending mode clears pending without advancing last_sha" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
         > "${STATE_WRITE_WORK}/.loop/state-test.json"
@@ -183,6 +250,32 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"No state changes to commit."* ]]
 }
+@test "run.sh persists empty open_rejections for an error outcome and survives invalid JSON" {
+    local bad
+    for bad in '[{"id":"stale"}]' 'not json'; do
+        state_write_git_setup
+        printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":1}}}' \
+            > "${STATE_WRITE_WORK}/.loop/state-test.json"
+        state_write_seed
+        state_write_run \
+            GITHUB_TOKEN='test-token' \
+            STATE_FILE='.loop/state-test.json' \
+            STATE_BRANCH='main' \
+            TARGET_KEY='integration:main' \
+            WRITE_TARGET_STATE='true' \
+            OUTCOME='error' \
+            SHA='def456' \
+            OPEN_REJECTIONS="${bad}" \
+            GITHUB_REPOSITORY='test/repo' \
+            GITHUB_RUN_ID='2' \
+            GITHUB_RUN_ATTEMPT='1'
+        [ "$status" -eq 0 ]
+        run jq -e '.targets["integration:main"].open_rejections == []' \
+            "${STATE_WRITE_WORK}/.loop/state-test.json"
+        [ "$status" -eq 0 ]
+    done
+}
+
 @test "run.sh increments consecutive_failures on rejected outcome" {
     printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' \
         > "${STATE_WRITE_WORK}/.loop/state-test.json"
@@ -236,6 +329,99 @@ setup() {
     done
     [ "${checked}" -eq 2 ]
 }
+@test "run.sh keeps counting from the stored value when the target is past the 30-day cooldown" {
+    local old
+    old="$(date -u -d '40 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-40d +%Y-%m-%dT%H:%M:%SZ)"
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='rejected' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='2' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 4' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='pr_created' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='3' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 0' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "run.sh gives an error probe and a target below the trip point the cooldown reset" {
+    local old
+    old="$(date -u -d '40 days ago' +%Y-%m-%dT%H:%M:%SZ 2> /dev/null || date -u -v-40d +%Y-%m-%dT%H:%M:%SZ)"
+    printf '{"targets":{"integration:main":{"consecutive_failures":3,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='error' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='4' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 0' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+
+    printf '{"targets":{"integration:main":{"consecutive_failures":2,"outcome":"rejected","last_run":"%s"}}}\n' "${old}" \
+        > "${STATE_WRITE_WORK}/.loop/state-test.json"
+    state_write_seed
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='rejected' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        REJECT_REASON='checker rejected' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='5' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e '.targets["integration:main"].consecutive_failures == 1' \
+        "${STATE_WRITE_WORK}/.loop/state-test.json"
+    [ "$status" -eq 0 ]
+}
+
 @test "run.sh commits finalize_commit_paths with the state file" {
     printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
 
@@ -490,6 +676,209 @@ setup() {
     done
     [ "${checked}" -eq 2 ]
 }
+@test "write_state does not retry on remote rejected" {
+    state_write_block_push
+    state_write_mock_gh
+
+    state_write_run \
+        PATH="${PATH}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output != *"Push race detected"* ]]
+    [[ $output == *"State PR queued for auto-merge"* ]]
+}
+@test "write_state retries a raced push and carries FINALIZE_COMMIT_PATHS files unchanged on the remote" {
+    state_write_mock_gh
+    state_write_race_setup 1
+    printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        PATH="${PATH}" \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected"* ]]
+    [[ $output != *"State PR queued for auto-merge"* ]]
+    run git -C "${STATE_WRITE_BARE}" show main:.loop/state-test-ledger.json
+    [ "$status" -eq 0 ]
+    [ "$output" = '{"entries":[1]}' ]
+    run git -C "${STATE_WRITE_BARE}" show main:.loop/state-test.json
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.targets["race-1"].last_sha' <<< "${output}")" = "x" ]
+    [ "$(jq -r '.targets["integration:main"].last_sha' <<< "${output}")" = "abcdefghi" ]
+}
+@test "write_state does not overwrite a FINALIZE_COMMIT_PATHS file that a rival changed" {
+    state_write_mock_gh
+    state_write_race_setup 1 add_ledger
+    printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        PATH="${PATH}" \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"not overwriting it"* ]]
+    [[ $output == *"State PR queued for auto-merge"* ]]
+    run git -C "${STATE_WRITE_BARE}" show main:.loop/state-test-ledger.json
+    [ "$status" -eq 0 ]
+    [ "$output" = '{"entries":["rival"]}' ]
+}
+@test "write_state merges a keyed FINALIZE_COMMIT_PATHS file that a rival changed" {
+    state_write_mock_gh
+    state_write_race_setup 1 add_ledger_keyed
+    printf '%s\n' '{"runs":{"mine":{"outcome":"pr_created"}}}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        PATH="${PATH}" \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Merged .loop/state-test-ledger.json"* ]]
+    [[ $output != *"State PR queued for auto-merge"* ]]
+    run git -C "${STATE_WRITE_BARE}" show main:.loop/state-test-ledger.json
+    [ "$status" -eq 0 ]
+    [ "$(jq -c '.runs | keys' <<< "${output}")" = '["mine","rival"]' ]
+}
+@test "write_state gives up after 3 retries and opens state PR fallback" {
+    state_write_mock_gh
+    state_write_race_setup 10
+
+    state_write_run \
+        PATH="${PATH}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 3/3"* ]]
+    [[ $output != *"retry 4/3"* ]]
+    [[ $output == *"State PR queued for auto-merge: https://github.com/test/repo/pull/99"* ]]
+    # initial commit + 3 retry commits each raced
+    [ "$(cat "${STATE_WRITE_RACE_COUNT}")" -eq 6 ]
+}
+@test "write_state retries after non-fast-forward and keeps both targets" {
+    state_write_race_setup 1
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 1/3"* ]]
+    [[ $output == *"State pushed to main."* ]]
+    run git --git-dir="${STATE_WRITE_BARE}" show main:.loop/state-test.json
+    [ "$status" -eq 0 ]
+    jq -e '.targets["race-1"].last_sha == "x"
+           and .targets["integration:main"].last_sha == "abcdefghi"' <<< "${output}"
+}
+@test "write_state retry rewrites state when rival removed the state file from the remote tip" {
+    state_write_race_setup 1 remove_file
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 1/3"* ]]
+    [[ $output != *"No state changes to commit."* ]]
+    [[ $output == *"State pushed to main."* ]]
+    run git --git-dir="${STATE_WRITE_BARE}" show main:.loop/state-test.json
+    [ "$status" -eq 0 ]
+    jq -e '.targets["integration:main"].last_sha == "abcdefghi"' <<< "${output}"
+}
+@test "write_state retry leaves no stale temp state file" {
+    local tmpd="${BATS_TEST_TMPDIR}/tmpd"
+    mkdir -p "${tmpd}"
+    state_write_race_setup 2
+
+    state_write_run \
+        TMPDIR="${tmpd}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='20' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"Push race detected; retry 2/3"* ]]
+    [ -z "$(ls -A "${tmpd}")" ]
+}
 @test "write_state_clear_pending clears pending without advancing last_sha" {
     TARGET_KEY='integration:main'
     OUTCOME='pr_closed'
@@ -565,10 +954,65 @@ setup() {
     [ "$output" = "::error::finalize_commit_paths must not contain '..': ../outside.json" ]
 }
 
+@test "validate_state_file_path rejects a state file without the hyphen that loop-state-promote lists" {
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    local path
+    for path in .loop/state_foo.json .loop/state.foo.json; do
+        run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE='"${path}"' validate_state_file_path'
+        [ "$status" -eq 1 ]
+    done
+}
+
 @test "validate_state_file_path rejects non-loop path" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
     run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE=state.json validate_state_file_path'
     [ "$status" -eq 1 ]
     [[ $output == *"must match .loop/state-<name>.json"* ]]
+}
+
+@test "prepare_open_rejections clears rejections unless the outcome is rejected, pr_closed or watch" {
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    local outcome
+    for outcome in error pr_created unchanged unmapped_value; do
+        OUTCOME="${outcome}"
+        OPEN_REJECTIONS='[{"id":"r1"}]'
+        prepare_open_rejections
+        [ "${OPEN_REJECTIONS}" = "[]" ]
+    done
+    for outcome in rejected pr_closed watch; do
+        OUTCOME="${outcome}"
+        OPEN_REJECTIONS='[{"id":"r1"}]'
+        prepare_open_rejections
+        [ "${OPEN_REJECTIONS}" = '[{"id":"r1"}]' ]
+    done
+}
+
+@test "prepare_open_rejections replaces invalid JSON with an empty array and warns" {
+    bats_require_minimum_version 1.5.0
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    OUTCOME='rejected'
+    OPEN_REJECTIONS='not json'
+    # Called directly (not in a command substitution) so the assignment is visible here.
+    prepare_open_rejections 2> "${BATS_TEST_TMPDIR}/stderr"
+    [ "${OPEN_REJECTIONS}" = "[]" ]
+    grep -q "open_rejections is not valid JSON" "${BATS_TEST_TMPDIR}/stderr"
+}
+
+@test "resolve_consecutive_failures prints only the count on stdout" {
+    local state_tmp="${BATS_TEST_TMPDIR}/state_tmp.json"
+    printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' > "${state_tmp}"
+    # shellcheck disable=SC1090
+    source "${RUN_SCRIPT}"
+    STATE_TMP="${state_tmp}"
+    TARGET_KEY='integration:main'
+    OUTCOME='rejected'
+
+    run resolve_consecutive_failures
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "3" ]
 }

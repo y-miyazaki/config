@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154,SC2317
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/loop-detect/lib/detect.sh (pending PR gate)
 
 # Use cases:

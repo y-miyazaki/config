@@ -1,5 +1,22 @@
-# Reusable workflow: Go CI (test, lint, security)
-# Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#######################################
+# Description:
+#   Reusable workflow: Go CI (test, lint, security)
+#   Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-go.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-go
 
 on:
@@ -196,8 +213,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             coverage-${{ env.COMPONENT }}
@@ -263,8 +279,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -294,8 +309,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: clear
@@ -324,8 +338,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)
@@ -413,8 +426,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}

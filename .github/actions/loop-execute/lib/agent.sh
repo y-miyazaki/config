@@ -86,11 +86,13 @@ CLAUDE_PLATFORM_DENY_RULES=(
 #     without an allow rule is denied).
 #   - --allowedTools carries CLAUDE_PLATFORM_ALLOW_RULES followed by the rules
 #     the calling workflow declared in AGENT_TOOL_ALLOWLIST.
-#   - --disallowedTools carries CLAUDE_PLATFORM_DENY_RULES, which outrank every
-#     allow rule.
+#   - --disallowedTools carries CLAUDE_PLATFORM_DENY_RULES followed by the rules
+#     the calling workflow declared in AGENT_TOOL_DENYLIST; deny rules outrank
+#     every allow rule.
 #
 # Globals:
 #   AGENT_TOOL_ALLOWLIST - Optional newline-separated permission rules (may be unset)
+#   AGENT_TOOL_DENYLIST - Optional newline-separated deny rules (may be unset)
 #   CLAUDE_PLATFORM_ALLOW_RULES - Fixed read-only allow baseline (read)
 #   CLAUDE_PLATFORM_DENY_RULES - Fixed deny list (read)
 #
@@ -109,6 +111,7 @@ function append_claude_permission_args {
     local -n args_ref=$1
     local allow_writes="${2:-true}"
     local -a allow_rules=("${CLAUDE_PLATFORM_ALLOW_RULES[@]}")
+    local -a deny_rules=("${CLAUDE_PLATFORM_DENY_RULES[@]}")
     local rule
 
     args_ref+=(--setting-sources project)
@@ -122,8 +125,13 @@ function append_claude_permission_args {
             [[ -n ${rule} ]] && allow_rules+=("${rule}")
         done <<< "${AGENT_TOOL_ALLOWLIST}"
     fi
+    if [[ -n ${AGENT_TOOL_DENYLIST:-} ]]; then
+        while IFS= read -r rule; do
+            [[ -n ${rule} ]] && deny_rules+=("${rule}")
+        done <<< "${AGENT_TOOL_DENYLIST}"
+    fi
     args_ref+=(--allowedTools "${allow_rules[@]}")
-    args_ref+=(--disallowedTools "${CLAUDE_PLATFORM_DENY_RULES[@]}")
+    args_ref+=(--disallowedTools "${deny_rules[@]}")
 }
 
 #######################################
@@ -260,28 +268,19 @@ function harvest_workspace_into_worktree {
         return 0
     fi
 
-    while IFS= read -r line; do
-        [[ -z ${line} ]] && continue
+    # -z gives NUL-separated, unquoted paths, so non-ASCII names and names holding " -> " are exact.
+    # A rename or copy is "XY new" followed by a separate "old" entry.
+    while IFS= read -r -d '' line; do
         xy="${line:0:2}"
         path="${line:3}"
-        if [[ ${xy} == R* || ${xy} == C* ]] && [[ ${path} == *" -> "* ]]; then
-            # Rename/copy porcelain lines are "old -> new"; only the new path
-            # is harvested, and the stale old path is dropped from the
-            # worktree so the rename isn't recreated as a duplicate add.
-            old_path="${path%% -> *}"
-            path="${path##* -> }"
-            old_path="${old_path#\"}"
-            old_path="${old_path%\"}"
-            old_path="${old_path//\\\"/\"}"
-            # A copy leaves the source in place, so only renames drop it.
-            if [[ ${xy} == R* && -n ${old_path} && ${old_path} != .git/* ]]; then
+        old_path=""
+        if [[ ${xy:0:1} == [RC] || ${xy:1:1} == [RC] ]]; then
+            IFS= read -r -d '' old_path || true
+            # A copy leaves the source in place, so only renames drop it; the stale old
+            # path is removed from the worktree so the rename isn't recreated as a duplicate add.
+            if [[ ${xy} == *R* && -n ${old_path} && ${old_path} != .git/* ]]; then
                 rm -rf "${worktree:?}/${old_path}"
             fi
-        fi
-        if [[ ${path} == \"* ]]; then
-            path="${path#\"}"
-            path="${path%\"}"
-            path="${path//\\\"/\"}"
         fi
         [[ -z ${path} || ${path} == .git/* ]] && continue
         dest="${worktree}/${path}"
@@ -305,7 +304,7 @@ function harvest_workspace_into_worktree {
             return 1
         fi
         harvested=1
-    done < <(git -C "${workspace}" status --porcelain)
+    done < <(git -C "${workspace}" status --porcelain -z --untracked-files=all)
 
     if [[ ${harvested} -eq 1 ]]; then
         echo "::warning::Harvested maker edits from GITHUB_WORKSPACE into worktree"
@@ -349,6 +348,7 @@ function run_agent_capture {
 #
 # Globals:
 #   AGENT_TOOL_ALLOWLIST - Optional newline-separated extra tool rules (claude only)
+#   AGENT_TOOL_DENYLIST - Optional newline-separated extra deny rules (claude only)
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ATTEMPT - Optional loop attempt number recorded on the usage session
 #   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory

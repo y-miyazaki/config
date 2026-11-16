@@ -1,5 +1,22 @@
-# Reusable workflow: ECS CI (jsonnet format check and ecspresso verify)
-# Scans service directories for ecspresso.jsonnet and validates per service via matrix.
+#######################################
+# Description:
+#   Reusable workflow: ECS CI (jsonnet format check and ecspresso verify)
+#   Scans service directories for ecspresso.jsonnet and validates per service via matrix.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-aws-ecs.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-aws-ecs
 
 on:
@@ -30,7 +47,7 @@ on:
         required: false
         type: string
       ecspresso_version:
-        default: "v2.8.7"
+        default: "v2.8.8"
         description: "ecspresso version (e.g. v2.7.1)"
         required: false
         type: string
@@ -173,8 +190,7 @@ jobs:
 
       - name: Setup jsonnetfmt
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnetfmt
@@ -210,8 +226,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)
@@ -253,7 +268,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@aff803a87548687aa8e6aa0fdc45ea8f00b6fbef # v2.8.7
+        uses: kayac/ecspresso@a695f3b95f6460a89995299ba049bc8177131759 # v2.8.8
         with:
           version: ${{ inputs.ecspresso_version }}
 
@@ -282,8 +297,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)
@@ -326,8 +340,7 @@ jobs:
 
       - name: Setup jsonnet
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnet
@@ -337,7 +350,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@aff803a87548687aa8e6aa0fdc45ea8f00b6fbef # v2.8.7
+        uses: kayac/ecspresso@a695f3b95f6460a89995299ba049bc8177131759 # v2.8.8
         with:
           version: ${{ inputs.ecspresso_version }}
 
@@ -395,8 +408,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)

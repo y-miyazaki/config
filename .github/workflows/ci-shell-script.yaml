@@ -1,5 +1,22 @@
-# Reusable workflow: Shell script lint and validation
-# Uses shellcheck, shfmt, bash syntax checks, shebang verification, and Bats/ShellSpec discovery when present.
+#######################################
+# Description:
+#   Reusable workflow: Shell script lint and validation
+#   Uses shellcheck, shfmt, bash syntax checks, shebang verification, and Bats/ShellSpec discovery when present.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-shell-script.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   None
+#
+# Dependencies:
+#   None
+#
+# References:
+#   None
+#######################################
 name: ci-shell-script
 
 on:
@@ -151,16 +168,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v bats >/dev/null 2>&1; then
+          missing=()
+          for tool in bats parallel; do
+            if ! command -v "${tool}" >/dev/null 2>&1; then
+              missing+=("${tool}")
+            fi
+          done
+          if [[ ${#missing[@]} -gt 0 ]]; then
             sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
           fi
           bats --version
 
       - name: Setup actionlint
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           binary: actionlint
           checksum: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 # pragma: allowlist secret
@@ -169,8 +191,7 @@ jobs:
 
       - name: Setup ghalint
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           binary: ghalint
           checksum: eda1af79c1a4a31c2de5831cd1333ad582fa6fa72015f8e9c1c4525d550c1d35 # pragma: allowlist secret
@@ -179,8 +200,7 @@ jobs:
 
       - name: Setup zizmor
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           asset_pattern: zizmor-x86_64-unknown-linux-gnu.tar.gz
           binary: zizmor
@@ -194,7 +214,7 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t bats_files < /tmp/bats_files.txt
-          bats "${bats_files[@]}"
+          bats --jobs "$(nproc)" --no-parallelize-within-files "${bats_files[@]}"
 
       - name: Setup ShellSpec
         if: steps.discover.outputs.has_shellspec == 'true'
@@ -235,8 +255,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)
@@ -262,8 +281,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -305,8 +323,7 @@ jobs:
 
       - name: Install shfmt
         if: steps.file-list.outputs.no_files == 'false'
-        uses: y-miyazaki/config/.github/actions/install-github-release@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/install-github-release@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           asset_pattern: "shfmt_v{version}_linux_amd64"
           binary: shfmt
@@ -327,7 +344,7 @@ jobs:
 
       - name: Exec shfmt + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -338,7 +355,7 @@ jobs:
 
       - name: Exec shfmt + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
-        uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
+        uses: reviewdog/action-suggester@295fd4e5482381f33925c46ca5c2f66c69370267 # v1.27.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -349,7 +366,7 @@ jobs:
 
       - name: Exec ShellCheck + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
-        uses: reviewdog/action-shellcheck@d0b8d5fd7fad6afdb6e1b6ce1778892be4d1f427 # v1.34.1
+        uses: reviewdog/action-shellcheck@b4ffc0b2a69f857f82b74d1310cd3e62e932f9f7 # v1.35.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -361,7 +378,7 @@ jobs:
 
       - name: Exec ShellCheck + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
-        uses: reviewdog/action-shellcheck@d0b8d5fd7fad6afdb6e1b6ce1778892be4d1f427 # v1.34.1
+        uses: reviewdog/action-shellcheck@b4ffc0b2a69f857f82b74d1310cd3e62e932f9f7 # v1.35.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -432,16 +449,14 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/git-auth@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ github.token }}
           operation: clear
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/summary@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           artifacts: |
             (none)

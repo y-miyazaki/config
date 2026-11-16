@@ -1,11 +1,26 @@
-# Reusable workflow: Loop caller orchestration (entity)
-# Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
-# Binds one GitHub entity event via loop-entity-detect, then reuses ci-loop-agent.
-# Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
-# Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-# Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
-# Do not fan out resolved tokens via job outputs — see:
-#   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#######################################
+# Description:
+#   Reusable workflow: Loop caller orchestration (entity)
+#   Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-loop-caller-entity.yaml@<commit SHA>
+#   Pass inputs via with: and credentials via an explicit secrets: map (never secrets: inherit).
+#
+# Design Rules:
+#   - Binds one GitHub entity event via loop-entity-detect, then reuses ci-loop-agent.
+#   - Token resolution: per-job loop-resolve-push-token (App → GH_TOKEN → job GITHUB_TOKEN).
+#   - Do not fan out resolved tokens via job outputs — see: docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
+#
+# Dependencies:
+#   - Secret AGENT_TOKEN (required): engine API key
+#   - Secrets BOT_APP_CLIENT_ID and BOT_APP_PRIVATE_KEY (optional): GitHub App token for push and PR writes; GH_TOKEN (optional) is the fallback
+#
+# References:
+#   - Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
+#   - Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
+#######################################
 name: ci-loop-caller-entity
 
 on:
@@ -98,6 +113,11 @@ on:
         description: "Skill package name"
         required: true
         type: string
+      agent_report_check:
+        default: ""
+        description: 'Deterministic check applied to the maker report before the LLM checker: "paths" (### Changes lists repository paths), "commits" (### Changes lists commits; ### Skipped replaces ### Deferred), or empty to skip the check. Declared by the caller per skill'
+        required: false
+        type: string
       agent_tool_allowlist:
         default: ""
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue view:*)"). Caller-declared only — never derived from detect output. The repository''s .claude/settings.json allow rules are not applied in CI; claude adds only a fixed read-only git baseline and always applies a fixed deny list for GitHub writes, push, network, and env commands'
@@ -157,6 +177,11 @@ on:
       finalize_script:
         default: ""
         description: "Bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
+        required: false
+        type: string
+      handoff_artifact_suffix:
+        default: ""
+        description: "Optional suffix for the handoff artifact name loop-handoff-<run_id> (^[A-Za-z0-9._-]*$); set it when this workflow is called several times in one run (matrix) to avoid upload name conflicts"
         required: false
         type: string
       level:
@@ -228,12 +253,14 @@ jobs:
       actions: write
       contents: read
       issues: read
+      pull-requests: read
     outputs:
       delivery: ${{ steps.detect.outputs.delivery }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
       pr_auto_merge: ${{ steps.detect.outputs.pr_auto_merge }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
+      skip_detail: ${{ steps.detect.outputs.skip_detail }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
       target_matrix: ${{ steps.detect.outputs.target_matrix }}
@@ -247,41 +274,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Export Detect Domain Env
-        env:
-          DETECT_ENV_JSON: ${{ inputs.detect_env_json }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${DETECT_ENV_JSON}" && "${DETECT_ENV_JSON}" != "{}" ]]; then
-            if ! echo "${DETECT_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
-              echo "detect_env_json must be a JSON object" >&2
-              exit 1
-            fi
-            if ! echo "${DETECT_ENV_JSON}" | jq -e               'to_entries | map(.key) | all(test("^[A-Z_][A-Z0-9_]*$"))'               >/dev/null; then
-              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r                 'to_entries[] | select(.key | test("^[A-Z_][A-Z0-9_]*$") | not) | .key'                 | head -1)"
-              echo "detect_env_json keys must match ^[A-Z_][A-Z0-9_]*$ (invalid: ${bad_key})" >&2
-              exit 1
-            fi
-            if ! echo "${DETECT_ENV_JSON}" | jq -e \
-              '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
-              >/dev/null; then
-              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r \
-                'to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]"))) | .key' \
-                | head -1)"
-              echo "detect_env_json values must not contain newlines (key: ${bad_key})" >&2
-              exit 1
-            fi
-            while IFS= read -r -d '' entry; do
-              printf '%s\n' "${entry}" >> "${GITHUB_ENV}"
-            done < <(echo "${DETECT_ENV_JSON}" | jq -jr \
-              'to_entries[] | select(.value != "") | "\(.key)=\(.value)\u0000"')
-          fi
+          # A PR event checks out the PR merge ref; privileged jobs run repo scripts with a write token, so pin the trusted state branch
+          ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -289,8 +287,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
           agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
@@ -302,13 +299,16 @@ jobs:
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
           budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
           delivery: ${{ inputs.delivery }}
+          detect_env_json: ${{ inputs.detect_env_json }}
           detect_script: ${{ inputs.detect_script }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          handoff_artifact_suffix: ${{ inputs.handoff_artifact_suffix }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           run_log_file: ${{ inputs.run_log_file }}
+          state_branch: ${{ inputs.state_branch }}
           state_file: ${{ inputs.state_file }}
 
   execute:
@@ -324,8 +324,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
     with:
       agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
       agent_checker_effort: ${{ inputs.agent_checker_effort }}
@@ -344,6 +343,7 @@ jobs:
       agent_maker_max_turns: ${{ inputs.agent_maker_max_turns }}
       agent_maker_model: ${{ inputs.agent_maker_model }}
       agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
+      agent_report_check: ${{ inputs.agent_report_check }}
       agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
       agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
       delivery: ${{ needs.detect.outputs.delivery }}
@@ -377,7 +377,7 @@ jobs:
   record-skip:
     # Record every non-run (circuit_breaker, budget, no_changes) so a quiet
     # cron tick is distinguishable from a loop that never started. Skipped
-    # entries do not consume the daily budget (see loop-detect guards.sh).
+    # entries do not consume the daily budget (see lib/loop/admission.sh).
     if: >-
       needs.detect.result == 'success' &&
       needs.detect.outputs.should_run == 'false'
@@ -393,24 +393,25 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # A PR event checks out the PR merge ref; privileged jobs run repo scripts with a write token, so pin the trusted state branch
+          ref: ${{ startsWith(github.event_name, 'pull_request') && inputs.state_branch || '' }}
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@c4ca6c4193026059c93c165fdff772bf894a1274 # v1.9.2
-
+        uses: y-miyazaki/config/.github/actions/loop-run-log@51b50cb4fd63e9b9da76a8b0bd3c6597b0763220 # v1.9.12
         with:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           loop_name: ${{ inputs.loop_name }}
           outcome: skipped
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_detail: ${{ needs.detect.outputs.skip_detail }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
           state_branch: ${{ inputs.state_branch }}

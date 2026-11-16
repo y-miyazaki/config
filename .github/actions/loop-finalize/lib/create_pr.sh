@@ -67,7 +67,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 #   OUTCOME - Finalize outcome for Created By footer icon (optional)
 #   PR_BASE_BRANCH - Base branch
 #   PR_BODY - Static PR body prefix (optional)
-#   PR_LABELS - PR labels (optional)
+#   PR_LABELS - PR labels, comma-separated; missing ones are created first (optional)
 #   PR_TITLE - PR title
 #   SKIP_REASON - Footer skip reason (optional)
 #   TARGET_JSON - Target JSON (optional)
@@ -86,7 +86,8 @@ function main {
     local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
-    local composed url number pr_err
+    local composed url number pr_err pr_err_path pr_failed
+    local -a pr_label_names=()
 
     : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
@@ -99,6 +100,9 @@ function main {
     # shellcheck source=../../lib/loop/handoff.sh
     # shellcheck disable=SC1091
     source "${loop_action_lib}/handoff.sh"
+    # shellcheck source=../../lib/loop/ensure_labels.sh
+    # shellcheck disable=SC1091
+    source "${loop_action_lib}/ensure_labels.sh"
 
     work_dir="$(mktemp -d)"
     # Capture path at trap-set time; local work_dir is out of scope on EXIT.
@@ -109,7 +113,7 @@ function main {
     notify_json_path="$(mktemp "${work_dir}/tmp.XXXXXX")"
     body_path="$(mktemp "${work_dir}/tmp.XXXXXX")"
 
-    loop_handoff_resolve_detect_result_json > "${detect_json_path}"
+    handoff_resolve_detect_result_json > "${detect_json_path}"
     printf '%s' "${NOTIFY_CONTEXT_JSON}" > "${notify_json_path}"
 
     body_args=(
@@ -132,22 +136,33 @@ function main {
     fi
     if [[ -n ${PR_LABELS} ]]; then
         gh_args+=(--label "${PR_LABELS}")
+        # gh splits --label on commas; create each missing label first
+        mapfile -t pr_label_names < <(ensure_labels_parse_list "${PR_LABELS}" ",")
     fi
     if [[ ${PR_DRAFT} == "true" ]]; then
         gh_args+=(--draft)
     fi
 
-    if ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then
+    # gh prints the PR URL on stdout; warnings and notices on stderr must not end up in the URL.
+    pr_err_path="$(mktemp "${work_dir}/err.XXXXXX")"
+    pr_failed="false"
+    if ! pr_err="$(ensure_labels_repo "${pr_label_names[@]}" 2>&1)"; then
+        pr_failed="true"
+    elif ! url="$(gh pr create "${gh_args[@]}" 2> "${pr_err_path}")"; then
+        pr_failed="true"
+        pr_err="$(cat "${pr_err_path}")"
+    fi
+    if [[ ${pr_failed} == "true" ]]; then
         if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
             # shellcheck source=../../lib/loop/failure_record.sh
             # shellcheck disable=SC1091
             source "${loop_action_lib}/failure_record.sh"
-            loop_failure_record "finalize_pr" "${pr_err}" "${LOOP_FAILURE_FILE}"
+            failure_record_write "finalize_pr" "${pr_err}" "${LOOP_FAILURE_FILE}"
         fi
         printf '%s\n' "${pr_err}" >&2
         exit 1
     fi
-    url="${pr_err}"
+    url="$(tail -n 1 <<< "${url}")"
     number="$(gh pr view "${url}" --json number --jq '.number')"
     printf '%s\n' "${url}"
 
