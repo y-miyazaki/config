@@ -300,6 +300,7 @@
       "Bash(git reset --hard:*)",
       "Bash(npm publish:*)",
       "Edit(.claude/settings.json)",
+      "Edit(.claude/settings.local.json)",
       "Edit(.editorconfig)",
       "Edit(.eslintrc*)",
       "Edit(.github/workflows/**)",
@@ -314,7 +315,6 @@
       "Edit(mise.toml)",
       "Edit(package.json)",
       "Edit(renovate.json)",
-      "Edit(terraform.*.tfvars)",
       "Edit(tsconfig.json)"
     ],
     "defaultMode": "acceptEdits"

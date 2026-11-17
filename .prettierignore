@@ -21,7 +21,6 @@ terraform/**/README.md
 
 # AI tool local paths (matches .gitignore)
 .claude/memory/
-.claude/settings.local.json
 .claude/tmp/
 .serena
 
