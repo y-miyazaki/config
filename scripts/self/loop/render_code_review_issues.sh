@@ -42,8 +42,10 @@
 #   GITHUB_STEP_SUMMARY Step summary file (optional)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
@@ -139,7 +141,7 @@ function main {
     local branch="${EXECUTE_BRANCH:-}"
     local message_dir="${LOOP_MESSAGE_DIR:-}"
     local since ref report count i finding path ev_start ev_end title body fingerprint ranges
-    local kept="[]" dropped=0 reason out_file
+    local kept="[]" dropped=0 out_file
     local -a reasons=()
 
     if [[ ${VERDICT:-} != "APPROVE" ]]; then

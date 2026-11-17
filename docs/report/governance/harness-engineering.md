@@ -130,12 +130,13 @@ Shared Renovate presets automate dependency governance.
 
 `env/common/scripts/init.sh` runs in devcontainer `postCreateCommand` and ensures all enforcement layers are active:
 
-| Step                                        | Effect                                                       |
-| ------------------------------------------- | ------------------------------------------------------------ |
-| `mise trust + install`                      | Installs pinned tool versions (Go, Terraform, linters, etc.) |
-| `apm install --frozen`                      | Deploys instructions, hooks, skills, MCP servers             |
-| `pre-commit install`                        | Activates pre-commit hooks                                   |
-| `pre-commit install --hook-type commit-msg` | Activates commitlint                                         |
+| Step                                        | Effect                                                                                                                                                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise trust + install`                      | Installs pinned tool versions (Go, Terraform, linters, etc.)                                                                                                               |
+| `apm install --frozen`                      | Deploys instructions, hooks, skills, MCP servers                                                                                                                           |
+| `pre-commit install`                        | Activates pre-commit hooks                                                                                                                                                 |
+| `pre-commit install --hook-type commit-msg` | Activates commitlint                                                                                                                                                       |
+| codebase-memory-mcp index                   | Indexes the repository; falls back to one project per git-tracked top-level directory when the root is refused as too broad (path depth below 2, for example `/workspace`) |
 
 **Result**: A developer who opens the devcontainer has all enforcement layers active without any manual setup.
 

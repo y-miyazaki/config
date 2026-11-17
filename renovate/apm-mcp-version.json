@@ -85,6 +85,11 @@
   ],
   "packageRules": [
     {
+      "description": "Rules: Keep mcp-compressor at 0.34.0 (0.35.0+ fails to connect to the GitHub remote MCP endpoint; re-enable after verifying an upstream fix)",
+      "matchDepNames": ["mcp-compressor"],
+      "enabled": false
+    },
+    {
       "description": "Rules: Update MCP package versions in apm.yml",
       "matchManagers": ["custom.regex"],
       "matchFileNames": [

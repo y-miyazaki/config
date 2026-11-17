@@ -93,7 +93,7 @@ MCP Server の選定・比較の判断材料。
 
 **→ GitHub MCP + Context7 + Fetch を採用する。** GitHub MCP は PR/Issue 操作に必須（`mcp-compressor` でラップ）。Context7 は API キー不要で最新ライブラリドキュメントを取得。Fetch は特定 URL の参照に有用。
 
-- Playwright MCP は E2E テストやブラウザ操作が必要なプロジェクトでのみ追加。常時有効にするとツール数が多くトークンを消費する。mcp-compressor は同時に 1 サーバーしかラップできないため、GitHub MCP に適用済みの場合は Playwright を同時に圧縮できない点に注意。
+- Playwright MCP は E2E テストやブラウザ操作が必要なプロジェクトでのみ追加。常時有効にするとツール数が多くトークンを消費する。mcp-compressor は `--config` / `--multi-server` で複数サーバーを 1 つのプロキシにまとめられる（0.34.0 で GitHub と stdio サーバーの同時ラップを確認）ため、Playwright を追加する場合は同じプロキシに加える。
 
 ## Performance / Token Optimization MCP Servers
 
@@ -162,7 +162,10 @@ Proxy/Hook 型は Agent の能力に依存せず確実に効果を発揮する�
 - **rtk (rtk-ai/rtk) Hook と lean-ctx Hook の併用は非推奨。** 両者とも PreToolUse で Bash コマンドを透過的に書き換える同一レイヤーのツール。本リポジトリは `lean-ctx hook rewrite` / `hook redirect` / `hook observe` で既に同思想を実装済み。rtk を追加すると (1) Hook 実行順により `rtk lean-ctx git diff` のような二重ラップが起きうる、(2) lean-ctx の passthrough（情報保全）と rtk の積極圧縮がコマンドごとに競合し、**何が削られ何が残ったか監査できない**、(3) 失敗時の原本保存 (tee) の責任境界が曖昧になる。圧縮方針を一本化するため lean-ctx に集約する。
 - **rtk 単体採用は lean-ctx 未導入環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。MCP・キャッシュ・redirect が不要な個人環境では rtk から始めてもよい。本リポジトリは APM で lean-ctx を MCP（`common`）として配布し、hooks は lean-ctx 本体に任せるため rtk は不要。
 - **mcp-rtk は理論上 lean-ctx と補完関係だが、現時点では未採用。** lean-ctx は Shell 出力・ファイル読み込み、mcp-rtk は MCP レスポンス JSON を圧縮する別レイヤー。ただし GitHub Stars が極めて少なく（2026-06 時点で Star 1）、プリセットの充実度・運用実績が不足。GitHub MCP は mcp-compressor でラップ済みのため、当面は mcp-rtk の導入優先度は低い。成熟度が上がった段階で再評価する。
-- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。
+- **mcp-compressor は複数サーバーを同時にラップできる。** `--config`（MCP 設定 JSON）または `--multi-server NAME=COMMAND` を使うと、ツール名にサーバー名の接頭辞（`github_invoke_tool`、`fetch_invoke_tool` など）が付き、衝突しない。0.34.0 で GitHub（HTTP）・fetch・context7（stdio）の同時ラップと GitHub の読み取りツール呼び出しを確認した。
+- **制約: mcp-compressor 0.35.0 以降は GitHub のリモート MCP（`https://api.githubcopilot.com/mcp/`）への接続に失敗する**（`Transport channel closed`、0.40.1 でも再現）。本リポジトリは 0.34.0 に固定している。
+- **ツール数の多い MCP は mcp-compressor で包む（サーバーごとに 1 プロキシ）。** 現在の対象は GitHub MCP（読み取り専用で約 34 ツール）と codebase-memory-mcp（16 ツール）。context7（2）と fetch（1）は包まない。
+- **権限はプロキシの有無で両方の名前を書く。** プロキシ経由のツール名は `mcp__<server>__server_get_tool_schema` / `mcp__<server>__server_invoke_tool` になり、個別ツール単位の allow / deny は一致しない。`.claude/settings.json` には GitHub の `get_*` / `list_*` / `search_*`（直接接続用）と `server_get_tool_schema` / `server_invoke_tool`（プロキシ用）を併記している。`server_invoke_tool` を許可できるのは、バックエンドを `X-MCP-Readonly: true` で読み取り専用にしているため。codebase-memory-mcp の `delete_project` は、直接接続用の deny に加え、プロキシ側の `--exclude-tools=delete_project` で除外している。Cursor は `Mcp(*:*)` と `mcpAllowlist: ["*:*"]` で全許可のため変更不要。
 - **Headroom の利用形態による違い:** Headroom は Library / Proxy / MCP Server の 3 形態がある。Library（アプリケーション組み込み）や Proxy（LLM API の前段に配置）では透過的に効果を発揮するが、MCP Server 形態では Agent が `compress_text` 等を明示的に呼び出す必要がある。Proxy をサポートしない環境では MCP 形態でしか利用できず、効果が限定的となる。アプリケーション組み込みや LLM Proxy 構成が可能な場合に追加を検討。headroom はシェル層に rtk または lean-ctx のどちらか一方を内部利用する設計であり、Hook 層での rtk + lean-ctx 併用とは別問題。
 
 - codebase-memory-mcp のトークン削減効果は構造クエリの副次的効果であり、主目的はコード理解。Code Intelligence カテゴリで採用。

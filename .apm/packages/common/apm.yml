@@ -18,12 +18,21 @@ dependencies:
       registry: false
       transport: stdio
       command: uvx
-      args: ["--with", "mcp>=1.28,<2", "mcp-server-fetch==2026.11.4"]
+      args: ["mcp-server-fetch==2026.11.4"]
+    # Wrapped with mcp-compressor (16 tools); delete_project is excluded at the proxy because a
+    # per-tool permission deny cannot match tools called through the proxy's invoke_tool.
+    # Pinned to 0.34.0: 0.35.0+ cannot connect to the GitHub remote MCP endpoint (see the github package).
     - name: codebase-memory-mcp
       registry: false
       transport: stdio
-      command: codebase-memory-mcp
-      args: []
+      command: uvx
+      args:
+        [
+          "mcp-compressor==0.34.0",
+          "--exclude-tools=delete_project",
+          "--",
+          "codebase-memory-mcp",
+        ]
     # - name: lean-ctx
     #   registry: false
     #   transport: stdio

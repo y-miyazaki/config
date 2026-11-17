@@ -46,8 +46,10 @@
 #   TRIAGE_NOW                ISO 8601 UTC "now" override for tests (default current time)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 

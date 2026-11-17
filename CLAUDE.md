@@ -22,6 +22,8 @@
 
 These four files express one permission policy for different agents. They are repo-owned and hand-edited: `apm install` does not materialize them, so the `.cursor/` sync-target row above does not apply to `cli.json` or `permissions.json`.
 
+Restrictions and hooks that apply only to this repository (for example denying edits to the sync targets, or the `scripts/self/hooks/bats_changed.sh` Stop hook) belong in the git-ignored `.claude/settings.local.json`, not in these shared files: this project is meant to be reusable, so shared settings stay generic. Their absence from the shared files is intentional.
+
 | File                       | Permission surface                                                                                             |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `.claude/settings.json`    | `permissions.allow` / `deny` / `ask` — `Bash(cmd:*)`, `Read(glob)`, `WebFetch`, `mcp__<server>`                |

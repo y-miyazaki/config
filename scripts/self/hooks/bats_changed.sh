@@ -9,7 +9,10 @@
 #   receives the hook event JSON on stdin. Also runnable by hand from the repository.
 #
 # Design Rules:
-#   - Repository-specific: not distributed through apm.
+#   - Repository-specific: not distributed through apm. Intentionally registered only in the
+#     git-ignored .claude/settings.local.json, not in shared settings or an apm hooks package:
+#     a shell file and its Bats suite have no layout-independent pairing, so this mapping
+#     (the "# Tests for <path>" header convention) cannot be reused by consumer repositories.
 #   - Changed files come from git (working tree, index, untracked); a changed *.bats runs itself.
 #   - A changed *.sh/*.bash maps to every suite whose header line is "# Tests for <repo-relative path>"
 #     (no fixed test directory layout is assumed).
@@ -21,6 +24,7 @@
 #   Claude Code Stop JSON {"decision":"block","reason":...} on failure; nothing otherwise.
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
 # Secure defaults

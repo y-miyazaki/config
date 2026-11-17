@@ -2,9 +2,11 @@
 #######################################
 # Description: Sync all APM distribution artifacts from repository source-of-truth paths
 #
-# Usage: ./sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--skip-install] [--skip-audit] [component...]
+# Usage: ./sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--mcp-reclaim] [--skip-install] [--skip-audit] [component...]
 #   --check         Dry-run for bash-based sync scripts; skip apm install/audit
 #   --force         Run even when the inputs are unchanged since the last full sync
+#   --mcp-reclaim   Before apm install, drop the .mcp.json entries of MCP servers declared in the
+#                   enabled packages so apm regenerates them (see reclaim_apm_mcp_connections)
 #   --apm-force     Pass --force to apm install (recovery when apm has no trusted
 #                   deployment baseline; also bypasses apm's critical security-scan block)
 #   --skip-install  Apply sync but do not run apm install --update
@@ -31,8 +33,10 @@
 # See CLAUDE.md § Edit Targets and .apm/CLAUDE.md § Validation Scripts Mirror.
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
@@ -41,6 +45,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK_MODE="false"
 FORCE="false"
 APM_FORCE="false"
+MCP_RECLAIM="${APM_SYNC_MCP_RECLAIM:-false}"
 SKIP_INSTALL="false"
 SKIP_AUDIT="false"
 declare -a COMPONENTS=()
@@ -60,7 +65,7 @@ declare -a SYNC_COMPONENTS=(
 #######################################
 function show_usage {
     cat << 'EOF'
-Usage: sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--skip-install] [--skip-audit] [component...]
+Usage: sync_apm_artifacts.sh [--check] [--force] [--apm-force] [--mcp-reclaim] [--skip-install] [--skip-audit] [component...]
 
 Description:
     Sync APM artifacts, install package outputs, and verify integrity.
@@ -81,6 +86,8 @@ Options:
     --check         Dry-run where supported; skip apm install and apm audit
     --force         Run even when the inputs are unchanged since the last full sync
     --apm-force     Pass --force to apm install (no trusted deployment baseline)
+    --mcp-reclaim   Ignore drift in .mcp.json: remove entries of apm-declared MCP servers before
+                    install so apm regenerates them (env APM_SYNC_MCP_RECLAIM=true does the same)
     --skip-install  Do not run apm install --update after sync
     --skip-audit    Do not run apm audit --ci after install
 
@@ -112,6 +119,10 @@ function parse_arguments {
                 ;;
             --apm-force)
                 APM_FORCE="true"
+                shift
+                ;;
+            --mcp-reclaim)
+                MCP_RECLAIM="true"
                 shift
                 ;;
             --skip-install)
@@ -355,6 +366,51 @@ function run_apm_command {
 }
 
 #######################################
+# reclaim_apm_mcp_connections: Drop .mcp.json entries that apm would otherwise treat as conflicts
+#
+# Description:
+#   apm refuses to overwrite a .mcp.json server entry it does not own (for example one that was
+#   edited by hand) and --force does not change that. This removes the entries of every MCP server
+#   declared in the enabled packages (uncommented ./.apm/packages/* lines of apm.yml) so the
+#   following apm install regenerates them. Servers not declared by a package are left alone.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Repository root
+#
+# Outputs:
+#   One line per removed entry on stdout
+#
+# Returns:
+#   0 always (nothing to do when .mcp.json or apm.yml is absent)
+#
+#######################################
+function reclaim_apm_mcp_connections {
+    local root="$1"
+    local mcp_file="${root}/.mcp.json" pkg name tmp
+    local -a names=()
+
+    [[ -f ${mcp_file} && -f ${root}/apm.yml ]] || return 0
+    while IFS= read -r pkg; do
+        [[ -f ${root}/${pkg}/apm.yml ]] || continue
+        while IFS= read -r name; do
+            names+=("${name}")
+        done < <(awk '/^  mcp:/{f=1;next} f&&/^    - name:/{print $3} f&&/^[^ ]/{f=0}' "${root}/${pkg}/apm.yml")
+    done < <(sed -n 's/^[[:space:]]*-[[:space:]]*\(\.\/\.apm\/packages\/[A-Za-z0-9_-]*\)[[:space:]]*$/\1/p' "${root}/apm.yml")
+
+    tmp="$(mktemp)"
+    for name in "${names[@]}"; do
+        if jq -e --arg n "${name}" '.mcpServers[$n]' "${mcp_file}" > /dev/null 2>&1; then
+            jq --arg n "${name}" 'del(.mcpServers[$n])' "${mcp_file}" > "${tmp}" && cat "${tmp}" > "${mcp_file}"
+            echo "mcp-reclaim: removed .mcp.json entry '${name}' (apm regenerates it)"
+        fi
+    done
+    rm -f "${tmp}"
+}
+
+#######################################
 # run_apm_install_component: Install APM package outputs into agent directories
 #######################################
 function run_apm_install_component {
@@ -364,6 +420,9 @@ function run_apm_install_component {
         return 1
     fi
     check_agent_config_json "$(resolve_repo_root)" || return 1
+    if [[ ${MCP_RECLAIM} == "true" ]]; then
+        reclaim_apm_mcp_connections "$(resolve_repo_root)"
+    fi
     local -a install_args=(install --update)
 
     if [[ ${APM_FORCE} == "true" ]]; then

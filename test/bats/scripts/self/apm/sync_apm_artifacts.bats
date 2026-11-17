@@ -16,6 +16,8 @@
 # - apm install gets --force only with --apm-force, and a failed install prints the --apm-force recovery hint
 # - check_agent_config_json refuses an agent config file that is not valid JSON and accepts valid or absent files
 # - apm install is not started when an agent config file is not valid JSON
+# - --mcp-reclaim (or APM_SYNC_MCP_RECLAIM=true) removes only the .mcp.json entries of servers declared in enabled packages before apm install
+# - without --mcp-reclaim .mcp.json is left untouched
 # - the guidelines component runs the generator from the repository root whatever the caller's directory, and fails when the generator fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -164,6 +166,54 @@ function apm_install_run {
     apm_install_run 1 "parse_arguments apm-install"
     [ "$status" -eq 1 ]
     [[ $output == *"--apm-force"* ]]
+}
+
+# mcp_reclaim_repo: Build a repo with one enabled package, one disabled package and a hand-edited .mcp.json
+function mcp_reclaim_repo {
+    MR_ROOT="${TEST_TMP}/mcp_root"
+    mkdir -p "${MR_ROOT}/.apm/packages/on" "${MR_ROOT}/.apm/packages/off"
+    printf 'dependencies:\n  apm:\n    - ./.apm/packages/on\n    # - ./.apm/packages/off\n' > "${MR_ROOT}/apm.yml"
+    printf 'dependencies:\n  apm: []\n  mcp:\n    - name: github\n      registry: false\n    - name: fetch\n      registry: false\n' > "${MR_ROOT}/.apm/packages/on/apm.yml"
+    printf 'dependencies:\n  mcp:\n    - name: disabled-server\n' > "${MR_ROOT}/.apm/packages/off/apm.yml"
+    printf '{"mcpServers":{"github":{"x":1},"fetch":{"x":2},"disabled-server":{"x":3},"mine":{"x":4}}}\n' > "${MR_ROOT}/.mcp.json"
+}
+
+@test "reclaim_apm_mcp_connections removes only entries of servers declared in enabled packages" {
+    mcp_reclaim_repo
+    run bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && reclaim_apm_mcp_connections '${MR_ROOT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *"removed .mcp.json entry 'github'"* ]]
+    run jq -c '.mcpServers|keys' "${MR_ROOT}/.mcp.json"
+    [ "$output" = '["disabled-server","mine"]' ]
+}
+
+@test "reclaim_apm_mcp_connections does nothing when .mcp.json or apm.yml is absent" {
+    mcp_reclaim_repo
+    rm "${MR_ROOT}/.mcp.json"
+    run bash -c "source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && reclaim_apm_mcp_connections '${MR_ROOT}'"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "apm install reclaims .mcp.json entries with --mcp-reclaim and leaves them without it" {
+    mcp_reclaim_repo
+    local mock_bin="${BATS_TEST_TMPDIR}/mock_bin_reclaim"
+    mkdir -p "${mock_bin}"
+    printf '#!/bin/bash\nexit 0\n' > "${mock_bin}/apm"
+    chmod +x "${mock_bin}/apm"
+    local src="source '${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh' && check_agent_config_json() { return 0; } && resolve_repo_root() { echo '${MR_ROOT}'; }"
+    run env PATH="${mock_bin}:${PATH}" bash -c "${src} && parse_arguments apm-install && run_apm_install_component"
+    [ "$status" -eq 0 ]
+    run jq -r '.mcpServers|keys|length' "${MR_ROOT}/.mcp.json"
+    [ "$output" = "4" ]
+    run env PATH="${mock_bin}:${PATH}" bash -c "${src} && parse_arguments --mcp-reclaim apm-install && run_apm_install_component"
+    [ "$status" -eq 0 ]
+    run jq -r '.mcpServers|keys|length' "${MR_ROOT}/.mcp.json"
+    [ "$output" = "2" ]
+    mcp_reclaim_repo
+    run env APM_SYNC_MCP_RECLAIM=true PATH="${mock_bin}:${PATH}" bash -c "${src} && parse_arguments apm-install && run_apm_install_component"
+    run jq -r '.mcpServers|keys|length' "${MR_ROOT}/.mcp.json"
+    [ "$output" = "2" ]
 }
 
 @test "check_agent_config_json refuses an agent config file that is not valid JSON" {

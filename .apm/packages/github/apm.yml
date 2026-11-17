@@ -9,6 +9,9 @@ includes: auto
 dependencies:
   apm: []
   mcp:
+    # mcp-compressor is pinned to 0.34.0: 0.35.0 and later fail to initialize the remote
+    # streamable HTTP backend ("Transport channel closed"). Renovate updates are disabled
+    # for it in renovate/apm-mcp-version.json; unpin once an upstream fix is verified.
     - name: github
       registry: false
       transport: stdio
@@ -16,5 +19,5 @@ dependencies:
       args:
         [
           "-lc",
-          'TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.40.0 -- https://api.githubcopilot.com/mcp/ -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers',
+          'TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.34.0 -- https://api.githubcopilot.com/mcp/ -H "Authorization=Bearer ${TOKEN}" -H "X-MCP-Readonly=true" --auth explicit-headers',
         ]

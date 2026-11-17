@@ -14,6 +14,7 @@
 # - Action-local only; not part of scripts/lib skill sync
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
 #######################################
@@ -36,7 +37,7 @@ function build_handoff_artifact_name {
         return 1
     fi
     if [[ ! ${suffix} =~ ^[A-Za-z0-9._-]*$ ]] || [[ ${suffix} == *$'\n'* ]]; then
-        echo "::error::handoff_artifact_suffix must match ^[A-Za-z0-9._-]*\$" >&2
+        echo '::error::handoff_artifact_suffix must match ^[A-Za-z0-9._-]*$' >&2
         return 1
     fi
     printf 'loop-handoff-%s%s\n' "${run_id}" "${suffix}"

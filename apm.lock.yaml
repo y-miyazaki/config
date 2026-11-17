@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-17T04:30:48.652151+00:00'
+generated_at: '2026-11-17T06:00:42.900697+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -338,7 +338,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:31469864c93cc1e3ce3bb3e4f23c7aed83b8bef8de89e070d2888d2f8f4aa77b
+  content_hash: sha256:378a9802d0659bca2984b671bff83c2240997b3bd46734393623a297d9b4b383
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -930,7 +930,7 @@ dependencies:
     .claude/skills/github-pr-revise/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
   source: local
   local_path: ./.apm/packages/github
-  content_hash: sha256:48e641afe7516273cec8ae7455ede43d94afc1eadf07b9b00757d1288e08d5e3
+  content_hash: sha256:ee8ffdb20a3324b7865df74c356fd5723d1084fad9ec0f0fd45fb1f27cd6af94
   declared_license: Apache-2.0
 - repo_url: _local/github-actions
   name: config-github-actions
@@ -13737,7 +13737,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:bc69a4668d08a2bea2981c4ab0c13087654d9c7710ff3e5234fa82d193dd1d20
+  content_hash: sha256:0d19b99ba2dbbec3bf12165d391e43d6f65a513058141962cce385cb507456a4
 - kind: uri
   target: mcp
   value: context7
@@ -13755,7 +13755,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:c159973401eb79e445afd80b53c1274fbb54c27df37dbb52abf3eac1e91b44cd
+  content_hash: sha256:436ff59e89d224521488b1695405d31a5a11433fdeade95f12bdc2cb258e4fe5
 - kind: uri
   target: mcp
   value: github
@@ -13764,7 +13764,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:66471abdb5b916c18d9a121a2352a7c7de9ac750ffa94d8a6014bf07e80e47d5
+  content_hash: sha256:cf18a99d8c70d9eb23a6a65bda93db68db952018320dadd2b577fb1d96c176a7
 - kind: uri
   target: mcp
   value: codebase-memory-mcp
@@ -13810,9 +13810,13 @@ mcp_configs:
   codebase-memory-mcp:
     name: codebase-memory-mcp
     transport: stdio
-    args: []
+    args:
+    - mcp-compressor==0.34.0
+    - --exclude-tools=delete_project
+    - --
+    - codebase-memory-mcp
     registry: false
-    command: codebase-memory-mcp
+    command: uvx
   context7:
     name: context7
     transport: stdio
@@ -13825,8 +13829,6 @@ mcp_configs:
     name: fetch
     transport: stdio
     args:
-    - --with
-    - mcp>=1.28,<2
     - mcp-server-fetch==2026.11.4
     registry: false
     command: uvx
@@ -13835,8 +13837,8 @@ mcp_configs:
     transport: stdio
     args:
     - -lc
-    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.40.0 -- https://api.githubcopilot.com/mcp/
-      -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers
+    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.34.0 -- https://api.githubcopilot.com/mcp/
+      -H "Authorization=Bearer ${TOKEN}" -H "X-MCP-Readonly=true" --auth explicit-headers
     registry: false
     command: bash
 mcp_target_servers:
