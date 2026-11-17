@@ -2829,45 +2829,73 @@ backend = "aqua:vektra/mockery"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64"]
 checksum = "sha256:0b7a9f1fe2c223b89d1ee3975a64e81c1ef3fc34dbc1fbd28f672f77c3681125"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292192"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64-musl"]
 checksum = "sha256:0b7a9f1fe2c223b89d1ee3975a64e81c1ef3fc34dbc1fbd28f672f77c3681125"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292192"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64"]
 checksum = "sha256:498b459515c463080df83735792b620c335f027c8b4c0e666d4de98156f0ea68"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292189"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64-musl"]
 checksum = "sha256:498b459515c463080df83735792b620c335f027c8b4c0e666d4de98156f0ea68"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292189"
 
 [tools."aqua:vektra/mockery"."platforms.macos-arm64"]
 checksum = "sha256:db565bb673f7fe539710da270db04523a80c63d2273dc64dbb5d29227e467c5b"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292270"
 
 [tools."aqua:vektra/mockery"."platforms.macos-x64"]
 checksum = "sha256:df0cc34a1a2130c6bf8679fbb3880e94958f066bcdec5cb1c52d2e3c94869630"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Darwin_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292277"
 
 [tools."aqua:vektra/mockery"."platforms.windows-x64"]
 checksum = "sha256:6184316ca712ebc9f9657f6e33d0ac78b7a10f73ee0062414de6a883f01aed6e"
-checksum_source = "mise-versions"
 url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Windows_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/728292190"
+
+[[tools."aqua:vektra/mockery"]]
+version = "3.9.1"
+backend = "aqua:vektra/mockery"
+
+[tools."aqua:vektra/mockery".options]
+"vars.lazy" = "true"
+
+[tools."aqua:vektra/mockery"."platforms.linux-arm64"]
+checksum = "sha256:0b7a9f1fe2c223b89d1ee3975a64e81c1ef3fc34dbc1fbd28f672f77c3681125"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_arm64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.linux-arm64-musl"]
+checksum = "sha256:0b7a9f1fe2c223b89d1ee3975a64e81c1ef3fc34dbc1fbd28f672f77c3681125"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_arm64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.linux-x64"]
+checksum = "sha256:498b459515c463080df83735792b620c335f027c8b4c0e666d4de98156f0ea68"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_x86_64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.linux-x64-musl"]
+checksum = "sha256:498b459515c463080df83735792b620c335f027c8b4c0e666d4de98156f0ea68"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Linux_x86_64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.macos-arm64"]
+checksum = "sha256:db565bb673f7fe539710da270db04523a80c63d2273dc64dbb5d29227e467c5b"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Darwin_arm64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.macos-x64"]
+checksum = "sha256:df0cc34a1a2130c6bf8679fbb3880e94958f066bcdec5cb1c52d2e3c94869630"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Darwin_x86_64.tar.gz"
+
+[tools."aqua:vektra/mockery"."platforms.windows-x64"]
+checksum = "sha256:6184316ca712ebc9f9657f6e33d0ac78b7a10f73ee0062414de6a883f01aed6e"
+url = "https://github.com/vektra/mockery/releases/download/v3.9.1/mockery_3.9.1_Windows_x86_64.tar.gz"
 
 [[tools."aqua:zizmorcore/zizmor"]]
 version = "1.32.0"
@@ -2959,45 +2987,63 @@ backend = "aqua:anthropics/claude-code"
 
 [tools.claude."platforms.linux-arm64"]
 checksum = "sha256:3621f233638834b672f5fdd406b0d72383e3aca425e3e981872dd8d51be4d34f"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728667680"
 
 [tools.claude."platforms.linux-arm64-musl"]
 checksum = "sha256:eccb11e7659e7398509068798074009ebaf1dfd9196651df12f3f9888d1ca4d9"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-linux-arm64-musl.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728667675"
 
 [tools.claude."platforms.linux-x64"]
 checksum = "sha256:361ef5837059512dcddb0d6b6319357b61604ff849b3dcd2693e2fcbb40b207a"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728668200"
 
 [tools.claude."platforms.linux-x64-musl"]
 checksum = "sha256:0e6ca2d89137dfdb00bf2bbd17db3b7472085448c975f57c0dd1be81308159f1"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-linux-x64-musl.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728667679"
 
 [tools.claude."platforms.macos-arm64"]
 checksum = "sha256:3ff73ad0d0cacc1ee8f5227942e471ada18ffa82475c8681525c621b2c9d6f53"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728667678"
 
 [tools.claude."platforms.macos-x64"]
 checksum = "sha256:6a4ce8b0e9bc69f8afa8feae75197fe5203b62def0be8a8008ddce1883a6efd9"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-darwin-x64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728667691"
 
 [tools.claude."platforms.windows-x64"]
 checksum = "sha256:c28cc74dc5986ce882d2fbc74b9e427441c923a127452f0c54e52bd1d07b3578"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.321/claude-win32-x64.zip"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/728668213"
+
+[[tools.claude]]
+version = "2.1.321"
+backend = "aqua:anthropics/claude-code"
+
+[tools.claude.options]
+"vars.lazy" = "true"
+
+[tools.claude."platforms.linux-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/linux-arm64/claude"
+
+[tools.claude."platforms.linux-arm64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/linux-arm64-musl/claude"
+
+[tools.claude."platforms.linux-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/linux-x64/claude"
+
+[tools.claude."platforms.linux-x64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/linux-x64-musl/claude"
+
+[tools.claude."platforms.macos-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/darwin-arm64/claude"
+
+[tools.claude."platforms.macos-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.321/darwin-x64/claude"
 
 [[tools."github:DeusData/codebase-memory-mcp"]]
 version = "0.12.1"
