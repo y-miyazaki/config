@@ -20,6 +20,9 @@
 #   - Only the intel and ioc modules gate the job: heuristic modules (YARA, AST, obfuscation)
 #     flag mainstream extensions such as hashicorp.terraform and anthropic.claude-code.
 #   - --strict is not used: it fails on any bundled native binary, which intel and ioc do not analyze.
+#   - severity defaults to critical: known-indicator matches (blocklist, malware hash, C2 domain/IP,
+#     known wallet) are critical, while generic wallet-like strings and duplicate ZIP paths are high
+#     and flag mainstream extensions such as github.vscode-github-actions.
 #   - The image is pinned by digest: upstream publishes only the main tag to ghcr.io.
 #   - Entries without a version are scanned at the registry latest; pin versions as publisher.name@version.
 #   - Extensions are only downloaded and read, never installed or executed.
@@ -47,7 +50,7 @@ on:
         required: false
         type: string
       severity:
-        default: "high"
+        default: "critical"
         description: "Minimum severity to report and fail on: low, medium, high, critical"
         required: false
         type: string

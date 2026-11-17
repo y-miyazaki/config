@@ -9,7 +9,7 @@
 # - the embedded extractor rejects entries that are not publisher.name[@version] and unreadable files
 # - the embedded extractor writes nothing when no configuration file exists
 # - the input validation accepts a sha256 image digest and rejects tags, short or uppercase digests
-# - the scan gates only on the intel and ioc modules without --strict
+# - the scan gates only on the intel and ioc modules without --strict, at critical severity by default
 # - the workflow declares the reusable inputs in alphabetical order
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -152,6 +152,8 @@ run_validator() {
     [[ ${output} == *"-m intel,ioc"* ]]
     [[ ${output} != *"--strict"* ]]
     [[ ${output} != *"--require-yara"* ]]
+    run awk '/^      severity:$/ { getline; print }' "${WORKFLOW}"
+    [[ ${output} == *'default: "critical"'* ]]
 }
 
 @test "workflow declares reusable inputs in alphabetical order" {
