@@ -42,7 +42,7 @@ on:
         required: false
         type: string
       go_version:
-        default: "1.27.3"
+        default: "1.27.4"
         description: "Go version to use for building"
         required: false
         type: string
