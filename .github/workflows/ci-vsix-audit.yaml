@@ -1,0 +1,251 @@
+#######################################
+# Description:
+#   Reusable workflow: VS Code extension security audit
+#   Reads extension IDs from devcontainer.json (customizations.vscode.extensions) and
+#   .vscode/extensions.json (recommendations), downloads each pinned version, and scans it
+#   with trailofbits/vsix-audit threat-intel modules (blocklist and IOC). Commented-out entries are ignored.
+#
+# Usage:
+#   Call from a workflow job:
+#     uses: y-miyazaki/config/.github/workflows/ci-vsix-audit.yaml@<commit SHA>
+#   with:
+#     config_files: newline-separated paths; empty uses the standard locations
+#     registry: marketplace or openvsx
+#     severity: minimum severity to report and fail on (low, medium, high, critical)
+#     vsix_audit_digest: vsix-audit container image digest (sha256:<64 hex>)
+#   No secrets are required.
+#
+# Design Rules:
+#   - Extension IDs are validated before use and passed to docker only as arguments.
+#   - Only the intel and ioc modules gate the job: heuristic modules (YARA, AST, obfuscation)
+#     flag mainstream extensions such as hashicorp.terraform and anthropic.claude-code.
+#   - --strict is not used: it fails on any bundled native binary, which intel and ioc do not analyze.
+#   - The image is pinned by digest: upstream publishes only the main tag to ghcr.io.
+#   - Entries without a version are scanned at the registry latest; pin versions as publisher.name@version.
+#   - Extensions are only downloaded and read, never installed or executed.
+#
+# Dependencies:
+#   - Network access to the extension registry and ghcr.io
+#   - permissions: contents read
+#
+# References:
+#   - docs/reference/specification.md
+#######################################
+name: ci-vsix-audit
+
+on:
+  workflow_call:
+    inputs:
+      config_files:
+        default: ""
+        description: "Newline-separated devcontainer.json / extensions.json paths. Empty uses the standard locations (.devcontainer/devcontainer.json, .devcontainer.json, .devcontainer/*/devcontainer.json, .vscode/extensions.json)."
+        required: false
+        type: string
+      registry:
+        default: "marketplace"
+        description: "Registry to download from: marketplace or openvsx"
+        required: false
+        type: string
+      severity:
+        default: "high"
+        description: "Minimum severity to report and fail on: low, medium, high, critical"
+        required: false
+        type: string
+      vsix_audit_digest:
+        default: "sha256:0dbc0a07c6e164f9c2ecf3f8baa79c64a2b86d445a6b1de763f7dfeae2789e78"
+        description: "vsix-audit container image digest (ghcr.io/trailofbits/vsix-audit@<digest>), format sha256:<64 hex>"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CONFIG_FILES: ${{ inputs.config_files }}
+  REGISTRY: ${{ inputs.registry }}
+  SEVERITY: ${{ inputs.severity }}
+  VSIX_AUDIT_DIGEST: ${{ inputs.vsix_audit_digest }}
+
+jobs:
+  audit:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${REGISTRY}" in
+            marketplace | openvsx) ;;
+            *) echo "::error::registry must be marketplace or openvsx: ${REGISTRY}"; exit 1 ;;
+          esac
+          case "${SEVERITY}" in
+            low | medium | high | critical) ;;
+            *) echo "::error::severity must be low, medium, high or critical: ${SEVERITY}"; exit 1 ;;
+          esac
+          if [[ ! "${VSIX_AUDIT_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::vsix_audit_digest must be sha256:<64 lowercase hex>: ${VSIX_AUDIT_DIGEST}"
+            exit 1
+          fi
+
+      - name: Extract Extension IDs
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ids_file="${RUNNER_TEMP}/vsix-ids.txt"
+          : > "${ids_file}"
+          node - "${ids_file}" <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+
+          // Remove comments and trailing commas without touching string contents.
+          function stripJsonc(src) {
+            let out = "";
+            let inString = false;
+            let i = 0;
+            while (i < src.length) {
+              const c = src[i];
+              const n = src[i + 1];
+              if (inString) {
+                out += c;
+                if (c === "\\") {
+                  out += n === undefined ? "" : n;
+                  i += 2;
+                  continue;
+                }
+                if (c === '"') inString = false;
+                i += 1;
+                continue;
+              }
+              if (c === '"') {
+                inString = true;
+                out += c;
+                i += 1;
+              } else if (c === "/" && n === "/") {
+                while (i < src.length && src[i] !== "\n") i += 1;
+              } else if (c === "/" && n === "*") {
+                i += 2;
+                while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) i += 1;
+                i += 2;
+              } else if (c === ",") {
+                let j = i + 1;
+                while (j < src.length && /\s/.test(src[j])) j += 1;
+                if (src[j] === "}" || src[j] === "]") {
+                  i += 1;
+                } else {
+                  out += c;
+                  i += 1;
+                }
+              } else {
+                out += c;
+                i += 1;
+              }
+            }
+            return out;
+          }
+
+          function defaultFiles() {
+            const files = [".devcontainer/devcontainer.json", ".devcontainer.json", ".vscode/extensions.json"];
+            if (fs.existsSync(".devcontainer")) {
+              for (const entry of fs.readdirSync(".devcontainer", { withFileTypes: true })) {
+                if (entry.isDirectory()) files.push(path.join(".devcontainer", entry.name, "devcontainer.json"));
+              }
+            }
+            return files.filter((f) => fs.existsSync(f));
+          }
+
+          const configured = (process.env.CONFIG_FILES || "")
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const files = configured.length > 0 ? configured : defaultFiles();
+          const idPattern = /^[A-Za-z0-9-]+\.[A-Za-z0-9._-]+(@[A-Za-z0-9.+_-]+)?$/;
+          const ids = new Set();
+          let failed = false;
+
+          for (const file of files) {
+            let json;
+            try {
+              json = JSON.parse(stripJsonc(fs.readFileSync(file, "utf8")));
+            } catch (err) {
+              console.log(`::error::cannot read ${file}: ${err.message}`);
+              failed = true;
+              continue;
+            }
+            const entries = [
+              ...((json.customizations && json.customizations.vscode && json.customizations.vscode.extensions) || []),
+              ...(json.recommendations || []),
+            ];
+            for (const entry of entries) {
+              if (typeof entry === "string" && idPattern.test(entry)) {
+                ids.add(entry);
+              } else {
+                console.log(`::error::unsupported extension entry in ${file}: ${JSON.stringify(entry)}`);
+                failed = true;
+              }
+            }
+          }
+
+          if (failed) process.exit(1);
+          fs.writeFileSync(process.argv[2], [...ids].sort().map((id) => `${id}\n`).join(""));
+          console.log(`Found ${ids.size} extension(s) in ${files.length} file(s)`);
+          NODE
+          count="$(wc -l < "${ids_file}" | tr -d ' ')"
+          echo "count=${count}" >> "${GITHUB_OUTPUT}"
+          if [[ "${count}" -eq 0 ]]; then
+            echo "::notice::No extensions found; nothing to audit"
+          fi
+          cat "${ids_file}"
+
+      - name: Download Extensions
+        if: ${{ steps.extract.outputs.count != '0' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          work_dir="${RUNNER_TEMP}/vsix"
+          mkdir -p "${work_dir}"
+          chmod 0777 "${work_dir}"
+          image="ghcr.io/trailofbits/vsix-audit@${VSIX_AUDIT_DIGEST}"
+          docker pull --quiet "${image}"
+          while IFS= read -r id; do
+            target="${id}"
+            if [[ "${REGISTRY}" == "openvsx" ]]; then
+              publisher="${id%%.*}"
+              target="openvsx:${publisher}/${id#*.}"
+            fi
+            docker run --rm --mount "type=bind,src=${work_dir},dst=/work" \
+              "${image}" download "${target}" -o /work
+          done < "${RUNNER_TEMP}/vsix-ids.txt"
+
+      - name: Scan Extensions
+        if: ${{ steps.extract.outputs.count != '0' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            --mount "type=bind,src=${RUNNER_TEMP}/vsix,dst=/work,readonly" \
+            "ghcr.io/trailofbits/vsix-audit@${VSIX_AUDIT_DIGEST}" \
+            scan -r /work -m intel,ioc --severity "${SEVERITY}"
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5eea4824916e0193eb01c6ead96dd5241c91f1d6 # v1.9.13
+        with:
+          artifacts: |
+            (none)
+          params: |
+            extensions: ${{ steps.extract.outputs.count }}
+            registry: ${{ env.REGISTRY }}
+            severity: ${{ env.SEVERITY }}
+            vsix_audit_digest: ${{ env.VSIX_AUDIT_DIGEST }}
+          status: "${{ job.status }}"
+          title: "VSIX Audit"

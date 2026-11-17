@@ -111,7 +111,7 @@ Package authoring: [APM Package Design Principles](apm-package-design.md), compa
 
 Validation is layered to reduce drift:
 
-- CI workflows for APM audit (`ci-apm-audit`), markdown lint, GitHub Actions validation, and shell script checks
+- CI workflows for APM audit (`ci-apm-audit`), VS Code extension audit (`ci-vsix-audit`), markdown lint, GitHub Actions validation, and shell script checks
 - package-level validation scripts under `scripts/`
 - language/tool specific validation via instructions and skills
 - CI-based checks for workflows and repository consistency

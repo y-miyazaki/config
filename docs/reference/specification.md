@@ -353,11 +353,13 @@ Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`, `ci-terraform`)
 
 ### APM and shell CI workflows
 
-| Workflow                    | Type     | Purpose                                                                       |
-| --------------------------- | -------- | ----------------------------------------------------------------------------- |
-| `ci-apm-audit.yaml`         | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input            |
-| `on-ci-push-apm-audit.yaml` | Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`) |
-| `ci-shell-script.yaml`      | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present                      |
+| Workflow                    | Type     | Purpose                                                                                                                                                      |
+| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci-apm-audit.yaml`         | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input                                                                                           |
+| `on-ci-push-apm-audit.yaml` | Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`)                                                                                |
+| `ci-shell-script.yaml`      | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present                                                                                                     |
+| `ci-vsix-audit.yaml`        | Reusable | VS Code extension audit (`devcontainer.json` + `.vscode/extensions.json`) via vsix-audit; inputs `config_files`, `registry`, `severity`, `vsix_audit_digest` |
+| `on-ci-vsix-audit.yaml`     | Caller   | Path-filtered push/PR and weekly schedule (dogfood: scans `env/example/.devcontainer/devcontainer.json`)                                                     |
 
 ### Scope
 
@@ -581,6 +583,7 @@ Use repository validation workflows and scripts for changed assets:
 
 - `apm install --frozen`: verify deterministic package resolution
 - `ci-apm-audit` workflow: install APM packages and run `apm audit --ci` with optional `check_drift` and policy checks
+- `ci-vsix-audit` workflow: scan pinned VS Code extensions (commented-out entries ignored) with the vsix-audit `intel` and `ioc` modules (blocklist and known indicators of compromise), failing on findings at or above `severity`; heuristic modules and `--strict` are off because they fail on mainstream extensions and bundled native binaries
 - Markdown lint CI workflow: validate documentation formatting
 - GitHub Actions workflow validation: check reusable workflow syntax
 - Renovate config validation: verify shared policy JSON schema compliance

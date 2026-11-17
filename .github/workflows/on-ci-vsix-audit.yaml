@@ -1,0 +1,67 @@
+#######################################
+# Description:
+#   CI workflow: VS Code extension security audit on push/PR and weekly schedule
+#
+# Usage:
+#   Runs on: push, pull_request, schedule, workflow_dispatch
+#
+# Design Rules:
+#   - Weekly schedule re-scans pinned versions so newly reported malicious extensions are caught.
+#   - .devcontainer/devcontainer.json is git-ignored here, so the committed example is scanned.
+#
+# Dependencies:
+#   None
+#
+# References:
+#   - docs/reference/specification.md
+#######################################
+name: on-ci-vsix-audit
+
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".github/workflows/ci-vsix-audit.yaml"
+      - ".github/workflows/on-ci-vsix-audit.yaml"
+      - ".vscode/extensions.json"
+      - "env/**/.devcontainer/devcontainer.json"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - ".github/workflows/ci-vsix-audit.yaml"
+      - ".github/workflows/on-ci-vsix-audit.yaml"
+      - ".vscode/extensions.json"
+      - "env/**/.devcontainer/devcontainer.json"
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+
+jobs:
+  vsix-audit:
+    uses: ./.github/workflows/ci-vsix-audit.yaml
+    with:
+      config_files: |
+        env/example/.devcontainer/devcontainer.json
+    permissions:
+      contents: read
