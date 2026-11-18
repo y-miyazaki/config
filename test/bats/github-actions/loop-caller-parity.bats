@@ -28,6 +28,8 @@
 # - reusable agent_tool_allowlist descriptions state host allow rules are not applied
 # - detect_items is an optional branch-caller boolean (default false) that reaches loop-detect as DETECT_ITEMS
 
+bats_require_minimum_version 1.5.0
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

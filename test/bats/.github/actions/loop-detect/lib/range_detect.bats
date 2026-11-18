@@ -10,6 +10,8 @@
 # - range_detect fails (rc 1) when git cannot diff the range
 # - range_detect caps the changed file list in verifier_context at 100 entries
 
+bats_require_minimum_version 1.5.0
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

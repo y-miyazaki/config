@@ -29,6 +29,8 @@
 # - deliver_issue_create_sanitize_body defuses HTML comments and mentions; the marker cannot be forged
 # - deliver_issue_create_run stops at the first failed create and reports the issues already created
 
+bats_require_minimum_version 1.5.0
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"
