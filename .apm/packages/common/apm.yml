@@ -18,7 +18,7 @@ dependencies:
       registry: false
       transport: stdio
       command: uvx
-      args: ["mcp-server-fetch==2026.11.4"]
+      args: ["mcp-server-fetch==2026.11.11"]
     # Wrapped with mcp-compressor (16 tools); delete_project is excluded at the proxy because a
     # per-tool permission deny cannot match tools called through the proxy's invoke_tool.
     # Pinned to 0.34.0: 0.35.0+ cannot connect to the GitHub remote MCP endpoint (see the github package).
