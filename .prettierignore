@@ -12,6 +12,8 @@ pnpm-lock.yaml
 # JSON excluded from formatting (matches pre-commit hook excludes)
 **/.devcontainer/devcontainer-lock.json
 **/.devcontainer/devcontainer.json
+**/.devcontainer/*/devcontainer-lock.json
+**/.devcontainer/*/devcontainer.json
 **/settings-example.json
 **/settings.json
 

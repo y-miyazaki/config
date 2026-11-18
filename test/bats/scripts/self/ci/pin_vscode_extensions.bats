@@ -14,6 +14,7 @@
 # - an extension missing from the Marketplace keeps its pin and makes the script exit 1
 # - a failed Marketplace request exits 1 without touching the file
 # - --help succeeds; unknown options, malformed --min-age-days, and malformed --vscode-version fail
+# - without a FILE argument only the VS Code example (env/example/.devcontainer/vscode/devcontainer.json) is targeted
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -187,4 +188,10 @@ teardown() {
     run bash "${PIN_SCRIPT}" --bogus
     [ "${status}" -eq 1 ]
     [[ ${output} == *"Unknown option: --bogus"* ]]
+}
+
+@test "without a FILE argument the VS Code example is the target and the Cursor example is untouched" {
+    run bash "${PIN_SCRIPT}" --dry-run
+    [[ ${output} == *"env/example/.devcontainer/vscode/devcontainer.json: "* ]]
+    [[ ${output} != *"/cursor/"* ]]
 }

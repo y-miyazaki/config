@@ -7,7 +7,9 @@
 #
 # Design Rules:
 #   - Weekly schedule re-scans pinned versions so newly reported malicious extensions are caught.
-#   - .devcontainer/devcontainer.json is git-ignored here, so the committed example is scanned.
+#   - .devcontainer/devcontainer.json is git-ignored here, so the committed examples are scanned.
+#   - The VS Code example installs from the Visual Studio Marketplace and the Cursor example from Open VSX,
+#     so each is scanned against its own registry.
 #
 # Dependencies:
 #   None
@@ -32,7 +34,7 @@ on:
       - ".github/workflows/ci-vsix-audit.yaml"
       - ".github/workflows/on-ci-vsix-audit.yaml"
       - ".vscode/extensions.json"
-      - "env/**/.devcontainer/devcontainer.json"
+      - "env/**/.devcontainer/*/devcontainer.json"
   pull_request:
     branches:
       - "main"
@@ -45,7 +47,7 @@ on:
       - ".github/workflows/ci-vsix-audit.yaml"
       - ".github/workflows/on-ci-vsix-audit.yaml"
       - ".vscode/extensions.json"
-      - "env/**/.devcontainer/devcontainer.json"
+      - "env/**/.devcontainer/*/devcontainer.json"
   schedule:
     - cron: "0 3 * * 1"
   workflow_dispatch:
@@ -58,10 +60,20 @@ permissions:
   contents: read
 
 jobs:
-  vsix-audit:
+  vsix-audit-cursor:
     uses: ./.github/workflows/ci-vsix-audit.yaml
     with:
       config_files: |
-        env/example/.devcontainer/devcontainer.json
+        env/example/.devcontainer/cursor/devcontainer.json
+      registry: "openvsx"
+    permissions:
+      contents: read
+
+  vsix-audit-vscode:
+    uses: ./.github/workflows/ci-vsix-audit.yaml
+    with:
+      config_files: |
+        env/example/.devcontainer/vscode/devcontainer.json
+      registry: "marketplace"
     permissions:
       contents: read

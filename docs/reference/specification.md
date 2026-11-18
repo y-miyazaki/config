@@ -352,13 +352,13 @@ Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`, `ci-terraform`)
 
 ### APM and shell CI workflows
 
-| Workflow                    | Type     | Purpose                                                                                                                                                      |
-| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ci-apm-audit.yaml`         | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input                                                                                           |
-| `on-ci-push-apm-audit.yaml` | Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`)                                                                                |
-| `ci-shell-script.yaml`      | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present                                                                                                     |
-| `ci-vsix-audit.yaml`        | Reusable | VS Code extension audit (`devcontainer.json` + `.vscode/extensions.json`) via vsix-audit; inputs `config_files`, `registry`, `severity`, `vsix_audit_digest` |
-| `on-ci-vsix-audit.yaml`     | Caller   | Path-filtered push/PR and weekly schedule (dogfood: scans `env/example/.devcontainer/devcontainer.json`)                                                     |
+| Workflow                    | Type     | Purpose                                                                                                                                                                                             |
+| --------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-apm-audit.yaml`         | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input                                                                                                                                  |
+| `on-ci-push-apm-audit.yaml` | Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`)                                                                                                                       |
+| `ci-shell-script.yaml`      | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present                                                                                                                                            |
+| `ci-vsix-audit.yaml`        | Reusable | VS Code extension audit (`devcontainer.json` + `.vscode/extensions.json`) via vsix-audit; inputs `config_files`, `registry`, `severity`, `vsix_audit_digest`                                        |
+| `on-ci-vsix-audit.yaml`     | Caller   | Path-filtered push/PR and weekly schedule (dogfood: scans `env/example/.devcontainer/vscode/devcontainer.json` on Marketplace and `env/example/.devcontainer/cursor/devcontainer.json` on Open VSX) |
 
 ### Scope
 

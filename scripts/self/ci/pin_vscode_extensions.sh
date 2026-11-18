@@ -16,6 +16,7 @@
 #   - Versions published less than --min-age-days ago (default 7, matching Renovate
 #     minimumReleaseAge) are skipped; versions without a publish date are skipped too
 #   - A pin is never downgraded: a pin newer than every allowed version stays unchanged
+#   - Marketplace only: do not run on Open VSX pins (env/example/.devcontainer/cursor/devcontainer.json)
 #   - Lookup failures leave the pin unchanged and make the script exit 1 after all other updates
 #
 # Output:
@@ -34,7 +35,7 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 # Default target, relative to the repository root
-DEFAULT_FILE="env/example/.devcontainer/devcontainer.json"
+DEFAULT_FILE="env/example/.devcontainer/vscode/devcontainer.json"
 DRY_RUN=false
 FILES=()
 # Overridable for tests; the public Marketplace endpoint needs no credentials
