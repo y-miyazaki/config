@@ -4,10 +4,11 @@ Terraform / IaC に特化したツール選定の判断材料。
 
 ## History
 
-| 日付       | 内容                                                                      |
-| ---------- | ------------------------------------------------------------------------- |
-| 2026-05-21 | History セクション追加                                                    |
-| 2026-05-11 | 初版作成。Lint / IaC 比較 / Plan Comment / Documentation / Testing を比較 |
+| 日付       | 内容                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-18 | tflint ライセンスを BUSL 1.1 混在に合わせて訂正。tfnotify を README / 直近コミット (2026-09) に合わせ「アクティブ」へ訂正。tftest の提供元・リポジトリ・ライセンスを GoogleCloudPlatform/terraform-python-testing-helper (Apache-2.0) に訂正。IaC 比較に料金行を追加 (Pulumi / HCP Terraform)。tfsec は Trivy 統合の README 記載を再確認 |
+| 2026-05-21 | History セクション追加                                                                                                                                                                                                                                                                                                                   |
+| 2026-05-11 | 初版作成。Lint / IaC 比較 / Plan Comment / Documentation / Testing を比較                                                                                                                                                                                                                                                                |
 
 ## Lint / Security: checkov vs tflint vs tfsec
 
@@ -15,7 +16,7 @@ Terraform / IaC に特化したツール選定の判断材料。
 | ---------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
 | 提供元           | Bridgecrew (Palo Alto)                                          | terraform-linters                                                       | Aqua Security                                               |
 | リポジトリ       | [bridgecrewio/checkov](https://github.com/bridgecrewio/checkov) | [terraform-linters/tflint](https://github.com/terraform-linters/tflint) | [aquasecurity/tfsec](https://github.com/aquasecurity/tfsec) |
-| ライセンス       | Apache 2.0                                                      | MPL-2.0                                                                 | MIT                                                         |
+| ライセンス       | Apache 2.0                                                      | MPL-2.0 (一部ファイルは BUSL 1.1)                                       | MIT                                                         |
 | 主な用途         | セキュリティ・コンプライアンス                                  | Lint (構文・命名・非推奨検出)                                           | セキュリティスキャン                                        |
 | カスタムルール   | ✅ Python/YAML                                                  | ✅ プラグイン                                                           | ✅ Rego/YAML                                                |
 | プロバイダー対応 | マルチクラウド                                                  | AWS/Azure/GCP プラグイン                                                | マルチクラウド                                              |
@@ -30,17 +31,18 @@ Terraform / IaC に特化したツール選定の判断材料。
 
 ## IaC: OpenTofu vs Pulumi vs Terraform
 
-| 比較項目              | OpenTofu                                                  | Pulumi                                            | Terraform                                                     |
-| --------------------- | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------- |
-| 提供元                | Linux Foundation                                          | Pulumi Corp                                       | HashiCorp                                                     |
-| リポジトリ            | [opentofu/opentofu](https://github.com/opentofu/opentofu) | [pulumi/pulumi](https://github.com/pulumi/pulumi) | [hashicorp/terraform](https://github.com/hashicorp/terraform) |
-| ライセンス            | MPL 2.0                                                   | Apache 2.0                                        | BSL 1.1 (v1.6+)                                               |
-| 設定言語              | HCL (互換)                                                | TypeScript/Python/Go 等                           | HCL                                                           |
-| State 管理            | S3, 互換バックエンド                                      | Pulumi Cloud, S3 等                               | S3, Terraform Cloud 等                                        |
-| Provider エコシステム | Terraform 互換                                            | 独自 + Terraform Bridge                           | 最大 (3,000+)                                                 |
-| モジュール互換性      | ✅ Terraform モジュール利用可                             | ❌                                                | -                                                             |
-| 移行コスト            | 低い (ほぼ互換)                                           | 高い (書き直し)                                   | -                                                             |
-| CI ツール連携         | Terraform 互換ツール利用可                                | 独自 CI 統合                                      | tfcmt, Atlantis 等豊富                                        |
+| 比較項目              | OpenTofu                                                  | Pulumi                                                                                                                                 | Terraform                                                                                  |
+| --------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 提供元                | Linux Foundation                                          | Pulumi Corp                                                                                                                            | HashiCorp                                                                                  |
+| リポジトリ            | [opentofu/opentofu](https://github.com/opentofu/opentofu) | [pulumi/pulumi](https://github.com/pulumi/pulumi)                                                                                      | [hashicorp/terraform](https://github.com/hashicorp/terraform)                              |
+| ライセンス            | MPL 2.0                                                   | Apache 2.0                                                                                                                             | BSL 1.1 (v1.6+)                                                                            |
+| 設定言語              | HCL (互換)                                                | TypeScript/Python/Go 等                                                                                                                | HCL                                                                                        |
+| State 管理            | S3, 互換バックエンド                                      | Pulumi Cloud, S3 等                                                                                                                    | S3, Terraform Cloud 等                                                                     |
+| Provider エコシステム | Terraform 互換                                            | 独自 + Terraform Bridge                                                                                                                | 最大 (3,000+)                                                                              |
+| モジュール互換性      | ✅ Terraform モジュール利用可                             | ❌                                                                                                                                     | -                                                                                          |
+| 移行コスト            | 低い (ほぼ互換)                                           | 高い (書き直し)                                                                                                                        | -                                                                                          |
+| CI ツール連携         | Terraform 互換ツール利用可                                | 独自 CI 統合                                                                                                                           | tfcmt, Atlantis 等豊富                                                                     |
+| 料金                  | 無料                                                      | Individual 無料 (1 ユーザー) / Essentials \$40/月 (40 credits、管理 500 リソースまで) / Pro \$400/月 (400 credits、2,000 リソースまで) | CLI 無料 / HCP Terraform Essentials \$0.10/リソース/月〜 (Standard \$0.47、Premium \$0.99) |
 
 ### Guidelines
 
@@ -60,7 +62,7 @@ Terraform / IaC に特化したツール選定の判断材料。
 | 設定の簡易さ     | ⚠️ サーバー運用が必要                                           | ✅ CLI 一つで完結                                                 | ✅ CLI 一つで完結                                       |
 | コメント品質     | 高い                                                            | 高い (差分ハイライト、折りたたみ)                                 | 中程度                                                  |
 | apply 実行       | ✅ (PR コメントから apply)                                      | ❌ (plan コメントのみ)                                            | ❌                                                      |
-| メンテナンス状況 | アクティブ                                                      | アクティブ                                                        | メンテナンスモード                                      |
+| メンテナンス状況 | アクティブ                                                      | アクティブ                                                        | アクティブ                                              |
 | 運用コスト       | サーバー運用コスト                                              | なし (CI ジョブ内実行)                                            | なし                                                    |
 
 ### Guidelines
@@ -87,19 +89,19 @@ Terraform / IaC に特化したツール選定の判断材料。
 
 ## Testing: terraform test vs Terratest vs tftest
 
-| 比較項目           | terraform test                                                | Terratest                                                           | tftest (pytest)                                                                             |
-| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| 提供元             | HashiCorp                                                     | Gruntwork                                                           | HashiCorp                                                                                   |
-| リポジトリ         | [hashicorp/terraform](https://github.com/hashicorp/terraform) | [gruntwork-io/terratest](https://github.com/gruntwork-io/terratest) | [hashicorp/terraform-plugin-testing](https://github.com/hashicorp/terraform-plugin-testing) |
-| ライセンス         | BSL 1.1                                                       | Apache 2.0                                                          | MPL-2.0                                                                                     |
-| テスト言語         | HCL (`.tftest.hcl`)                                           | Go                                                                  | Python (pytest)                                                                             |
-| 実リソース作成     | ✅ (plan のみも可)                                            | ✅                                                                  | ✅                                                                                          |
-| plan のみテスト    | ✅ (`command = plan`)                                         | ⚠️ 自前実装                                                         | ✅                                                                                          |
-| モック             | ✅ (`mock_provider`)                                          | ❌                                                                  | ⚠️ 限定的                                                                                   |
-| 追加依存           | なし (terraform 組み込み)                                     | Go 環境必要                                                         | Python 環境必要                                                                             |
-| 学習コスト         | 低い (HCL で記述)                                             | 高い (Go テストコード)                                              | 中程度                                                                                      |
-| 柔軟性             | 中程度                                                        | 非常に高い (任意の Go コード)                                       | 中程度                                                                                      |
-| マルチクラウド検証 | ✅                                                            | ✅ (HTTP, SSH, K8s 等も可)                                          | ✅                                                                                          |
+| 比較項目           | terraform test                                                | Terratest                                                           | tftest (pytest)                                                                                                               |
+| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 提供元             | HashiCorp                                                     | Gruntwork                                                           | Google Cloud Platform                                                                                                         |
+| リポジトリ         | [hashicorp/terraform](https://github.com/hashicorp/terraform) | [gruntwork-io/terratest](https://github.com/gruntwork-io/terratest) | [GoogleCloudPlatform/terraform-python-testing-helper](https://github.com/GoogleCloudPlatform/terraform-python-testing-helper) |
+| ライセンス         | BSL 1.1                                                       | Apache 2.0                                                          | Apache 2.0                                                                                                                    |
+| テスト言語         | HCL (`.tftest.hcl`)                                           | Go                                                                  | Python (pytest)                                                                                                               |
+| 実リソース作成     | ✅ (plan のみも可)                                            | ✅                                                                  | ✅                                                                                                                            |
+| plan のみテスト    | ✅ (`command = plan`)                                         | ⚠️ 自前実装                                                         | ✅                                                                                                                            |
+| モック             | ✅ (`mock_provider`)                                          | ❌                                                                  | ⚠️ 限定的                                                                                                                     |
+| 追加依存           | なし (terraform 組み込み)                                     | Go 環境必要                                                         | Python 環境必要                                                                                                               |
+| 学習コスト         | 低い (HCL で記述)                                             | 高い (Go テストコード)                                              | 中程度                                                                                                                        |
+| 柔軟性             | 中程度                                                        | 非常に高い (任意の Go コード)                                       | 中程度                                                                                                                        |
+| マルチクラウド検証 | ✅                                                            | ✅ (HTTP, SSH, K8s 等も可)                                          | ✅                                                                                                                            |
 
 ### Guidelines
 

@@ -4,12 +4,13 @@ Go 開発に特化したツール選定の判断材料。
 
 ## History
 
-| 日付       | 内容                                                                                                                          |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-10 | mockery のバージョンを `mise.toml` 実値 (v3.8.0) に同期 (#911)。gomock / moq は検証手段 (外部アクセス) が未許可のため据え置き |
-| 2026-08-23 | Mock 最新バージョン更新 (gomock v0.6.0 / mockery v3.7.3 / moq v0.7.1)。kaniko アーカイブ済みを反映し BuildKit rootless へ誘導 |
-| 2026-05-21 | History セクション追加                                                                                                        |
-| 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較                                            |
+| 日付       | 内容                                                                                                                                                                                                                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-18 | Mock 最新バージョン更新 (mockery v3.9.1 は `mise.toml` 実値 / moq v0.8.1)。golangci-lint v2 の変更点 (fmt / migrate / linter 統合) を Guidelines に追記。gomock v0.6.0 は最新を確認。新規ツール (gotestsum / ginkgo 等) は対応セクションがないため追加せず。moq v0.8.1 のリリース日を GitHub Releases で確認し 2026-10-14 に確定 |
+| 2026-10-10 | mockery のバージョンを `mise.toml` 実値 (v3.8.0) に同期 (#911)。gomock / moq は検証手段 (外部アクセス) が未許可のため据え置き                                                                                                                                                                                                    |
+| 2026-08-23 | Mock 最新バージョン更新 (gomock v0.6.0 / mockery v3.7.3 / moq v0.7.1)。kaniko アーカイブ済みを反映し BuildKit rootless へ誘導                                                                                                                                                                                                    |
+| 2026-05-21 | History セクション追加                                                                                                                                                                                                                                                                                                           |
+| 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較                                                                                                                                                                                                                                               |
 
 ## Formatter: gofumpt vs gofmt vs goimports
 
@@ -48,6 +49,8 @@ Go 開発に特化したツール選定の判断材料。
 ### Guidelines
 
 **→ golangci-lint を採用する。** staticcheck・go vet を含む 100+ のリンターを一括管理でき、差分チェック・キャッシュ・自動修正に対応。これ一つで十分。
+
+- v2 系 (v2.0.0: 2025-03、`mise.toml` 実値は v2.15.0): 設定ファイルは `version: "2"` が必須。`golangci-lint fmt` でフォーマッター (gofumpt / goimports 等) を実行でき、`golangci-lint migrate` で v1 設定から移行できる。staticcheck / stylecheck / gosimple は `staticcheck` に統合された
 
 ## Container Build: Docker vs kaniko vs ko
 
@@ -169,7 +172,7 @@ Go 開発に特化したツール選定の判断材料。
 | 提供元             | Uber (golang/mock から移行)                     | vektra                                              | Mat Ryer                                      |
 | リポジトリ         | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
 | ライセンス         | Apache 2.0                                      | BSD-3-Clause                                        | MIT                                           |
-| 最新バージョン     | v0.6.0 (2025-08)                                | v3.8.0 (`mise.toml` 実値)                           | v0.7.1 (2026-03)                              |
+| 最新バージョン     | v0.6.0 (2025-08)                                | v3.9.1 (`mise.toml` 実値)                           | v0.8.1 (2026-10-14)                           |
 | アプローチ         | コード生成 + DSL                                | コード生成 (testify/mock ベース)                    | コード生成 (関数フィールド)                   |
 | コード生成ツール   | `mockgen`                                       | `mockery`                                           | `moq`                                         |
 | go generate 対応   | ✅                                              | ✅                                                  | ✅                                            |

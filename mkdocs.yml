@@ -127,8 +127,10 @@ nav:
           - AI Agent Hooks: report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md
           - AI Governance: report/tool-comparison/tool-comparison-matrix-ai-governance.md
           - AI MCP Server: report/tool-comparison/tool-comparison-matrix-ai-mcp-server.md
+          - AI Spec-Driven: report/tool-comparison/tool-comparison-matrix-ai-spec-driven.md
           - AI Workflow: report/tool-comparison/tool-comparison-matrix-ai-workflow.md
           - AWS: report/tool-comparison/tool-comparison-matrix-aws.md
+          - Docs Site Generator: report/tool-comparison/tool-comparison-matrix-docs.md
           - Go: report/tool-comparison/tool-comparison-matrix-go.md
           - Node.js: report/tool-comparison/tool-comparison-matrix-nodejs.md
           - Shell Script: report/tool-comparison/tool-comparison-matrix-shell-script.md
