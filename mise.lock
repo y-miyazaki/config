@@ -3225,13 +3225,6 @@ backend = "npm:awsp"
 version = "10.4.1"
 backend = "npm:cspell"
 
-[[tools."npm:lean-ctx-bin"]]
-version = "3.12.2"
-backend = "npm:lean-ctx-bin"
-
-[tools."npm:lean-ctx-bin".options]
-allow_builds = '["lean-ctx-bin"]'
-
 [[tools."npm:markdown-link-check"]]
 version = "3.15.0"
 backend = "npm:markdown-link-check"
