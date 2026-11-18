@@ -29,6 +29,11 @@ setup() {
     mkdir -p "${WORK}"
 }
 
+# Detection tests need the real gitleaks binary; without it the hook fails open (exit 0).
+require_gitleaks() {
+    command -v gitleaks > /dev/null 2>&1 || skip "gitleaks is not installed"
+}
+
 run_hook() {
     local json="$1"
     run bash -c "cd '${WORK}' && bash '${HOOK}' <<< '${json}'"
@@ -56,6 +61,7 @@ run_hook() {
 }
 
 @test "claude blocks a prompt containing a secret with exit 2" {
+    require_gitleaks
     run_hook "{\"hook_event_name\":\"UserPromptSubmit\",\"session_id\":\"s\",\"prompt\":\"key ${SECRET}\"}"
     [ "$status" -eq 2 ]
     [[ ${output} == *"aws-access-token (line 1)"* ]]
@@ -68,12 +74,14 @@ run_hook() {
 }
 
 @test "copilot only warns and tells the user to rotate the secret" {
+    require_gitleaks
     run_hook "{\"sessionId\":\"s\",\"prompt\":\"key ${SECRET}\"}"
     [ "$status" -eq 2 ]
     [[ ${output} == *"cannot block"* ]]
 }
 
 @test "cursor blocks via continue false JSON with exit 0" {
+    require_gitleaks
     run_hook "{\"hook_event_name\":\"beforeSubmitPrompt\",\"cursor_version\":\"1\",\"prompt\":\"key ${SECRET}\"}"
     [ "$status" -eq 0 ]
     [ "$(jq -r .continue <<< "${output}")" = "false" ]

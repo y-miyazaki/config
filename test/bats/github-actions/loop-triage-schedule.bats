@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2016
 
 # Tests for .github/workflows/on-loop-github-issue-triage.yaml
 #
@@ -52,11 +53,11 @@ if_branch() {
 @test "on keeps issues, issue_comment, workflow_dispatch and has one schedule entry" {
     local on
     on="$(awk '/^on:/ {f=1; next} f && /^[a-z]/ {exit} f' "${WF}")"
-    grep -q '^  issues:' <<<"${on}"
-    grep -q '^  issue_comment:' <<<"${on}"
-    grep -q '^  workflow_dispatch:' <<<"${on}"
-    grep -q '^  schedule:' <<<"${on}"
-    [ "$(grep -c 'cron:' <<<"${on}")" -eq 1 ]
+    grep -q '^  issues:' <<< "${on}"
+    grep -q '^  issue_comment:' <<< "${on}"
+    grep -q '^  workflow_dispatch:' <<< "${on}"
+    grep -q '^  schedule:' <<< "${on}"
+    [ "$(grep -c 'cron:' <<< "${on}")" -eq 1 ]
 }
 
 @test "list job runs only on schedule with contents and issues read permissions" {
@@ -65,12 +66,12 @@ if_branch() {
     [ -n "${block}" ]
     [ "$(job_if list | tr -s ' \n' ' ' | sed 's/^ *//; s/ *$//')" = "if: github.event_name == 'schedule'" ]
     local perms
-    perms="$(awk '/^    permissions:/ {f=1; next} f && /^    [a-z]/ {exit} f' <<<"${block}" | sed 's/^ *//' | sort | tr '\n' ' ')"
+    perms="$(awk '/^    permissions:/ {f=1; next} f && /^    [a-z]/ {exit} f' <<< "${block}" | sed 's/^ *//' | sort | tr '\n' ' ')"
     [ "${perms}" = "contents: read issues: read " ]
-    grep -q 'persist-credentials: false' <<<"${block}"
-    grep -q 'GH_TOKEN: \${{ github.token }}' <<<"${block}"
-    grep -q 'timeout-minutes:' <<<"${block}"
-    grep -q 'scripts/self/loop/list_triage_issues.sh' <<<"${block}"
+    grep -q 'persist-credentials: false' <<< "${block}"
+    grep -q 'GH_TOKEN: \${{ github.token }}' <<< "${block}"
+    grep -q 'timeout-minutes:' <<< "${block}"
+    grep -q 'scripts/self/loop/list_triage_issues.sh' <<< "${block}"
 }
 
 @test "workflow-level permissions are empty and the loop job holds the caller write block" {
@@ -86,45 +87,45 @@ if_branch() {
 }
 
 @test "list job does not pass GITHUB_REPOSITORY explicitly" {
-    run grep -q 'GITHUB_REPOSITORY' <<<"$(job_block list)"
+    run grep -q 'GITHUB_REPOSITORY' <<< "$(job_block list)"
     [ "$status" -ne 0 ]
 }
 
 @test "loop job needs list and gates with !cancelled(), list result and a schedule branch" {
     local block iff
     block="$(job_block loop)"
-    grep -qx '    needs: list' <<<"${block}"
+    grep -qx '    needs: list' <<< "${block}"
     iff="$(job_if loop)"
-    grep -q '!cancelled()' <<<"${iff}"
-    grep -q "needs.list.result == 'success'" <<<"${iff}"
-    grep -q "needs.list.result == 'skipped'" <<<"${iff}"
-    grep -q "github.event_name == 'schedule'" <<<"${iff}"
-    grep -q 'needs.list.outputs.count > 0' <<<"${iff}"
+    grep -q '!cancelled()' <<< "${iff}"
+    grep -q "needs.list.result == 'success'" <<< "${iff}"
+    grep -q "needs.list.result == 'skipped'" <<< "${iff}"
+    grep -q "github.event_name == 'schedule'" <<< "${iff}"
+    grep -q 'needs.list.outputs.count > 0' <<< "${iff}"
 }
 
 @test "loop job matrix reads list outputs with fail-fast false and max-parallel 3" {
     local block
     block="$(job_block loop)"
-    grep -qx '      fail-fast: false' <<<"${block}"
-    grep -qx '      max-parallel: 3' <<<"${block}"
-    grep -q 'issue: \${{ fromJSON(needs.list.outputs.issues ||' <<<"${block}"
-    grep -q "handoff_artifact_suffix: -issue-" <<<"${block}"
+    grep -qx '      fail-fast: false' <<< "${block}"
+    grep -qx '      max-parallel: 3' <<< "${block}"
+    grep -q 'issue: \${{ fromJSON(needs.list.outputs.issues ||' <<< "${block}"
+    grep -q "handoff_artifact_suffix: -issue-" <<< "${block}"
 }
 
 @test "detect_env_json covers schedule, workflow_dispatch and default" {
     local line
     line="$(job_block loop | grep 'detect_env_json:')"
-    grep -q 'ISSUE_EVENT_NAME' <<<"${line}"
-    grep -q "github.event_name == 'schedule'" <<<"${line}"
-    grep -q "github.event_name == 'workflow_dispatch'" <<<"${line}"
-    grep -q "'{}'" <<<"${line}"
-    grep -q 'matrix.issue' <<<"${line}"
+    grep -q 'ISSUE_EVENT_NAME' <<< "${line}"
+    grep -q "github.event_name == 'schedule'" <<< "${line}"
+    grep -q "github.event_name == 'workflow_dispatch'" <<< "${line}"
+    grep -q "'{}'" <<< "${line}"
+    grep -q 'matrix.issue' <<< "${line}"
 }
 
 @test "concurrency group is loop-state-main on schedule" {
     local group
     group="$(grep '^  group:' "${WF}")"
-    grep -q "github.event_name == 'schedule' && 'loop-state-main'" <<<"${group}"
+    grep -q "github.event_name == 'schedule' && 'loop-state-main'" <<< "${group}"
     grep -qx '  cancel-in-progress: false' "${WF}"
     grep -qx '  queue: max' "${WF}"
 }
@@ -135,14 +136,14 @@ if_branch() {
     comment="$(if_branch loop "github.event_name == 'issue_comment'" "")"
     [ -n "${issues}" ]
     [ -n "${comment}" ]
-    grep -q "!contains(github.event.issue.labels.\*.name, 'loop:code-review')" <<<"${issues}"
-    run grep -q 'loop:code-review' <<<"${comment}"
+    grep -q "!contains(github.event.issue.labels.\*.name, 'loop:code-review')" <<< "${issues}"
+    run grep -q 'loop:code-review' <<< "${comment}"
     [ "$status" -ne 0 ]
 }
 
 @test "issues branch keeps Bot sender and triage:failed refusals" {
     local issues
     issues="$(if_branch loop "github.event_name == 'issues'" "github.event_name == 'issue_comment'")"
-    grep -q "github.event.sender.type != 'Bot'" <<<"${issues}"
-    grep -q "!contains(github.event.issue.labels.\*.name, 'triage:failed')" <<<"${issues}"
+    grep -q "github.event.sender.type != 'Bot'" <<< "${issues}"
+    grep -q "!contains(github.event.issue.labels.\*.name, 'triage:failed')" <<< "${issues}"
 }

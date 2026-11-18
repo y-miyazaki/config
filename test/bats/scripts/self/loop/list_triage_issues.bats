@@ -267,7 +267,7 @@ ok_count() {
 @test "exits 0 with a notice and empty output when nothing matches" {
     run_list
     [ "$status" -eq 0 ]
-    [[ "$output" == *"::notice"* ]]
+    [[ $output == *"::notice"* ]]
     grep -qx 'issues=\[\]' "${OUT}"
     grep -qx 'count=0' "${OUT}"
 }
@@ -276,7 +276,7 @@ ok_count() {
     touch "${FIX}/issues_fail"
     run_list
     [ "$status" -eq 1 ]
-    ! grep -q '^issues=' "${OUT}"
+    run ! grep -q '^issues=' "${OUT}"
 }
 
 @test "drops issues with three recent unchanged rows" {
