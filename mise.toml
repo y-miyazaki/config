@@ -50,11 +50,6 @@ claude = { version = "2.1.322", lazy = true, lazy_bins = ["claude"] }           
 "github:DeusData/codebase-memory-mcp" = { version = "v0.12.1", lazy = true, lazy_bins = ["codebase-memory-mcp"] } # codebase memory MCP server
 "aqua:github/copilot-cli" = { version = "1.0.109", lazy = true, lazy_bins = ["copilot"] }                           # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.44.0", extras = "proxy,mcp,bedrock", depends = ["python"], lazy = true, lazy_bins = ["headroom", "headroom-cache-ttl"] }
-"npm:lean-ctx-bin" = { version = "3.12.2", depends = [
-  "node",
-], allow_builds = [
-  "lean-ctx-bin",
-], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["lean-ctx"] } # context optimizer (hooks CLI + MCP npm)
 "github:microsoft/waza" = { version = "v0.40.1", lazy = true, lazy_bins = ["waza"] }                              # agent skill evaluator
 
 # AWS related tools

@@ -33,8 +33,3 @@ dependencies:
           "--",
           "codebase-memory-mcp",
         ]
-    # - name: lean-ctx
-    #   registry: false
-    #   transport: stdio
-    #   command: npx
-    #   args: ["-y", "lean-ctx-bin@3.12.2"]

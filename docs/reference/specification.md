@@ -175,7 +175,7 @@ command -v actionlint > /dev/null 2>&1 || exit 0
 
 Stop hooks block the agent at most `HOOK_BLOCK_LIMIT` times (default 2) per unchanged working-tree state: a hook compares the hash of the tracked diff plus untracked file content with the hash it last reported (stored with a report count per session and hook under `${TMPDIR:-/tmp}/hook-state-<uid>/`) and exits 0 without running the tool once the count reaches the limit. The session ID is read from the hook input (`session_id`, `conversation_id`, `sessionId`, or `conversationId`); when none is present, a shared `nosession` key is used. The `go_test.sh` hook runs `go test -short` (timeout from `GO_TEST_TIMEOUT`, default `90s`) only for packages that contain changed Go files.
 
-Hooks exit 0 when optional native tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit. lean-ctx agent hooks and shell integration are left to lean-ctx itself (not distributed via `common-hooks-*`).
+Hooks exit 0 when optional native tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit.
 
 #### Skills — Explicit Validation
 
@@ -193,7 +193,6 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 | common        | fetch                          | stdio           | uvx                                 |
 | common        | github                         | stdio           | bash                                |
 | common        | codebase-memory-mcp            | stdio           | binary (optional; consumer install) |
-| common        | lean-ctx                       | stdio           | npx                                 |
 | aws           | aws-mcp                        | streamable-http | url (OAuth)                         |
 | aws           | aws-knowledge-mcp-server       | stdio           | uvx                                 |
 | aws           | aws-documentation-mcp-server   | stdio           | uvx                                 |

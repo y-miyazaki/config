@@ -10,17 +10,6 @@
       "datasourceTemplate": "npm"
     },
     {
-      "description": "CustomManager: Update lean-ctx-bin in apm.yml and init.sh",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^\\.apm/packages/.*/apm\\.yml$/",
-        "/^env/common/scripts/init\\.sh$/"
-      ],
-      "matchStrings": ["lean-ctx-bin@(?<currentValue>[\\d.]+)"],
-      "depNameTemplate": "lean-ctx-bin",
-      "datasourceTemplate": "npm"
-    },
-    {
       "description": "CustomManager: Update terraform-mcp-server in apm.yml",
       "customType": "regex",
       "managerFilePatterns": ["/^\\.apm/packages/.*/apm\\.yml$/"],

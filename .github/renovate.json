@@ -15,15 +15,19 @@
     {
       "description": "CustomManager: Track the pinned Claude Code CLI version of the on-loop-code-review caller (repo-local: the built-in code-review skill ships inside the CLI, so every update needs a human review)",
       "customType": "regex",
-      "managerFilePatterns": ["/^\\.github/workflows/on-loop-code-review\\.yaml$/"],
-      "matchStrings": ["agent_cli_version:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"],
+      "managerFilePatterns": [
+        "/^\\.github/workflows/on-loop-code-review\\.yaml$/"
+      ],
+      "matchStrings": [
+        "agent_cli_version:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"
+      ],
       "depNameTemplate": "@anthropic-ai/claude-code",
       "datasourceTemplate": "npm"
     }
   ],
   "packageRules": [
     {
-      "description": "Rules: Automerge minor/patch updates for grouped CLI tools (npm: mise deps and lean-ctx are excluded: their lockfile is updated by workflow and minimumReleaseAge is not enforced)",
+      "description": "Rules: Automerge minor/patch updates for grouped CLI tools (npm: mise deps are excluded: their lockfile is updated by workflow and minimumReleaseAge is not enforced)",
       "addLabels": ["automerge"],
       "automerge": true,
       "matchPackageNames": [

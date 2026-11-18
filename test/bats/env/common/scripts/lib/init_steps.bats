@@ -1,10 +1,9 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for env/common/scripts/init.sh
+# Tests for env/common/scripts/lib/init_steps.sh
 #
 # Use cases:
-# - --help prints usage and an unknown argument fails
 # - resolve_repo_root prints the git root of the workspace and falls back to the workspace folder outside git
 # - index_codebase_memory indexes the whole root in one call when the tool accepts it
 # - a "too broad" refusal falls back to one project per git-tracked top-level directory
@@ -12,6 +11,8 @@
 # - any other indexing failure warns on stderr and does not fall back
 # - index_codebase_memory is skipped silently when codebase-memory-mcp is missing
 # - auto-index settings are applied after indexing
+# - install_mise_global_node sets the node pinned by mise.toml as the mise global without the lock
+# - install_mise_global_node warns and skips when mise.toml pins no node, and is silent without mise or mise.toml
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -22,7 +23,7 @@ source "${_bats_support}/support/common.bash"
 
 setup() {
     REPO_ROOT="$(bats_workspace_root)"
-    SCRIPT="${REPO_ROOT}/env/common/scripts/init.sh"
+    SCRIPT="${REPO_ROOT}/env/common/scripts/lib/init_steps.sh"
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     CALL_LOG="${BATS_TEST_TMPDIR}/calls.log"
     WORK="${BATS_TEST_TMPDIR}/work/myrepo"
@@ -60,22 +61,13 @@ EOF
     chmod +x "${MOCK_BIN}/codebase-memory-mcp"
 }
 
-# run_index: Source init.sh and run index_codebase_memory against the work repository
+# run_index: Source init_steps.sh and run index_codebase_memory against the work repository
 run_index() {
     run env PATH="${MOCK_BIN}:${PATH}" bash -c "source '${SCRIPT}' && REPO_ROOT='${WORK}' && index_codebase_memory"
 }
 
 teardown() {
     rm -rf "${BATS_TEST_TMPDIR}/work" "${MOCK_BIN}"
-}
-
-@test "--help prints usage and an unknown argument fails" {
-    run bash "${SCRIPT}" --help
-    [ "$status" -eq 0 ]
-    [[ $output == *"Usage: init.sh"* ]]
-    run bash "${SCRIPT}" --bogus
-    [ "$status" -eq 1 ]
-    [[ $output == *"Unknown argument: --bogus"* ]]
 }
 
 @test "resolve_repo_root prints the git root of the workspace" {
@@ -135,4 +127,50 @@ teardown() {
     [ "$status" -eq 0 ]
     [ "$(grep -c '^index' "${CALL_LOG}")" -eq 1 ]
     [[ $output == *"indexed ${WORK}"* ]]
+}
+
+# write_mise_mock: Install a mise mock; $1 = node version printed by "mise current node" (empty prints nothing)
+write_mise_mock() {
+    local version="$1"
+    cat > "${MOCK_BIN}/mise" << EOF
+#!/usr/bin/env bash
+if [[ "\$1" == "current" ]]; then
+    [[ -n "${version}" ]] && echo "${version}"
+    exit 0
+fi
+echo "MISE_LOCKED=\${MISE_LOCKED:-unset} \$*" >> "${CALL_LOG}"
+EOF
+    chmod +x "${MOCK_BIN}/mise"
+}
+
+@test "install_mise_global_node is silent without mise" {
+    : > "${WORK}/mise.toml"
+    run env PATH="${MOCK_BIN}:/usr/bin:/bin" bash -c "source '${SCRIPT}' && REPO_ROOT='${WORK}' && install_mise_global_node"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "install_mise_global_node is silent without mise.toml" {
+    write_mise_mock "24.22.3"
+    run env PATH="${MOCK_BIN}:${PATH}" bash -c "source '${SCRIPT}' && REPO_ROOT='${WORK}' && install_mise_global_node"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+    [ ! -s "${CALL_LOG}" ]
+}
+
+@test "install_mise_global_node sets the pinned node as global without the lock" {
+    : > "${WORK}/mise.toml"
+    write_mise_mock "24.22.3"
+    run env PATH="${MOCK_BIN}:${PATH}" bash -c "source '${SCRIPT}' && REPO_ROOT='${WORK}' && install_mise_global_node"
+    [ "$status" -eq 0 ]
+    grep -qx "MISE_LOCKED=0 use -g node@24.22.3" "${CALL_LOG}"
+}
+
+@test "install_mise_global_node warns and skips when mise.toml pins no node" {
+    : > "${WORK}/mise.toml"
+    write_mise_mock ""
+    run env PATH="${MOCK_BIN}:${PATH}" bash -c "source '${SCRIPT}' && REPO_ROOT='${WORK}' && install_mise_global_node"
+    [ "$status" -eq 0 ]
+    [[ $output == *"[warn] mise global node skipped"* ]]
+    [ ! -s "${CALL_LOG}" ]
 }

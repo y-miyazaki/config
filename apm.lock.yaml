@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-17T06:00:42.900697+00:00'
+generated_at: '2026-11-18T02:31:45.328923+00:00'
 apm_version: 0.35.0
 dependencies:
 - repo_url: _local/common
@@ -338,7 +338,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:378a9802d0659bca2984b671bff83c2240997b3bd46734393623a297d9b4b383
+  content_hash: sha256:0d1e9daf0f37ebcca384c19380dfd7a1a44e3667c6c1d7f1d2e2105a5681b9ff
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude

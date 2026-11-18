@@ -1,0 +1,81 @@
+#!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+
+# Tests for env/common/scripts/on_create.sh, update_content.sh, post_create.sh and post_start.sh
+#
+# Use cases:
+# - every lifecycle script prints usage on --help and fails on an unknown argument
+# - each lifecycle script runs exactly its own steps in the documented order
+# - update_content installs mise tools and the global node before apm, aqua, pre-commit and tflint
+
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+setup() {
+    REPO_ROOT="$(bats_workspace_root)"
+    SCRIPT_DIR="${REPO_ROOT}/env/common/scripts"
+}
+
+# run_steps: Source one lifecycle script, stub every step to log its name, and run main
+# Arguments:
+#   $1 - script file name
+run_steps() {
+    local script="$1"
+    run bash -c "
+        source '${SCRIPT_DIR}/${script}'
+        for fn in adjust_ownership configure_claude_statusline configure_cursor_statusline \
+            configure_github_credentials index_codebase_memory install_apm \
+            install_aqua install_gh_extension install_mise install_mise_global_node \
+            install_pre_commit prepare_terraform; do
+            eval \"\${fn}() { echo \${fn}; }\"
+        done
+        resolve_repo_root() { printf /nowhere; }
+        main
+    "
+}
+
+@test "every lifecycle script fails on an unknown argument" {
+    local script
+    for script in on_create update_content post_create post_start; do
+        run bash "${SCRIPT_DIR}/${script}.sh" --bogus
+        [ "$status" -eq 1 ]
+        [[ $output == *"Unknown argument: --bogus"* ]]
+    done
+}
+
+@test "every lifecycle script prints usage on --help" {
+    local script
+    for script in on_create update_content post_create post_start; do
+        run bash "${SCRIPT_DIR}/${script}.sh" --help
+        [ "$status" -eq 0 ]
+        [[ $output == *"Usage: ${script}.sh"* ]]
+    done
+}
+
+@test "on_create runs only the ownership step" {
+    run_steps on_create.sh
+    [ "$status" -eq 0 ]
+    [ "$output" = "adjust_ownership" ]
+}
+
+@test "post_create configures statuslines and credentials in order" {
+    run_steps post_create.sh
+    [ "$status" -eq 0 ]
+    [ "$output" = "$(printf '%s\n' configure_claude_statusline configure_cursor_statusline configure_github_credentials)" ]
+}
+
+@test "post_start runs only the codebase index step" {
+    run_steps post_start.sh
+    [ "$status" -eq 0 ]
+    [ "$output" = "index_codebase_memory" ]
+}
+
+@test "update_content installs mise tools and the global node before the dependent tools" {
+    run_steps update_content.sh
+    [ "$status" -eq 0 ]
+    [ "$output" = "$(printf '%s\n' install_mise install_mise_global_node install_apm install_aqua install_gh_extension install_pre_commit prepare_terraform)" ]
+}

@@ -49,7 +49,7 @@ This is achieved through a 6-layer enforcement architecture where each layer cat
 │  (Shared policy presets)        Triggers CI on update PRs       │
 │                                                                 │
 │  Layer 6: Setup Automation    ← Ensures layers 1-3 are active   │
-│  (devcontainer init.sh)         Runs on environment creation    │
+│  (devcontainer lifecycle)       Runs on creation and start      │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -128,11 +128,11 @@ Shared Renovate presets automate dependency governance.
 
 ## Layer 6: Setup Automation
 
-`env/common/scripts/init.sh` runs in devcontainer `postCreateCommand` and ensures all enforcement layers are active:
+The scripts under `env/common/scripts/` run as devcontainer lifecycle commands (`onCreateCommand` → `updateContentCommand` → `postCreateCommand` → `postStartCommand`, shared steps in `lib/init_steps.sh`) and ensure all enforcement layers are active. `updateContentCommand` (`update_content.sh`) runs the tool steps below except the index; `postStartCommand` (`post_start.sh`) runs the index on every start:
 
 | Step                                        | Effect                                                                                                                                                                     |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mise trust + install`                      | Installs pinned tool versions (Go, Terraform, linters, etc.)                                                                                                               |
+| `mise trust + install`                      | Installs pinned tool versions (Go, Terraform, linters, etc.) and sets the pinned node as the mise global node (pre-commit uses `language_version: system`)                 |
 | `apm install --frozen`                      | Deploys instructions, hooks, skills, MCP servers                                                                                                                           |
 | `pre-commit install`                        | Activates pre-commit hooks                                                                                                                                                 |
 | `pre-commit install --hook-type commit-msg` | Activates commitlint                                                                                                                                                       |

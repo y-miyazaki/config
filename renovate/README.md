@@ -48,7 +48,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `apm`, `ecspresso`, `ecschedule`, `gitleaks`, `golangci-lint`, `goreleaser`, `lean-ctx`, `markdownlint-cli2`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `apm`, `ecspresso`, `ecschedule`, `gitleaks`, `golangci-lint`, `goreleaser`, `markdownlint-cli2`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -165,7 +165,6 @@ Tools that appear in GitHub Actions workflow inputs (`github-actions-tool-versio
 | ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        | —                              |
 | golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   | —                              |
 | goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    | —                              |
-| lean-ctx      | `lean-ctx-bin` (apm.yml MCP + init.sh)       | `npm:lean-ctx-bin` (mise)       | —                              |
 | mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               | —                              |
 | semgrep       | `semgrep` (pypi)                             | `pipx:semgrep`                  | `semgrep/pre-commit`           |
 | terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      | —                              |
@@ -234,7 +233,6 @@ Disabled managers (checksum-coupled updates) include:
 ### Scope
 
 - Uses `custom.regex` managers
-- Targets `.apm/packages/**/apm.yml` and `env/common/scripts/init.sh` for `lean-ctx-bin@` pins
 - Detects pinned MCP package versions in `npx` (`package@X.Y.Z`) and `uvx` (`package==X.Y.Z`) args
 
 ### Labels and Automerge
@@ -249,7 +247,6 @@ Disabled managers (checksum-coupled updates) include:
 npm (`datasource: npm`):
 
 - `@upstash/context7-mcp`
-- `lean-ctx-bin`
 - `terraform-mcp-server`
 
 PyPI (`datasource: pypi`):
@@ -260,8 +257,6 @@ PyPI (`datasource: pypi`):
 - `awslabs.aws-documentation-mcp-server`
 - `awslabs.aws-pricing-mcp-server`
 - `awslabs.terraform-mcp-server`
-
-mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the package `postinstall` can download the native binary (mise disables npm lifecycle scripts by default).
 
 ## Pre-commit Config Tool Version Rules (`pre-commit-config-tool-version.json`)
 

@@ -4,17 +4,18 @@ MCP Server の選定・比較の判断材料。
 
 ## History
 
-| 日付       | 内容                                                                                                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-16 | AWS API 操作は `aws-mcp` に統一。`awslabs-aws-api-mcp-server` を削除。認証は OAuth（`streamable-http` + `?oauth=initialize`）をデフォルト採用し `NoCredentialsError` を回避 |
-| 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記                                                         |
-| 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook 型 vs MCP Server 型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記                              |
-| 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加                                                                                                                 |
-| 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA 反映、GitHub MCP v1.1.0 機能追加、codebase-memory-mcp LSP エンジン追加、lean-ctx WebSocket 対応、Context7 OAuth 対応                    |
-| 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加                                                                                                                   |
-| 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一                          |
-| 2026-05-21 | History セクション追加                                                                                                                                                      |
-| 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較                                                                                 |
+| 日付       | 内容                                                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-18 | lean-ctx を不採用に変更。本リポジトリで rtk と実測比較し、lean-ctx のシェル出力は無損失（削減 0%）、rtk は 37〜71% 削減するが `git diff` の変更行を省略することを確認。実測結果と判断を Guidelines に追記 |
+| 2026-07-16 | AWS API 操作は `aws-mcp` に統一。`awslabs-aws-api-mcp-server` を削除。認証は OAuth（`streamable-http` + `?oauth=initialize`）をデフォルト採用し `NoCredentialsError` を回避                               |
+| 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記                                                                                       |
+| 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook 型 vs MCP Server 型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記                                                            |
+| 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加                                                                                                                                               |
+| 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA 反映、GitHub MCP v1.1.0 機能追加、codebase-memory-mcp LSP エンジン追加、lean-ctx WebSocket 対応、Context7 OAuth 対応                                                  |
+| 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加                                                                                                                                                 |
+| 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一                                                        |
+| 2026-05-21 | History セクション追加                                                                                                                                                                                    |
+| 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較                                                                                                               |
 
 ## AWS MCP Servers
 
@@ -122,9 +123,9 @@ MCP Server の選定・比較の判断材料。
 
 > **用語整理:** **rtk** ([rtk-ai/rtk](https://github.com/rtk-ai/rtk)) は PreToolUse Hook で Bash コマンドを透過的に書き換え、シェル出力を圧縮する CLI プロキシ。**mcp-rtk** ([ThomasTartrau/mcp-rtk](https://github.com/ThomasTartrau/mcp-rtk)) は MCP レスポンス JSON を圧縮するプロキシで、製品・レイヤーともに別物。
 
-本リポジトリは lean-ctx を MCP（`common`）として配布する。agent hooks / shell 統合は lean-ctx 本体に任せる（`common-hooks-*` では配布しない）。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
+本リポジトリは lean-ctx を配布・導入していない（2026-11-18 に不採用へ変更、理由は [Guidelines](#guidelines) を参照）。以下の比較は不採用の判断時点の記録である。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
 
-| 比較項目            | lean-ctx (採用)                              | rtk (rtk-ai/rtk)                        |
+| 比較項目            | lean-ctx (不採用)                            | rtk (rtk-ai/rtk)                        |
 | ------------------- | -------------------------------------------- | --------------------------------------- |
 | 提供元              | yvgude                                       | rtk-ai                                  |
 | リポジトリ          | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/rtk-ai/rtk) |
@@ -135,33 +136,49 @@ MCP Server の選定・比較の判断材料。
 | 再読込キャッシュ    | ✅ (~13 tokens/再読み込み)                   | ❌                                      |
 | Read/Grep 置換      | ✅ (`hook redirect` + MCP)                   | ❌ (Bash のみ)                          |
 | lean-ctx との併用   | —                                            | **非推奨** (同一 Hook 層)               |
-| 本リポジトリ採用    | ✅                                           | ❌                                      |
+| 本リポジトリ採用    | ❌ (2026-11-18 に不採用へ変更)               | ❌                                      |
 
 参考: [rtk vs lean-ctx 実測比較 (Elcamy Tech Blog)](https://blog.elcamy.com/articles/token-killer-bench)
 
 ### Guidelines
 
-**→ lean-ctx + mcp-compressor を採用する。** Shell Hook と MCP によるコンテキスト最適化に加え、ツール数の多い MCP サーバーの JSON Schema 要約を mcp-compressor で行う。
+**→ mcp-compressor を採用する。lean-ctx と rtk は採用しない。** ツール数の多い MCP サーバーの JSON Schema 要約を mcp-compressor で行う。シェル出力の圧縮は行わない。
 
-| レイヤー                           | ツール         | 役割                                                                                                                                                      |
-| ---------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx       | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP)。agent hooks / shell 統合は lean-ctx 本体に任せる（`common-hooks-*` では配布しない） |
-| Proxy (ツール定義圧縮)             | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約                                                                                 |
-| Proxy (レスポンス JSON 圧縮)       | mcp-rtk        | **現時点では未採用。** MCP レスポンス JSON のフィールドフィルタ。成熟度 (GitHub Stars 等) が不足のため保留                                                |
+| レイヤー                           | ツール         | 役割                                                                                    |
+| ---------------------------------- | -------------- | --------------------------------------------------------------------------------------- |
+| Shell Hook (出力圧縮 + キャッシュ) | なし           | **不採用。** lean-ctx と rtk を実測比較した結果、いずれも採用しない（下記「実測比較」） |
+| Proxy (ツール定義圧縮)             | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約               |
+
+**実測比較（2026-11-18、本リポジトリ、aarch64、`bytes / 4` による見積もり）:**
+
+| ケース                             | raw (tokens)     | lean-ctx 3.12.2 | rtk (oss) | 備考                                                                   |
+| ---------------------------------- | ---------------- | --------------- | --------- | ---------------------------------------------------------------------- |
+| `git status`                       | 221              | 0%              | 59%       | rtk は書式を変更（`On branch` 行が消える）                             |
+| `git diff HEAD~3`                  | 8,680            | 0%              | 47%       | rtk は変更行 685 件のうち約 196 件のみ残す（要約表示。全体は読めない） |
+| `git log -n 30`                    | 2,303            | 0%              | 56%       | rtk はハッシュ・作者・件名のみ                                         |
+| `ls -la`                           | 98               | 0%              | 71%       |                                                                        |
+| `find scripts -type f`             | 463              | 0%              | 37%       | rtk は 1 行に複数ファイルをまとめる                                    |
+| `grep -rn` / `git log -p` / `bats` | 724 / 1,794 / 92 | 0%              | 0%        | 両ツールとも素通し                                                     |
+
+- lean-ctx のシェル出力は無損失で、単発の実行では削減されない。効果は同一出力の再実行を `[unchanged …]` に置き換える重複排除に限られ、これは未測定。
+- rtk は削減できるが有損失。`git diff` の変更行を省略するため、レビューや原因調査では全体を読めない。
+- lean-ctx は導入時の `onboard` が `AGENTS.md`、`.claude/settings.local.json`、`~/.claude/CLAUDE.md` を確認なしに変更し、`postinstall` の無効化方針とも衝突した。権限 4 ファイルの同期と `BASH_ENV` による Bats テストへの影響も維持コストになった。
+- 再導入する場合は、同一コマンドの再実行を含む測定で重複排除の効果を確認してから判断する。
+  | Proxy (レスポンス JSON 圧縮) | mcp-rtk | **現時点では未採用。** MCP レスポンス JSON のフィールドフィルタ。成熟度 (GitHub Stars 等) が不足のため保留 |
 
 **導入形態による効果発動条件の違い:**
 
 | 導入形態      | 効果発動条件                                                   | 例                      |
 | ------------- | -------------------------------------------------------------- | ----------------------- |
 | Proxy 型      | 経路上に存在するだけで透過的に効く（Agent は存在を意識しない） | mcp-rtk, mcp-compressor |
-| Hook 型       | フック設定があれば透過的に効く（Agent は存在を意識しない）     | lean-ctx                |
+| Hook 型       | フック設定があれば透過的に効く（Agent は存在を意識しない）     | lean-ctx, rtk（不採用） |
 | MCP Server 型 | Agent が明示的にツールを呼び出した場合にのみ効く               | Headroom MCP            |
 
 Proxy/Hook 型は Agent の能力に依存せず確実に効果を発揮する。MCP Server 型は Agent がツールを呼ぶ保証がないため、導入効果の確実性が低い。
 
-- **rtk (rtk-ai/rtk) Hook と lean-ctx Hook の併用は非推奨。** 両者とも PreToolUse で Bash コマンドを透過的に書き換える同一レイヤーのツール。本リポジトリは `lean-ctx hook rewrite` / `hook redirect` / `hook observe` で既に同思想を実装済み。rtk を追加すると (1) Hook 実行順により `rtk lean-ctx git diff` のような二重ラップが起きうる、(2) lean-ctx の passthrough（情報保全）と rtk の積極圧縮がコマンドごとに競合し、**何が削られ何が残ったか監査できない**、(3) 失敗時の原本保存 (tee) の責任境界が曖昧になる。圧縮方針を一本化するため lean-ctx に集約する。
-- **rtk 単体採用は lean-ctx 未導入環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。MCP・キャッシュ・redirect が不要な個人環境では rtk から始めてもよい。本リポジトリは APM で lean-ctx を MCP（`common`）として配布し、hooks は lean-ctx 本体に任せるため rtk は不要。
-- **mcp-rtk は理論上 lean-ctx と補完関係だが、現時点では未採用。** lean-ctx は Shell 出力・ファイル読み込み、mcp-rtk は MCP レスポンス JSON を圧縮する別レイヤー。ただし GitHub Stars が極めて少なく（2026-06 時点で Star 1）、プリセットの充実度・運用実績が不足。GitHub MCP は mcp-compressor でラップ済みのため、当面は mcp-rtk の導入優先度は低い。成熟度が上がった段階で再評価する。
+- **rtk (rtk-ai/rtk) Hook と lean-ctx Hook の併用は非推奨。** 両者とも PreToolUse で Bash コマンドを透過的に書き換える同一レイヤーのツール。本リポジトリは `lean-ctx hook rewrite` / `hook redirect` / `hook observe` で既に同思想を実装済み。rtk を追加すると (1) Hook 実行順により `rtk lean-ctx git diff` のような二重ラップが起きうる、(2) lean-ctx の passthrough（情報保全）と rtk の積極圧縮がコマンドごとに競合し、**何が削られ何が残ったか監査できない**、(3) 失敗時の原本保存 (tee) の責任境界が曖昧になる。この併用非推奨の判断は、いずれかを採用する場合に有効である（本リポジトリは 2026-11-18 に両方とも不採用）。
+- **rtk 単体採用は、有損失を許容できる環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。実測では `git status` / `git log` / `ls` を 56〜71% 削減できる一方、`git diff` の変更行を省略する。本リポジトリはレビューと原因調査で出力の全体を読む必要があるため採用しない。
+- **mcp-rtk は理論上 Shell 出力圧縮ツールと補完関係だが、現時点では未採用。** Shell 出力圧縮ツールは Shell 出力・ファイル読み込み、mcp-rtk は MCP レスポンス JSON を圧縮する別レイヤー。ただし GitHub Stars が極めて少なく（2026-06 時点で Star 1）、プリセットの充実度・運用実績が不足。GitHub MCP は mcp-compressor でラップ済みのため、当面は mcp-rtk の導入優先度は低い。成熟度が上がった段階で再評価する。
 - **mcp-compressor は複数サーバーを同時にラップできる。** `--config`（MCP 設定 JSON）または `--multi-server NAME=COMMAND` を使うと、ツール名にサーバー名の接頭辞（`github_invoke_tool`、`fetch_invoke_tool` など）が付き、衝突しない。0.34.0 で GitHub（HTTP）・fetch・context7（stdio）の同時ラップと GitHub の読み取りツール呼び出しを確認した。
 - **制約: mcp-compressor 0.35.0 以降は GitHub のリモート MCP（`https://api.githubcopilot.com/mcp/`）への接続に失敗する**（`Transport channel closed`、0.40.1 でも再現）。本リポジトリは 0.34.0 に固定している。
 - **ツール数の多い MCP は mcp-compressor で包む（サーバーごとに 1 プロキシ）。** 現在の対象は GitHub MCP（読み取り専用で約 34 ツール）と codebase-memory-mcp（16 ツール）。context7（2）と fetch（1）は包まない。
@@ -374,12 +391,12 @@ WebFetch / Fetch MCP の出力に対して Markdown 圧縮やレスポンスフ�
 
 ### Guidelines
 
-**→ lean-ctx を採用する (Performance カテゴリと兼用)。** fetch ツール内蔵 + Shell 圧縮パイプライン + TTL キャッシュ (~13 tokens/再読み込み) + CCP セッションメモリにより、Web Fetch 結果の圧縮・蓄積・検索を単体でカバーする。単一バイナリ・Apache-2.0・ゼロ依存で導入コストが最小。
+**→ lean-ctx は採用しない（2026-11-18 に変更。理由は [Performance / Token Optimization MCP Servers](#performance--token-optimization-mcp-servers) の実測比較を参照）。** Web 取得は既存の Fetch MCP を継続して使う。lean-ctx の fetch ツール内蔵・TTL キャッシュ (~13 tokens/再読み込み)・CCP セッションメモリは、本リポジトリでは効果を測定できていない。
 
-- lean-ctx 導入済み環境では本カテゴリの他ツール追加の優先度は低い。mcp-rtk は MCP レスポンス JSON 圧縮として理論上は補完関係にあるが、成熟度不足のため現時点では未採用（詳細は [Performance / Token Optimization MCP Servers](#performance--token-optimization-mcp-servers) 参照）。
+- 本カテゴリの他ツール追加の優先度は低い。mcp-rtk は MCP レスポンス JSON 圧縮として理論上は補完関係にあるが、成熟度不足のため現時点では未採用（詳細は [Performance / Token Optimization MCP Servers](#performance--token-optimization-mcp-servers) 参照）。
 - Context Mode は lean-ctx と機能が重複するが、サンドボックス実行 (`ctx_fetch_and_index`) による 98% 圧縮が独自。ELv2 ライセンスのため SaaS 再配布不可だが開発ツールとしては無制限。15 プラットフォーム対応。
 
 - Cloudflare MCP Portal はエンタープライズ向け。`optimize_context=search_and_execute` でツール定義コストを定数化できるが、Cloudflare Access 環境が前提。
 - Markdownify MCP は PDF/画像/音声 →Markdown 変換が必要な場合に追加。Web 取得のみなら mcp-read-website-fast の方が軽量。
 - mcp-read-website-fast は Readability による不要要素除去 + Turndown による Markdown 変換で、Fetch MCP の代替として単体利用可能。ツール数が 1 で軽量。
-- mcp-compressor（Performance カテゴリで採用済み）はツール定義の圧縮であり、レスポンス圧縮とは補完関係にある。lean-ctx と併用推奨。
+- mcp-compressor（Performance カテゴリで採用済み）はツール定義の圧縮であり、レスポンス圧縮とは補完関係にある。
