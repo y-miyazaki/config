@@ -70,7 +70,7 @@ Layers 1–2 apply only when development is AI-assisted. For manual development,
 
 ### Provider-dependent checks without init
 
-If a developer has not run `terraform init`, pre-commit hooks will fail for provider-specific rules (e.g., `aws_instance` attribute validation). Basic syntax and naming rules still pass. The `init.sh` setup automation mitigates this by running `tflint --init` on devcontainer creation.
+If a developer has not run `terraform init`, pre-commit hooks will fail for provider-specific rules (e.g., `aws_instance` attribute validation). Basic syntax and naming rules still pass. The devcontainer `update_content.sh` setup automation mitigates this by running `tflint --init` on devcontainer creation.
 
 ## Pending Items
 

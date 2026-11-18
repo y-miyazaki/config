@@ -251,7 +251,7 @@ loop の実行ジョブ(`loop-execute`)が導入するのは Node(`setup-node`)�
 
 ### mise.toml の lazy 化(実施済み)
 
-- 本リポジトリの `mise.toml` は、ランタイム(`aqua`、`node`、`pnpm`、`python`)、`uv`、`npm:awsp` を除く 56 ツールに `lazy = true` と `lazy_bins` を指定した。`mise install` は lazy のツールを導入せず、コマンドの初回実行時に導入される。`init.sh` と `mise-install` タスクは `mise install` のままで、`--include-lazy` は使わない。
+- 本リポジトリの `mise.toml` は、ランタイム(`aqua`、`node`、`pnpm`、`python`)、`uv`、`npm:awsp` を除く 56 ツールに `lazy = true` と `lazy_bins` を指定した。`mise install` は lazy のツールを導入せず、コマンドの初回実行時に導入される。`update_content.sh` と `mise-install` タスクは `mise install` のままで、`--include-lazy` は使わない。
 - 隔離環境で、`mise install` が lazy を導入しないこと、`mise reshim` で shim が作られること、初回実行で aqua(`shellcheck`)、npm(`markdownlint-cli2`)、pipx(`yamllint`)、github(`apm`)のツールが導入されて動くことを確認した。go バックエンド(`dlv`、`gopls` など)と、`postinstall`(`mkdocs`)、`allow_builds`(`lean-ctx-bin`)付きのツールの lazy 動作は未確認。
 - `lazy_bins` は、registry の短縮名以外のツールでは必須(未指定だと shim が作られず、警告が出る)。
 - `mise_version` は `ci-mise-update-lock.yaml` の inputs の default で指定し、Renovate が更新する。caller の `with:` では指定しない。
@@ -271,7 +271,7 @@ loop の実行ジョブ(`loop-execute`)が導入するのは Node(`setup-node`)�
 1. **PR の CI が起動するか。** `loop-resolve-push-token` が App のトークンで PR を作成する構成(`MAINTENANCE_BOT_APP_*`)かを、実際の PR で確認する。`GITHUB_TOKEN` へのフォールバックでは CI が起動しない。
 2. **Go のテストを実行する CI。** フェーズ 2 の前に、Go のテストを実行する `on-ci-push-*` caller が必要。
 3. **ツール導入 action の未確認事項。** lazy の shim 作成に `reshim` 入力が必要か、`aquaproj/aqua-installer` の入力仕様、`auto` の判定が Portability 規則に抵触しないか。
-4. **mise の lazy の未確認範囲。** go バックエンド、`postinstall`、`allow_builds` 付きのツール、`init.sh` の `mise prune` との相互作用。
+4. **mise の lazy の未確認範囲。** go バックエンド、`postinstall`、`allow_builds` 付きのツール、`update_content.sh` の `mise prune` との相互作用。
 
 ### 確定済み(2026-10-11)
 

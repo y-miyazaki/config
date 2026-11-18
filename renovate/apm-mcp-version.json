@@ -81,20 +81,14 @@
     {
       "description": "Rules: Update MCP package versions in apm.yml",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [
-        ".apm/packages/**/apm.yml",
-        "env/common/scripts/init.sh"
-      ],
+      "matchFileNames": [".apm/packages/**/apm.yml"],
       "commitMessagePrefix": "renovate(apm-mcp):",
       "addLabels": ["apm-mcp"]
     },
     {
       "description": "Rules: Automerge patch updates for apm.yml MCP packages",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [
-        ".apm/packages/**/apm.yml",
-        "env/common/scripts/init.sh"
-      ],
+      "matchFileNames": [".apm/packages/**/apm.yml"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["automerge"],
       "automerge": true,
