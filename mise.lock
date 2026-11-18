@@ -282,38 +282,44 @@ checksum = "sha256:a6d419ec5ce460101499246c9ee8a8a6020e43b7cf6355a388274f5127f2e
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.39.7.pkg"
 
 [[tools."aqua:aws/aws-sam-cli"]]
-version = "1.171.0"
+version = "1.172.1"
 backend = "aqua:aws/aws-sam-cli"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-arm64"]
-checksum = "sha256:a14e69562da4ddb3d15c8ddfb84869dd401ef89af6c04cb5a9c6ea92e2def2ec"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-linux-arm64.zip"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690003590"
+checksum = "sha256:fcfc7cd414a75cc17a00c81110b2955ab52b6fae1dd8b7415d637ca95ca931df"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-linux-arm64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733884474"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-arm64-musl"]
-checksum = "sha256:a14e69562da4ddb3d15c8ddfb84869dd401ef89af6c04cb5a9c6ea92e2def2ec"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-linux-arm64.zip"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690003590"
+checksum = "sha256:fcfc7cd414a75cc17a00c81110b2955ab52b6fae1dd8b7415d637ca95ca931df"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-linux-arm64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733884474"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-x64"]
-checksum = "sha256:b19a78b39458103cd196f2de36a4603397b7a2abad95a091a49b2bbeca42d8f9"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-linux-x86_64.zip"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690004071"
+checksum = "sha256:aa6a5a785c576f5d8e1b783fe1633cb6eea1cbab382fa5aca1b9e17a9250cc07"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-linux-x86_64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733885192"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-x64-musl"]
-checksum = "sha256:b19a78b39458103cd196f2de36a4603397b7a2abad95a091a49b2bbeca42d8f9"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-linux-x86_64.zip"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690004071"
+checksum = "sha256:aa6a5a785c576f5d8e1b783fe1633cb6eea1cbab382fa5aca1b9e17a9250cc07"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-linux-x86_64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733885192"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.macos-arm64"]
-checksum = "sha256:6b6c310cad669e83abf1e59ce22cc7c2621614321f1c9d2b80d6ff6d21a5b462"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-macos-arm64.pkg"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690003863"
+checksum = "sha256:3123ce41dec75b922c631cafab99b2e6234844228104efb8a01fba5ebf4a2abe"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-macos-arm64.pkg"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733884834"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.macos-x64"]
-checksum = "sha256:43111fb8811fa75f115f910212293b1b0d7578b7a65af6daead75aba763c5409"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.171.0/aws-sam-cli-macos-x86_64.pkg"
-url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/690003781"
+checksum = "sha256:6af39e2634dba8ff0a2094b9e4f950f91fdf51ded9a3c97c976a059d0c73bc34"
+checksum_source = "mise-versions"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli-macos-x86_64.pkg"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/733884715"
 
 [[tools."aqua:bats-core/bats-core"]]
 version = "1.14.0"
