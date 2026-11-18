@@ -71,7 +71,7 @@ teardown() {
 if [[ "$1" == "ssm" && "$2" == "start-session" ]]; then
     echo "Port 15432 opened"
     echo "Waiting for connections"
-    sleep 30
+    exec sleep 30
     exit 0
 fi
 exit 1
@@ -90,7 +90,7 @@ EOF
 if [[ "$1" == "ssm" && "$2" == "start-session" ]]; then
     echo "Port 19999 opened"
     echo "Waiting for connections"
-    sleep 30
+    exec sleep 30
     exit 0
 fi
 exit 1

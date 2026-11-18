@@ -21,6 +21,8 @@
 # - validate_script_accessible skips directories without counting failures
 # - collect_bats_failures_from_tap records failing tests and summary
 # - print_summary_bats_results reports incomplete bats runs
+# - print_bats_output surfaces runner errors when exit is non-zero without failing tests
+# - print_bats_output omits runner section when failing tests are recorded
 # - print_summary_overall_result reports mixed script and bats failures
 # - print_summary_overall_result reports incomplete bats when no failures recorded
 # - analyze_functions and check_complexity tolerate scripts without function definitions when VERBOSE is true
@@ -308,6 +310,29 @@ TAP
     [ "$status" -eq 0 ]
     [[ $output == *"did not complete successfully (exit 2)"* ]]
     [[ $output == *"no TAP summary captured"* ]]
+}
+
+@test "print_bats_output omits runner section when failing tests are recorded" {
+    VERBOSE=false
+    local tap_file="${BATS_TEST_TMPDIR}/fail.tap"
+    printf '%s\n' '1..1' 'not ok 1 broken case' "# (in test file scripts/demo.bats, line 3)" > "${tap_file}"
+
+    run print_bats_output "${tap_file}" 1
+    [ "$status" -eq 0 ]
+    [[ $output == *"not ok 1 broken case"* ]]
+    [[ $output != *"non-TAP lines"* ]]
+}
+
+@test "print_bats_output surfaces runner errors when exit is non-zero without failing tests" {
+    VERBOSE=false
+    local tap_file="${BATS_TEST_TMPDIR}/runner_error.tap"
+    printf '%s\n' '1..2' 'ok 1 a' 'ok 2 b' '[ERRO] wait cmd #1: WaitDelay expired' > "${tap_file}"
+
+    run print_bats_output "${tap_file}" 1
+    [ "$status" -eq 0 ]
+    [[ $output == *"non-TAP lines"* ]]
+    [[ $output == *"WaitDelay expired"* ]]
+    [[ $output != *"ok 1 a"* ]]
 }
 
 @test "print_summary_overall_result reports mixed script and bats failures" {

@@ -385,4 +385,3 @@ function loop_run_log_compute_duration {
     fi
     echo $((now_epoch - started_epoch))
 }
-

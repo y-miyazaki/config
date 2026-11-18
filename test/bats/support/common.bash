@@ -64,6 +64,7 @@ function apm_skill_dir {
     local skill="$1"
     local root
     root="$(bats_workspace_root)"
+    # shellcheck disable=SC2034 # read by apm_skill_root (sourced below)
     WORKSPACE_ROOT="${root}"
     # shellcheck disable=SC1091
     source "${root}/scripts/self/apm/apm_skill_root.sh"
