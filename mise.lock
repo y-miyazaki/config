@@ -3234,7 +3234,7 @@ version = "0.24.0"
 backend = "npm:markdownlint-cli2"
 
 [[tools."npm:prettier"]]
-version = "3.9.10"
+version = "3.10.0"
 backend = "npm:prettier"
 
 [[tools."pipx:aws-mfa"]]
