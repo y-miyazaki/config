@@ -6,12 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-19T00:16:16Z","loop_name":"ci-sweeper","duration_s":45,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39179954879","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-19T00:27:43Z","loop_name":"github-pr-review","duration_s":42,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39180812796","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-19T00:37:03Z","loop_name":"github-pr-review","duration_s":40,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39181522404","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-19T08:36:08Z","loop_name":"tech-debt","duration_s":841,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39222246869","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-19T09:10:15Z","loop_name":"docs-updater","duration_s":55,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39227899354","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-19T10:14:14Z","loop_name":"test-gap","duration_s":43,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39235892624","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-23T10:05:44Z","loop_name":"changelog","duration_s":44,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39936521500","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-25T10:12:39Z","loop_name":"refactor","duration_s":13,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"40183805233"}
 {"run_id":"2026-10-26T08:38:32Z","loop_name":"tech-debt","duration_s":896,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40291933085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
@@ -330,3 +324,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-18T10:57:33Z","loop_name":"ci-sweeper","duration_s":24,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"44290148783","skip_detail":"integration:main: consecutive_failures 3"}
 {"run_id":"2026-11-18T12:13:20Z","loop_name":"github-issue-autofix","duration_s":25,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"44301761608","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
 {"run_id":"2026-11-18T20:21:51Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"44390151581","skip_detail":"integration:main: consecutive_failures 3"}
+{"run_id":"2026-11-19T12:13:25Z","loop_name":"github-issue-autofix","duration_s":19,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"44521810015","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
