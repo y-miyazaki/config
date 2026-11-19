@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for scripts/self/ci/pin_vscode_extensions.sh
+# Tests for scripts/editor/pin_vscode_extensions.sh
 #
 # Use cases:
 # - pinned entries move to the highest stable Marketplace version; pre-release versions are skipped
@@ -14,6 +14,10 @@
 # - an extension missing from the Marketplace keeps its pin and makes the script exit 1
 # - a failed Marketplace request exits 1 without touching the file
 # - --help succeeds; unknown options, malformed --min-age-days, and malformed --vscode-version fail
+# - --registry openvsx reads versions and publish dates from the Open VSX API, skips pre-release and undated versions, and defaults to the Cursor example
+# - --registry openvsx adopts a version published exactly 7 days ago and skips one a second younger
+# - --registry rejects an unknown value; --registry openvsx rejects --vscode-version
+# - --registry openvsx keeps the pin and exits 1 when the API request fails
 # - without a FILE argument only the VS Code example (env/example/.devcontainer/vscode/devcontainer.json) is targeted
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -23,7 +27,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-PIN_SCRIPT="$(bats_workspace_root)/scripts/self/ci/pin_vscode_extensions.sh"
+PIN_SCRIPT="$(bats_workspace_root)/scripts/editor/pin_vscode_extensions.sh"
 
 setup() {
     FIXTURE_DIR="$(mktemp -d)"
@@ -92,6 +96,39 @@ teardown() {
     rm -rf "${FIXTURE_DIR}"
 }
 
+# openvsx_fixture <key> <json>: serve <json> for the Open VSX request whose URL maps to <key>.
+# Key = URL path after the API base with / ? = & replaced by _ (for example redhat_vscode-yaml_versions_size_20).
+openvsx_fixture() {
+    mkdir -p "${FIXTURE_DIR}/openvsx"
+    printf '%s' "$2" > "${FIXTURE_DIR}/openvsx/$1"
+}
+
+# openvsx_detail <namespace/name> <version> <timestamp|-> <prerelease>: serve one version detail.
+openvsx_detail() {
+    local key="${1//\//_}_$2"
+    if [[ $3 == "-" ]]; then
+        openvsx_fixture "${key}" "{\"version\":\"$2\",\"preRelease\":$4}"
+    else
+        openvsx_fixture "${key}" "{\"version\":\"$2\",\"timestamp\":\"$3\",\"preRelease\":$4}"
+    fi
+}
+
+# use_openvsx_stub: replace the Marketplace curl stub with an Open VSX one that serves openvsx_fixture files
+# and fails (exit 22, like curl -f on HTTP 404) for any other URL.
+use_openvsx_stub() {
+    export OPENVSX_URL="https://openvsx.invalid/api"
+    export OPENVSX_FIXTURES="${FIXTURE_DIR}/openvsx"
+    mkdir -p "${OPENVSX_FIXTURES}"
+    cat > "${FIXTURE_DIR}/bin/curl" << 'EOF'
+#!/bin/bash
+url="${*: -1}"
+file="${OPENVSX_FIXTURES}/$(printf '%s' "${url#"${OPENVSX_URL}/"}" | tr '/?=&' '____')"
+[[ -f ${file} ]] || exit 22
+cat "${file}"
+EOF
+    chmod +x "${FIXTURE_DIR}/bin/curl"
+}
+
 @test "--dry-run reports updates without rewriting the file" {
     local before
     before="$(cat "${DEVCONTAINER}")"
@@ -115,6 +152,18 @@ teardown() {
     run bash "${PIN_SCRIPT}" --min-age-days 7d "${DEVCONTAINER}"
     [ "${status}" -eq 1 ]
     [[ ${output} == *"--min-age-days needs a non-negative integer"* ]]
+}
+
+@test "--registry openvsx rejects --vscode-version" {
+    run bash "${PIN_SCRIPT}" --registry openvsx --vscode-version 1.106.0 "${DEVCONTAINER}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"--vscode-version applies to --registry marketplace only"* ]]
+}
+
+@test "--registry rejects an unknown value" {
+    run bash "${PIN_SCRIPT}" --registry npm "${DEVCONTAINER}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"--registry needs marketplace or openvsx"* ]]
 }
 
 @test "--vscode-version allows an engine minimum equal to the version" {
@@ -176,6 +225,74 @@ teardown() {
     run bash "${PIN_SCRIPT}" --dry-run "${DEVCONTAINER}" "${FIXTURE_DIR}/second.json"
     [ "$(jq -c '[.filters[0].criteria[].value]' "${FAKE_REQUEST}")" = '["redhat.vscode-yaml","hashicorp.terraform","golang.go"]' ]
     [ "$(jq -c '.flags' "${FAKE_REQUEST}")" = "17" ]
+}
+
+@test "openvsx a failed request keeps the pin and exits 1" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "redhat.vscode-yaml@1.0.0"
+] } } }
+EOF
+    run bash "${PIN_SCRIPT}" --registry openvsx "${DEVCONTAINER}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"redhat.vscode-yaml 1.0.0 (no stable Open VSX version found; unchanged)"* ]]
+    grep -q '"redhat.vscode-yaml@1.0.0"' "${DEVCONTAINER}"
+}
+
+@test "openvsx adopts a version published exactly 7 days ago and skips one a second younger" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "a.old@1.0.0",
+  "a.young@1.0.0"
+] } } }
+EOF
+    openvsx_fixture "a_old_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/old" "1.1.0" "2026-11-10T00:00:00Z" false
+    openvsx_fixture "a_young_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/young" "1.1.0" "2026-11-10T00:00:01Z" false
+    run bash "${PIN_SCRIPT}" --registry openvsx --dry-run "${DEVCONTAINER}"
+    [[ ${output} == *"a.old 1.0.0 -> 1.1.0"* ]]
+    [[ ${output} == *"a.young 1.0.0 (no stable Open VSX version found; unchanged)"* ]]
+}
+
+@test "openvsx moves pins to the highest stable version and skips pre-release and undated versions" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "redhat.vscode-yaml@1.0.0",
+  "hashicorp.terraform@2.40.1",
+  "esbenp.prettier-vscode",
+  // "redhat.vscode-yaml@0.1.0"
+  "golang.go@9.0.0"
+] } } }
+EOF
+    # versions are listed newest first, as Open VSX returns them
+    openvsx_fixture "redhat_vscode-yaml_versions_size_20" '{"versions":{"2.1.2026111208":"u","1.10.0":"u","1.9.0":"u"}}'
+    openvsx_detail "redhat/vscode-yaml" "2.1.2026111208" "2026-10-01T00:00:00.123456Z" true
+    openvsx_detail "redhat/vscode-yaml" "1.10.0" "2026-11-12T00:00:00Z" false
+    openvsx_detail "redhat/vscode-yaml" "1.9.0" "2026-10-01T00:00:00.5Z" false
+    openvsx_fixture "hashicorp_terraform_versions_size_20" '{"versions":{"2.41.0":"u","2.40.1":"u"}}'
+    openvsx_detail "hashicorp/terraform" "2.41.0" "-" false
+    openvsx_detail "hashicorp/terraform" "2.40.1" "2026-10-01T00:00:00Z" false
+    openvsx_fixture "golang_go_versions_size_20" '{"versions":{"0.58.0":"u"}}'
+    openvsx_detail "golang/go" "0.58.0" "2026-10-01T00:00:00Z" false
+    run bash "${PIN_SCRIPT}" --registry openvsx "${DEVCONTAINER}"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *"redhat.vscode-yaml 1.0.0 -> 1.9.0"* ]]
+    [[ ${output} == *"hashicorp.terraform 2.40.1 (up to date)"* ]]
+    [[ ${output} == *"golang.go 9.0.0 (newer than latest allowed 0.58.0; unchanged)"* ]]
+    grep -q '"redhat.vscode-yaml@1.9.0"' "${DEVCONTAINER}"
+    grep -q '// "redhat.vscode-yaml@0.1.0"' "${DEVCONTAINER}"
+    grep -q '"esbenp.prettier-vscode",' "${DEVCONTAINER}"
+}
+
+@test "openvsx uses the Cursor example as the default target" {
+    use_openvsx_stub
+    run bash "${PIN_SCRIPT}" --registry openvsx --dry-run
+    [[ ${output} == *"env/example/.devcontainer/cursor/devcontainer.json: "* ]]
+    [[ ${output} != *"/vscode/devcontainer.json"* ]]
 }
 
 @test "pinned entries move to the highest stable version and skip pre-release" {

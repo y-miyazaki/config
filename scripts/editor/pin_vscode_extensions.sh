@@ -2,17 +2,22 @@
 #######################################
 # Description:
 #   Update pinned VS Code extension versions ("publisher.name@x.y.z") in
-#   devcontainer.json files to the latest stable Visual Studio Marketplace release.
+#   devcontainer.json files to the latest stable release from the Visual Studio Marketplace
+#   (VS Code) or Open VSX (Cursor).
 #
 # Usage:
-#   bash scripts/self/ci/pin_vscode_extensions.sh [--dry-run] [--min-age-days N] [--vscode-version X.Y.Z] [FILE...]
+#   bash scripts/editor/pin_vscode_extensions.sh [--dry-run] [--min-age-days N] [--registry marketplace|openvsx] [--vscode-version X.Y.Z] [FILE...]
 #
 # Design Rules:
 #   - Only uncommented array entries of the form "publisher.name@version" are read and rewritten;
 #     "// ..." lines and unpinned entries stay unchanged
-#   - One Marketplace extensionquery POST covers every pinned ID
-#   - Pre-release versions are skipped; with --vscode-version, versions whose engines.vscode
-#     minimum is newer than that VS Code version are skipped too
+#   - --registry picks the registry and the default FILE: marketplace (default) updates the VS Code example,
+#     openvsx updates the Cursor example; the two registries publish different versions, so never mix pins
+#   - marketplace: one extensionquery POST covers every pinned ID
+#   - openvsx: one versions request per ID, then one detail request per candidate among the newest
+#     OPENVSX_CANDIDATES versions (the detail holds the publish date and the pre-release flag)
+#   - Pre-release versions are skipped; with --vscode-version (marketplace only), versions whose
+#     engines.vscode minimum is newer than that VS Code version are skipped too
 #   - Versions published less than --min-age-days ago (default 7, matching Renovate
 #     minimumReleaseAge) are skipped; versions without a publish date are skipped too
 #   - A pin is never downgraded: a pin newer than every allowed version stays unchanged
@@ -35,11 +40,18 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 # Default target, relative to the repository root
-DEFAULT_FILE="env/example/.devcontainer/vscode/devcontainer.json"
+DEFAULT_FILE_MARKETPLACE="env/example/.devcontainer/vscode/devcontainer.json"
+DEFAULT_FILE_OPENVSX="env/example/.devcontainer/cursor/devcontainer.json"
 DRY_RUN=false
 FILES=()
 # Overridable for tests; the public Marketplace endpoint needs no credentials
 MARKETPLACE_URL="${MARKETPLACE_URL:-https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery}"
+# Number of newest Open VSX versions inspected per extension (the detail request per version is the cost)
+OPENVSX_CANDIDATES=20
+# Overridable for tests; the public Open VSX API needs no credentials
+OPENVSX_URL="${OPENVSX_URL:-https://open-vsx.org/api}"
+# Registry to read versions from: marketplace or openvsx
+REGISTRY="marketplace"
 # Minimum days since a version was published before it is adopted (0 disables the filter)
 MIN_AGE_DAYS=7
 # Current time in epoch seconds; overridable for tests
@@ -54,7 +66,8 @@ VSCODE_VERSION=""
 #   Prints usage information and exits successfully.
 #
 # Globals:
-#   DEFAULT_FILE - Default target shown in the help text
+#   DEFAULT_FILE_MARKETPLACE - Default marketplace target shown in the help text
+#   DEFAULT_FILE_OPENVSX     - Default openvsx target shown in the help text
 #
 # Arguments:
 #   None
@@ -68,25 +81,29 @@ VSCODE_VERSION=""
 #######################################
 function show_usage {
     cat << EOF
-Usage: $(basename "$0") [--dry-run] [--min-age-days N] [--vscode-version X.Y.Z] [FILE...]
+Usage: $(basename "$0") [--dry-run] [--min-age-days N] [--registry marketplace|openvsx] [--vscode-version X.Y.Z] [FILE...]
 
 Update pinned VS Code extensions ("publisher.name@x.y.z") in devcontainer.json
-to the latest stable Visual Studio Marketplace version.
+to the latest stable version of the Visual Studio Marketplace or Open VSX.
 
 Arguments:
-  FILE                    devcontainer.json to update (default: ${DEFAULT_FILE})
+  FILE                    devcontainer.json to update
+                          (default: ${DEFAULT_FILE_MARKETPLACE} for marketplace,
+                          ${DEFAULT_FILE_OPENVSX} for openvsx)
 
 Options:
   -h, --help              Display this help message
   --dry-run               Report updates without rewriting files
   --min-age-days N        Skip versions published less than N days ago (default: ${MIN_AGE_DAYS}; 0 disables)
-  --vscode-version X.Y.Z  Skip versions whose engines.vscode needs a newer VS Code
+  --registry NAME         marketplace (VS Code, default) or openvsx (Cursor)
+  --vscode-version X.Y.Z  Skip versions whose engines.vscode needs a newer VS Code (marketplace only)
 
 Examples:
-  bash scripts/self/ci/pin_vscode_extensions.sh --dry-run
-  bash scripts/self/ci/pin_vscode_extensions.sh --vscode-version 1.106.0
-  bash scripts/self/ci/pin_vscode_extensions.sh --min-age-days 0
-  bash scripts/self/ci/pin_vscode_extensions.sh .devcontainer/devcontainer.json
+  bash scripts/editor/pin_vscode_extensions.sh --dry-run
+  bash scripts/editor/pin_vscode_extensions.sh --registry openvsx
+  bash scripts/editor/pin_vscode_extensions.sh --vscode-version 1.106.0
+  bash scripts/editor/pin_vscode_extensions.sh --min-age-days 0
+  bash scripts/editor/pin_vscode_extensions.sh .devcontainer/devcontainer.json
 EOF
     exit 0
 }
@@ -95,12 +112,13 @@ EOF
 # parse_arguments: Parse CLI options
 #
 # Description:
-#   Supports --dry-run, --min-age-days, --vscode-version, --help, and positional FILE arguments.
+#   Supports --dry-run, --min-age-days, --registry, --vscode-version, --help, and positional FILE arguments.
 #
 # Globals:
 #   DRY_RUN        - Set to true when --dry-run is passed
 #   FILES          - Appended with positional arguments
 #   MIN_AGE_DAYS   - Set from --min-age-days
+#   REGISTRY       - Set from --registry
 #   VSCODE_VERSION - Set from --vscode-version
 #
 # Arguments:
@@ -110,7 +128,8 @@ EOF
 #   Error messages to stderr
 #
 # Returns:
-#   Exits 1 on unknown options, an invalid --min-age-days, or an invalid --vscode-version
+#   Exits 1 on unknown options, an invalid --min-age-days, --registry, or --vscode-version,
+#   or --vscode-version combined with --registry openvsx
 #
 #######################################
 function parse_arguments {
@@ -131,6 +150,14 @@ function parse_arguments {
                 MIN_AGE_DAYS="$2"
                 shift 2
                 ;;
+            --registry)
+                if [[ $# -lt 2 || ! $2 =~ ^(marketplace|openvsx)$ ]]; then
+                    echo "--registry needs marketplace or openvsx" >&2
+                    exit 1
+                fi
+                REGISTRY="$2"
+                shift 2
+                ;;
             --vscode-version)
                 if [[ $# -lt 2 || ! $2 =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                     echo "--vscode-version needs X.Y.Z" >&2
@@ -149,6 +176,10 @@ function parse_arguments {
                 ;;
         esac
     done
+    if [[ ${REGISTRY} == "openvsx" && -n ${VSCODE_VERSION} ]]; then
+        echo "--vscode-version applies to --registry marketplace only" >&2
+        exit 1
+    fi
 }
 
 #######################################
@@ -263,6 +294,56 @@ function latest_version {
 }
 
 #######################################
+# openvsx_latest_version: Pick the newest allowed version from Open VSX
+#
+# Description:
+#   Lists the newest OPENVSX_CANDIDATES versions of the extension, reads the detail of each,
+#   drops pre-release versions and versions published within MIN_AGE_DAYS (or without a publish
+#   date), and prints the highest remaining version. The engines.vscode range is not evaluated:
+#   Cursor's VS Code base version differs from the one in --vscode-version.
+#
+# Globals:
+#   MIN_AGE_DAYS      - Minimum age in days of an adopted version
+#   NOW_EPOCH         - Current time in epoch seconds
+#   OPENVSX_CANDIDATES - Number of newest versions inspected
+#   OPENVSX_URL       - Open VSX API base URL
+#
+# Arguments:
+#   $1 - Extension ID (publisher.name)
+#
+# Outputs:
+#   Version on stdout
+#
+# Returns:
+#   0 on success; 1 when the request fails or no allowed version is found
+#
+#######################################
+function openvsx_latest_version {
+    local id="$1"
+    local namespace="${id%%.*}"
+    local name="${id#*.}"
+    local version old_enough
+    local -a candidates=() versions=()
+
+    mapfile -t versions < <(curl -fsS --max-time 60 "${OPENVSX_URL}/${namespace}/${name}/versions?size=${OPENVSX_CANDIDATES}" \
+        | jq -r '.versions // {} | keys_unsorted[]')
+
+    for version in "${versions[@]}"; do
+        [[ ${version} =~ ^[A-Za-z0-9.+_-]+$ ]] || continue
+        old_enough="$(curl -fsS --max-time 60 "${OPENVSX_URL}/${namespace}/${name}/${version}" \
+            | jq -r --argjson cutoff "$((NOW_EPOCH - MIN_AGE_DAYS * 86400))" '
+                if .preRelease == true then "false"
+                else ((.timestamp // "" | sub("\\.[0-9]+"; "") | try fromdateiso8601 catch null) as $t
+                    | if $t == null then "false" else ($t <= $cutoff | tostring) end)
+                end')" || continue
+        [[ ${old_enough} == "true" ]] && candidates+=("${version}")
+    done
+
+    [[ ${#candidates[@]} -gt 0 ]] || return 1
+    printf '%s\n' "${candidates[@]}" | sort -uV | tail -1
+}
+
+#######################################
 # query_marketplace: Fetch version data for extension IDs
 #
 # Description:
@@ -325,13 +406,15 @@ function rewrite_pin {
 # main: Update pinned extensions in every target file
 #
 # Description:
-#   Collects pins, queries the Marketplace once, prints each result, and
-#   rewrites files unless --dry-run is set.
+#   Collects pins, looks up the latest versions in the selected registry, prints each
+#   result, and rewrites files unless --dry-run is set.
 #
 # Globals:
-#   DEFAULT_FILE - Used when no FILE is given
-#   DRY_RUN      - Skips rewriting when true
-#   FILES        - Target files
+#   DEFAULT_FILE_MARKETPLACE - Used when no FILE is given and the registry is marketplace
+#   DEFAULT_FILE_OPENVSX     - Used when no FILE is given and the registry is openvsx
+#   DRY_RUN                  - Skips rewriting when true
+#   FILES                    - Target files
+#   REGISTRY                 - Registry to read versions from
 #
 # Arguments:
 #   $@ - Command line arguments
@@ -344,13 +427,15 @@ function rewrite_pin {
 #
 #######################################
 function main {
-    local cmd file pin id old new key repo_root response
+    local cmd file pin id old new key repo_root response label
     local failed=0
     local -a ids=()
     local -A latest=()
     local -A seen=()
 
     parse_arguments "$@"
+    label="Marketplace"
+    [[ ${REGISTRY} == "openvsx" ]] && label="Open VSX"
 
     for cmd in curl jq perl; do
         if ! command -v "${cmd}" > /dev/null 2>&1; then
@@ -361,7 +446,11 @@ function main {
 
     if [[ ${#FILES[@]} -eq 0 ]]; then
         repo_root="$(git rev-parse --show-toplevel 2> /dev/null || pwd)"
-        FILES=("${repo_root}/${DEFAULT_FILE}")
+        if [[ ${REGISTRY} == "openvsx" ]]; then
+            FILES=("${repo_root}/${DEFAULT_FILE_OPENVSX}")
+        else
+            FILES=("${repo_root}/${DEFAULT_FILE_MARKETPLACE}")
+        fi
     fi
     for file in "${FILES[@]}"; do
         if [[ ! -f ${file} ]]; then
@@ -381,18 +470,24 @@ function main {
         return 0
     fi
 
-    response="$(mktemp)"
-    # shellcheck disable=SC2064 # expand now: response is local to main
-    trap "rm -f '${response}'" EXIT
-    if ! query_marketplace "${response}" "${ids[@]}"; then
-        echo "Marketplace query failed: ${MARKETPLACE_URL}" >&2
-        exit 1
-    fi
+    if [[ ${REGISTRY} == "openvsx" ]]; then
+        for id in "${ids[@]}"; do
+            latest[${id,,}]="$(openvsx_latest_version "${id}" || true)"
+        done
+    else
+        response="$(mktemp)"
+        # shellcheck disable=SC2064 # expand now: response is local to main
+        trap "rm -f '${response}'" EXIT
+        if ! query_marketplace "${response}" "${ids[@]}"; then
+            echo "Marketplace query failed: ${MARKETPLACE_URL}" >&2
+            exit 1
+        fi
 
-    for id in "${ids[@]}"; do
-        key="${id,,}"
-        latest[${key}]="$(latest_version "${response}" "${id}" || true)"
-    done
+        for id in "${ids[@]}"; do
+            key="${id,,}"
+            latest[${key}]="$(latest_version "${response}" "${id}" || true)"
+        done
+    fi
 
     for file in "${FILES[@]}"; do
         while IFS= read -r pin; do
@@ -400,7 +495,7 @@ function main {
             old="${pin##*@}"
             new="${latest[${id,,}]}"
             if [[ -z ${new} ]]; then
-                echo "${file}: ${id} ${old} (no stable Marketplace version found; unchanged)" >&2
+                echo "${file}: ${id} ${old} (no stable ${label} version found; unchanged)" >&2
                 failed=1
             elif [[ ${new} == "${old}" ]]; then
                 echo "${file}: ${id} ${old} (up to date)"
