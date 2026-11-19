@@ -3,6 +3,9 @@
 # Tests for .github/workflows/ci-vsix-audit.yaml
 #
 # Use cases:
+# - the openvsx download uses the universal build, else linux-x64, for extensions published only as platform builds
+# - the openvsx download fails when no usable build exists or the download URL is not on open-vsx.org
+# - the marketplace download still goes through vsix-audit download
 # - the embedded extractor reads devcontainer.json extensions and ignores commented-out entries
 # - the embedded extractor reads .vscode/extensions.json recommendations and de-duplicates across files
 # - the embedded extractor keeps // inside strings and tolerates trailing commas
@@ -25,16 +28,95 @@ setup() {
     EXTRACTOR="${FIXTURE_DIR}/extract.js"
     IDS_FILE="${FIXTURE_DIR}/ids.txt"
     VALIDATOR="${FIXTURE_DIR}/validate.sh"
+    DOWNLOADER="${FIXTURE_DIR}/download.sh"
     # Pull the node heredoc out of the "Extract Extension IDs" step and drop the YAML indent.
     awk '/^ +node - .*<<.NODE.$/ { in_js = 1; next } /^ +NODE$/ { in_js = 0 } in_js { print }' "${WORKFLOW}" \
         | sed 's/^ \{10\}//' > "${EXTRACTOR}"
     # Pull the run script of the "Validate Inputs" step (up to the next step) and drop the YAML indent.
     awk '/^      - name: Validate Inputs$/ { in_step = 1; next } in_step && /^      - name:/ { in_step = 0 } in_step && in_run { print } in_step && /^        run: \|$/ { in_run = 1 }' "${WORKFLOW}" \
         | sed 's/^ \{10\}//' > "${VALIDATOR}"
+    # Pull the run script of the "Download Extensions" step (up to the next step) and drop the YAML indent.
+    awk '/^      - name: Download Extensions$/ { in_step = 1; next } in_step && /^      - name:/ { in_step = 0 } in_step && in_run { print } in_step && /^        run: \|$/ { in_run = 1 }' "${WORKFLOW}" \
+        | sed 's/^ \{10\}//' > "${DOWNLOADER}"
 }
 
 teardown() {
     rm -rf "${FIXTURE_DIR}"
+}
+
+# run_downloader <registry> <id> <api_json>: run the download step with docker and curl stubbed.
+# The API stub returns <api_json>; a curl with -o writes a placeholder VSIX; calls are logged.
+run_downloader() {
+    local registry="$1" id="$2" api_json="$3"
+    mkdir -p "${FIXTURE_DIR}/bin" "${FIXTURE_DIR}/tmp"
+    printf '%s\n' "${id}" > "${FIXTURE_DIR}/tmp/vsix-ids.txt"
+    printf '%s' "${api_json}" > "${FIXTURE_DIR}/api.json"
+    : > "${FIXTURE_DIR}/calls.log"
+    cat > "${FIXTURE_DIR}/bin/docker" << 'EOF'
+#!/bin/bash
+echo "docker $*" >> "${CALLS_LOG}"
+EOF
+    cat > "${FIXTURE_DIR}/bin/curl" << 'EOF'
+#!/bin/bash
+out=""
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+    [[ ${args[i]} == "-o" ]] && out="${args[i + 1]}"
+done
+echo "curl ${args[*]: -1}" >> "${CALLS_LOG}"
+if [[ -n ${out} ]]; then echo vsix > "${out}"; else cat "${API_JSON}"; fi
+EOF
+    chmod +x "${FIXTURE_DIR}/bin/docker" "${FIXTURE_DIR}/bin/curl"
+    run env PATH="${FIXTURE_DIR}/bin:${PATH}" CALLS_LOG="${FIXTURE_DIR}/calls.log" API_JSON="${FIXTURE_DIR}/api.json" \
+        RUNNER_TEMP="${FIXTURE_DIR}/tmp" REGISTRY="${registry}" VSIX_AUDIT_DIGEST="sha256:abc" bash "${DOWNLOADER}"
+}
+
+@test "download falls back to linux-x64 when the openvsx extension has no universal build" {
+    run_downloader openvsx "anthropic.claude-code@2.1.326" \
+        '{"downloads":{"darwin-arm64":"https://open-vsx.org/d/darwin.vsix","linux-x64":"https://open-vsx.org/d/linux-x64.vsix"}}'
+    [ "${status}" -eq 0 ]
+    grep -q "curl https://open-vsx.org/api/anthropic/claude-code/2.1.326$" "${FIXTURE_DIR}/calls.log"
+    grep -q "curl https://open-vsx.org/d/linux-x64.vsix$" "${FIXTURE_DIR}/calls.log"
+    run grep -q "download" "${FIXTURE_DIR}/calls.log"
+    [ "${status}" -eq 1 ]
+    [ -f "${FIXTURE_DIR}/tmp/vsix/anthropic.claude-code-2.1.326.vsix" ]
+}
+
+@test "download fails when the openvsx download URL is not on open-vsx.org" {
+    run_downloader openvsx "a.b@1.0.0" '{"downloads":{"universal":"https://example.invalid/b.vsix"}}'
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"unexpected Open VSX download URL"* ]]
+    [ ! -e "${FIXTURE_DIR}/tmp/vsix/a.b-1.0.0.vsix" ]
+}
+
+@test "download fails when the openvsx extension has neither a universal nor a linux-x64 build" {
+    run_downloader openvsx "a.b@1.0.0" '{"downloads":{"darwin-arm64":"https://open-vsx.org/d/b.vsix"}}'
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"no universal or linux-x64 build on Open VSX: a.b@1.0.0"* ]]
+}
+
+@test "download queries the latest openvsx version when no version is pinned" {
+    run_downloader openvsx "a.b" '{"downloads":{"universal":"https://open-vsx.org/d/b.vsix"}}'
+    [ "${status}" -eq 0 ]
+    grep -q "curl https://open-vsx.org/api/a/b$" "${FIXTURE_DIR}/calls.log"
+    [ -f "${FIXTURE_DIR}/tmp/vsix/a.b.vsix" ]
+}
+
+@test "download uses the openvsx universal build when it exists" {
+    run_downloader openvsx "a.b@1.0.0" \
+        '{"downloads":{"universal":"https://open-vsx.org/d/universal.vsix","linux-x64":"https://open-vsx.org/d/linux-x64.vsix"}}'
+    [ "${status}" -eq 0 ]
+    grep -q "curl https://open-vsx.org/d/universal.vsix$" "${FIXTURE_DIR}/calls.log"
+    run grep -q "linux-x64" "${FIXTURE_DIR}/calls.log"
+    [ "${status}" -eq 1 ]
+}
+
+@test "download uses vsix-audit for the marketplace registry" {
+    run_downloader marketplace "a.b@1.0.0" '{}'
+    [ "${status}" -eq 0 ]
+    grep -q "download a.b@1.0.0 -o /work" "${FIXTURE_DIR}/calls.log"
+    run grep -q "^curl" "${FIXTURE_DIR}/calls.log"
+    [ "${status}" -eq 1 ]
 }
 
 # run_extractor <config_files>: run the extractor inside the fixture directory.

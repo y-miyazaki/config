@@ -26,9 +26,12 @@
 #   - The image is pinned by digest: upstream publishes only the main tag to ghcr.io.
 #   - Entries without a version are scanned at the registry latest; pin versions as publisher.name@version.
 #   - Extensions are only downloaded and read, never installed or executed.
+#   - registry openvsx downloads through the Open VSX API instead of vsix-audit, which cannot choose a
+#     target platform: the universal build is used, else linux-x64 (the other platform builds are not scanned).
 #
 # Dependencies:
-#   - Network access to the extension registry and ghcr.io
+#   - Network access to the extension registry (open-vsx.org for registry openvsx) and ghcr.io
+#   - curl and jq on the runner (registry openvsx)
 #   - permissions: contents read
 #
 # References:
@@ -220,13 +223,28 @@ jobs:
           image="ghcr.io/trailofbits/vsix-audit@${VSIX_AUDIT_DIGEST}"
           docker pull --quiet "${image}"
           while IFS= read -r id; do
-            target="${id}"
             if [[ "${REGISTRY}" == "openvsx" ]]; then
-              publisher="${id%%.*}"
-              target="openvsx:${publisher}/${id#*.}"
+              # vsix-audit cannot pick a target platform, so extensions published only as platform
+              # builds (for example anthropic.claude-code) return 404. Resolve the build here.
+              name="${id%@*}"
+              version=""
+              if [[ "${id}" == *@* ]]; then version="${id#*@}"; fi
+              api="https://open-vsx.org/api/${name%%.*}/${name#*.}${version:+/${version}}"
+              url="$(curl -fsSL --max-time 60 "${api}" | jq -r '.downloads.universal // .downloads["linux-x64"] // empty')"
+              if [[ -z "${url}" ]]; then
+                echo "::error::no universal or linux-x64 build on Open VSX: ${id}"
+                exit 1
+              fi
+              if [[ "${url}" != https://open-vsx.org/* ]]; then
+                echo "::error::unexpected Open VSX download URL for ${id}: ${url}"
+                exit 1
+              fi
+              echo "Downloading: openvsx:${id} (${url##*/})"
+              curl -fsSL --max-time 300 -o "${work_dir}/${name}${version:+-${version}}.vsix" "${url}"
+              continue
             fi
             docker run --rm --mount "type=bind,src=${work_dir},dst=/work" \
-              "${image}" download "${target}" -o /work
+              "${image}" download "${id}" -o /work
           done < "${RUNNER_TEMP}/vsix-ids.txt"
 
       - name: Scan Extensions

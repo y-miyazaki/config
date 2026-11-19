@@ -582,7 +582,7 @@ Use repository validation workflows and scripts for changed assets:
 
 - `apm install --frozen`: verify deterministic package resolution
 - `ci-apm-audit` workflow: install APM packages and run `apm audit --ci` with optional `check_drift` and policy checks
-- `ci-vsix-audit` workflow: scan pinned VS Code extensions (commented-out entries ignored) with the vsix-audit `intel` and `ioc` modules (blocklist and known indicators of compromise), failing on findings at or above `severity` (default `critical`: known-indicator matches are critical, while generic wallet-like strings and duplicate ZIP paths are high); heuristic modules and `--strict` are off because they fail on mainstream extensions and bundled native binaries
+- `ci-vsix-audit` workflow: scan pinned VS Code extensions (commented-out entries ignored) with the vsix-audit `intel` and `ioc` modules (blocklist and known indicators of compromise), failing on findings at or above `severity` (default `critical`: known-indicator matches are critical, while generic wallet-like strings and duplicate ZIP paths are high); heuristic modules and `--strict` are off because they fail on mainstream extensions and bundled native binaries; with `registry: openvsx` the workflow downloads through the Open VSX API (universal build, else `linux-x64`) because vsix-audit cannot choose a target platform and returns 404 for platform-only extensions such as `anthropic.claude-code`
 - Markdown lint CI workflow: validate documentation formatting
 - GitHub Actions workflow validation: check reusable workflow syntax
 - Renovate config validation: verify shared policy JSON schema compliance
