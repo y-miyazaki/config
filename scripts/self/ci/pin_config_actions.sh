@@ -29,6 +29,8 @@ export LC_ALL=C.UTF-8
 #######################################
 DRY_RUN=false
 FORCE_TAG=false
+GIT_RETRY_ATTEMPTS=3
+GIT_RETRY_DELAY="${GIT_RETRY_DELAY:-1}"
 NO_PUSH=false
 PIN_ONLY=false
 REPO_ROOT=""
@@ -214,7 +216,7 @@ function apply_pin_sha {
 #   Progress messages to stderr
 #
 # Returns:
-#   1 when there are no YAML changes; 0 on success
+#   0 on success; 1 when there are no YAML changes; 2 when git add/commit fails
 #
 #######################################
 function commit_yaml {
@@ -233,12 +235,43 @@ function commit_yaml {
     [[ ${#targets[@]} -gt 0 ]] || return 1
     while IFS= read -r f; do
         dirty+=("${f}")
-    done < <(git diff --name-only -- "${targets[@]}")
+    done < <(git diff --name-only HEAD -- "${targets[@]}")
     [[ ${#dirty[@]} -gt 0 ]] || return 1
 
-    git add -- "${dirty[@]}"
-    git commit --no-verify -m "${message}"
+    git add -- "${dirty[@]}" || return 2
+    retry_git commit --no-verify -m "${message}" -- "${dirty[@]}" || return 2
     echo "committed: ${message}" >&2
+}
+
+#######################################
+# commit_yaml_or_skip: Commit YAML changes, tolerating only "no changes"
+#
+# Description:
+#   Wraps commit_yaml so a failed git commit aborts the run instead of being
+#   treated like an empty diff (which would let the script push stale pins).
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Commit message
+#
+# Outputs:
+#   Error message to stderr on failure
+#
+# Returns:
+#   0 when committed or nothing to commit; exits 1 when git fails
+#
+#######################################
+function commit_yaml_or_skip {
+    local rc=0
+
+    commit_yaml "$1" || rc=$?
+    if [[ ${rc} -gt 1 ]]; then
+        echo "git commit failed: $1" >&2
+        exit 1
+    fi
+    return 0
 }
 
 #######################################
@@ -329,7 +362,46 @@ function pin_all_to_head {
 
     mapfile -t files < <(all_yaml_files)
     apply_pin_sha "${sha}" "${TAG}" "${files[@]}"
-    commit_yaml "chore: ${label} ${TAG} (${sha:0:7})" || true
+    commit_yaml_or_skip "chore: ${label} ${TAG} (${sha:0:7})"
+}
+
+#######################################
+# retry_git: Run a git command, retrying transient failures
+#
+# Description:
+#   Bind-mounted checkouts can fail ref updates with "nonexistent object"
+#   right after the object is written; the object is visible a moment later.
+#   Retries the command so that race does not abort a release.
+#
+# Globals:
+#   GIT_RETRY_ATTEMPTS - Maximum attempts
+#   GIT_RETRY_DELAY    - Seconds to wait between attempts
+#
+# Arguments:
+#   $@ - git subcommand and arguments
+#
+# Outputs:
+#   Retry notices to stderr
+#
+# Returns:
+#   0 on success; the last exit status after all attempts fail
+#
+#######################################
+function retry_git {
+    local attempt=1
+    local rc=0
+
+    while true; do
+        rc=0
+        git "$@" || rc=$?
+        [[ ${rc} -eq 0 ]] && return 0
+        if [[ ${attempt} -ge ${GIT_RETRY_ATTEMPTS} ]]; then
+            return "${rc}"
+        fi
+        echo "git $1 failed (attempt ${attempt}/${GIT_RETRY_ATTEMPTS}); retrying" >&2
+        attempt=$((attempt + 1))
+        sleep "${GIT_RETRY_DELAY}"
+    done
 }
 
 #######################################
@@ -394,7 +466,7 @@ function main {
             echo "[dry-run]"
         else
             apply_pin_sha "${base_sha}" "${TAG}" "${all_files[@]}"
-            commit_yaml "chore: pin all to ${base_sha:0:7} (${TAG})" || echo "pins already up to date" >&2
+            commit_yaml_or_skip "chore: pin all to ${base_sha:0:7} (${TAG})"
         fi
         echo
         echo "Done."
@@ -407,7 +479,7 @@ function main {
         echo "[dry-run]"
     else
         apply_pin_sha "${base_sha}" "${TAG}" "${all_files[@]}"
-        commit_yaml "chore: pin all to ${TAG} (${base_sha:0:7})" || true
+        commit_yaml_or_skip "chore: pin all to ${TAG} (${base_sha:0:7})"
     fi
 
     pin_all_to_head "pin all to release"
@@ -420,7 +492,7 @@ function main {
     else
         mapfile -t files < <(all_yaml_files)
         apply_pin_sha "${release_sha}" "${TAG}" "${files[@]}"
-        commit_yaml "chore: align pins to ${TAG} (${release_sha:0:7})" || true
+        commit_yaml_or_skip "chore: align pins to ${TAG} (${release_sha:0:7})"
     fi
 
     echo "=== tag ${TAG} @ ${release_sha:0:7} ==="
@@ -431,7 +503,7 @@ function main {
         exit 1
     fi
     if [[ ${DRY_RUN} != true ]]; then
-        git tag -a -f -m "${TAG}" "${TAG}" "${release_sha}"
+        retry_git tag -a -f -m "${TAG}" "${TAG}" "${release_sha}"
         if [[ ${NO_PUSH} != true ]]; then
             git push origin HEAD
             if [[ ${FORCE_TAG} == true ]]; then
