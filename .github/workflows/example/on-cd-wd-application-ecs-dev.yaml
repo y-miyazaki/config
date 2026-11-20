@@ -35,7 +35,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: y-miyazaki/config/.github/workflows/cd-aws-ecs.yaml@c42c6f0318cf14e03d15fec4c2df4baf3e46111d # v1.9.15
+    uses: y-miyazaki/config/.github/workflows/cd-aws-ecs.yaml@d9ff57eb739c3fa32c7e45ceac80776b91fd1e30 # v1.9.15
     with:
       ecs_service_base_dir: "ecs/ecs-service/test-server"
       environment: "dev"
