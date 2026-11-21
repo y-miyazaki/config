@@ -428,6 +428,31 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.40.3.pkg"
 checksum = "sha256:be032742ff205f7f2d7c189010bbb1f3891d0a67be0b1df0fe9d3e7f5fc5ad30"
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.40.3.pkg"
 
+[[tools."aqua:aws/aws-cli"]]
+version = "2.40.3"
+backend = "aqua:aws/aws-cli"
+
+[tools."aqua:aws/aws-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.40.3.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.40.3.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.40.3.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.40.3.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-arm64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.40.3.pkg"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-x64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.40.3.pkg"
+
 [[tools."aqua:aws/aws-sam-cli"]]
 version = "1.172.1"
 backend = "aqua:aws/aws-sam-cli"
@@ -836,45 +861,73 @@ backend = "aqua:github/copilot-cli"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-arm64"]
 checksum = "sha256:491d18303505935675dc20987ef0c5f3ae899f81e66c53d567ad97a8b03e504e"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647607"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-arm64-musl"]
 checksum = "sha256:491d18303505935675dc20987ef0c5f3ae899f81e66c53d567ad97a8b03e504e"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647607"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-x64"]
 checksum = "sha256:dfe7e59acf04f0b7f59b024ea9db101a9246503e9bf7152eb668fbb2a469b151"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647868"
 
 [tools."aqua:github/copilot-cli"."platforms.linux-x64-musl"]
 checksum = "sha256:dfe7e59acf04f0b7f59b024ea9db101a9246503e9bf7152eb668fbb2a469b151"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647868"
 
 [tools."aqua:github/copilot-cli"."platforms.macos-arm64"]
 checksum = "sha256:4a4a6aa624dceb76a23e1a53fb5f64e87a0bb5a2161a5017e0edf78d7082ce68"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647606"
 
 [tools."aqua:github/copilot-cli"."platforms.macos-x64"]
 checksum = "sha256:fda4b6661269589b15447c9c6ebde96939a4cd32d08d6595a9dad6e92d1e83f5"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-darwin-x64.tar.gz"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647604"
 
 [tools."aqua:github/copilot-cli"."platforms.windows-x64"]
 checksum = "sha256:159a5e610c7b64c4b68b97a812fd7913182f372cb84ce688d81167d5277896d9"
-checksum_source = "mise-versions"
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-win32-x64.zip"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/745647602"
+
+[[tools."aqua:github/copilot-cli"]]
+version = "1.0.112"
+backend = "aqua:github/copilot-cli"
+
+[tools."aqua:github/copilot-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64"]
+checksum = "sha256:491d18303505935675dc20987ef0c5f3ae899f81e66c53d567ad97a8b03e504e"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64-musl"]
+checksum = "sha256:491d18303505935675dc20987ef0c5f3ae899f81e66c53d567ad97a8b03e504e"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64"]
+checksum = "sha256:dfe7e59acf04f0b7f59b024ea9db101a9246503e9bf7152eb668fbb2a469b151"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64-musl"]
+checksum = "sha256:dfe7e59acf04f0b7f59b024ea9db101a9246503e9bf7152eb668fbb2a469b151"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-arm64"]
+checksum = "sha256:4a4a6aa624dceb76a23e1a53fb5f64e87a0bb5a2161a5017e0edf78d7082ce68"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-darwin-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-x64"]
+checksum = "sha256:fda4b6661269589b15447c9c6ebde96939a4cd32d08d6595a9dad6e92d1e83f5"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-darwin-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.windows-x64"]
+checksum = "sha256:159a5e610c7b64c4b68b97a812fd7913182f372cb84ce688d81167d5277896d9"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.112/copilot-win32-x64.zip"
 
 [[tools."aqua:gitleaks/gitleaks"]]
 version = "8.30.1"
