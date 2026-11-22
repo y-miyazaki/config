@@ -6,6 +6,10 @@
 # Use cases:
 # - find_nodejs_projects finds projects whose path contains spaces
 # - find_nodejs_projects skips node_modules and build output
+# - filter_changed_projects keeps only projects owning changed files, using the deepest match
+# - filter_changed_projects emits nothing when no file changed
+# - filter_changed_projects ignores changed files that are not JS TS or JSON
+# - filter_changed_projects keeps a project whose file was removed
 # - run_security_audit counts a single vulnerability reported as "1 vulnerability"
 # - run_npm_install uses npm ci by default
 # - run_npm_install uses npm install with --fix
@@ -82,4 +86,58 @@ _mock_npm() {
     _mock_npm 1
     run bash -c "PATH='${BATS_TEST_TMPDIR}/bin':\$PATH; source '${VALIDATE_SCRIPT}' && (run_npm_install '${BATS_TEST_TMPDIR}/app' || echo \"rc=\$? failed=\$INSTALL_FAILED\")"
     [[ $output == *"rc=1 failed=1"* ]]
+}
+
+@test "filter_changed_projects emits nothing when no file changed" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/p1"
+    echo '{}' > "${repo}/p1/package.json"
+    bats_git_commit "${repo}" init
+    run bash -c "cd '${repo}' && source '${VALIDATE_SCRIPT}' && filter_changed_projects '${repo}/p1'"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "filter_changed_projects keeps only projects owning changed files, using the deepest match" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/p1" "${repo}/p2" "${repo}/p1/sub"
+    echo '{}' > "${repo}/package.json"
+    echo '{}' > "${repo}/p1/package.json"
+    echo '{}' > "${repo}/p2/package.json"
+    echo '{}' > "${repo}/p1/sub/package.json"
+    bats_git_commit "${repo}" init
+    echo '// c' > "${repo}/p1/sub/index.js"
+    echo '// c' > "${repo}/p2/index.js"
+    run bash -c "cd '${repo}' && source '${VALIDATE_SCRIPT}' && filter_changed_projects '${repo}' '${repo}/p1' '${repo}/p2' '${repo}/p1/sub'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${repo}/p2"$'\n'"${repo}/p1/sub" ]
+}
+
+@test "filter_changed_projects keeps a project whose file was removed" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/p1"
+    echo '{}' > "${repo}/p1/package.json"
+    echo '// c' > "${repo}/p1/index.js"
+    bats_git_commit "${repo}" init
+    rm "${repo}/p1/index.js"
+    run bash -c "cd '${repo}' && source '${VALIDATE_SCRIPT}' && filter_changed_projects '${repo}/p1'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${repo}/p1" ]
+}
+
+@test "filter_changed_projects ignores changed files that are not JS TS or JSON" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/p1"
+    echo '{}' > "${repo}/package.json"
+    echo '{}' > "${repo}/p1/package.json"
+    bats_git_commit "${repo}" init
+    echo 'x' > "${repo}/README.md"
+    echo 'x' > "${repo}/tool.sh"
+    run bash -c "cd '${repo}' && source '${VALIDATE_SCRIPT}' && filter_changed_projects '${repo}' '${repo}/p1'"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }

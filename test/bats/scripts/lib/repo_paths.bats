@@ -26,6 +26,14 @@
 # - repo_path_is_gitignored does not change the caller's nounset option
 # - repo_path_is_gitignored keeps earlier cache entries across calls
 # - repo_path_is_gitignored returns 1 for an empty path
+# - repo_emit_changed_paths emits modified, staged, and untracked files but not deleted, ignored, or unchanged ones
+# - repo_emit_changed_paths applies the regex filter and scope paths
+# - repo_emit_changed_paths re-bases absolute scopes onto the current directory
+# - repo_emit_changed_paths emits nothing outside a git work tree
+# - repo_emit_changed_paths reports both sides of a rename and resolves .. in scopes
+# - repo_emit_changed_paths emits deleted files only when REPO_PATHS_INCLUDE_DELETED is true
+# - repo_emit_changed_paths lists staged files in a repository without commits
+# - repo_nearest_ancestor_with finds the nearest directory holding the marker or fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -165,6 +173,95 @@ setup() {
     [ "${#changed[@]}" -eq 0 ]
 }
 
+@test "repo_emit_changed_paths applies the regex filter and scope paths" {
+    mkdir -p "${REPO_FIXTURE}/a" "${REPO_FIXTURE}/b"
+    printf 'x\n' > "${REPO_FIXTURE}/a/one.sh"
+    printf 'x\n' > "${REPO_FIXTURE}/b/two.sh"
+    printf 'x\n' > "${REPO_FIXTURE}/a/note.md"
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$'"
+    [ "$status" -eq 0 ]
+    [ "$output" = $'a/one.sh\nb/two.sh' ]
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$' ./a"
+    [ "$status" -eq 0 ]
+    [ "$output" = "a/one.sh" ]
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$' a/one.sh"
+    [ "$output" = "a/one.sh" ]
+}
+
+@test "repo_emit_changed_paths emits deleted files only when REPO_PATHS_INCLUDE_DELETED is true" {
+    rm "${REPO_FIXTURE}/docs/readme.md"
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths"
+    [ -z "$output" ]
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && REPO_PATHS_INCLUDE_DELETED=true repo_emit_changed_paths"
+    [ "$output" = "docs/readme.md" ]
+}
+
+@test "repo_emit_changed_paths emits modified, staged, and untracked files but not deleted, ignored, or unchanged ones" {
+    printf 'more\n' >> "${REPO_FIXTURE}/docs/readme.md"
+    printf 'new\n' > "${REPO_FIXTURE}/docs/untracked.md"
+    printf 'staged\n' > "${REPO_FIXTURE}/docs/staged.md"
+    git -C "${REPO_FIXTURE}" add docs/staged.md
+    printf 'skip\n' > "${REPO_FIXTURE}/tmp/new_ignored.txt"
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths"
+    [ "$status" -eq 0 ]
+    [ "$output" = $'docs/readme.md\ndocs/staged.md\ndocs/untracked.md' ]
+
+    rm "${REPO_FIXTURE}/docs/readme.md"
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths"
+    [[ $output != *"docs/readme.md"* ]]
+}
+
+@test "repo_emit_changed_paths emits nothing outside a git work tree" {
+    mkdir -p "${BATS_TEST_TMPDIR}/plain"
+    printf 'x\n' > "${BATS_TEST_TMPDIR}/plain/a.sh"
+    run bash -c "cd '${BATS_TEST_TMPDIR}/plain' && GIT_CEILING_DIRECTORIES='${BATS_TEST_TMPDIR}' && export GIT_CEILING_DIRECTORIES && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "repo_emit_changed_paths lists staged files in a repository without commits" {
+    local fresh="${BATS_TEST_TMPDIR}/fresh"
+    bats_git_fresh_repo "${fresh}"
+    printf 'x\n' > "${fresh}/staged.sh"
+    printf 'y\n' > "${fresh}/loose.sh"
+    git -C "${fresh}" add staged.sh
+    run bash -c "cd '${fresh}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths"
+    [ "$status" -eq 0 ]
+    [ "$output" = $'loose.sh\nstaged.sh' ]
+}
+
+@test "repo_emit_changed_paths re-bases absolute scopes onto the current directory" {
+    mkdir -p "${REPO_FIXTURE}/a" "${REPO_FIXTURE}/b"
+    printf 'x\n' > "${REPO_FIXTURE}/a/one.sh"
+    printf 'x\n' > "${REPO_FIXTURE}/b/two.sh"
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$' '${REPO_FIXTURE}/a'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "a/one.sh" ]
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$' '${REPO_FIXTURE}'"
+    [ "$output" = $'a/one.sh\nb/two.sh' ]
+
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_emit_changed_paths '\\.sh\$' /elsewhere"
+    [ -z "$output" ]
+}
+
+@test "repo_emit_changed_paths reports both sides of a rename and resolves .. in scopes" {
+    mkdir -p "${REPO_FIXTURE}/a" "${REPO_FIXTURE}/b"
+    printf 'x\n' > "${REPO_FIXTURE}/a/u.sh"
+    git -C "${REPO_FIXTURE}" add a/u.sh
+    git -C "${REPO_FIXTURE}" commit -q -m add
+    git -C "${REPO_FIXTURE}" mv a/u.sh b/u.sh
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && REPO_PATHS_INCLUDE_DELETED=true repo_emit_changed_paths '\\.sh\$'"
+    [ "$output" = $'a/u.sh\nb/u.sh' ]
+    run bash -c "cd '${REPO_FIXTURE}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && REPO_PATHS_INCLUDE_DELETED=true repo_emit_changed_paths '\\.sh\$' a/../b"
+    [ "$output" = "b/u.sh" ]
+}
+
 @test "repo_emit_tracked_paths emits non-ASCII tracked paths unquoted" {
     local emitted
 
@@ -244,6 +341,21 @@ setup() {
         ) | sort)"
 
     [ "${filtered}" = "$(printf '%s' "${expected}" | sort)" ]
+}
+
+@test "repo_nearest_ancestor_with finds the nearest directory holding the marker or fails" {
+    local root="${BATS_TEST_TMPDIR}/anc"
+    mkdir -p "${root}/a/b/c" "${root}/x[1]"
+    touch "${root}/go.mod" "${root}/a/go.mod" "${root}/x[1]/m.tf"
+    run bash -c "cd '${root}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_nearest_ancestor_with a/b/c go.mod"
+    [ "$status" -eq 0 ]
+    [ "$output" = "a" ]
+    run bash -c "cd '${root}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_nearest_ancestor_with 'x[1]' '*.tf'"
+    [ "$output" = "x[1]" ]
+    run bash -c "cd '${root}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_nearest_ancestor_with a/b/c '*.tf'"
+    [ "$status" -eq 1 ]
+    run bash -c "cd '${root}' && source '${BATS_TEST_DIRNAME}/../../../../scripts/lib/all.sh' && repo_nearest_ancestor_with a/b/c go.mod && repo_nearest_ancestor_with . go.mod"
+    [ "$output" = $'a\n.' ]
 }
 
 @test "repo_path_is_gitignored caches repeated lookups" {

@@ -173,7 +173,7 @@ Hooks invoke native binaries when present on `PATH`. Most hook tools are not ava
 command -v actionlint > /dev/null 2>&1 || exit 0
 ```
 
-Stop hooks block the agent at most `HOOK_BLOCK_LIMIT` times (default 2) per unchanged working-tree state: a hook compares the hash of the tracked diff plus untracked file content with the hash it last reported (stored with a report count per session and hook under `${TMPDIR:-/tmp}/hook-state-<uid>/`) and exits 0 without running the tool once the count reaches the limit. The session ID is read from the hook input (`session_id`, `conversation_id`, `sessionId`, or `conversationId`); when none is present, a shared `nosession` key is used. The `go_test.sh` hook runs `go test -short` (timeout from `GO_TEST_TIMEOUT`, default `90s`) only for packages that contain changed Go files.
+Stop hooks block the agent at most `HOOK_BLOCK_LIMIT` times (default 2) per unchanged working-tree state: a hook compares the hash of the tracked diff plus untracked file content with the hash it last reported (stored with a report count per session and hook under `${TMPDIR:-/tmp}/hook-state-<uid>/`) and exits 0 without running the tool once the count reaches the limit. The session ID is read from the hook input (`session_id`, `conversation_id`, `sessionId`, or `conversationId`); when none is present, a shared `nosession` key is used. The `go_test.sh` hook runs `go test -short` (timeout from `GO_TEST_TIMEOUT`, default `90s`) from each Go module root, only for packages that contain changed or removed Go files; a changed `go.mod`/`go.sum` or a removed package directory tests the whole module, and packages whose files are all excluded by build constraints are skipped. `golangci_lint.sh` selects packages the same way.
 
 Hooks exit 0 when optional native tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit.
 
@@ -215,9 +215,9 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 | common-hooks-\*       | github-actions-zizmor     | Stop                                                        | Security scan `.github` with zizmor when workflows/actions change                            |
 | common-hooks-\*       | gitleaks                  | Stop                                                        | Scan changed files for secrets with gitleaks                                                 |
 | common-hooks-\*       | gitleaks-prompt           | UserPromptSubmit / beforeSubmitPrompt / userPromptSubmitted | Scan the submitted prompt for secrets; block on Claude Code and Cursor, warn only on Copilot |
-| go-hooks-\*           | golangci-lint             | Stop                                                        | Auto-fix Go files with golangci-lint                                                         |
+| go-hooks-\*           | golangci-lint             | Stop                                                        | Auto-fix changed Go packages with golangci-lint                                              |
 | terraform-hooks-\*    | terraform-fmt             | PostToolUse                                                 | Run terraform fmt on changed files                                                           |
-| terraform-hooks-\*    | tflint                    | Stop                                                        | Run tflint on changed files                                                                  |
+| terraform-hooks-\*    | tflint                    | Stop                                                        | Run tflint on the modules of changed files                                                   |
 | shell-script-hooks-\* | shellcheck                | Stop                                                        | Run shellcheck on changed shell scripts                                                      |
 | shell-script-hooks-\* | shfmt                     | Stop                                                        | Auto-format shell scripts with shfmt                                                         |
 

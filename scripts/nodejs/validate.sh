@@ -8,6 +8,7 @@
 #     -v, --verbose  Enable verbose output
 #     -d, --dry-run  Run in dry-run mode (no changes made)
 #     -f, --fix      Automatically fix issues where possible
+#         --changed-only  Validate only projects with uncommitted git changes to JS/TS/JSON files
 #   arguments:
 #     directory      Target directory to validate (optional)
 #                    If not provided, auto-detects all Node.js projects
@@ -41,6 +42,8 @@ FIX_MODE=false
 TARGET_DIR=""
 EXIT_CODE=0
 IS_SCOPED=false
+# When true, validate only projects containing uncommitted git changes
+CHANGED_ONLY=false
 
 # Flags for individual checks
 INSTALL_FAILED=0
@@ -89,6 +92,8 @@ Options:
   -v, --verbose  Enable verbose output
   -d, --dry-run  Run in dry-run mode (no changes made)
   -f, --fix      Automatically fix issues where possible
+      --changed-only  Only projects containing JS/TS/JSON files with uncommitted git changes
+                 (staged, unstaged, untracked, deleted)
 
 Arguments:
   directory      Target directory to check (optional)
@@ -98,6 +103,7 @@ Examples:
   $(basename "$0")                                    # Auto-detect all Node.js projects
   $(basename "$0") -v                                 # Auto-detect with verbose output
   $(basename "$0") -f ./kinesis_data_firehose_cloudwatch_logs_processor  # Check specific project with auto-fix
+  $(basename "$0") --changed-only                     # Only projects with git changes
 EOF
     exit 0
 }
@@ -109,7 +115,7 @@ EOF
 #   Parses command line arguments and sets global variables accordingly
 #
 # Globals:
-#   None
+#   CHANGED_ONLY - Limit validation to projects with uncommitted git changes
 #
 # Arguments:
 #   $@ - All command line arguments passed to the script
@@ -136,6 +142,10 @@ function parse_arguments {
                 ;;
             -d | --dry-run)
                 DRY_RUN=true
+                shift
+                ;;
+            --changed-only)
+                CHANGED_ONLY=true
                 shift
                 ;;
             -f | --fix)
@@ -246,6 +256,60 @@ function check_package_sync {
         popd > /dev/null
         return 1
     fi
+}
+
+#######################################
+# filter_changed_projects: Keep only projects containing uncommitted git changes
+#
+# Description:
+#   Reads project directories from the arguments and emits those that own at least one file
+#   with uncommitted changes (staged, unstaged, untracked, deleted) to a JavaScript, TypeScript
+#   or JSON file. A changed file belongs to the deepest project directory that contains it.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Project directories
+#
+# Outputs:
+#   Project directories with changes to stdout, one per line (input order)
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   mapfile -t projects < <(filter_changed_projects "${projects[@]}")
+#
+#######################################
+function filter_changed_projects {
+    local -a abs_projects=() orig_projects=("$@")
+    local project file best_index i
+    for project in "${orig_projects[@]}"; do
+        abs_projects+=("$(cd "$project" && pwd)")
+    done
+
+    local -a owned=()
+    while IFS= read -r file; do
+        [[ -z $file ]] && continue
+        best_index=-1
+        for i in "${!abs_projects[@]}"; do
+            if [[ "$PWD/$file" == "${abs_projects[$i]}/"* ]]; then
+                if [[ $best_index -lt 0 || ${#abs_projects[$i]} -gt ${#abs_projects[$best_index]} ]]; then
+                    best_index=$i
+                fi
+            fi
+        done
+        if [[ $best_index -ge 0 ]]; then
+            owned[best_index]=1
+        fi
+    done < <(REPO_PATHS_INCLUDE_DELETED=true repo_emit_changed_paths '\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json)$')
+
+    for i in "${!abs_projects[@]}"; do
+        if [[ -n ${owned[$i]:-} ]]; then
+            printf '%s\n' "${orig_projects[$i]}"
+        fi
+    done
 }
 
 #######################################
@@ -687,6 +751,15 @@ function main {
     if [[ ${#projects[@]} -eq 0 ]]; then
         log "WARN" "No Node.js projects found in $TARGET_DIR"
         exit 0
+    fi
+
+    if [[ $CHANGED_ONLY == "true" ]]; then
+        mapfile -t projects < <(filter_changed_projects "${projects[@]}")
+        if [[ ${#projects[@]} -eq 0 ]]; then
+            log "INFO" "--changed-only: no changed Node.js projects"
+            print_validation_result nodejs 0 "changed_only=SKIP|no changed Node.js projects" || true
+            exit 0
+        fi
     fi
 
     log "INFO" "Found ${#projects[@]} Node.js project(s)"

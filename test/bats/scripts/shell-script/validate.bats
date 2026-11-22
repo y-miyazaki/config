@@ -5,6 +5,14 @@
 
 # Use cases:
 # - run_bats_tests passes --jobs and a parallel runner when one is installed
+# - parse_arguments --changed-only limits scripts and Bats suites to uncommitted git changes
+# - parse_arguments --changed-only skips scripts and tests when nothing changed
+# - parse_arguments --changed-only fails for a scope path that does not exist
+# - find_changed_shell_scripts lists sh files and executable shell-shebang files only
+# - find_changed_shell_scripts includes agent directories like a full run
+# - parse_arguments --changed-only resolves changes from the workspace root when run from a subdirectory
+# - find_paired_bats_tests emits only existing suites that mirror the given .sh paths
+# - find_paired_bats_tests honors the BATS_MIRROR_ROOT override
 # - run_bats_tests stays serial when BATS_JOBS=1
 # - print_summary_overall_result prints success and failure outcomes
 # - print_summary_statistics prints validation counters
@@ -392,6 +400,7 @@ TAP
     [ "${validation_passed}" = "true" ]
     [ "${shellcheck_passed}" = "true" ]
 }
+
 @test "find_bats_tests returns all tests when unscoped and no --tests paths" {
     IS_SCOPED=false
     TEST_PATHS=()
@@ -463,4 +472,93 @@ _mock_bats_env() {
     run bash -c "PATH='${BATS_TEST_TMPDIR}/bin':/usr/bin:/bin; BATS_JOBS=1; export BATS_JOBS; source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && TEST_PATHS=(x) && run_bats_tests '${BATS_TEST_TMPDIR}/a.bats'"
     [ "$status" -eq 0 ]
     [[ $(cat "${BATS_TEST_TMPDIR}/bats_args") != *"--jobs"* ]]
+}
+
+@test "parse_arguments --changed-only limits scripts and bats suites to uncommitted git changes" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/a" "${repo}/b"
+    echo 'x' > "${repo}/a/old.sh"
+    bats_git_commit "${repo}" init
+    echo 'x' > "${repo}/a/new.sh"
+    echo 'x' > "${repo}/b/other.sh"
+    echo 'x' > "${repo}/a/t.bats"
+    run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${repo}' && parse_arguments --changed-only a && echo \"S=\${SEARCH_PATHS[*]} T=\${TEST_PATHS[*]} SS=\$SKIP_SCRIPTS ST=\$SKIP_TESTS\""
+    [ "$status" -eq 0 ]
+    [[ $output == *"S=a/new.sh T=a/t.bats SS=false ST=false"* ]]
+}
+
+@test "parse_arguments --changed-only skips scripts and tests when nothing changed" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    echo 'x' > "${repo}/readme.md"
+    bats_git_commit "${repo}" init
+    run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${repo}' && parse_arguments --changed-only && echo \"S=\${#SEARCH_PATHS[@]} SS=\$SKIP_SCRIPTS ST=\$SKIP_TESTS\""
+    [ "$status" -eq 0 ]
+    [[ $output == *"S=0 SS=true ST=true"* ]]
+}
+
+@test "find_paired_bats_tests emits only existing suites that mirror the given sh paths" {
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && find_paired_bats_tests scripts/lib/common.sh scripts/lib/no_such_script.sh README.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = "test/bats/scripts/lib/common.bats" ]
+}
+
+@test "parse_arguments --changed-only resolves changes from the workspace root when run from a subdirectory" {
+    local root
+    root="$(bats_workspace_root)"
+    run bash -c "cd '${root}/scripts/lib' && source '${root}/scripts/shell-script/validate.sh' && parse_arguments --changed-only && echo \"PWD=\$PWD\" && [[ \${SEARCH_PATHS[*]} == *scripts/shell-script/validate.sh* ]]"
+    [ "$status" -eq 0 ]
+    [[ $output == *"PWD=${root}"* ]]
+}
+
+@test "find_changed_shell_scripts lists sh files and executable shell-shebang files only" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/tools" "${repo}/bin"
+    echo 'x' > "${repo}/readme.md"
+    bats_git_commit "${repo}" init
+    printf '#!/bin/bash\n' > "${repo}/tools/deploy"
+    chmod +x "${repo}/tools/deploy"
+    printf '#!/bin/bash\n' > "${repo}/tools/not_exec"
+    printf '#!/usr/bin/env python3\n' > "${repo}/tools/tool"
+    chmod +x "${repo}/tools/tool"
+    printf 'echo hi\n' > "${repo}/lib.sh"
+    printf '#!/bin/sh\n' > "${repo}/bin/run"
+    chmod +x "${repo}/bin/run"
+    run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && find_changed_shell_scripts"
+    [ "$status" -eq 0 ]
+    [ "$output" = $'bin/run\nlib.sh\ntools/deploy' ]
+}
+
+@test "parse_arguments --changed-only fails for a scope path that does not exist" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    echo x > "${repo}/readme.md"
+    bats_git_commit "${repo}" init
+    run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${repo}' && parse_arguments --changed-only no/such/path"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Path does not exist"* ]]
+}
+
+@test "find_paired_bats_tests honors the BATS_MIRROR_ROOT override" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    mkdir -p "${repo}/scripts" "${repo}/spec/scripts"
+    echo x > "${repo}/scripts/a.sh"
+    echo x > "${repo}/spec/scripts/a.bats"
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${repo}' BATS_MIRROR_ROOT=spec find_paired_bats_tests scripts/a.sh"
+    [ "$status" -eq 0 ]
+    [ "$output" = "spec/scripts/a.bats" ]
+}
+
+@test "find_changed_shell_scripts includes agent directories like a full run" {
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/.claude/skills/x"
+    echo x > "${repo}/readme.md"
+    bats_git_commit "${repo}" init
+    echo 'echo hi' > "${repo}/.claude/skills/x/run.sh"
+    run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && find_changed_shell_scripts"
+    [ "$status" -eq 0 ]
+    [ "$output" = ".claude/skills/x/run.sh" ]
 }

@@ -8,6 +8,10 @@
 # - a changed package with passing tests exits silently
 # - unchanged packages are not tested even when their tests fail
 # - changed Go files outside any Go module are skipped
+# - a changed go.mod tests every package of the module
+# - a removed Go file still tests its surviving package
+# - a removed package directory tests the whole module
+# - a changed package whose files are all excluded by build constraints is skipped
 # - an unchanged failing state blocks twice by default, then is skipped
 # - every agent package ships the script and its hook config
 
@@ -102,4 +106,36 @@ run_hook() {
         grep -q 'go test -short -timeout' "${script}"
         grep -q 'go_test.sh' "${ROOT}/.apm/packages/go-hooks-${agent}/.apm/hooks/go-test.json"
     done
+}
+
+@test "a changed go.mod tests every package of the module" {
+    printf '\n// touch\n' >> "${REPO}/go.mod"
+    run_hook
+    [ "$status" -eq 0 ]
+    [[ ${output} == *'"decision": "block"'* ]]
+    [[ ${output} == *'boom'* ]]
+}
+
+@test "a removed Go file still tests its surviving package" {
+    rm "${REPO}/good/good.go"
+    run_hook
+    [ "$status" -eq 0 ]
+    [[ ${output} == *'"decision": "block"'* ]]
+    [[ ${output} == *'go test failed'* ]]
+}
+
+@test "a removed package directory tests the whole module" {
+    rm -r "${REPO}/good"
+    run_hook
+    [ "$status" -eq 0 ]
+    [[ ${output} == *'"decision": "block"'* ]]
+    [[ ${output} == *'boom'* ]]
+}
+
+@test "a changed package whose files are all excluded by build constraints is skipped" {
+    mkdir -p "${REPO}/ign"
+    printf '//go:build ignore\n\npackage ign\n' > "${REPO}/ign/i.go"
+    run_hook
+    [ "$status" -eq 0 ]
+    [ -z "${output}" ]
 }
