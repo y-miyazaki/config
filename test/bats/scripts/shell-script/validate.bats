@@ -505,11 +505,17 @@ _mock_bats_env() {
 }
 
 @test "parse_arguments --changed-only resolves changes from the workspace root when run from a subdirectory" {
-    local root
-    root="$(bats_workspace_root)"
-    run bash -c "cd '${root}/scripts/lib' && source '${root}/scripts/shell-script/validate.sh' && parse_arguments --changed-only && echo \"PWD=\$PWD\" && [[ \${SEARCH_PATHS[*]} == *scripts/shell-script/validate.sh* ]]"
+    local repo="${BATS_TEST_TMPDIR}/repo"
+    bats_git_fresh_repo "${repo}"
+    mkdir -p "${repo}/sub/deep"
+    echo 'x' > "${repo}/readme.md"
+    bats_git_commit "${repo}" init
+    echo 'x' > "${repo}/top.sh"
+    run bash -c "cd '${repo}/sub/deep' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && parse_arguments --changed-only && echo \"PWD=\$PWD\" && echo \"S=\${SEARCH_PATHS[*]}\" && echo \"WR=\$WORKSPACE_ROOT\""
     [ "$status" -eq 0 ]
-    [[ $output == *"PWD=${root}"* ]]
+    [[ $output == *"PWD=${repo}/sub/deep"* ]]
+    [[ $output == *"S=top.sh"* ]]
+    [[ $output == *"WR=${repo}"* ]]
 }
 
 @test "find_changed_shell_scripts lists sh files and executable shell-shebang files only" {
