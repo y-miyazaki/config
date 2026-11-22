@@ -50,6 +50,10 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 
 `shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool). The sync is hook-covered too: do not run `apm install`/sync by hand, and omit the sync targets (`.claude/`, `.cursor/`, `.github/hooks`, `apm_modules/`) from Completion — no "not yet synced", "pending sync", or "uncommitted" notes.
 
+## AGENTS.md portability (MUST)
+
+`AGENTS.md` is a generic agent constitution meant to be reused across repositories. Do not write repo-specific names in it (paths, skill names, tool names, hook lists, sync targets); put those in this file or the nearest `CLAUDE.md`.
+
 ## Conventions
 
 | Topic           | Rule             |
