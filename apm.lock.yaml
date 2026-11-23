@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-22T04:25:46.260582+00:00'
+generated_at: '2026-11-23T12:42:24.010001+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -89,6 +89,8 @@ dependencies:
   - .agents/skills/markdown-validation/scripts/validate.sh
   - .claude/agents/test-engineer.md
   - .claude/rules/agent-skills.md
+  - .claude/rules/claude-settings.md
+  - .claude/rules/cursor-settings.md
   - .claude/rules/instructions.md
   - .claude/rules/markdown.md
   - .claude/skills/agent-skills-review
@@ -173,6 +175,8 @@ dependencies:
   - .claude/skills/markdown-validation/scripts/validate.sh
   - .cursor/agents/test-engineer.md
   - .cursor/rules/agent-skills.mdc
+  - .cursor/rules/claude-settings.mdc
+  - .cursor/rules/cursor-settings.mdc
   - .cursor/rules/instructions.mdc
   - .cursor/rules/markdown.mdc
   deployed_file_hashes:
@@ -254,6 +258,8 @@ dependencies:
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
     .claude/agents/test-engineer.md: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
     .claude/rules/agent-skills.md: sha256:8ed6b5a1d827010f9bf2c3dbfc51e931865f034bb636e3736cfff95a8e34c94d
+    .claude/rules/claude-settings.md: sha256:7a11346bf695246e83e202ffee7b09f480ac8ff1cf89ecd9170a80ffa3d1903c
+    .claude/rules/cursor-settings.md: sha256:a95d8699a466a3f182d114d7ea1b0e66f6188a334261976a2531c93b6aa98a17
     .claude/rules/instructions.md: sha256:27318b9c03647fba11a0ab2f1fe572e4cd0c5ade238e3e27989acb558f502ef4
     .claude/rules/markdown.md: sha256:67c019eba7931bf52778706d22a623568f1974239b65789d44630112179deae7
     .claude/skills/agent-skills-review/SKILL.md: sha256:c350cf2ac0195caa1dd5092e2000fab58edf8c9f9fa529ee0323d2367dcb25c5
@@ -334,11 +340,13 @@ dependencies:
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
     .cursor/agents/test-engineer.md: sha256:e4454632ab953fd0569f5cbc609e55eb30fd27ed13319fcffbd092e8bb2e6ffa
     .cursor/rules/agent-skills.mdc: sha256:bf1d491a9e6c43371389c304d28c2aae3c11d7e87a942e5ebd300d929970396b
+    .cursor/rules/claude-settings.mdc: sha256:ea3ae11b20131657082426810672f946222a6aced0821e331946b07bd92fabb6
+    .cursor/rules/cursor-settings.mdc: sha256:ed678ed4f5237213a594083999b3108a5b3423ad7624dbe4a895e7589c189023
     .cursor/rules/instructions.mdc: sha256:1e1080bb01e9172c6bba3c14e65599b7d77eff6bdf562d59585f5e470a0e4866
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:b732245d90461ed50f97811fd8468365c4fc2dd815bf9017549bc5a981ffffbb
+  content_hash: sha256:ec6b19deaa82e070d4fde3d8e21e99023af87c9a28d2308d550500fbbc08e4bb
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -2704,6 +2712,24 @@ deployments:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
   content_hash: sha256:1d17f095e9ced10a07b6a088c47de639f99f07f6d07647f592faa8373915d73d
+- kind: project-relative
+  target: claude
+  value: .claude/rules/claude-settings.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:7a11346bf695246e83e202ffee7b09f480ac8ff1cf89ecd9170a80ffa3d1903c
+- kind: project-relative
+  target: claude
+  value: .claude/rules/cursor-settings.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:a95d8699a466a3f182d114d7ea1b0e66f6188a334261976a2531c93b6aa98a17
 - kind: project-relative
   target: claude
   value: .claude/rules/github-actions-workflow.md
@@ -13675,6 +13701,24 @@ deployments:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
   content_hash: sha256:f4cbb6ae99732d01905ae2b853475745ce3604f504abf3eb8a3d27fbe4a88f71
+- kind: project-relative
+  target: cursor
+  value: .cursor/rules/claude-settings.mdc
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:ea3ae11b20131657082426810672f946222a6aced0821e331946b07bd92fabb6
+- kind: project-relative
+  target: cursor
+  value: .cursor/rules/cursor-settings.mdc
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:ed678ed4f5237213a594083999b3108a5b3423ad7624dbe4a895e7589c189023
 - kind: project-relative
   target: cursor
   value: .cursor/rules/github-actions-workflow.mdc

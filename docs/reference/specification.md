@@ -85,7 +85,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── common/          # Shared workflows, documentation, and tools
 │   ├── apm.yml      # 5 MCP servers
 │   └── .apm/
-│       ├── instructions/  # 4 instruction files
+│       ├── instructions/  # 5 instruction files
 │       └── skills/        # 12 skills (includes loop domain skills)
 ├── common-hooks-claude/   # Common hooks for Claude Code (6 hooks)
 ├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (6 hooks)
@@ -280,16 +280,18 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 
 Instructions are defined under each package's `.apm/instructions/` directory.
 
-| Package      | Instruction             | Scope                                |
-| ------------ | ----------------------- | ------------------------------------ |
-| common       | agent-skills            | Agent skill files                    |
-| common       | github-actions-workflow | GitHub Actions workflows             |
-| common       | instructions            | Instruction files                    |
-| common       | markdown                | Markdown files                       |
-| go           | go                      | `**/*.go`                            |
-| terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
-| shell-script | shell-script            | `**/*.sh`                            |
-| shell-script | bats                    | `**/*.bats`                          |
+| Package      | Instruction             | Scope                                                                |
+| ------------ | ----------------------- | -------------------------------------------------------------------- |
+| common       | agent-skills            | Agent skill files                                                    |
+| common       | claude-settings         | `.claude/settings.json`, `.claude/settings.local.json`               |
+| common       | cursor-settings         | `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/hooks.json` |
+| common       | github-actions-workflow | GitHub Actions workflows                                             |
+| common       | instructions            | Instruction files                                                    |
+| common       | markdown                | Markdown files                                                       |
+| go           | go                      | `**/*.go`                                                            |
+| terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl`                                 |
+| shell-script | shell-script            | `**/*.sh`                                                            |
+| shell-script | bats                    | `**/*.bats`                                                          |
 
 ### Scope
 

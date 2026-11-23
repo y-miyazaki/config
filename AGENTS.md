@@ -34,7 +34,7 @@ Every rule is mandatory.
 - Never weaken, remove, or bypass tests or validations solely to make checks pass.
 - Fix the root cause; do not suppress errors or warnings, special-case test inputs, or add retries or sleeps to hide a failure unless the request asks for it.
 - Do not rely on training knowledge for version-specific APIs, library behavior, or toolchain details. Verify, in this order: repository code, tests, and docs; then official primary sources (vendor documentation, release notes, source repository) via a documentation tool or web fetch.
-- Do not manually run lint, format, or static-analysis checks that hooks, pre-commit, or CI already run automatically; act on their output instead. Run the tests for the changed behavior yourself, except tests a hook already runs (for example a test hook on file save or session stop); for those, act on the hook output. Never bypass or disable hooks.
+- Do not manually run lint, format, or static-analysis checks that hooks, pre-commit, or CI already run automatically; act on their output instead. Run the tests for the changed behavior yourself, except tests a hook already runs (for example a test hook on file save or session stop); for those, act on the hook output (a targeted run in the test-first red/green loop is allowed). Never bypass or disable hooks.
 
 ## Fixing Bugs and Anti-Patterns
 
@@ -80,6 +80,6 @@ Every rule is mandatory.
 2. **Verification:** What was verified (behavior/tests), deferred, or unavailable — lint/format re-runs are not required proof. State the self-review performed (skill or manual), its findings and dispositions, and any exception taken from Tests or Self-Review with its reason. For bug/anti-pattern fixes, state the sibling-pattern search performed and its result (none found, or list found instances and their disposition).
 3. **Risks:** Assumptions made, residual risks, and off-scope findings or suggestions (siblings, simplifications, review findings, alternatives).
 
-Do not report checks that hooks, pre-commit, or CI run automatically as not run, pending, or skipped; omit them entirely. Do not state the obvious (the request itself, what a tool call already showed).
+Do not mention automatic processes (checks, formatters, syncs, generators) or their pending, unsynced, or uncommitted output in any message; omit them entirely. Report one only when it failed and the user must act. State only what the user cannot see from the tool results.
 
 Investigation-only or question-only responses skip this format, but still mark unverified claims as such.
