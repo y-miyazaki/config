@@ -6,7 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-23T10:05:44Z","loop_name":"changelog","duration_s":44,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"39936521500","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-25T10:12:39Z","loop_name":"refactor","duration_s":13,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"40183805233"}
 {"run_id":"2026-10-26T08:38:32Z","loop_name":"tech-debt","duration_s":896,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40291933085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-26T09:11:04Z","loop_name":"docs-updater","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40297552015"}
@@ -337,3 +336,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-22T10:08:51Z","loop_name":"refactor","duration_s":47,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"45010912952","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","target_key":"integration:main"}
 {"run_id":"2026-11-22T12:12:28Z","loop_name":"github-issue-autofix","duration_s":22,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"45021040550","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
 {"run_id":"2026-11-22T15:24:15Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"45038077278","skip_detail":"integration:main: consecutive_failures 3"}
+{"run_id":"2026-11-23T08:26:40Z","loop_name":"tech-debt","duration_s":795,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"45136852854","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","target_key":"integration:main"}
