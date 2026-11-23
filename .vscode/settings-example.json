@@ -77,48 +77,59 @@
   // for AI Assistant (Cursor)
   // ------------------------------------------------------------
   "cursor.general.globalCursorIgnoreList": [
+    // AI tool configs
+    "**/.copilot",
+    "**/.kiro",
+    "**/.serena",
+    "**/apm_modules",
+    // Go
+    "**/.serverless",
+    "**/bin",
+    "**/cover.out",
+    "**/coverage",
+    "**/coverage.html",
+    "**/dist",
+    "**/output",
+    "**/vendor",
+    // Large auto-generated config
+    "**/.gitleaks.toml",
+    "**/.golangci.yaml",
+    // Lock files
+    "**/.terraform.lock.hcl",
+    "**/apm.lock.yaml",
+    "**/aqua-checksums.json",
+    "**/go.sum",
+    "**/mise.lock",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    // Node
+    "**/node_modules",
+    // OS / Temp
+    "**/.DS_Store",
+    "**/tmp",
+    // Python
+    "**/.Python",
+    "**/.venv",
+    "**/__pycache__",
     // Secrets / Credentials
     "**/.env",
     "**/.env.*",
+    "**/.env.*.local",
+    "**/.env.local",
     "**/credentials/**",
     "**/secrets/**",
     "**/*.key",
     "**/*.p12",
     "**/*.pem",
     "**/*.pfx",
-    // AI tool configs
-    "**/.copilot",
-    "**/.kiro",
-    "**/.serena",
-    "**/apm_modules",
     // Terraform
     "**/.terraform",
     "**/.terraform.d",
+    "**/*.tfbackend",
     "**/*.tfstate",
     "**/*.tfstate.*",
-    "**/builds",
-    // Go / Node / Python
-    "**/bin",
-    "**/coverage",
-    "**/dist",
-    "**/vendor",
-    "**/output",
-    "**/node_modules",
-    "**/__pycache__",
-    "**/.venv",
-    // Temp
-    "**/tmp",
-    // Lock files
-    "**/go.sum",
-    "**/package-lock.json",
-    "**/yarn.lock",
-    "**/.terraform.lock.hcl",
-    "**/mise.lock",
-    "**/apm.lock.yaml",
-    // Large auto-generated config
-    "**/.golangci.yaml",
-    "**/.gitleaks.toml",
-    "**/aqua-checksums.json"
+    "**/*.tfvars",
+    "**/builds"
   ],
   "cursor-retrieval.canAttemptGithubLogin": true,
   // ------------------------------------------------------------
@@ -151,7 +162,7 @@
     "windsurf": true,
     "cursor-global": true,
     "cursor-workspace": true
-  },
+},
   "chat.tools.terminal.autoApprove": {
     "/.*/": true,
     "curl": true,
@@ -234,66 +245,75 @@
   "files.exclude": {
     "**/.env.*.local": true,
     "**/.env.local": true,
-    "**/credentials/**": true,
-    "**/node_modules": true,
-    "**/secrets/**": true,
     "**/*.key": true,
     "**/*.p12": true,
     "**/*.pem": true,
-    "**/*.pfx": true
+    "**/*.pfx": true,
+    "**/credentials/**": true,
+    "**/node_modules": true,
+    "**/secrets/**": true
   },
   "files.insertFinalNewline": true,
   "search.exclude": {
-    // Security
+    // AI tool configs
+    "**/.copilot": true,
+    "**/.kiro": true,
+    "**/.serena": true,
+    "**/apm_modules": true,
+    // Go
+    "**/coverage": true,
+    "**/dist": true,
+    "**/output": true,
+    "**/vendor": true,
+    // Lock files
+    "**/.terraform.lock.hcl": true,
+    "**/apm.lock.yaml": true,
+    "**/aqua-checksums.json": true,
+    "**/go.sum": true,
+    "**/mise.lock": true,
+    "**/package-lock.json": true,
+    "**/yarn.lock": true,
+    // Node
+    "**/node_modules": true,
+    // OS / Temp
+    "**/tmp": true,
+    // Python
+    "**/.venv": true,
+    "**/__pycache__": true,
+    // Secrets / Credentials
     "**/credentials/**": true,
     "**/secrets/**": true,
     "**/*.key": true,
     "**/*.p12": true,
     "**/*.pem": true,
     "**/*.pfx": true,
+    // Terraform
+    "**/.terraform": true
+  },
+  "files.watcherExclude": {
     // AI tool configs
     "**/.copilot": true,
     "**/.kiro": true,
     "**/.serena": true,
     "**/apm_modules": true,
-    // Terraform
-    "**/.terraform": true,
-    // Go / Node / Python
-    "**/node_modules": true,
-    "**/vendor": true,
-    "**/output": true,
+    // Go
     "**/coverage": true,
-    "**/__pycache__": true,
-    "**/.venv": true,
-    // Temp / Generated
-    "**/tmp": true,
     "**/dist": true,
-    "**/aqua-checksums.json": true,
-    // Lock files
-    "**/go.sum": true,
-    "**/package-lock.json": true,
-    "**/yarn.lock": true,
-    "**/.terraform.lock.hcl": true,
-    "**/mise.lock": true,
-    "**/apm.lock.yaml": true
-  },
-  "files.watcherExclude": {
+    "**/output": true,
+    "**/vendor": true,
+    // Node
+    "**/node_modules": true,
+    // OS / Temp
     "**/.git": true,
-    "**/.copilot": true,
-    "**/.kiro": true,
-    "**/.serena": true,
-    "**/.terraform": true,
-    "**/apm_modules": true,
-    "**/coverage": true,
-    "**/credentials": true,
-    "**/dist": true,
-    "**/node_modules": true,
-    "**/output": true,
-    "**/secrets": true,
     "**/tmp": true,
-    "**/vendor": true,
+    // Python
     "**/.venv": true,
-    "**/__pycache__": true
+    "**/__pycache__": true,
+    // Secrets / Credentials
+    "**/credentials": true,
+    "**/secrets": true,
+    // Terraform
+    "**/.terraform": true
   },
   // ------------------------------------------------------------
   // for Golang
@@ -444,7 +464,10 @@
   },
   // ------------------------------------------------------------
   // for Json
-  //  ------------------------------------------------------------
+  // ------------------------------------------------------------
+  "json.format.enable": true,
+  "json.schemaDownload.enable": true,
+  "json.validate.enable": true,
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -460,6 +483,7 @@
   //  ------------------------------------------------------------
   "markdown.extension.completion.enabled": true,
   "markdown.extension.tableFormatter.enabled": true,
+  "markdown.extension.list.indentationSize": "inherit",
   "markdown.extension.toc.updateOnSave": true,
   "markdownlint.lintWorkspaceGlobs": [
     "**/*.{md,mkd,mdwn,mdown,markdown,markdn,mdtxt,mdtext,workbook}",
