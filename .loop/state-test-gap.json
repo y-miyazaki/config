@@ -1,7 +1,7 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-11-16T10:10:58Z",
+      "last_run": "2026-11-23T10:10:56Z",
       "outcome": "error",
       "consecutive_failures": 0,
       "open_rejections": [],
