@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-23T12:42:24.010001+00:00'
+generated_at: '2026-11-24T02:40:45.540158+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -346,7 +346,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:75df65f44fd4f213387152822fd5d3e09b52b1d2f94a252f070ffd82e32659a7
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:ec6b19deaa82e070d4fde3d8e21e99023af87c9a28d2308d550500fbbc08e4bb
+  content_hash: sha256:1035a33c9f69c95838ca174d13cdee42a0ced99c66d117c147a1820689aa3882
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -13790,7 +13790,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:e2ab020a5e02b88807b45017cc4745a1afbd46fe4598a872b03e70b9762929a9
+  content_hash: sha256:dbf62557e19c667dbacfc3b4a1aeee307d9329a7fd87796f84985fd19d7eeb51
 - kind: uri
   target: mcp
   value: fetch
@@ -13866,7 +13866,7 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - '@upstash/context7-mcp@4.7.0'
+    - '@upstash/context7-mcp@4.7.1'
     registry: false
     command: npx
   fetch:

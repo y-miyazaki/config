@@ -4,6 +4,7 @@
 # Tests for env/common/scripts/on_create.sh, update_content.sh, post_create.sh and post_start.sh
 #
 # Use cases:
+# - adjust_ownership chowns existing config paths including ~/.claude and skips missing ones
 # - every lifecycle script prints usage on --help and fails on an unknown argument
 # - each lifecycle script runs exactly its own steps in the documented order
 # - update_content installs mise tools and the global node before apm, aqua, pre-commit and tflint
@@ -36,6 +37,23 @@ run_steps() {
         resolve_repo_root() { printf /nowhere; }
         main
     "
+}
+
+@test "adjust_ownership chowns existing config paths including .claude and skips missing ones" {
+    local fake_home="${BATS_TEST_TMPDIR}/home" fake_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${fake_home}/.claude" "${fake_home}/.aws" "${fake_bin}"
+    printf '#!/bin/bash\necho "$*" >> "%s/sudo.log"\n' "${BATS_TEST_TMPDIR}" > "${fake_bin}/sudo"
+    chmod +x "${fake_bin}/sudo"
+    run bash -c "
+        export HOME='${fake_home}' PATH='${fake_bin}':\"\${PATH}\"
+        source '${REPO_ROOT}/env/common/scripts/lib/init_steps.sh'
+        adjust_ownership
+    "
+    [ "$status" -eq 0 ]
+    grep -q "chown -R .* ${fake_home}/.claude\$" "${BATS_TEST_TMPDIR}/sudo.log"
+    grep -q "chown -R .* ${fake_home}/.aws\$" "${BATS_TEST_TMPDIR}/sudo.log"
+    run grep -q "\.ssh\|\.gitconfig\|\.local" "${BATS_TEST_TMPDIR}/sudo.log"
+    [ "$status" -eq 1 ]
 }
 
 @test "every lifecycle script fails on an unknown argument" {
