@@ -1,6 +1,6 @@
 module github.com/y-miyazaki/config/cmd/terraform
 
-go 1.26.11
+go 1.27.4
 
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
