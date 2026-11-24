@@ -8,6 +8,7 @@
 # - every lifecycle script prints usage on --help and fails on an unknown argument
 # - each lifecycle script runs exactly its own steps in the documented order
 # - update_content installs mise tools and the global node before apm, aqua, pre-commit and tflint
+# - install_apm runs apm install --frozen, warns with lockfile recovery steps on failure, and skips without apm.yml
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -36,6 +37,24 @@ run_steps() {
         done
         resolve_repo_root() { printf /nowhere; }
         main
+    "
+}
+
+# run_install_apm: Run install_apm with a stub apm that exits with the given status
+# Arguments:
+#   $1 - exit status of the stub apm
+#   $2 - "with-yml" to create apm.yml in the repo root, anything else to omit it
+run_install_apm() {
+    local apm_status="$1" yml="$2" fake_bin="${BATS_TEST_TMPDIR}/bin" root="${BATS_TEST_TMPDIR}/repo"
+    mkdir -p "${fake_bin}" "${root}"
+    [[ ${yml} == with-yml ]] && touch "${root}/apm.yml"
+    printf '#!/bin/bash\necho "apm $*" >> "%s/apm.log"\nexit %s\n' "${BATS_TEST_TMPDIR}" "${apm_status}" > "${fake_bin}/apm"
+    chmod +x "${fake_bin}/apm"
+    run bash -c "
+        export PATH='${fake_bin}':\"\${PATH}\"
+        source '${REPO_ROOT}/env/common/scripts/lib/init_steps.sh'
+        REPO_ROOT='${root}'
+        install_apm
     "
 }
 
@@ -73,6 +92,28 @@ run_steps() {
         [[ $output == *"Usage: ${script}.sh"* ]]
     done
 }
+
+@test "install_apm runs apm install --frozen and prints no warning on success" {
+    run_install_apm 0 with-yml
+    [ "$status" -eq 0 ]
+    grep -qx "apm install --frozen" "${BATS_TEST_TMPDIR}/apm.log"
+    [[ $output != *"[warn]"* ]]
+}
+
+
+@test "install_apm skips apm when apm.yml is absent" {
+    run_install_apm 1 no-yml
+    [ "$status" -eq 0 ]
+    [ ! -f "${BATS_TEST_TMPDIR}/apm.log" ]
+}
+
+@test "install_apm warns with the lockfile recovery steps when the frozen install fails" {
+    run_install_apm 1 with-yml
+    [ "$status" -eq 0 ]
+    [[ $output == *"[warn] apm install --frozen failed"* ]]
+    [[ $output == *"apm install"*"apm.lock.yaml"* ]]
+}
+
 
 @test "on_create runs only the ownership step" {
     run_steps on_create.sh
