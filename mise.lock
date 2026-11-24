@@ -403,6 +403,7 @@ provenance = "github-attestations"
 [[tools."aqua:aws/aws-cli"]]
 version = "2.40.4"
 backend = "aqua:aws/aws-cli"
+unsupported_platforms = ["windows-x64"]
 
 [tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
 checksum = "sha256:88961950fb3ef0b7190b40a1bccad0308b69186dbc575cb7c999b8c18959c635"
@@ -456,6 +457,7 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.40.4.pkg"
 [[tools."aqua:aws/aws-sam-cli"]]
 version = "1.172.1"
 backend = "aqua:aws/aws-sam-cli"
+unsupported_platforms = ["windows-x64"]
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-arm64"]
 checksum = "sha256:fcfc7cd414a75cc17a00c81110b2955ab52b6fae1dd8b7415d637ca95ca931df"
@@ -521,6 +523,7 @@ url = "https://github.com/aws/aws-sam-cli/releases/download/v1.172.1/aws-sam-cli
 [[tools."aqua:bats-core/bats-core"]]
 version = "1.14.0"
 backend = "aqua:bats-core/bats-core"
+unsupported_platforms = ["windows-x64"]
 
 [tools."aqua:bats-core/bats-core"."platforms.linux-arm64"]
 checksum = "sha256:bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177"
@@ -2532,6 +2535,7 @@ provenance = "github-attestations"
 [[tools."aqua:swaggo/swag"]]
 version = "1.16.6"
 backend = "aqua:swaggo/swag"
+unsupported_platforms = ["windows-x64"]
 
 [tools."aqua:swaggo/swag"."platforms.linux-arm64"]
 checksum = "sha256:0a2890b2ab31f37da92a45d27b4cc78501bb74720b1df0932d59377527c366e9"
@@ -3267,6 +3271,7 @@ backend = "pipx:yamllint"
 [[tools.pnpm]]
 version = "11.28.12"
 backend = "aqua:pnpm/pnpm"
+unsupported_platforms = ["macos-x64"]
 
 [tools.pnpm."platforms.linux-arm64"]
 checksum = "sha256:9aa42310dfeca6153a22a57211f6ad08f33be3c0b1b86356b11da3c1de1b44ee"
