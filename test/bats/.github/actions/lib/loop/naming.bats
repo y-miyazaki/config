@@ -24,7 +24,10 @@ source "${_bats_support}/support/common.bash"
             bad+="${stem}.sh: ${name}"$'\n'
         done < <(sed -nE 's/^function ([A-Za-z0-9_]+).*/\1/p' "${file}")
     done
-    [ -z "${bad}" ] || { printf '%s' "${bad}" >&2; return 1; }
+    [ -z "${bad}" ] || {
+        printf '%s' "${bad}" >&2
+        return 1
+    }
 }
 
 @test "no validate_*.sh remains in lib/loop" {

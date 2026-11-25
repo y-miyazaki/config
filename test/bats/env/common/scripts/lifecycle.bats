@@ -100,7 +100,6 @@ run_install_apm() {
     [[ $output != *"[warn]"* ]]
 }
 
-
 @test "install_apm skips apm when apm.yml is absent" {
     run_install_apm 1 no-yml
     [ "$status" -eq 0 ]
@@ -113,7 +112,6 @@ run_install_apm() {
     [[ $output == *"[warn] apm install --frozen failed"* ]]
     [[ $output == *"apm install"*"apm.lock.yaml"* ]]
 }
-
 
 @test "on_create runs only the ownership step" {
     run_steps on_create.sh

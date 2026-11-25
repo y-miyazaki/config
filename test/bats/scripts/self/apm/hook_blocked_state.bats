@@ -178,17 +178,26 @@ EOF
             body=$(awk -v s="function ${fn} " 'index($0,s)==1{p=1} p{print} p&&/^}/{exit}' "$f")
             if [ -z "$body" ]; then
                 # the prompt hook and terraform_fmt have no event helpers
-                [[ $name == gitleaks_prompt.sh || $name == terraform_fmt.sh ]] || { echo "${fn} missing in ${f}"; return 1; }
+                [[ $name == gitleaks_prompt.sh || $name == terraform_fmt.sh ]] || {
+                    echo "${fn} missing in ${f}"
+                    return 1
+                }
                 continue
             fi
             # the PostToolUse formatters have no blocked-state gate and so no record_blocked_state call
             [[ $name == prettier.sh || $name == shfmt.sh ]] && body=$(printf '%s\n' "$body" | sed '/^    record_blocked_state$/d')
             if [[ $fn == report_failure && $name != prettier.sh && $name != shfmt.sh ]]; then
-                printf '%s\n' "$body" | grep -q '^    record_blocked_state$' || { echo "record_blocked_state missing in ${f}"; return 1; }
+                printf '%s\n' "$body" | grep -q '^    record_blocked_state$' || {
+                    echo "record_blocked_state missing in ${f}"
+                    return 1
+                }
                 body=$(printf '%s\n' "$body" | sed '/^    record_blocked_state$/d')
             fi
             [ -z "$want" ] && want="$body"
-            [ "$body" = "$want" ] || { echo "${fn} differs in ${f}"; return 1; }
+            [ "$body" = "$want" ] || {
+                echo "${fn} differs in ${f}"
+                return 1
+            }
         done
         [ -n "$want" ]
     done

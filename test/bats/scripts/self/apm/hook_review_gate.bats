@@ -133,7 +133,7 @@ _run_hook() {
 }
 
 @test "a hand-edited settings file counts as a change but a synced skill file does not" {
-    mkdir -p "${REPO}/.claude/skills" 
+    mkdir -p "${REPO}/.claude/skills"
     printf 'x\n' > "${REPO}/.claude/skills/s.md"
     printf '{}\n' > "${REPO}/.claude/settings.json"
     _edit
