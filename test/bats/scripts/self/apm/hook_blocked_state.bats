@@ -12,6 +12,7 @@
 #   (Cursor), sessionId (Copilot agentStop) or conversationId (Antigravity), falling back to a shared key
 # - untracked file content participates in the state hash
 # - every Stop hook script in every agent package defines the gate functions
+# - report_failure and the event helpers are the same text in every hook script (apm cannot ship a lib)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -154,16 +155,41 @@ EOF
 }
 
 @test "compute_state_hash is empty-safe outside git and differs for untracked content" {
-    run bash -c "cd '${BATS_TEST_TMPDIR}' && source '${HOOK}' && compute_state_hash"
+    run bash -c "cd '${BATS_TEST_TMPDIR}' && source '${HOOK}' < /dev/null && compute_state_hash"
     [ "$status" -eq 0 ]
 
     printf 'x\n' > "${REPO}/new.txt"
-    run bash -c "cd '${REPO}' && source '${HOOK}' && compute_state_hash"
+    run bash -c "cd '${REPO}' && source '${HOOK}' < /dev/null && compute_state_hash"
     local before="${output}"
     [ -n "${before}" ]
 
     printf 'y\n' > "${REPO}/new.txt"
-    run bash -c "cd '${REPO}' && source '${HOOK}' && compute_state_hash"
+    run bash -c "cd '${REPO}' && source '${HOOK}' < /dev/null && compute_state_hash"
     [ -n "${output}" ]
     [ "${output}" != "${before}" ]
+}
+
+@test "report_failure and the event helpers are the same text in every hook script" {
+    local fn f body want name
+    for fn in report_failure truncate_reason_text collapse_reason_for_cursor_display emit_json_with_reason; do
+        want=""
+        for f in "${ROOT}"/.apm/packages/*-hooks-*/.apm/hooks/scripts/*.sh; do
+            name=$(basename "$f")
+            body=$(awk -v s="function ${fn} " 'index($0,s)==1{p=1} p{print} p&&/^}/{exit}' "$f")
+            if [ -z "$body" ]; then
+                # the prompt hook and terraform_fmt have no event helpers
+                [[ $name == gitleaks_prompt.sh || $name == terraform_fmt.sh ]] || { echo "${fn} missing in ${f}"; return 1; }
+                continue
+            fi
+            # the PostToolUse formatters have no blocked-state gate and so no record_blocked_state call
+            [[ $name == prettier.sh || $name == shfmt.sh ]] && body=$(printf '%s\n' "$body" | sed '/^    record_blocked_state$/d')
+            if [[ $fn == report_failure && $name != prettier.sh && $name != shfmt.sh ]]; then
+                printf '%s\n' "$body" | grep -q '^    record_blocked_state$' || { echo "record_blocked_state missing in ${f}"; return 1; }
+                body=$(printf '%s\n' "$body" | sed '/^    record_blocked_state$/d')
+            fi
+            [ -z "$want" ] && want="$body"
+            [ "$body" = "$want" ] || { echo "${fn} differs in ${f}"; return 1; }
+        done
+        [ -n "$want" ]
+    done
 }

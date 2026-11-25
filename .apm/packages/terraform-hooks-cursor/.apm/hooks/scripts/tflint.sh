@@ -248,6 +248,7 @@ function report_failure {
         fi
     fi
 
+    # Final fallback: env var check
     if [[ -z $agent && -n ${GITHUB_COPILOT_API_TOKEN:-} ]]; then
         agent="copilot"
     fi
@@ -266,6 +267,9 @@ function report_failure {
             if [[ $hook_event == "Stop" ]]; then
                 emit_json_with_reason "$reason" '{decision: "block", reason: .}'
                 exit 0
+            elif [[ $hook_event == "PostToolUse" ]]; then
+                emit_json_with_reason "$reason" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: .}}'
+                exit 0
             else
                 echo "$reason" >&2
                 exit 2
@@ -275,6 +279,10 @@ function report_failure {
             case "$hook_event" in
                 Stop | agentStop)
                     emit_json_with_reason "$reason" '{decision: "block", reason: .}'
+                    exit 0
+                    ;;
+                PostToolUse | postToolUse)
+                    emit_json_with_reason "$reason" '{additionalContext: .}'
                     exit 0
                     ;;
                 *)
@@ -304,6 +312,9 @@ function report_failure {
         vscode)
             if [[ $hook_event == "Stop" ]]; then
                 emit_json_with_reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: .}}'
+                exit 0
+            elif [[ $hook_event == "PostToolUse" ]]; then
+                emit_json_with_reason "$reason" '{decision: "block", reason: ., hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: .}}'
                 exit 0
             else
                 echo "$reason" >&2

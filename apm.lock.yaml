@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T04:18:29.114461+00:00'
+generated_at: '2026-11-25T04:42:16.523540+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -365,16 +365,16 @@ dependencies:
   deployed_file_hashes:
     .claude/hooks/common-hooks-claude/scripts/actionlint.sh: sha256:26fcd4b7fb68bad278849094a01164706b4cd27d66eb1dbe086b55c0cae0e96b
     .claude/hooks/common-hooks-claude/scripts/ghalint.sh: sha256:99a86e811af3c31b63c7438a837f6114a8a1a30a459556fd95d2f67424b383e4
-    .claude/hooks/common-hooks-claude/scripts/gitleaks.sh: sha256:2f5c17938d97cb9f7860dd5ce10ec6cb16dffa29d37dd1b9aff165121c37efe2
+    .claude/hooks/common-hooks-claude/scripts/gitleaks.sh: sha256:cb1a70e70c15b6dcabc9a00fbfd9ea8b209836a8b70b859e5b19bd6b37aca2da
     .claude/hooks/common-hooks-claude/scripts/gitleaks_prompt.sh: sha256:9c77a5a930cb68072f832ea2779133014d216e45285ce25e617ca0a2075f51f6
     .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:805844a6c02eba07cf9a9d41c04b0f21208ce5381f21f55fedbbb535b466c975
     .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:041365dfd707d70481aabe8ef3d1282440d0028f8069729b2672db1d8cd5d2f6
     .claude/hooks/common-hooks-claude/scripts/prettier.sh: sha256:53109de9c4203da09946a5049b3ded9edcf0dbab436ff426d9007f47ab686e33
-    .claude/hooks/common-hooks-claude/scripts/review_gate.sh: sha256:270cabbd7cfebf1a97dbe13253c49d9593eca3943c55df0578c89b3c11ff1204
+    .claude/hooks/common-hooks-claude/scripts/review_gate.sh: sha256:2d0eb50b07c5af945e7c7803380340a618a0a9f68e25e5d8bcc8bfa77886c07d
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:19374e19565e5dd92fdf162160e0a4c30197262f25f86b7679c2846b84c2b48c
   source: local
   local_path: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:2a4b6f2a817cf5128891f40f1c45ac01587ca66d89a89bd89ebab9751a62926e
+  content_hash: sha256:38551ab23cec2bf63b1cad15978f057e5c45de69846a60d7fc92a8819b276b14
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
   name: common-hooks-cursor
@@ -393,16 +393,16 @@ dependencies:
   deployed_file_hashes:
     .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:26fcd4b7fb68bad278849094a01164706b4cd27d66eb1dbe086b55c0cae0e96b
     .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh: sha256:99a86e811af3c31b63c7438a837f6114a8a1a30a459556fd95d2f67424b383e4
-    .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh: sha256:2f5c17938d97cb9f7860dd5ce10ec6cb16dffa29d37dd1b9aff165121c37efe2
+    .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh: sha256:cb1a70e70c15b6dcabc9a00fbfd9ea8b209836a8b70b859e5b19bd6b37aca2da
     .cursor/hooks/common-hooks-cursor/scripts/gitleaks_prompt.sh: sha256:9c77a5a930cb68072f832ea2779133014d216e45285ce25e617ca0a2075f51f6
     .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:805844a6c02eba07cf9a9d41c04b0f21208ce5381f21f55fedbbb535b466c975
     .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:041365dfd707d70481aabe8ef3d1282440d0028f8069729b2672db1d8cd5d2f6
     .cursor/hooks/common-hooks-cursor/scripts/prettier.sh: sha256:53109de9c4203da09946a5049b3ded9edcf0dbab436ff426d9007f47ab686e33
-    .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh: sha256:270cabbd7cfebf1a97dbe13253c49d9593eca3943c55df0578c89b3c11ff1204
+    .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh: sha256:2d0eb50b07c5af945e7c7803380340a618a0a9f68e25e5d8bcc8bfa77886c07d
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:19374e19565e5dd92fdf162160e0a4c30197262f25f86b7679c2846b84c2b48c
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:7fbd2cc6cbb78eefa754e75143217eb8e0ff8874a764038c58093a76858ee40d
+  content_hash: sha256:4ebe60b3ddd3ce6d1cc452fafe80f241cc0f6915213ebff7847b6d7869b441f4
   declared_license: Apache-2.0
 - repo_url: _local/github
   name: config-github
@@ -2616,7 +2616,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:2f5c17938d97cb9f7860dd5ce10ec6cb16dffa29d37dd1b9aff165121c37efe2
+  content_hash: sha256:cb1a70e70c15b6dcabc9a00fbfd9ea8b209836a8b70b859e5b19bd6b37aca2da
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/gitleaks_prompt.sh
@@ -2661,7 +2661,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:270cabbd7cfebf1a97dbe13253c49d9593eca3943c55df0578c89b3c11ff1204
+  content_hash: sha256:2d0eb50b07c5af945e7c7803380340a618a0a9f68e25e5d8bcc8bfa77886c07d
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/zizmor.sh
@@ -13614,7 +13614,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:2f5c17938d97cb9f7860dd5ce10ec6cb16dffa29d37dd1b9aff165121c37efe2
+  content_hash: sha256:cb1a70e70c15b6dcabc9a00fbfd9ea8b209836a8b70b859e5b19bd6b37aca2da
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/gitleaks_prompt.sh
@@ -13659,7 +13659,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:270cabbd7cfebf1a97dbe13253c49d9593eca3943c55df0578c89b3c11ff1204
+  content_hash: sha256:2d0eb50b07c5af945e7c7803380340a618a0a9f68e25e5d8bcc8bfa77886c07d
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh
