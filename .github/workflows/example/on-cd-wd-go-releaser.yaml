@@ -28,16 +28,6 @@ on:
         required: false
         type: boolean
         default: true
-      draft:
-        description: "Create a draft release"
-        required: false
-        type: boolean
-        default: false
-      prerelease:
-        description: "Mark as prerelease"
-        required: false
-        type: boolean
-        default: false
       version:
         description: "Release version (e.g. v1.0.0, v1.0.0-beta.1). Must start with 'v' and follow semantic versioning."
         required: true
@@ -78,10 +68,8 @@ jobs:
     with:
       component: base
       create_tag: ${{ inputs.create_tag }}
-      draft: ${{ inputs.draft }}
       go_project_path: "."
       go_version: ${{ needs.detect-go-version.outputs.go-version }}
-      prerelease: ${{ inputs.prerelease == true && 'true' || 'auto' }}
       version: ${{ inputs.version }}
     permissions:
       contents: write

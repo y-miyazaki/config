@@ -100,7 +100,7 @@ Three layers. Do not collapse them.
 | `agent_verifier_instructions` / `_model` / `_max_turns` / `_skill_name` | `agent_checker_*` |
 | Implementer / Verifier (prose for the agent)                            | Maker / Checker   |
 
-Keep as-is: Verify phase, `verifier_context`, `VERIFIER_CONTEXT`, `loop-verifier`, validation inside Execute (`validate_agent_report.sh`).
+Keep as-is: Verify phase, `verifier_context`, `VERIFIER_CONTEXT`, `loop-verifier`, validation inside Execute (`check_agent_report.sh`).
 
 ## Terminology bridge
 

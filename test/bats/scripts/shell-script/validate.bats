@@ -4,6 +4,7 @@
 # Tests for scripts/shell-script/validate.sh
 
 # Use cases:
+# - parse_arguments ignores a missing tests path when tests are skipped
 # - run_bats_tests passes --jobs and a parallel runner when one is installed
 # - parse_arguments --changed-only limits scripts and Bats suites to uncommitted git changes
 # - parse_arguments --changed-only skips scripts and tests when nothing changed
@@ -33,6 +34,9 @@
 # - print_bats_output omits runner section when failing tests are recorded
 # - print_summary_overall_result reports mixed script and bats failures
 # - print_summary_overall_result reports incomplete bats when no failures recorded
+# - parse_arguments fails for a script or --tests path that does not exist
+# - parse_arguments accepts script and --tests paths that exist
+# - validate_shebang --fix preserves the executable mode of the script
 # - analyze_functions and check_complexity tolerate scripts without function definitions when VERBOSE is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -190,7 +194,7 @@ EOF
 
 @test "validate_script_accessible accepts readable files" {
     local script="${FIXTURE_DIR}/readable.sh"
-    printf '%s\n' '#!/bin/bash' 'echo ok' > "${script}"
+    printf '%s\n# - parse_arguments selects the repository root when a path exists only relative to it\n' '#!/bin/bash' 'echo ok' > "${script}"
     chmod +r "${script}"
 
     run validate_script_accessible "${script}" "readable.sh" "tmp/readable.sh"
@@ -567,4 +571,46 @@ _mock_bats_env() {
     run bash -c "cd '${repo}' && source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && find_changed_shell_scripts"
     [ "$status" -eq 0 ]
     [ "$output" = ".claude/skills/x/run.sh" ]
+}
+
+@test "parse_arguments accepts script and tests paths that exist" {
+    mkdir -p "${FIXTURE_DIR}/t"
+    echo 'echo hi' > "${FIXTURE_DIR}/a.sh"
+    WORKSPACE_ROOT="${FIXTURE_DIR}"
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${FIXTURE_DIR}' && parse_arguments a.sh --tests t"
+    [ "$status" -eq 0 ]
+}
+
+@test "parse_arguments fails for a script path that does not exist" {
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${FIXTURE_DIR}' && parse_arguments scripts/typo.sh"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Path does not exist: scripts/typo.sh"* ]]
+}
+
+@test "parse_arguments ignores a missing tests path when tests are skipped" {
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${FIXTURE_DIR}' && parse_arguments --skip-tests --tests no/such.bats"
+    [ "$status" -eq 0 ]
+}
+
+@test "parse_arguments selects the repository root when a path exists only relative to it" {
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${FIXTURE_DIR}' && parse_arguments scripts/lib/common.sh && echo root=\${WORKSPACE_ROOT}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"root=$(bats_workspace_root)"* ]]
+}
+
+@test "parse_arguments fails for a tests path that does not exist" {
+    run bash -c "source '$(bats_workspace_root)/scripts/shell-script/validate.sh' && WORKSPACE_ROOT='${FIXTURE_DIR}' && parse_arguments --tests no/such.bats"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Path does not exist: no/such.bats"* ]]
+}
+
+@test "validate_shebang --fix preserves the executable mode of the script" {
+    printf 'echo hi\n' > "${FIXTURE_DIR}/noshebang.sh"
+    chmod 755 "${FIXTURE_DIR}/noshebang.sh"
+    AUTO_FIX=true
+    run bash -c "umask 027; source '$(bats_workspace_root)/scripts/shell-script/validate.sh'; AUTO_FIX=true; validate_shebang '${FIXTURE_DIR}/noshebang.sh'"
+    [ "$status" -eq 0 ]
+    [ "$(head -1 "${FIXTURE_DIR}/noshebang.sh")" = "#!/bin/bash" ]
+    [ -x "${FIXTURE_DIR}/noshebang.sh" ]
+    [ "$(stat -c '%a' "${FIXTURE_DIR}/noshebang.sh")" = "755" ]
 }

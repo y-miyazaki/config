@@ -6,6 +6,7 @@
 # Use cases:
 # - determine_target_pattern fails for a missing directory instead of validating the whole repository
 # - determine_target_pattern fails for a scoped directory without Go files
+# - determine_target_pattern does not prefix ./ to an absolute directory
 # - determine_target_pattern keeps ./... and accepts a scoped directory that contains Go files
 # - determine_changed_patterns emits one package pattern per directory with changed .go files, grouped by module
 # - determine_changed_patterns honors the scope directory, skips testdata and files without a go.mod
@@ -236,4 +237,10 @@ setup() {
     run bash "${VALIDATE_SCRIPT}" --help
     [ "$status" -eq 0 ]
     [[ $output == *"[options] [directory]"* ]]
+}
+
+@test "determine_target_pattern does not prefix ./ to an absolute directory" {
+    run bash -c "cd '${WORK_DIR}' && source '${VALIDATE_SCRIPT}' && determine_target_pattern '${WORK_DIR}/pkg dir'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${WORK_DIR}/pkg dir/..." ]
 }

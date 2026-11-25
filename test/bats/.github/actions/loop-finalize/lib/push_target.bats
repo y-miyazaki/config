@@ -6,6 +6,8 @@
 # Use cases:
 # - sequential agent merges preserve earlier product-file commits on to.branch
 # - merge conflicts fail closed without updating to.branch
+# - merge conflicts and push rejections are redacted and recorded via failure_record_write
+# - failure recording is skipped (still fail closed) when LOOP_FAILURE_FILE is unset
 # - the landing merge commit carries no [skip ci] so PR checks run on the new head
 # - identical agent and to.branch names are rejected
 # - invalid branch names are rejected, including a leading dash that git would read as an option
@@ -45,6 +47,7 @@ push_target_run() {
         TO_BRANCH="${TO_BRANCH}" \
         GITHUB_TOKEN="test-token" \
         GITHUB_OUTPUT="${github_output}" \
+        LOOP_FAILURE_FILE="${LOOP_FAILURE_FILE:-}" \
         bash -c "cd '${PUSH_WORK}' && bash '${PUSH_SCRIPT}'"
     PUSH_GITHUB_OUTPUT="${github_output}"
 }
@@ -153,4 +156,74 @@ push_target_run() {
     push_target_run
     [ "$status" -eq 1 ]
     [[ $output == *"invalid to.branch"* ]]
+}
+
+push_target_make_conflict() {
+    local file="$1"
+    git -C "${PUSH_WORK}" checkout -q feature/pr-head
+    printf 'head-a\n' > "${PUSH_WORK}/${file}"
+    git -C "${PUSH_WORK}" add "${file}"
+    git -C "${PUSH_WORK}" commit -q -m "feat: head side"
+    git -C "${PUSH_WORK}" push -q origin feature/pr-head
+
+    git -C "${PUSH_WORK}" checkout -q -b loop/github-pr-revise/a feature/pr-head~
+    printf 'agent-a\n' > "${PUSH_WORK}/${file}"
+    git -C "${PUSH_WORK}" add "${file}"
+    git -C "${PUSH_WORK}" commit -q -m "feat: agent side"
+    git -C "${PUSH_WORK}" push -q -u origin loop/github-pr-revise/a
+}
+
+@test "push_target records a redacted merge conflict failure and redacts the printed output" {
+    push_target_git_setup
+    push_target_make_conflict "token=abcsecret.txt"
+
+    AGENT_BRANCH="loop/github-pr-revise/a"
+    TO_BRANCH="feature/pr-head"
+    LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json"
+    push_target_run
+    [ "$status" -eq 1 ]
+    [[ $output == *"fail closed"* ]]
+    [[ $output != *"abcsecret"* ]]
+    [ "$(jq -r '.failure_stage' "${LOOP_FAILURE_FILE}")" = "finalize_push" ]
+    [[ $(jq -r '.failure_message' "${LOOP_FAILURE_FILE}") == *"merge conflict"* ]]
+    [[ $(jq -r '.failure_message' "${LOOP_FAILURE_FILE}") != *"abcsecret"* ]]
+}
+
+@test "push_target fails closed without a failure record when LOOP_FAILURE_FILE is unset" {
+    push_target_git_setup
+    push_target_make_conflict "conflict.txt"
+
+    AGENT_BRANCH="loop/github-pr-revise/a"
+    TO_BRANCH="feature/pr-head"
+    unset LOOP_FAILURE_FILE
+    push_target_run
+    [ "$status" -eq 1 ]
+    [[ $output == *"fail closed"* ]]
+    [ ! -e "${BATS_TEST_TMPDIR}/failure.json" ]
+}
+
+@test "push_target records a push rejection and fails closed" {
+    push_target_git_setup
+    git -C "${PUSH_WORK}" checkout -q -b loop/github-pr-revise/p origin/feature/pr-head
+    printf 'fix\n' > "${PUSH_WORK}/p.txt"
+    git -C "${PUSH_WORK}" add p.txt
+    git -C "${PUSH_WORK}" commit -q -m "fix: p"
+    git -C "${PUSH_WORK}" push -q -u origin loop/github-pr-revise/p
+
+    mkdir -p "${PUSH_BARE}/hooks"
+    printf '#!/bin/sh\necho "rejected by hook x-access-token:abcsecret" >&2\nexit 1\n' > "${PUSH_BARE}/hooks/pre-receive"
+    chmod +x "${PUSH_BARE}/hooks/pre-receive"
+
+    before="$(git -C "${PUSH_BARE}" rev-parse refs/heads/feature/pr-head)"
+    AGENT_BRANCH="loop/github-pr-revise/p"
+    TO_BRANCH="feature/pr-head"
+    LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json"
+    push_target_run
+    [ "$status" -eq 1 ]
+    [[ $output == *"push to feature/pr-head failed"* ]]
+    [[ $output != *"abcsecret"* ]]
+    [ "$(jq -r '.failure_stage' "${LOOP_FAILURE_FILE}")" = "finalize_push" ]
+    [[ $(jq -r '.failure_message' "${LOOP_FAILURE_FILE}") != *"abcsecret"* ]]
+    after="$(git -C "${PUSH_BARE}" rev-parse refs/heads/feature/pr-head)"
+    [ "${before}" = "${after}" ]
 }

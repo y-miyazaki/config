@@ -82,30 +82,47 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 
 ```text
 .apm/packages/
-├── common/          # Shared workflows, documentation, and tools
-│   ├── apm.yml      # 5 MCP servers
+├── common/          # Forge-neutral review, markdown, docs-creator, and shared MCP
+│   ├── apm.yml      # 3 MCP servers
 │   └── .apm/
+│       ├── agents/        # 1 agent (test-engineer.md)
 │       ├── instructions/  # 5 instruction files
-│       └── skills/        # 12 skills (includes loop domain skills)
-├── common-hooks-claude/   # Common hooks for Claude Code (6 hooks)
-├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (6 hooks)
-├── common-hooks-cursor/   # Common hooks for Cursor (6 hooks)
+│       └── skills/        # 4 skills
+├── common-hooks-claude/   # Common hooks for Claude Code (8 hooks)
+├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (8 hooks)
+├── common-hooks-cursor/   # Common hooks for Cursor (8 hooks)
+├── repo-maintenance/  # In-repo maintenance skills
+│   └── .apm/
+│       └── skills/        # 6 skills
+├── github/          # GitHub Issue/PR skills and GitHub MCP
+│   ├── apm.yml      # 1 MCP server
+│   └── .apm/
+│       └── skills/        # 5 skills
+├── github-actions/  # GitHub Actions review/validation
+│   └── .apm/
+│       ├── instructions/  # 1 instruction file
+│       └── skills/        # 2 skills
+├── loop/            # Generic loop checker
+│   └── .apm/
+│       └── skills/        # 1 skill
 ├── aws/             # AWS development
-│   └── apm.yml      # 5 MCP servers
+│   └── apm.yml      # 4 MCP servers
 ├── terraform/       # Terraform development (cloud-agnostic)
 │   ├── apm.yml      # 1 MCP server
 │   └── .apm/
 │       ├── instructions/  # 1 instruction file
 │       └── skills/        # 2 skills
 ├── terraform-aws/   # Terraform + AWS integration
-│   └── apm.yml      # 1 MCP server
+│   ├── apm.yml      # 1 MCP server
+│   └── .apm/
+│       └── instructions/  # 1 instruction file
 ├── terraform-hooks-claude/  # Terraform hooks for Claude Code (2 hooks)
 ├── terraform-hooks-copilot/ # Terraform hooks for GitHub Copilot CLI (2 hooks)
 ├── terraform-hooks-cursor/  # Terraform hooks for Cursor (2 hooks)
 ├── go/              # Go development
 │   ├── apm.yml      # 0 MCP servers
 │   └── .apm/
-│       ├── instructions/  # 1 instruction file
+│       ├── instructions/  # 2 instruction files
 │       └── skills/        # 2 skills
 ├── go-hooks-claude/       # Go hooks for Claude Code (2 hooks)
 ├── go-hooks-copilot/      # Go hooks for GitHub Copilot CLI (2 hooks)
@@ -191,8 +208,8 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 | ------------- | ------------------------------ | --------------- | ----------------------------------- |
 | common        | context7                       | stdio           | npx                                 |
 | common        | fetch                          | stdio           | uvx                                 |
-| common        | github                         | stdio           | bash                                |
 | common        | codebase-memory-mcp            | stdio           | binary (optional; consumer install) |
+| github        | github                         | stdio           | bash                                |
 | aws           | aws-mcp                        | streamable-http | url (OAuth)                         |
 | aws           | aws-knowledge-mcp-server       | stdio           | uvx                                 |
 | aws           | aws-documentation-mcp-server   | stdio           | uvx                                 |
@@ -208,6 +225,7 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 
 | Hooks Package         | Hook                      | Trigger                                                     | Description                                                                                  |
 | --------------------- | ------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| common-hooks-\*       | prettier                  | PostToolUse                                                 | Auto-format changed files with prettier                                                      |
 | common-hooks-\*       | markdownlint-cli2         | Stop                                                        | Auto-fix Markdown files with markdownlint                                                    |
 | common-hooks-\*       | markdown-link-check       | Stop                                                        | Check Markdown links                                                                         |
 | common-hooks-\*       | github-actions-actionlint | Stop                                                        | Lint GitHub Actions workflows with actionlint                                                |
@@ -216,10 +234,11 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 | common-hooks-\*       | gitleaks                  | Stop                                                        | Scan changed files for secrets with gitleaks                                                 |
 | common-hooks-\*       | gitleaks-prompt           | UserPromptSubmit / beforeSubmitPrompt / userPromptSubmitted | Scan the submitted prompt for secrets; block on Claude Code and Cursor, warn only on Copilot |
 | go-hooks-\*           | golangci-lint             | Stop                                                        | Auto-fix changed Go packages with golangci-lint                                              |
+| go-hooks-\*           | go-test                   | Stop                                                        | Run `go test -short` on changed Go packages                                                  |
 | terraform-hooks-\*    | terraform-fmt             | PostToolUse                                                 | Run terraform fmt on changed files                                                           |
 | terraform-hooks-\*    | tflint                    | Stop                                                        | Run tflint on the modules of changed files                                                   |
 | shell-script-hooks-\* | shellcheck                | Stop                                                        | Run shellcheck on changed shell scripts                                                      |
-| shell-script-hooks-\* | shfmt                     | Stop                                                        | Auto-format shell scripts with shfmt                                                         |
+| shell-script-hooks-\* | shfmt                     | PostToolUse / postToolUse / afterFileEdit                   | Auto-format shell scripts with shfmt                                                         |
 
 > **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 
@@ -227,12 +246,12 @@ Hooks are distributed as separate target-specific packages because each AI agent
 
 | Hooks Package              | Target  | Hooks | Description                               |
 | -------------------------- | ------- | ----- | ----------------------------------------- |
-| common-hooks-claude        | Claude  | 6     | Common hooks for Claude Code              |
-| common-hooks-copilot       | Copilot | 6     | Common hooks for GitHub Copilot CLI       |
-| common-hooks-cursor        | Cursor  | 6     | Common hooks for Cursor                   |
-| go-hooks-claude            | Claude  | 1     | Go hooks for Claude Code                  |
-| go-hooks-copilot           | Copilot | 1     | Go hooks for GitHub Copilot CLI           |
-| go-hooks-cursor            | Cursor  | 1     | Go hooks for Cursor                       |
+| common-hooks-claude        | Claude  | 8     | Common hooks for Claude Code              |
+| common-hooks-copilot       | Copilot | 8     | Common hooks for GitHub Copilot CLI       |
+| common-hooks-cursor        | Cursor  | 8     | Common hooks for Cursor                   |
+| go-hooks-claude            | Claude  | 2     | Go hooks for Claude Code                  |
+| go-hooks-copilot           | Copilot | 2     | Go hooks for GitHub Copilot CLI           |
+| go-hooks-cursor            | Cursor  | 2     | Go hooks for Cursor                       |
 | shell-script-hooks-claude  | Claude  | 2     | Shell script hooks for Claude Code        |
 | shell-script-hooks-copilot | Copilot | 2     | Shell script hooks for GitHub Copilot CLI |
 | shell-script-hooks-cursor  | Cursor  | 2     | Shell script hooks for Cursor             |
@@ -255,43 +274,51 @@ Hooks JSON format is incompatible across AI agents and cannot be auto-converted 
 
 Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md` and references; validation skills also ship `scripts/validate.sh` (and related helpers).
 
-| Package      | Skill                     |
-| ------------ | ------------------------- |
-| common       | agent-skills-review       |
-| common       | changelog                 |
-| common       | ci-sweeper                |
-| common       | docs-creator              |
-| common       | docs-updater              |
-| common       | github-actions-review     |
-| common       | github-actions-validation |
-| common       | github-pr-body            |
-| common       | instructions-review       |
-| common       | markdown-validation       |
-| common       | refactor                  |
-| common       | tech-debt                 |
-| go           | go-review                 |
-| go           | go-validation             |
-| terraform    | terraform-review          |
-| terraform    | terraform-validation      |
-| shell-script | shell-script-review       |
-| shell-script | shell-script-validation   |
+| Package          | Skill                     |
+| ---------------- | ------------------------- |
+| common           | agent-skills-review       |
+| common           | docs-creator              |
+| common           | instructions-review       |
+| common           | markdown-validation       |
+| repo-maintenance | changelog                 |
+| repo-maintenance | ci-sweeper                |
+| repo-maintenance | docs-updater              |
+| repo-maintenance | refactor                  |
+| repo-maintenance | tech-debt                 |
+| repo-maintenance | test-gap                  |
+| github           | github-issue-autofix      |
+| github           | github-issue-triage       |
+| github           | github-pr-body            |
+| github           | github-pr-review          |
+| github           | github-pr-revise          |
+| github-actions   | github-actions-review     |
+| github-actions   | github-actions-validation |
+| loop             | loop-verifier             |
+| go               | go-review                 |
+| go               | go-validation             |
+| terraform        | terraform-review          |
+| terraform        | terraform-validation      |
+| shell-script     | shell-script-review       |
+| shell-script     | shell-script-validation   |
 
 ### Instructions
 
 Instructions are defined under each package's `.apm/instructions/` directory.
 
-| Package      | Instruction             | Scope                                                                |
-| ------------ | ----------------------- | -------------------------------------------------------------------- |
-| common       | agent-skills            | Agent skill files                                                    |
-| common       | claude-settings         | `.claude/settings.json`, `.claude/settings.local.json`               |
-| common       | cursor-settings         | `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/hooks.json` |
-| common       | github-actions-workflow | GitHub Actions workflows                                             |
-| common       | instructions            | Instruction files                                                    |
-| common       | markdown                | Markdown files                                                       |
-| go           | go                      | `**/*.go`                                                            |
-| terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl`                                 |
-| shell-script | shell-script            | `**/*.sh`                                                            |
-| shell-script | bats                    | `**/*.bats`                                                          |
+| Package        | Instruction             | Scope                                                                                        |
+| -------------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| common         | agent-skills            | Agent skill files                                                                            |
+| common         | claude-settings         | `.claude/settings.json`, `.claude/settings.local.json`                                       |
+| common         | cursor-settings         | `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/hooks.json`                         |
+| github-actions | github-actions-workflow | `.github/workflows/**/*.yaml`, `.github/workflows/**/*.yml`, `.github/actions/**/action.yml` |
+| common         | instructions            | Instruction files                                                                            |
+| common         | markdown                | Markdown files                                                                               |
+| go             | go                      | `**/*.go`                                                                                    |
+| go             | go-test                 | `**/*.go`                                                                                    |
+| terraform      | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl`                                                         |
+| terraform-aws  | terraform-aws           | `**/*.tf`, `**/*.tfvars`, `**/*.hcl`                                                         |
+| shell-script   | shell-script            | `**/*.sh`                                                                                    |
+| shell-script   | bats                    | `**/*.sh`, `**/*.bats`                                                                       |
 
 ### Scope
 
@@ -388,7 +415,7 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Skill Package Pattern
 
-Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`, `test-gap`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
+Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`, `test-gap`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-review`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
 | Artifact                      | Location                                 | Role                                                   |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------------------ |

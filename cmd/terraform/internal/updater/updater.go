@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/y-miyazaki/config/cmd/terraform/internal/modulefile"
@@ -26,6 +27,9 @@ const (
 
 	// logKeySource is the structured log key for a module source address.
 	logKeySource = "source"
+
+	// logKeyError is the structured log key for an error value.
+	logKeyError = "error"
 )
 
 var (
@@ -174,6 +178,10 @@ func (u *Updater) discover(ctx context.Context, uses []moduleUse, sum *Summary) 
 		if latest == "" {
 			continue
 		}
+		if isProtectedRange(use.version) {
+			u.log.Warn("Skipping version range with an upper bound or several clauses; update it by hand", logKeySource, use.source, "current", use.version, "latest", latest)
+			continue
+		}
 		if !isNewer(latest, use.version) {
 			u.log.Info("Module is up to date or newer", logKeySource, use.source, "current", use.version, "latest", latest)
 			continue
@@ -203,7 +211,7 @@ func (u *Updater) logSkip(source string, err error) {
 	case errors.Is(err, registry.ErrNoEligibleVersion):
 		u.log.Info("Skipping module: no version old enough", logKeySource, source)
 	default:
-		u.log.Warn("Could not determine latest version; skipping", logKeySource, source, "error", err)
+		u.log.Warn("Could not determine latest version; skipping", logKeySource, source, logKeyError, err)
 	}
 }
 
@@ -220,7 +228,7 @@ func (u *Updater) scan(ctx context.Context) ([]moduleUse, error) {
 			if ctxErr := ctx.Err(); ctxErr != nil {
 				return nil, fmt.Errorf("scan: %w", ctxErr)
 			}
-			u.log.Warn("Skipping unparsable file", "file", file, "error", extractErr)
+			u.log.Warn("Skipping unparsable file", "file", file, logKeyError, extractErr)
 			continue
 		}
 		for i := range refs {
@@ -264,9 +272,21 @@ func (u *Updater) terraformFiles() ([]string, error) {
 	return files, nil
 }
 
+// isProtectedRange reports whether a version constraint has an explicit upper
+// bound, an exclusion or several clauses. Such a range states an intent that an
+// exact pin would destroy, so it is left for the user to change.
+func isProtectedRange(current string) bool {
+	return strings.ContainsAny(current, ",<!")
+}
+
 // isNewer reports whether latest is strictly newer than the version in current.
-// A current value without any number (for example "latest") is always replaced.
+// A current value without any number (for example "latest") is always replaced;
+// a constraint with an explicit upper bound, an exclusion or several clauses is
+// never replaced (a single "~>" or ">=" clause is, by design, pinned to latest).
 func isNewer(latest, current string) bool {
+	if isProtectedRange(current) {
+		return false
+	}
 	base := versionNumber.FindString(current)
 	if base == "" {
 		return true

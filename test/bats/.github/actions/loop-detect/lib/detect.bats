@@ -6,7 +6,7 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-detect/lib/detect.sh (guard helpers and config gates)
 
 # Use cases:
-# - validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE
+# - check_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE
 # - resolve_detect_script_path leaves an empty DETECT_SCRIPT and fails on a missing one
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
 # - apply_scoped_pr_number_filter drops integration and keeps matching PR only
@@ -566,16 +566,16 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "validate_branch_match accepts list glob and regex" {
+@test "check_branch_match accepts list glob and regex" {
     for mode in list glob regex; do
         DETECT_BRANCH_MATCH_MODE="${mode}"
-        run validate_branch_match
+        run check_branch_match
         [ "$status" -eq 0 ]
     done
 }
-@test "validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE" {
+@test "check_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE" {
     DETECT_BRANCH_MATCH_MODE="invalid"
-    run validate_branch_match
+    run check_branch_match
     [ "$status" -eq 1 ]
     [[ $output == *"Invalid DETECT_BRANCH_MATCH_MODE"* ]]
 }
@@ -1185,17 +1185,17 @@ output_matrix_keys() {
     local assignment checked=0
 
     make_items_repo "$(items_detect_json 1)"
-    run validate_detect_inputs
+    run check_detect_inputs
     [ "$status" -eq 0 ]
     DETECT_BRANCH_MATCH_MODE="glob"
-    run validate_detect_inputs
+    run check_detect_inputs
     [ "$status" -eq 0 ]
     rm -rf "${ITEMS_REPO}"
 
     for assignment in "${cases[@]}"; do
         make_items_repo "$(items_detect_json 1)"
         export "${assignment?}"
-        run --separate-stderr validate_detect_inputs
+        run --separate-stderr check_detect_inputs
         [ "$status" -eq 1 ]
         [[ ${stderr} == *"::error::"*"detect_items"* ]]
         rm -rf "${ITEMS_REPO}"
@@ -1227,7 +1227,7 @@ output_matrix_keys() {
 @test "items mode requires a non-empty detect_script" {
     make_items_repo "$(items_detect_json 1)"
     export DETECT_SCRIPT=""
-    run --separate-stderr validate_detect_inputs
+    run --separate-stderr check_detect_inputs
     [ "$status" -eq 1 ]
     [[ ${stderr} == *"::error::"*"detect_items"*"detect_script"* ]]
 }

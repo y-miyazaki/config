@@ -217,13 +217,14 @@ jobs:
         shell: bash
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          MATRIX_NAME: ${{ matrix.name }}
           SERVICE_PATH: ${{ matrix.path }}
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
           # Check if task definition or service definition has changed
-          echo "Checking diffs for ${{ matrix.name }} (env: ${ENVIRONMENT})..."
+          echo "Checking diffs for ${MATRIX_NAME} (env: ${ENVIRONMENT})..."
           cd "${SERVICE_PATH}"
 
           # Check for changes in ecspresso diff
@@ -232,7 +233,7 @@ jobs:
           if diff_output=$(ecspresso diff \
               --config "${ECSPRESSO_CONFIG}" \
               --ext-str ENV="${ENVIRONMENT}" \
-              --ext-str NAME="${{ matrix.name }}" \
+              --ext-str NAME="${MATRIX_NAME}" \
               --ext-str ACCOUNT_ID="${ACCOUNT_ID}" \
               --ext-str AWS_REGION="${AWS_REGION}" 2>&1); then
             actual_diff=$(echo "$diff_output" | grep -vE "$LOG_FILTER_PATTERN" || true)
@@ -255,16 +256,17 @@ jobs:
         shell: bash
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          MATRIX_NAME: ${{ matrix.name }}
           SERVICE_PATH: ${{ matrix.path }}
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "Deploying ${{ matrix.name }} (env: ${ENVIRONMENT})..."
+          echo "Deploying ${MATRIX_NAME} (env: ${ENVIRONMENT})..."
           cd "${SERVICE_PATH}"
           ecspresso deploy \
             --config "${ECSPRESSO_CONFIG}" \
             --ext-str ENV="${ENVIRONMENT}" \
-            --ext-str NAME="${{ matrix.name }}" \
+            --ext-str NAME="${MATRIX_NAME}" \
             --ext-str ACCOUNT_ID="${ACCOUNT_ID}" \
             --ext-str AWS_REGION="${AWS_REGION}"
           echo "Deploy completed"
@@ -272,8 +274,10 @@ jobs:
       - name: Skip Deploy (No Changes)
         if: steps.check_diff.outputs.deploy == 'false'
         shell: bash
+        env:
+          MATRIX_NAME: ${{ matrix.name }}
         run: |
-          echo "No changes detected for ${{ matrix.name }}, skipping deploy"
+          echo "No changes detected for ${MATRIX_NAME}, skipping deploy"
 
   deploy-scheduled-tasks:
     needs: scan
@@ -332,10 +336,11 @@ jobs:
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           BATCH_PATH: ${{ matrix.path }}
+          MATRIX_NAME: ${{ matrix.name }}
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "Deploying scheduled task ${{ matrix.name }} (env: ${ENVIRONMENT})..."
+          echo "Deploying scheduled task ${MATRIX_NAME} (env: ${ENVIRONMENT})..."
           cd "${BATCH_PATH}"
 
           # Pre-render ecschedule Jsonnet (ecschedule does not support --ext-str)
@@ -345,7 +350,7 @@ jobs:
             -V ACCOUNT_ID="${ACCOUNT_ID}" \
             -V AWS_REGION="${AWS_REGION}" \
             -V ENV="${ENVIRONMENT}" \
-            -V NAME="${{ matrix.name }}" \
+            -V NAME="${MATRIX_NAME}" \
             "${ECSCHEDULE_CONFIG}" > "$TMP_CONFIG"
 
           # Step 1: Check diffs to skip unnecessary deploys
@@ -359,7 +364,7 @@ jobs:
               --ext-str ACCOUNT_ID="${ACCOUNT_ID}" \
               --ext-str AWS_REGION="${AWS_REGION}" \
               --ext-str ENV="${ENVIRONMENT}" \
-              --ext-str NAME="${{ matrix.name }}" 2>&1); then
+              --ext-str NAME="${MATRIX_NAME}" 2>&1); then
             # Filter out log messages to get actual diff content
             # Pattern mirrors aws_deploy_ecs_scheduled_task.sh: remove bracketed timestamps, ISO dates, time=/level= structured log prefixes, and blank lines
             actual_td_diff=$(echo "$td_diff" | grep -vE '^(\[|[0-9]{4}-[0-9]{2}-[0-9]{2}|time=|level=|\s*$)' || true)
@@ -407,7 +412,7 @@ jobs:
               --ext-str ACCOUNT_ID="${ACCOUNT_ID}" \
               --ext-str AWS_REGION="${AWS_REGION}" \
               --ext-str ENV="${ENVIRONMENT}" \
-              --ext-str NAME="${{ matrix.name }}"
+              --ext-str NAME="${MATRIX_NAME}"
             echo "Task definition registered"
           fi
 

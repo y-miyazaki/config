@@ -121,8 +121,8 @@ jobs:
             echo "Processing rule: $rule_name"
 
             # Get targets for this rule
-            targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json)
-            targets_rc=$?
+            targets_rc=0
+            targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json) || targets_rc=$?
             echo "Targets JSON length: ${#targets_json}"
             if [ $targets_rc -eq 0 ] && echo "$targets_json" | jq empty 2>/dev/null; then
               targets="$targets_json"
@@ -282,8 +282,8 @@ jobs:
             for rule_name in "${all_rules[@]}"; do
               [[ -z "$rule_name" ]] && continue
 
-              targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json)
-              targets_rc=$?
+              targets_rc=0
+              targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json) || targets_rc=$?
               if [ $targets_rc -eq 0 ] && echo "$targets_json" | jq empty 2>/dev/null; then
                 targets="$targets_json"
               else

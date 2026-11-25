@@ -364,7 +364,8 @@ function generate_generic_resources {
                             resources=$(aws ecs list-clusters --region "$region" --query "clusterArns[]" --output json 2> /dev/null || echo '[]')
                             ;;
                         "dynamodb")
-                            resources=$(aws_paginate_items 'TableNames' aws dynamodb list-tables --region "$region" 2> /dev/null || echo '[]')
+                            # aws_paginate_items emits one JSON item per line; slurp them into one array
+                            resources=$(aws_paginate_items 'TableNames' aws dynamodb list-tables --region "$region" 2> /dev/null | jq -sc '.' 2> /dev/null) || resources='[]'
                             ;;
                         *)
                             # Generic command execution for other services
@@ -512,7 +513,7 @@ generate_lambda_nonvpc_hierarchical_resources() {
 
         # Get all Lambda functions (paginated)
         local functions_json
-        functions_json=$(aws_paginate_items 'Functions' aws lambda list-functions --region "$region" 2> /dev/null | jq -s '{Functions: .}' 2> /dev/null || echo '{"Functions":[]}')
+        functions_json=$(aws_paginate_items 'Functions' aws lambda list-functions --region "$region" 2> /dev/null | jq -s '{Functions: .}' 2> /dev/null) || functions_json='{"Functions":[]}'
 
         # Filter Non-VPC functions
         local nonvpc_functions=()
@@ -907,7 +908,7 @@ EOF
 
                                     # Get Lambda functions in this VPC (paginated)
                                     local lambda_functions
-                                    lambda_functions=$(aws_paginate_items 'Functions' aws lambda list-functions --region "$region" 2> /dev/null | jq -s '{Functions: .}' 2> /dev/null || echo '{"Functions":[]}')
+                                    lambda_functions=$(aws_paginate_items 'Functions' aws lambda list-functions --region "$region" 2> /dev/null | jq -s '{Functions: .}' 2> /dev/null) || lambda_functions='{"Functions":[]}'
 
                                     local ec2_children=()
                                     local lambda_children=()

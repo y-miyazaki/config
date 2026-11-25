@@ -229,7 +229,7 @@ function render_template {
 }
 
 #######################################
-# validate_agent_report_check: Reject unknown agent_report_check values
+# check_agent_report_check: Reject unknown agent_report_check values
 #
 # Description:
 #   An empty value skips the deterministic report check by design. Any other value
@@ -248,7 +248,7 @@ function render_template {
 #   0 when the value is empty, paths, or commits; 1 otherwise
 #
 #######################################
-function validate_agent_report_check {
+function check_agent_report_check {
     case "${AGENT_REPORT_CHECK:-}" in
         "" | commits | paths) return 0 ;;
         *)
@@ -259,7 +259,7 @@ function validate_agent_report_check {
 }
 
 #######################################
-# validate_agent_unchanged_verdict: Require an explicit unchanged verdict
+# check_agent_unchanged_verdict: Require an explicit unchanged verdict
 #
 # Description:
 #   AGENT_UNCHANGED_VERDICT is the verdict when the maker produces no file
@@ -280,7 +280,7 @@ function validate_agent_report_check {
 #   0 when the value is APPROVE or REJECT, 1 otherwise
 #
 #######################################
-function validate_agent_unchanged_verdict {
+function check_agent_unchanged_verdict {
     case "${AGENT_UNCHANGED_VERDICT:-}" in
         APPROVE | REJECT) return 0 ;;
         *)

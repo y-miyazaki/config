@@ -207,6 +207,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Control Batch Job Queue
+        id: control
         env:
           QUEUE_NAME: ${{ matrix.queue }}
         shell: bash
@@ -222,6 +223,7 @@ jobs:
 
           if [[ -z "$QUEUE_CHECK" || "$QUEUE_CHECK" == "None" ]]; then
             echo "ℹ️ Job queue $QUEUE_NAME not found (skipping)"
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -255,7 +257,7 @@ jobs:
           fi
 
       - name: Wait for Queue State Update
-        if: ${{ inputs.wait_for_stable }}
+        if: ${{ inputs.wait_for_stable && steps.control.outputs.skipped != 'true' }}
         timeout-minutes: 10
         env:
           EXPECTED_STATE: ${{ inputs.action == 'stop' && 'DISABLED' || 'ENABLED' }}

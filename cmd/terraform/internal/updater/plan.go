@@ -63,7 +63,7 @@ func (u *Updater) createBaselines(ctx context.Context, pending map[string]*pendi
 		files = append(files, p.files...)
 	}
 	// Every affected project needs its own baseline, even when several modules share it.
-	for _, project := range uniqueProjects(files) {
+	for _, project := range uniqueProjects(files, u.opts.Env) {
 		u.log.Info("Creating baseline plan", "project", project)
 		if err := u.createBaseline(ctx, project); err != nil {
 			return fmt.Errorf("cannot proceed without baseline plans: %w", err)

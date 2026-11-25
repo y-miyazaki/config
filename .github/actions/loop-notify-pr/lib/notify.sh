@@ -511,7 +511,7 @@ function upsert_comment {
 }
 
 #######################################
-# validate_required_inputs: Validate required loop-notify-pr environment
+# check_required_inputs: Validate required loop-notify-pr environment
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
@@ -531,7 +531,7 @@ function upsert_comment {
 #   Exits 1 when required input is missing
 #
 #######################################
-function validate_required_inputs {
+function check_required_inputs {
     : "${GITHUB_OUTPUT:?}"
     : "${LOOP_NAME:?}"
     : "${OUTCOME:?}"
@@ -610,7 +610,7 @@ function main {
         return 0
     fi
 
-    validate_required_inputs
+    check_required_inputs
 
     actor="$(resolve_actor)"
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"

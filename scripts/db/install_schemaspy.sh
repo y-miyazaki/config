@@ -516,8 +516,8 @@ function download_postgresql_jdbc {
     if [ -f "${jdbc_jar}" ]; then
         local file_size
         file_size=$(du -h "${jdbc_jar}" | cut -f1)
-        ln -s "${jdbc_jar}" "${INSTALL_DIR}/postgresql-jdbc.jar"
-        ln -s "${jdbc_jar}" "${INSTALL_DIR}/pgsql11-jdbc.jar"
+        ln -sf "${jdbc_jar}" "${INSTALL_DIR}/postgresql-jdbc.jar"
+        ln -sf "${jdbc_jar}" "${INSTALL_DIR}/pgsql11-jdbc.jar"
         log "INFO" "PostgreSQL JDBC driver downloaded successfully: ${file_size}"
     else
         error_exit "PostgreSQL JDBC driver download failed"

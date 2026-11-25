@@ -190,7 +190,10 @@ function build_function {
     mkdir -p "$outdir"
 
     log "INFO" "  Building $function..."
-    env GOOS=linux GOARCH="${ARCH}" go build -ldflags="-s -w" -o "${outdir}/bootstrap" "./$dir" || error_exit "Failed to build $function"
+    # An absolute dir must not get a "./" prefix (".//abs" is rejected by go)
+    local pkg="./$dir"
+    [[ $dir == /* ]] && pkg="$dir"
+    env GOOS=linux GOARCH="${ARCH}" go build -ldflags="-s -w" -o "${outdir}/bootstrap" "$pkg" || error_exit "Failed to build $function"
 
     log "INFO" "  Packaging $function..."
     zip outputs/"${BINDIR}"/go_"${function}".zip -j "${outdir}/bootstrap" || error_exit "Failed to create zip for $function"

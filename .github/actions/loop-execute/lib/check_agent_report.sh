@@ -2,8 +2,8 @@
 #######################################
 # Description: Mechanical validation of loop maker agent-output.txt
 #
-# Usage: source lib/validate_agent_report.sh
-#        validate_agent_report <output_file> <changed_files_newline> <agent_report_check>
+# Usage: source lib/check_agent_report.sh
+#        check_agent_report <output_file> <changed_files_newline> <agent_report_check>
 #
 # Output:
 # - Prints violation lines to stdout (empty when valid)
@@ -395,7 +395,7 @@ PY
 }
 
 #######################################
-# validate_agent_report: Validate maker output format and diff consistency
+# check_agent_report: Validate maker output format and diff consistency
 #
 # Globals:
 #   None
@@ -412,7 +412,7 @@ PY
 #   0 when valid; 1 when violations were printed
 #
 #######################################
-function validate_agent_report {
+function check_agent_report {
     local output_file="$1"
     local changed_files="$2"
     local agent_report_check="$3"

@@ -215,6 +215,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Control Redshift Cluster
+        id: control
         env:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
@@ -239,6 +240,7 @@ jobs:
               exit 0
             elif [[ "$CURRENT_STATUS" != "available" ]]; then
               echo "ℹ️ Redshift cluster is not available (status: $CURRENT_STATUS). Cannot pause (skipping)"
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -265,6 +267,7 @@ jobs:
               exit 0
             elif [[ "$CURRENT_STATUS" != "paused" ]]; then
               echo "ℹ️ Redshift cluster is not paused (status: $CURRENT_STATUS). Cannot resume (skipping)"
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -283,7 +286,7 @@ jobs:
           fi
 
       - name: Wait for Redshift Cluster Status
-        if: ${{ inputs.wait_for_stable }}
+        if: ${{ inputs.wait_for_stable && steps.control.outputs.skipped != 'true' }}
         timeout-minutes: 30
         env:
           CLUSTER: ${{ matrix.cluster }}

@@ -56,6 +56,6 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 
 ## Conventions
 
-| Topic           | Rule             |
-| --------------- | ---------------- |
-| Temporary files | Write to `tmp/`. |
+| Topic           | Rule                                                                                                                                                                                                                                                                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Temporary files | Disposable intermediates (scratch output, probe scripts, downloads, `mktemp` files, test fixtures) go to the system temp dir (`/tmp`, `mktemp`, `BATS_TEST_TMPDIR`) so they disappear on their own. Write to the git-ignored `tmp/` only what must outlive the session and be read again (progress notes, reports handed to the user). |

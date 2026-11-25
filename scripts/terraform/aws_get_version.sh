@@ -381,9 +381,9 @@ function collect_rds_versions {
         local engine_versions_json
         engine_versions_json=$(aws rds describe-db-engine-versions --engine "$engine" --region "$region" 2> /dev/null | jq '.DBEngineVersions' || echo "[]")
 
-        # Get latest version by sorting versions properly
+        # Get latest version by sorting numerically on every number in the version (8.0.40 > 8.0.9, 15.4-R2 > 15.4)
         local latest_version
-        latest_version=$(echo "$engine_versions_json" | jq -r 'sort_by(.EngineVersion) | reverse | .[0].EngineVersion // ""')
+        latest_version=$(echo "$engine_versions_json" | jq -r 'sort_by(.EngineVersion | [scan("[0-9]+") | tonumber]) | reverse | .[0].EngineVersion // ""')
 
         # Process each version with AWS API data
         while IFS= read -r version_data; do

@@ -57,6 +57,8 @@ permissions:
 jobs:
   markdown-ci:
     uses: ./.github/workflows/ci-markdown.yaml
+    with:
+      markdownlint_flags: "README.md docs/**/*.md"
     permissions:
       contents: read
       pull-requests: write

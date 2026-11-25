@@ -9,6 +9,8 @@
 # - XDG_CACHE_HOME is honored when SCHEMASPY_CACHE_DIR is unset
 # - install_schemaspy.sh and aws_schemaspy.sh agree on the default location
 # - download_file removes the partial file and fails when the download fails
+# - download_postgresql_jdbc recreates the compatibility symlinks on a --force reinstall
+# - run_schemaspy reports the exit code and log path when SchemaSpy fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -63,4 +65,36 @@ EOF
     run bash -c "unset SCHEMASPY_CACHE_DIR; export XDG_CACHE_HOME='${BATS_TEST_TMPDIR}/xdg'; source '${AWS_SCHEMASPY}'; schemaspy_cache_dir"
     [ "$status" -eq 0 ]
     [ "$output" = "${BATS_TEST_TMPDIR}/xdg/schemaspy" ]
+}
+
+@test "download_postgresql_jdbc recreates the compatibility symlinks on a force reinstall" {
+    mkdir -p "${BATS_TEST_TMPDIR}/bin" "${BATS_TEST_TMPDIR}/cache"
+    cat > "${BATS_TEST_TMPDIR}/bin/curl" << 'EOF'
+#!/usr/bin/env bash
+out=""
+while [[ $# -gt 0 ]]; do
+    [[ $1 == -o ]] && out="$2"
+    shift
+done
+echo jar > "$out"
+EOF
+    chmod +x "${BATS_TEST_TMPDIR}/bin/curl"
+    run bash -c "export PATH='${BATS_TEST_TMPDIR}/bin':\$PATH; source '${INSTALL_SCHEMASPY}'; INSTALL_DIR='${BATS_TEST_TMPDIR}/cache'; FORCE_INSTALL=true; DRY_RUN=false; download_postgresql_jdbc && download_postgresql_jdbc"
+    [ "$status" -eq 0 ]
+    [ -L "${BATS_TEST_TMPDIR}/cache/postgresql-jdbc.jar" ]
+    [ -L "${BATS_TEST_TMPDIR}/cache/pgsql11-jdbc.jar" ]
+}
+
+@test "run_schemaspy reports the exit code and log path when SchemaSpy fails" {
+    mkdir -p "${BATS_TEST_TMPDIR}/bin"
+    cat > "${BATS_TEST_TMPDIR}/bin/java" << 'EOF'
+#!/usr/bin/env bash
+echo "boom" >&2
+exit 3
+EOF
+    chmod +x "${BATS_TEST_TMPDIR}/bin/java"
+    run bash -c "export PATH='${BATS_TEST_TMPDIR}/bin':\$PATH TMPDIR='${BATS_TEST_TMPDIR}'; source '${AWS_SCHEMASPY}'; set -eo pipefail; OUTPUT_DIR='${BATS_TEST_TMPDIR}/out'; DB_TYPE=mysql; DB_USER=u; DB_PASSWORD=p; DB_NAME=d; DB_THREADS=1; LOCAL_PORT=3306; SSL_MODE=disable; SCHEMA_NAME=''; SCHEMASPY_JAR=x.jar; JDBC_DRIVER=y.jar; DRY_RUN=false; run_schemaspy"
+    [ "$status" -ne 0 ]
+    [[ $output == *"SchemaSpy execution failed with exit code 3"* ]]
+    [[ $output == *"Check log: ${BATS_TEST_TMPDIR}/out/schemaspy.log"* ]]
 }

@@ -2,6 +2,7 @@
 # Description:
 #   Reusable workflow: Go application release with GoReleaser
 #   Builds cross-platform binaries and creates GitHub releases.
+#   Release attributes (draft, prerelease) come from the consumer's .goreleaser.yaml `release:` section.
 #
 # Usage:
 #   Call from a workflow job:
@@ -31,11 +32,6 @@ on:
         description: "Create a git tag if it doesn't exist (true/false)"
         required: false
         type: boolean
-      draft:
-        default: false
-        description: "Create a draft release (true/false)"
-        required: false
-        type: boolean
       go_project_path:
         default: "."
         description: "Path (relative) to the Go project root (directory containing go.mod)"
@@ -56,11 +52,6 @@ on:
         description: "GoReleaser version to use"
         required: false
         type: string
-      prerelease:
-        default: "auto"
-        description: "Mark as prerelease (true/false, or 'auto' for automatic detection)"
-        required: false
-        type: string
       version:
         description: "Release version (e.g. v1.0.0). Must start with 'v'. If empty, uses the tag that triggered the workflow."
         required: false
@@ -73,12 +64,10 @@ permissions:
 env:
   COMPONENT: ${{ inputs.component }}
   CREATE_TAG: ${{ inputs.create_tag }}
-  DRAFT: ${{ inputs.draft }}
   GORELEASER_ARGS: ${{ inputs.goreleaser_args }}
   GORELEASER_VERSION: ${{ inputs.goreleaser_version }}
   GO_PROJECT_PATH: ${{ inputs.go_project_path }}
   GO_VERSION: ${{ inputs.go_version }}
-  PRERELEASE: ${{ inputs.prerelease }}
   VERSION: ${{ inputs.version }}
 
 jobs:
@@ -272,11 +261,9 @@ jobs:
           params: |
             component: ${{ env.COMPONENT }}
             create_tag: ${{ env.CREATE_TAG }}
-            draft: ${{ env.DRAFT }}
             go_project_path: ${{ env.GO_PROJECT_PATH }}
             go_version: ${{ env.GO_VERSION }}
             goreleaser_version: ${{ env.GORELEASER_VERSION }}
-            prerelease: ${{ env.PRERELEASE }}
             version: ${{ env.VERSION }}
           status: "${{ job.status }}"
           title: "${{ format('Go Release: {0} {1}', env.COMPONENT, steps.check-tag.outputs.version) }}"

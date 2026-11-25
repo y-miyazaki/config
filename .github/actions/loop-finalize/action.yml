@@ -344,6 +344,7 @@ runs:
       env:
         AGENT_BRANCH: ${{ steps.agent_push.outputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
         TO_BRANCH: ${{ steps.target.outputs.to_branch }}
       run: bash "${GITHUB_ACTION_PATH}/lib/push_target.sh"
 

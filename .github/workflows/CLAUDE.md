@@ -187,7 +187,7 @@ Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engin
 
 ## Loop judgements (MUST)
 
-Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../actions/CLAUDE.md#loop-judgements-go-through-the-gate-must), which also owns the shared name validators and the state-branch read rule. Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger filters; actor trust, mention and repository visibility checks belong to the gate.
+Changing what decides whether a loop run proceeds, is skipped, or how an outcome is counted follows [Loop judgements go through the gate](../actions/CLAUDE.md#loop-judgements-go-through-the-gate-must), which also owns the shared name validators and the state-branch read rule. Job `if` in `on-loop-*.yaml` holds only static, cheap self-retrigger and abuse filters (bot sender, event type, label name, and an author association or mention check that is a strict subset of what the gate refuses); the gate owns every run admission decision, and repository visibility is never a trust signal.
 
 ## Cross-job values, landing commits, and trusted ref (MUST)
 

@@ -12,6 +12,10 @@
 # - aws_paginate_items handles DynamoDB list-global-tables pagination
 # - aws_paginate_items values can be unquoted with jq -r for primitive arrays (DynamoDB TableNames)
 # - aws_paginate_items handles S3 list-objects-v2 ContinuationToken pagination
+# - aws_paginate_items returns non-zero when a later page fails instead of silently truncating
+# - aws_paginate_items returns non-zero when --max-items fallback also fails
+# - aws_paginate_items keeps CLI stderr warnings out of the parsed items
+# - aws_retry_exec keeps stderr out of stdout on success
 # - aws_retry_exec retries on failure and succeeds
 # - aws_retry_exec returns the command's non-zero exit status when it fails
 
@@ -21,6 +25,8 @@ while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
 done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
+
+bats_require_minimum_version 1.5.0
 
 setup() {
     bats_source_rel "scripts/lib/aws.sh"
@@ -199,4 +205,59 @@ EOF
 
     run aws_retry_exec 1 aws cognito-idp list-user-pools --region us-east-1
     [ "$status" -eq 7 ]
+}
+
+@test "aws_paginate_items keeps CLI stderr warnings out of the parsed items" {
+    mock_aws_write << 'EOF'
+#!/usr/bin/env bash
+echo "WARNING: deprecated option" >&2
+echo '{"UserPools":[{"Id":"1"},{"Id":"2"}]}'
+EOF
+    chmod +x "$MOCK_DIR/aws"
+
+    run --separate-stderr aws_paginate_items 'UserPools' aws cognito-idp list-user-pools --region us-east-1
+    [ "$status" -eq 0 ]
+    [ "$(printf '%s\n' "$output" | grep -c '^')" -eq 2 ]
+}
+
+@test "aws_paginate_items returns non-zero when a later page fails instead of silently truncating" {
+    mock_aws_write << 'EOF'
+#!/usr/bin/env bash
+if [[ "$*" == *"--exclusive-start-table-name"* ]]; then
+    echo "An error occurred (AccessDenied) when calling the ListTables operation: denied" >&2
+    exit 254
+fi
+echo '{"TableNames":["table1"],"LastEvaluatedTableName":"table1"}'
+EOF
+    chmod +x "$MOCK_DIR/aws"
+
+    run --separate-stderr aws_paginate_items 'TableNames' aws dynamodb list-tables --region us-east-1
+    [ "$status" -eq 254 ]
+    [ "$output" = '"table1"' ]
+}
+
+@test "aws_paginate_items returns non-zero when --max-items fallback also fails" {
+    mock_aws_write << 'EOF'
+#!/usr/bin/env bash
+echo "An error occurred (AccessDenied) when calling the ListUserPools operation: denied" >&2
+exit 254
+EOF
+    chmod +x "$MOCK_DIR/aws"
+
+    run --separate-stderr aws_paginate_items 'UserPools' aws cognito-idp list-user-pools --region us-east-1
+    [ "$status" -eq 254 ]
+    [ -z "$output" ]
+}
+
+@test "aws_retry_exec keeps stderr out of stdout on success" {
+    cat > "$MOCK_DIR/aws" << 'EOF'
+#!/usr/bin/env bash
+echo "WARNING: something" >&2
+echo '{"a":1}'
+EOF
+    chmod +x "$MOCK_DIR/aws"
+
+    run --separate-stderr aws_retry_exec 1 aws s3 ls
+    [ "$status" -eq 0 ]
+    [ "$output" = '{"a":1}' ]
 }

@@ -250,7 +250,7 @@ function run_verify {
         # Honor the caller's setting here too rather than approving
         # unconditionally. The value is required at L2/L3 and has no default:
         # an empty value is a configuration error, not an implicit REJECT.
-        if ! validate_agent_unchanged_verdict; then
+        if ! check_agent_unchanged_verdict; then
             cd "${old_pwd}" || return 1
             return 1
         fi
@@ -292,7 +292,7 @@ function run_verify {
     if [[ -f ${agent_output_file} ]] \
         && agent_report_requires_check "${AGENT_REPORT_CHECK:-}"; then
         reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}"
-        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}" || true)"
+        format_violations="$(check_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_REPORT_CHECK:-}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
                 "Agent report output format or Changes/Deferred consistency failed" \

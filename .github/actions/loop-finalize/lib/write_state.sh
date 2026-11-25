@@ -75,7 +75,7 @@ STATE_TMP=""
 STATE_EXTRA_PATHS=()
 
 #######################################
-# validate_finalize_commit_path: Reject unsafe finalize commit paths
+# check_finalize_commit_path: Reject unsafe finalize commit paths
 #
 # Globals:
 #   None
@@ -90,7 +90,7 @@ STATE_EXTRA_PATHS=()
 #   0 when valid, 1 otherwise
 #
 #######################################
-function validate_finalize_commit_path {
+function check_finalize_commit_path {
     local path="$1"
 
     if [[ ${path} == *".."* ]]; then
@@ -147,7 +147,7 @@ function commit_and_push_state {
             item="${item#"${item%%[![:space:]]*}"}"
             item="${item%"${item##*[![:space:]]}"}"
             [[ -z ${item} ]] && continue
-            if ! validate_finalize_commit_path "${item}"; then
+            if ! check_finalize_commit_path "${item}"; then
                 return 1
             fi
             paths_to_add+=("${item}")
@@ -546,7 +546,7 @@ function retry_state_write {
 }
 
 #######################################
-# validate_branches: Validate read and push branch names
+# check_branches: Validate read and push branch names
 #
 # Globals:
 #   READ_BRANCH - Set before call in main
@@ -559,22 +559,22 @@ function retry_state_write {
 #   None
 #
 # Returns:
-#   Exits 1 on invalid branch name
+#   0 when valid; 1 on invalid branch name
 #
 #######################################
-function validate_branches {
+function check_branches {
     if ! check_names_branch "${READ_BRANCH}"; then
         echo "::error::Invalid state read branch: ${READ_BRANCH}"
-        exit 1
+        return 1
     fi
     if ! check_names_branch "${PUSH_BRANCH}"; then
         echo "::error::Invalid state push branch: ${PUSH_BRANCH}"
-        exit 1
+        return 1
     fi
 }
 
 #######################################
-# validate_required_inputs: Validate required env for target state writes
+# check_required_inputs: Validate required env for target state writes
 #
 # Globals:
 #   TARGET_KEY - Required target key
@@ -591,13 +591,13 @@ function validate_branches {
 #   None
 #
 # Returns:
-#   Exits 1 when required input is missing
+#   0 when valid; 1 when required input is missing
 #
 #######################################
-function validate_required_inputs {
+function check_required_inputs {
     if [[ -z ${TARGET_KEY} ]]; then
         echo "::error::target_key is required for loop-finalize state write"
-        exit 1
+        return 1
     fi
 
     if [[ ${WRITE_TARGET_STATE} != "true" ]]; then
@@ -606,20 +606,20 @@ function validate_required_inputs {
 
     if [[ -z ${OUTCOME} ]]; then
         echo "::error::outcome is required when write_target_state=true"
-        exit 1
+        return 1
     fi
     if [[ ${STATE_WRITE_MODE} != "promote" && ${STATE_WRITE_MODE} != "clear_pending" && -z ${SHA} ]]; then
         echo "::error::sha is required when state_write_mode=${STATE_WRITE_MODE}"
-        exit 1
+        return 1
     fi
     if [[ ${STATE_WRITE_MODE} == "pending" && -z ${PENDING_PR_NUMBER} ]]; then
         echo "::error::pending_pr_number is required when state_write_mode=pending"
-        exit 1
+        return 1
     fi
     if [[ ${STATE_WRITE_MODE} == "promote" || ${STATE_WRITE_MODE} == "clear_pending" ]]; then
         if [[ -z ${PENDING_PR_NUMBER} ]]; then
             echo "::error::pending_pr_number is required when state_write_mode=${STATE_WRITE_MODE}"
-            exit 1
+            return 1
         fi
     fi
 }
@@ -893,7 +893,7 @@ function write_target_state {
 }
 
 #######################################
-# validate_state_file_path: Reject unsafe state file paths
+# check_state_file_path: Reject unsafe state file paths
 #
 # Globals:
 #   STATE_FILE - State file path to validate
@@ -908,7 +908,7 @@ function write_target_state {
 #   0 when valid, 1 otherwise
 #
 #######################################
-function validate_state_file_path {
+function check_state_file_path {
     if ! check_names_state_file "${STATE_FILE}"; then
         echo "::error::state_file must match .loop/state-<name>.json (no '..')" >&2
         return 1
@@ -937,7 +937,7 @@ function main {
 
     : "${STATE_FILE:?}"
 
-    validate_state_file_path || exit 1
+    check_state_file_path || exit 1
 
     git_auth_configure
 
@@ -948,8 +948,8 @@ function main {
     READ_BRANCH="${STATE_BRANCH}"
     PUSH_BRANCH="${READ_BRANCH}"
 
-    validate_branches
-    validate_required_inputs
+    check_branches || exit 1
+    check_required_inputs || exit 1
 
     load_state_tmp
     # Count before pruning too: the 30-day cooldown in prune_targets resets an aged

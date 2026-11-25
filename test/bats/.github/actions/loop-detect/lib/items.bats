@@ -20,8 +20,8 @@ bats_require_minimum_version 1.5.0
 # - item_target_key joins branch and key with a hash
 # - order_items_by_last_run puts missing state first
 # - order_items_by_last_run orders oldest first and is stable
-# - validate_item_key accepts valid keys
-# - validate_item_key rejects empty / double dot / leading dot / trailing dot / space / hash / over 64 chars
+# - check_item_key accepts valid keys
+# - check_item_key rejects empty / double dot / leading dot / trailing dot / space / hash / over 64 chars
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -150,30 +150,30 @@ JSON
     [ "$(jq -c '[.[].key]' <<< "$output")" = '["b","c","a"]' ]
 }
 
-@test "validate_item_key accepts issue:123" {
-    run validate_item_key "issue:123"
+@test "check_item_key accepts issue:123" {
+    run check_item_key "issue:123"
     [ "$status" -eq 0 ]
-    run validate_item_key "a.b-c_d"
+    run check_item_key "a.b-c_d"
     [ "$status" -eq 0 ]
-    run validate_item_key "$(printf 'a%.0s' {1..64})"
+    run check_item_key "$(printf 'a%.0s' {1..64})"
     [ "$status" -eq 0 ]
 }
 
-@test "validate_item_key rejects empty / double dot / leading dot / trailing dot / space / hash / over 64 chars" {
-    run validate_item_key ""
+@test "check_item_key rejects empty / double dot / leading dot / trailing dot / space / hash / over 64 chars" {
+    run check_item_key ""
     [ "$status" -eq 1 ]
-    run validate_item_key "a..b"
+    run check_item_key "a..b"
     [ "$status" -eq 1 ]
-    run validate_item_key ".a"
+    run check_item_key ".a"
     [ "$status" -eq 1 ]
-    run validate_item_key "a."
+    run check_item_key "a."
     [ "$status" -eq 1 ]
-    run validate_item_key "é"
+    run check_item_key "é"
     [ "$status" -eq 1 ]
-    run validate_item_key "a b"
+    run check_item_key "a b"
     [ "$status" -eq 1 ]
-    run validate_item_key "a#b"
+    run check_item_key "a#b"
     [ "$status" -eq 1 ]
-    run validate_item_key "$(printf 'a%.0s' {1..65})"
+    run check_item_key "$(printf 'a%.0s' {1..65})"
     [ "$status" -eq 1 ]
 }

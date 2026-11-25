@@ -63,8 +63,8 @@ MAKER_TOKENS_SPENT=0
 #######################################
 function initialize_loop_state {
     mkdir -p "${STATUS_DIR}"
-    validate_agent_unchanged_verdict || return 1
-    validate_agent_report_check || return 1
+    check_agent_unchanged_verdict || return 1
+    check_agent_report_check || return 1
     materialize_matrix_handoff_context
     load_default_prompts
     edit_paths_apply_platform_denylist_default

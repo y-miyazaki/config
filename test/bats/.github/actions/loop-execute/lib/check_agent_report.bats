@@ -3,20 +3,20 @@
 
 bats_require_minimum_version 1.5.0
 
-# Tests for .github/actions/loop-execute/lib/validate_agent_report.sh
+# Tests for .github/actions/loop-execute/lib/check_agent_report.sh
 
 # Use cases:
 # - agent_report_requires_check matches only the paths and commits modes
-# - validate_agent_report skips all checks when the report check is empty
-# - validate_agent_report accepts canonical apply output with matching git diff
-# - validate_agent_report accepts survey output with Candidates and Watch
-# - validate_agent_report accepts survey no-op without Candidates
-# - validate_agent_report accepts watch-only survey without Candidates
+# - check_agent_report skips all checks when the report check is empty
+# - check_agent_report accepts canonical apply output with matching git diff
+# - check_agent_report accepts survey output with Candidates and Watch
+# - check_agent_report accepts survey no-op without Candidates
+# - check_agent_report accepts watch-only survey without Candidates
 # - reconcile_agent_report_with_branch_diff appends missing branch-diff rows after table body
 # - reconcile_agent_report_with_branch_diff skips commit-based changelog Changes tables
-# - validate_agent_report accepts changelog apply output without path rows in Changes
-# - validate_agent_report accepts a changed path whose basename starts with a header word
-# - validate_agent_report ignores multi-word header cells such as Commit range
+# - check_agent_report accepts changelog apply output without path rows in Changes
+# - check_agent_report accepts a changed path whose basename starts with a header word
+# - check_agent_report ignores multi-word header cells such as Commit range
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -26,8 +26,8 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-execute/lib/validate_agent_report.sh"
-    TEST_TMP="${BATS_TEST_TMPDIR}/validate_agent_report"
+    bats_source_rel ".github/actions/loop-execute/lib/check_agent_report.sh"
+    TEST_TMP="${BATS_TEST_TMPDIR}/check_agent_report"
     mkdir -p "${TEST_TMP}"
 }
 
@@ -42,7 +42,7 @@ setup() {
     done
 }
 
-@test "validate_agent_report accepts canonical output with matching git diff" {
+@test "check_agent_report accepts canonical output with matching git diff" {
     local out="${TEST_TMP}/good.txt"
     cat > "${out}" << 'EOF'
 # Refactor Result
@@ -65,12 +65,12 @@ Refactor scan found duplicated diff logic; this run deduplicated one call.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "paths"
+    run check_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report accepts survey no-op without Candidates" {
+@test "check_agent_report accepts survey no-op without Candidates" {
     local out="${TEST_TMP}/survey-noop.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -80,12 +80,12 @@ No actionable CI failures after triage; no edits applied.
 ## Summary
 
 EOF
-    run validate_agent_report "${out}" "" "paths"
+    run check_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report accepts survey output without Verification" {
+@test "check_agent_report accepts survey output without Verification" {
     local out="${TEST_TMP}/survey.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -106,12 +106,12 @@ Debt scan over abc..def found broken links in docs/guide; no edits applied.
 | ------ | -------- | ----------- |
 | scripts/foo.sh | TODO marker | low urgency |
 EOF
-    run validate_agent_report "${out}" "" "paths"
+    run check_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report accepts watch-only survey without Candidates" {
+@test "check_agent_report accepts watch-only survey without Candidates" {
     local out="${TEST_TMP}/survey-watch-only.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -126,12 +126,12 @@ Infra flake on workflow lint; logged as Watch; no edits applied.
 | ------ | -------- | ----------- |
 | ci/lint | runner timeout | infra flake |
 EOF
-    run validate_agent_report "${out}" "" "paths"
+    run check_agent_report "${out}" "" "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report rejects Deferred path still in branch diff" {
+@test "check_agent_report rejects Deferred path still in branch diff" {
     local out="${TEST_TMP}/deferred-mismatch.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -158,12 +158,12 @@ Docs drift found stale inventory; updated specification only.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/reference/specification.md\ndocs/index.md\n' "paths"
+    run check_agent_report "${out}" $'docs/reference/specification.md\ndocs/index.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"docs/index.md"* ]]
 }
 
-@test "validate_agent_report rejects apply output with Candidates subsection" {
+@test "check_agent_report rejects apply output with Candidates subsection" {
     local out="${TEST_TMP}/apply-candidates.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -190,12 +190,12 @@ Fixed docs/foo.md heading style.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/foo.md\n' "paths"
+    run check_agent_report "${out}" $'docs/foo.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Candidates"* ]]
 }
 
-@test "validate_agent_report rejects apply output with Watch subsection" {
+@test "check_agent_report rejects apply output with Watch subsection" {
     local out="${TEST_TMP}/apply-watch.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -222,12 +222,12 @@ Fixed docs/foo.md heading style.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/foo.md\n' "paths"
+    run check_agent_report "${out}" $'docs/foo.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Watch"* ]]
 }
 
-@test "validate_agent_report rejects branch diff path missing from Changes table" {
+@test "check_agent_report rejects branch diff path missing from Changes table" {
     local out="${TEST_TMP}/missing-change.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -248,12 +248,12 @@ Updated one doc file.
 | ----- | ------ |
 | markdownlint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
+    run check_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"docs/b.md"* ]]
 }
 
-@test "validate_agent_report accepts a changed path whose basename starts with a header word" {
+@test "check_agent_report accepts a changed path whose basename starts with a header word" {
     # Regression guard: extract_subsection_table_col1 used to prefix-match
     # header words (File/Target/Root/Check/...), so a real path like
     # Rootfs/entry.sh or Checker.sh was mistaken for a table header and
@@ -279,12 +279,12 @@ Refactored the rootfs entrypoint and checker script.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "paths"
+    run check_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report ignores multi-word header cells in the Changes table" {
+@test "check_agent_report ignores multi-word header cells in the Changes table" {
     local out="${TEST_TMP}/multiword-header.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -305,7 +305,7 @@ Fixed a script.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'a.sh\n' "paths"
+    run check_agent_report "${out}" $'a.sh\n' "paths"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
@@ -338,7 +338,7 @@ Fixed mkdocs strict link failure.
 | mkdocs build --strict | pass |
 EOF
     reconcile_agent_report_with_branch_diff "${out}" $'docs/explanation/apm-package-design.md\n' "paths"
-    run validate_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "paths"
+    run check_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "paths"
     [ "$status" -eq 0 ]
     # Placeholder row must follow existing data rows, not sit between header and separator.
     python3 - "${out}" << 'PY'
@@ -390,7 +390,7 @@ Updated one doc file.
 | markdownlint | pass |
 EOF
     reconcile_agent_report_with_branch_diff "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
-    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
+    run check_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "paths"
     [ "$status" -eq 0 ]
     grep -q 'docs/b.md' "${out}"
     # Placeholder row must follow existing data rows, not sit between header and separator.
@@ -424,7 +424,7 @@ Updated evaluation report.
 | markdownlint | pass |
 EOF
     reconcile_agent_report_with_branch_diff "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "paths"
-    run validate_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "paths"
+    run check_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "paths"
     [ "$status" -eq 0 ]
     run ! grep -q 'Updated in an earlier loop attempt' "${out}"
 }
@@ -463,13 +463,13 @@ Added changelog entries.
 | CHANGELOG.md structure | pass |
 EOF
     reconcile_agent_report_with_branch_diff "${out}" $'CHANGELOG.md\n' "commits"
-    run validate_agent_report "${out}" $'CHANGELOG.md\n' "commits"
+    run check_agent_report "${out}" $'CHANGELOG.md\n' "commits"
     [ "$status" -eq 0 ]
     run grep -q 'Updated in an earlier loop attempt' "${out}"
     [ "$status" -eq 1 ]
 }
 
-@test "validate_agent_report accepts changelog apply output with commit rows only" {
+@test "check_agent_report accepts changelog apply output with commit rows only" {
     local out="${TEST_TMP}/changelog-apply.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -497,12 +497,12 @@ Processed commits since abc..def; added Unreleased bullets and promoted releases
 | ----- | ------ |
 | CHANGELOG.md structure | pass |
 EOF
-    run validate_agent_report "${out}" $'CHANGELOG.md\n' "commits"
+    run check_agent_report "${out}" $'CHANGELOG.md\n' "commits"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
 
-@test "validate_agent_report rejects legacy Fixes Applied and Outcome sections" {
+@test "check_agent_report rejects legacy Fixes Applied and Outcome sections" {
     local out="${TEST_TMP}/legacy.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -525,13 +525,13 @@ Loop done.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\n' "paths"
+    run check_agent_report "${out}" $'docs/a.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"Fixes Applied"* ]]
     [[ $output == *"Outcome"* ]]
 }
 
-@test "validate_agent_report rejects survey output with Deferred subsection" {
+@test "check_agent_report rejects survey output with Deferred subsection" {
     local out="${TEST_TMP}/survey-deferred.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -552,12 +552,12 @@ Survey only.
 | ------ | ------------ |
 | docs/b.md | later |
 EOF
-    run validate_agent_report "${out}" "" "paths"
+    run check_agent_report "${out}" "" "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"use ### Watch"* ]]
 }
 
-@test "validate_agent_report rejects survey output with Skipped subsection" {
+@test "check_agent_report rejects survey output with Skipped subsection" {
     local out="${TEST_TMP}/survey-skipped.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -578,12 +578,12 @@ Survey only.
 | ------ | ----------- |
 | def5678 | chore only |
 EOF
-    run validate_agent_report "${out}" "" "commits"
+    run check_agent_report "${out}" "" "commits"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ### Skipped"* ]]
 }
 
-@test "validate_agent_report rejects survey output with Verification section" {
+@test "check_agent_report rejects survey output with Verification section" {
     local out="${TEST_TMP}/survey-verif.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -604,12 +604,12 @@ Survey only.
 | ----- | ------ |
 | lint | pass |
 EOF
-    run validate_agent_report "${out}" "" "paths"
+    run check_agent_report "${out}" "" "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"must not include ## Verification"* ]]
 }
 
-@test "validate_agent_report rejects survey output with branch diff" {
+@test "check_agent_report rejects survey output with branch diff" {
     local out="${TEST_TMP}/survey-diff.txt"
     cat > "${out}" << 'EOF'
 ## Overview
@@ -624,16 +624,16 @@ Survey only.
 | ------ | -------- | ------------------ | -------- |
 | docs/a.md | stale | fix | high |
 EOF
-    run validate_agent_report "${out}" $'docs/a.md\n' "paths"
+    run check_agent_report "${out}" $'docs/a.md\n' "paths"
     [ "$status" -eq 1 ]
     [[ $output == *"Apply output must not include ### Candidates"* ]]
     [[ $output == *"Missing ### Changes under ## Summary while branch has file changes"* ]]
 }
 
-@test "validate_agent_report skips all checks when the report check is empty" {
+@test "check_agent_report skips all checks when the report check is empty" {
     local out="${TEST_TMP}/none.txt"
     printf '%s\n' '# Anything' 'not a fix report' > "${out}"
-    run validate_agent_report "${out}" $'docs/a.md\n' ""
+    run check_agent_report "${out}" $'docs/a.md\n' ""
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }

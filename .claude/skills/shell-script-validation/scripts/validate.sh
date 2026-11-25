@@ -241,6 +241,21 @@ function parse_arguments {
         esac
     done
 
+    if [[ $CHANGED_ONLY != "true" ]]; then
+        # A typo must not pass by checking nothing: every user-given path has to resolve
+        local user_path
+        local -a user_paths=(${SEARCH_PATHS[@]+"${SEARCH_PATHS[@]}"})
+        # --tests paths are not used when tests are skipped
+        if [[ $SKIP_TESTS != "true" ]]; then
+            user_paths+=(${TEST_PATHS[@]+"${TEST_PATHS[@]}"})
+        fi
+        for user_path in ${user_paths[@]+"${user_paths[@]}"}; do
+            if [[ ! -e "$(resolve_user_search_path "$user_path")" ]]; then
+                error_exit "Path does not exist: $user_path"
+            fi
+        done
+    fi
+
     if [[ $CHANGED_ONLY == "true" ]]; then
         # Discovery resolves paths against WORKSPACE_ROOT; synced skill copies derive it from
         # their own location, so use the repository root of the current directory when there is one
@@ -2282,6 +2297,10 @@ function validate_shebang {
                 custom_log "ERROR" "Failed to append content: $script_name"
                 rm -f "$script.bak" "$script.tmp"
                 return 1
+            fi
+            # The new file is created under umask 027; keep the original mode (e.g. the exec bit)
+            if ! chmod --reference="$script" "$script.tmp" 2> /dev/null && ! chmod "$(stat -f '%Lp' "$script" 2> /dev/null)" "$script.tmp" 2> /dev/null; then
+                custom_log "WARN" "Could not preserve file mode: $script_name"
             fi
             if ! mv "$script.tmp" "$script"; then
                 custom_log "ERROR" "Failed to replace original file: $script_name"
