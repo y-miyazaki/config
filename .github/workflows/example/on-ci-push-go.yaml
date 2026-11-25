@@ -80,7 +80,7 @@ jobs:
 
   go-ci:
     needs: detect-go-version
-    uses: y-miyazaki/config/.github/workflows/ci-go.yaml@d399b3df0798bd17eee67d7ea4031076189a6b8a # v1.10.0
+    uses: y-miyazaki/config/.github/workflows/ci-go.yaml@25cd9b4d799e5963d21c04fc1d198db957b5aa47 # v1.10.0
     with:
       component: "base"
       go_project_path: "."
