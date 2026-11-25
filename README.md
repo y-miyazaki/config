@@ -76,6 +76,22 @@ APM distributes AI agent-related configuration files as packages. Each package b
 
 Hooks are split per agent target (`*` is `claude`, `copilot`, or `cursor`); install the suffix that matches your agent.
 
+### Review gate (`common-hooks-*`)
+
+The `review-gate` Stop hook blocks finishing while changed files have not been reviewed. It finds changes through git (generated and agent-managed paths are ignored) and the review through the session transcript. It fails open: a missing `jq`/`git`, an error, or `stop_hook_active` lets the agent stop. Only the Claude Code transcript format is verified; for Copilot CLI and Cursor the hook blocks once per working-tree state.
+
+Set these environment variables (for example in `containerEnv` of `devcontainer.json`) to adjust it. An empty shared variable keeps the default; the one exception is a per-agent `REVIEW_GATE_MODEL_<AGENT>` (see below).
+
+| Variable                                                          | Effect                                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `REVIEW_GATE_DISABLED=1`                                          | Turn the gate off                                                                                           |
+| `REVIEW_GATE_COMMAND`, `REVIEW_GATE_COMMAND_<AGENT>`              | Review command named in the block reason (default `/code-review`; `/review` for Copilot CLI and Cursor)    |
+| `REVIEW_GATE_MODEL`, `REVIEW_GATE_MODEL_<AGENT>`                  | Model the review should use, named in the block reason (advisory, not verified; empty keeps the session model) |
+| `REVIEW_GATE_MARKER`, `REVIEW_GATE_EDIT_MARKER`                   | Regular expressions that match a review / an edit line in the transcript (for other transcript formats)    |
+| `HOOK_BLOCK_LIMIT`                                                | Times the same working-tree state is reported before the gate lets it pass (default 1 for this hook)        |
+
+`<AGENT>` is `CLAUDE`, `COPILOT` or `CURSOR`; the per-agent value wins over the shared one, and a set-but-empty `REVIEW_GATE_MODEL_<AGENT>` turns the model note off for that agent, while an empty `REVIEW_GATE_COMMAND_<AGENT>` falls back to the shared or default command.
+
 For detailed package contents (MCP servers, hooks, skills, instructions), see the [Specification](https://y-miyazaki.github.io/config/reference/specification/).
 
 ### Individual Packages

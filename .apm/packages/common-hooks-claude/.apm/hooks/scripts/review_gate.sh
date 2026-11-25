@@ -30,7 +30,7 @@
 #   REVIEW_GATE_MODEL_<AGENT> - the same per agent; wins over REVIEW_GATE_MODEL, and an empty value
 #                            (set but empty) turns the model note off for that agent. Advisory only: the
 #                            reason asks the agent to use the model, the gate does not verify it
-#   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND
+#   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (an empty value falls back to the shared or default command) (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND
 #   REVIEW_GATE_MARKER     - ERE that matches a transcript line proving a review ran
 #   REVIEW_GATE_EDIT_MARKER - ERE that matches a transcript line of a file-edit tool call
 #######################################

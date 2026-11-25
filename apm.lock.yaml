@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T03:37:29.241210+00:00'
+generated_at: '2026-11-25T03:42:43.873978+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -370,11 +370,11 @@ dependencies:
     .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:805844a6c02eba07cf9a9d41c04b0f21208ce5381f21f55fedbbb535b466c975
     .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:041365dfd707d70481aabe8ef3d1282440d0028f8069729b2672db1d8cd5d2f6
     .claude/hooks/common-hooks-claude/scripts/prettier.sh: sha256:53109de9c4203da09946a5049b3ded9edcf0dbab436ff426d9007f47ab686e33
-    .claude/hooks/common-hooks-claude/scripts/review_gate.sh: sha256:8f1b713252ba05f306309236c5845d0030da92817175aefdac3cab785c257eb1
+    .claude/hooks/common-hooks-claude/scripts/review_gate.sh: sha256:a59f5eecab00e2b1c4e1cb1344371d40519ca07e00a077183f321adcdab58514
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:19374e19565e5dd92fdf162160e0a4c30197262f25f86b7679c2846b84c2b48c
   source: local
   local_path: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:5bf34f2ea8fc13ff0e033d8ce10af788409b93b3d8f7a21cf5b4e99b77fecea3
+  content_hash: sha256:a10aad847c8a36d9bca030b0a75192f807f17b86eeea46ceae333bac9b74ea3f
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
   name: common-hooks-cursor
@@ -398,11 +398,11 @@ dependencies:
     .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:805844a6c02eba07cf9a9d41c04b0f21208ce5381f21f55fedbbb535b466c975
     .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:041365dfd707d70481aabe8ef3d1282440d0028f8069729b2672db1d8cd5d2f6
     .cursor/hooks/common-hooks-cursor/scripts/prettier.sh: sha256:53109de9c4203da09946a5049b3ded9edcf0dbab436ff426d9007f47ab686e33
-    .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh: sha256:8f1b713252ba05f306309236c5845d0030da92817175aefdac3cab785c257eb1
+    .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh: sha256:a59f5eecab00e2b1c4e1cb1344371d40519ca07e00a077183f321adcdab58514
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:19374e19565e5dd92fdf162160e0a4c30197262f25f86b7679c2846b84c2b48c
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:1a8c4d6190d9b9f82dddb578c8c772298d23869ff0a3fbeb11100fb88b7de4ca
+  content_hash: sha256:cbc046633af12ade314693990fd2d2e9e42cb58a82c1fcd294fa026fd49b27f3
   declared_license: Apache-2.0
 - repo_url: _local/github
   name: config-github
@@ -2661,7 +2661,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:8f1b713252ba05f306309236c5845d0030da92817175aefdac3cab785c257eb1
+  content_hash: sha256:a59f5eecab00e2b1c4e1cb1344371d40519ca07e00a077183f321adcdab58514
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/zizmor.sh
@@ -13659,7 +13659,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:8f1b713252ba05f306309236c5845d0030da92817175aefdac3cab785c257eb1
+  content_hash: sha256:a59f5eecab00e2b1c4e1cb1344371d40519ca07e00a077183f321adcdab58514
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh

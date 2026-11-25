@@ -27,7 +27,9 @@
 #                            Claude Code, /review for Copilot CLI and Cursor)
 #   REVIEW_GATE_MODEL      - model the review must use, named in the block reason (default empty: the
 #                            session's base model)
-#   REVIEW_GATE_MODEL_<AGENT> - the same per agent; wins over REVIEW_GATE_MODEL
+#   REVIEW_GATE_MODEL_<AGENT> - the same per agent; wins over REVIEW_GATE_MODEL, and an empty value
+#                            (set but empty) turns the model note off for that agent. Advisory only: the
+#                            reason asks the agent to use the model, the gate does not verify it
 #   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND
 #   REVIEW_GATE_MARKER     - ERE that matches a transcript line proving a review ran
 #   REVIEW_GATE_EDIT_MARKER - ERE that matches a transcript line of a file-edit tool call
@@ -508,7 +510,7 @@ function set_markers {
     REVIEW_COMMAND="${!agent_var:-${REVIEW_GATE_COMMAND:-$default_command}}"
     # Optional model for the review; empty keeps the session (base) model
     local model_var="REVIEW_GATE_MODEL_${1^^}"
-    REVIEW_MODEL="${!model_var:-${REVIEW_GATE_MODEL:-}}"
+    REVIEW_MODEL="${!model_var-${REVIEW_GATE_MODEL:-}}"
 }
 
 # Agent-managed and generated paths that never need a review (single owner of the ignore list);
