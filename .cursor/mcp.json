@@ -15,7 +15,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@upstash/context7-mcp@4.7.1"
+        "@upstash/context7-mcp@4.7.3"
       ]
     },
     "fetch": {
