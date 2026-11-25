@@ -30,7 +30,8 @@
 #   REVIEW_GATE_MODEL_<AGENT> - the same per agent; wins over REVIEW_GATE_MODEL, and an empty value
 #                            (set but empty) turns the model note off for that agent. Advisory only: the
 #                            reason asks the agent to use the model, the gate does not verify it
-#   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (an empty value falls back to the shared or default command) (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND
+#   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND;
+#                            an empty value falls back to the shared or default command
 #   REVIEW_GATE_MARKER     - ERE that matches a transcript line proving a review ran
 #   REVIEW_GATE_EDIT_MARKER - ERE that matches a transcript line of a file-edit tool call
 #######################################
@@ -176,7 +177,7 @@ function report_failure {
             agent="antigravity"
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
-        elif is_cursor_event; then
+        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1; then
             agent="cursor"
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // "stop"' 2> /dev/null)
         elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
@@ -439,26 +440,6 @@ function record_blocked_state {
 # Agent-specific strings: replace these to adapt the gate to another agent or review command.
 
 #######################################
-# is_cursor_event: Tell whether the event JSON comes from Cursor (single owner of the rule)
-#
-# Globals:
-#   HOOK_STDIN_DATA - hook event JSON
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 for a Cursor event, 1 otherwise
-#
-#######################################
-function is_cursor_event {
-    printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1
-}
-
-#######################################
 # detect_agent: Name the agent that sent the hook event
 #
 # Globals:
@@ -475,7 +456,7 @@ function is_cursor_event {
 #
 #######################################
 function detect_agent {
-    if is_cursor_event; then
+    if printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1; then
         echo cursor
     elif printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("transcriptPath") or has("stopReason")' > /dev/null 2>&1; then
         echo copilot

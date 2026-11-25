@@ -50,26 +50,6 @@ if [[ ! -t 0 ]]; then
 fi
 
 #######################################
-# is_cursor_event: Tell whether the event JSON comes from Cursor (single owner of the rule)
-#
-# Globals:
-#   HOOK_STDIN_DATA - hook event JSON
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 for a Cursor event, 1 otherwise
-#
-#######################################
-function is_cursor_event {
-    printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1
-}
-
-#######################################
 # get_changed_files: Collect changed files from git
 #
 # Globals:
@@ -197,7 +177,7 @@ function report_failure {
             agent="antigravity"
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
-        elif is_cursor_event; then
+        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1; then
             agent="cursor"
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // "stop"' 2> /dev/null)
         elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
@@ -476,7 +456,7 @@ function record_blocked_state {
 #
 #######################################
 function detect_agent {
-    if is_cursor_event; then
+    if printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots")' > /dev/null 2>&1; then
         echo cursor
     elif printf '%s' "$HOOK_STDIN_DATA" | jq -e 'has("transcriptPath") or has("stopReason")' > /dev/null 2>&1; then
         echo copilot
