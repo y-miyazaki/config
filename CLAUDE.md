@@ -54,6 +54,18 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 
 `AGENTS.md` is a generic agent constitution meant to be reused across repositories. Do not write repo-specific names in it (paths, skill names, tool names, hook lists, sync targets); put those in this file or the nearest `CLAUDE.md`.
 
+## Nested CLAUDE.md files (MUST)
+
+Rules that apply to one part of the tree live in the nearest `CLAUDE.md`; read it before editing there. A repository-specific rule for a path goes in that path's file, never in a package source (`.apm/packages/**`) or in `AGENTS.md`.
+
+| Path                          | File                                                       |
+| ----------------------------- | ---------------------------------------------------------- |
+| `.apm/packages/**`            | [.apm/CLAUDE.md](.apm/CLAUDE.md)                           |
+| `.github/workflows/**`        | [.github/workflows/CLAUDE.md](.github/workflows/CLAUDE.md) |
+| `.github/actions/**`          | [.github/actions/CLAUDE.md](.github/actions/CLAUDE.md)     |
+| `scripts/**`, root installers | [scripts/CLAUDE.md](scripts/CLAUDE.md)                     |
+| `test/bats/**`                | [test/bats/CLAUDE.md](test/bats/CLAUDE.md)                 |
+
 ## Conventions
 
 | Topic           | Rule                                                                                                                                                                                                                                                                                                                                   |

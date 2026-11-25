@@ -1038,18 +1038,20 @@ function main {
     trap cleanup_temp_files EXIT
     parse_arguments "$@"
     start_time=$(date +%s)
-    require_dependencies "go" "golangci-lint"
     local -a changed_lines=()
     if [[ $CHANGED_ONLY == "true" ]]; then
         # Checks run from each module root, so a directory argument only scopes the changed set
         IS_SCOPED=false
         mapfile -t changed_lines < <(determine_changed_patterns "$TARGET_DIR")
         if [[ ${#changed_lines[@]} -eq 0 ]]; then
+            # Nothing to check: succeed without requiring the Go toolchain or the linter
             log "INFO" "--changed-only: no changed Go packages"
             print_validation_result go 0 "changed_only=SKIP|no changed Go packages" || true
             exit 0
         fi
+        require_dependencies "go" "golangci-lint"
     else
+        require_dependencies "go" "golangci-lint"
         TARGET_PATTERNS=("$(determine_target_pattern "$TARGET_DIR")")
     fi
     echo_section "Starting Go code quality checks"
