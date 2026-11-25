@@ -57,7 +57,7 @@ permissions:
 
 jobs:
   markdown-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@25cd9b4d799e5963d21c04fc1d198db957b5aa47 # v1.10.0
+    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@1e49ae1c296dcda495bd371742f0ec6bc68abd7f # v1.10.0
     with:
       markdownlint_flags: "README.md docs/**/*.md"
     permissions:
