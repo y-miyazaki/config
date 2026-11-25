@@ -147,6 +147,10 @@ function resolve_bats_suites {
             [[ -d $BATS_SUITE_ROOT ]] || continue
             escaped=$(printf '%s' "$path" | sed 's/[][\.*^$+?(){}|]/\\&/g')
             grep -rlE --include='*.bats' "^# Tests for ${escaped}([[:space:]]|$)" "$BATS_SUITE_ROOT" 2> /dev/null || true
+            # A shared library is exercised by suites of other scripts: add suites that name it
+            if [[ $path == scripts/lib/*.sh ]]; then
+                grep -rlF --include='*.bats' "lib/${path##*/}" "$BATS_SUITE_ROOT" 2> /dev/null || true
+            fi
         done
     } | sort -u
 }
@@ -182,13 +186,24 @@ function main {
     root=$(git rev-parse --show-toplevel 2> /dev/null) || exit 0
     cd "$root" || exit 0
 
-    local -a files=()
+    local pending_file="${root}/.claude/tmp/bats-pending"
+    local -a files=() suites=()
     mapfile -t files < <(get_changed_files)
-    [[ ${#files[@]} -gt 0 ]] || exit 0
-
-    local -a suites=()
-    mapfile -t suites < <(resolve_bats_suites "${files[@]}")
+    if [[ ${#files[@]} -gt 0 ]]; then
+        mapfile -t suites < <(resolve_bats_suites "${files[@]}")
+    fi
+    # Re-run suites left over from an earlier failed or interrupted stop
+    if [[ -f $pending_file && -n $(find "$pending_file" -mmin -1440 2> /dev/null) ]]; then
+        local line
+        while IFS= read -r line; do
+            [[ -f $line ]] && suites+=("$line")
+        done < "$pending_file"
+    fi
     [[ ${#suites[@]} -gt 0 ]] || exit 0
+    mapfile -t suites < <(printf '%s\n' "${suites[@]}" | sort -u)
+    # Record before running so a timeout kill keeps the suites pending
+    mkdir -p "${pending_file%/*}"
+    [[ -f $pending_file ]] || printf '%s\n' "${suites[@]}" > "$pending_file"
 
     local -a opts=()
     local jobs="${BATS_JOBS:-$(nproc 2> /dev/null || echo 1)}"
@@ -209,6 +224,7 @@ function main {
         report_failure "bats failed for suites mapped from changed files (${suites[*]}):
 $(printf '%s\n' "$output" | tail -n 80)"
     fi
+    rm -f "$pending_file"
 }
 
 # Only call main function if script is executed directly, not sourced

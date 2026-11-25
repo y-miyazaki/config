@@ -36,4 +36,5 @@ CI runs `bats --jobs "$(nproc)" --no-parallelize-within-files`: suites run in pa
 ## Running (SHOULD)
 
 - Run the suites for the files you changed (`bats test/bats/<path>.bats`). The full suite (`bats -r test/bats`) takes about four minutes; run it before opening a PR, not after every edit.
-- The Stop hook `scripts/self/hooks/bats_changed.sh` runs only the suites mapped from changed files, with the timeout set in `.claude/settings.local.json` (120 seconds at the time of writing); it does not see suites that merely source a changed library. Run those suites yourself when you change `scripts/lib/`.
+- The Stop hook `scripts/self/hooks/bats_changed.sh` runs the suites mapped from changed files (through the `# Tests for` header) plus, for a changed `scripts/lib/*.sh`, the suites that mention `lib/<name>.sh`. A suite that fails or is cut off by the timeout stays in `.claude/tmp/bats-pending` and runs again on the next stop until it passes. Suites that reach a library only indirectly (through `all.sh`) are still not mapped: run those yourself when you change `scripts/lib/`.
+- The Stop hook `scripts/self/hooks/review_gate.sh` blocks the stop when a source file was edited after the last `/code-review` of the session (AGENTS.md Self-Review).

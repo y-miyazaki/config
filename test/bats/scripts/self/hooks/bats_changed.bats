@@ -12,6 +12,8 @@
 # - resolve_runner_bin keeps the runner name unless it is a mise shim
 # - resolve_runner_bin returns the real binary path for a mise shim
 # - main skips when stop_hook_active is true or nothing changed
+# - resolve_bats_suites adds suites that mention a changed lib file (reverse dependencies)
+# - main keeps a failed suite pending and re-runs it on the next stop until it passes
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -110,4 +112,30 @@ _write_suite() {
     run bash -c "PATH='${BATS_TEST_TMPDIR}/shims':\$PATH; source '${HOOK_SCRIPT}' </dev/null && resolve_runner_bin rush"
     [ "$status" -eq 0 ]
     [ "$output" = "${BATS_TEST_TMPDIR}/real/rush" ]
+}
+
+@test "resolve_bats_suites adds suites that mention a changed lib file" {
+    mkdir -p "${REPO}/scripts/lib"
+    _write_suite "other/user.bats" "scripts/user.sh" 'source scripts/lib/aws.sh'
+    run bash -c "cd '${REPO}' && source '${HOOK_SCRIPT}' </dev/null && resolve_bats_suites scripts/lib/aws.sh"
+    [ "$status" -eq 0 ]
+    [ "$output" = "test/bats/other/user.bats" ]
+}
+
+@test "main keeps a failed suite pending and re-runs it on the next stop until it passes" {
+    _write_suite "other/a.bats" "scripts/a.sh" "false"
+    echo '# changed' >> "${REPO}/scripts/a.sh"
+    run bash -c "cd '${REPO}' && BATS_JOBS=1 bash '${HOOK_SCRIPT}' </dev/null"
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    [ -f "${REPO}/.claude/tmp/bats-pending" ]
+    # Commit everything: nothing is changed any more, yet the pending suite runs again and still fails
+    git -C "${REPO}" add -A -f
+    git -C "${REPO}" commit -q -m wip
+    run bash -c "cd '${REPO}' && BATS_JOBS=1 bash '${HOOK_SCRIPT}' </dev/null"
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    _write_suite "other/a.bats" "scripts/a.sh" "true"
+    run bash -c "cd '${REPO}' && BATS_JOBS=1 bash '${HOOK_SCRIPT}' </dev/null"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+    [ ! -f "${REPO}/.claude/tmp/bats-pending" ]
 }
