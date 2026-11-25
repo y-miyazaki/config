@@ -707,9 +707,9 @@ function run_schemaspy {
     java_cmd+=(-configFile "${SCHEMASPY_PASSWORD_FILE}")
 
     # Execute SchemaSpy
-    "${java_cmd[@]}" 2>&1 | tee "${schemaspy_log}"
-
-    local exit_code=${PIPESTATUS[0]}
+    # Under set -e/pipefail a failing java would abort here; capture its status from PIPESTATUS instead
+    local exit_code=0
+    "${java_cmd[@]}" 2>&1 | tee "${schemaspy_log}" || exit_code=${PIPESTATUS[0]}
     if [ "${exit_code}" -ne 0 ]; then
         error_exit "SchemaSpy execution failed with exit code ${exit_code}. Check log: ${schemaspy_log}"
     fi

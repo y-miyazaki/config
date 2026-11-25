@@ -57,18 +57,24 @@ Full documentation is hosted at **<https://y-miyazaki.github.io/config/>**.
 
 APM distributes AI agent-related configuration files as packages. Each package bundles MCP servers, hooks, instructions, and skills appropriate for its domain.
 
-| Package          | Description                                              |
-| ---------------- | -------------------------------------------------------- |
-| common           | Forge-neutral review, markdown, docs-creator, shared MCP |
-| repo-maintenance | Changelog, docs sync, CI repair, refactor, tech-debt     |
-| github           | GitHub Issues/PRs (`gh`) and GitHub MCP                  |
-| github-actions   | GitHub Actions workflow review and validation            |
-| loop             | Generic loop checker (`loop-verifier`)                   |
-| aws              | AWS development                                          |
-| terraform        | Terraform development (cloud-agnostic)                   |
-| terraform-aws    | Terraform AWS-specific rules + MCP (use with terraform)  |
-| go               | Go development                                           |
-| shell-script     | Shell script development                                 |
+| Package               | Description                                              |
+| --------------------- | -------------------------------------------------------- |
+| common                | Forge-neutral review, markdown, docs-creator, shared MCP |
+| repo-maintenance      | Changelog, docs sync, CI repair, refactor, tech-debt     |
+| github                | GitHub Issues/PRs (`gh`) and GitHub MCP                  |
+| github-actions        | GitHub Actions workflow review and validation            |
+| loop                  | Generic loop checker (`loop-verifier`)                   |
+| aws                   | AWS development                                          |
+| terraform             | Terraform development (cloud-agnostic)                   |
+| terraform-aws         | Terraform AWS-specific rules + MCP (use with terraform)  |
+| go                    | Go development                                           |
+| shell-script          | Shell script development                                 |
+| common-hooks-\*       | Common hooks (markdown, GitHub Actions, secrets, format) |
+| go-hooks-\*           | Go hooks (golangci-lint, go test)                        |
+| terraform-hooks-\*    | Terraform hooks (terraform fmt, tflint)                  |
+| shell-script-hooks-\* | Shell script hooks (shellcheck, shfmt)                   |
+
+Hooks are split per agent target (`*` is `claude`, `copilot`, or `cursor`); install the suffix that matches your agent.
 
 For detailed package contents (MCP servers, hooks, skills, instructions), see the [Specification](https://y-miyazaki.github.io/config/reference/specification/).
 
@@ -85,6 +91,18 @@ apm install y-miyazaki/config/.apm/packages/terraform
 apm install y-miyazaki/config/.apm/packages/terraform-aws
 apm install y-miyazaki/config/.apm/packages/go
 apm install y-miyazaki/config/.apm/packages/shell-script
+apm install y-miyazaki/config/.apm/packages/common-hooks-claude
+apm install y-miyazaki/config/.apm/packages/common-hooks-copilot
+apm install y-miyazaki/config/.apm/packages/common-hooks-cursor
+apm install y-miyazaki/config/.apm/packages/go-hooks-claude
+apm install y-miyazaki/config/.apm/packages/go-hooks-copilot
+apm install y-miyazaki/config/.apm/packages/go-hooks-cursor
+apm install y-miyazaki/config/.apm/packages/terraform-hooks-claude
+apm install y-miyazaki/config/.apm/packages/terraform-hooks-copilot
+apm install y-miyazaki/config/.apm/packages/terraform-hooks-cursor
+apm install y-miyazaki/config/.apm/packages/shell-script-hooks-claude
+apm install y-miyazaki/config/.apm/packages/shell-script-hooks-copilot
+apm install y-miyazaki/config/.apm/packages/shell-script-hooks-cursor
 ```
 
 ## Lint Configs

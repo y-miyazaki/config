@@ -5,11 +5,11 @@
 
 # Use cases:
 # - render_template replaces placeholders
-# - validate_agent_report_check accepts empty, paths, and commits and rejects other values
-# - validate_agent_unchanged_verdict accepts APPROVE and REJECT
-# - validate_agent_unchanged_verdict fails on empty (no REJECT default) and ignores
+# - check_agent_report_check accepts empty, paths, and commits and rejects other values
+# - check_agent_unchanged_verdict accepts APPROVE and REJECT
+# - check_agent_unchanged_verdict fails on empty (no REJECT default) and ignores
 #   the legacy NO_CHANGES_VERDICT name
-# - validate_agent_unchanged_verdict fails on values other than APPROVE / REJECT
+# - check_agent_unchanged_verdict fails on values other than APPROVE / REJECT
 # - parse_output_field extracts legacy line fields
 # - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
 # - materialize_matrix_handoff_context gives an entity prompt the full detect JSON the skills read
@@ -170,26 +170,26 @@ EOF
     [[ $output == *"inline DETECT_RESULT_JSON is invalid"* ]]
 }
 
-@test "validate_agent_report_check accepts empty, paths, and commits and rejects other values" {
+@test "check_agent_report_check accepts empty, paths, and commits and rejects other values" {
     local value
     for value in "" paths commits; do
         AGENT_REPORT_CHECK="${value}"
-        run validate_agent_report_check
+        run check_agent_report_check
         [ "${status}" -eq 0 ]
     done
     for value in path Paths none; do
         AGENT_REPORT_CHECK="${value}"
-        run validate_agent_report_check
+        run check_agent_report_check
         [ "${status}" -eq 1 ]
         [ "${output}" = "::error::agent_report_check must be empty, paths, or commits; got: '${value}'" ]
     done
 }
 
-@test "validate_agent_unchanged_verdict accepts APPROVE and REJECT" {
+@test "check_agent_unchanged_verdict accepts APPROVE and REJECT" {
     local value checked=0
     for value in APPROVE REJECT; do
         AGENT_UNCHANGED_VERDICT="${value}"
-        run validate_agent_unchanged_verdict
+        run check_agent_unchanged_verdict
         [ "${status}" -eq 0 ]
         [ -z "${output}" ]
         checked=$((checked + 1))
@@ -197,19 +197,19 @@ EOF
     [ "${checked}" -eq 2 ]
 }
 
-@test "validate_agent_unchanged_verdict fails on empty and ignores NO_CHANGES_VERDICT" {
+@test "check_agent_unchanged_verdict fails on empty and ignores NO_CHANGES_VERDICT" {
     unset AGENT_UNCHANGED_VERDICT
     NO_CHANGES_VERDICT="APPROVE"
-    run validate_agent_unchanged_verdict
+    run check_agent_unchanged_verdict
     [ "${status}" -eq 1 ]
     [ "${output}" = "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: ''" ]
 }
 
-@test "validate_agent_unchanged_verdict fails on values other than APPROVE or REJECT" {
+@test "check_agent_unchanged_verdict fails on values other than APPROVE or REJECT" {
     local value checked=0
     for value in approve reject maybe; do
         AGENT_UNCHANGED_VERDICT="${value}"
-        run validate_agent_unchanged_verdict
+        run check_agent_unchanged_verdict
         [ "${status}" -eq 1 ]
         [ "${output}" = "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: '${value}'" ]
         checked=$((checked + 1))

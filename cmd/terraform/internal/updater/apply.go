@@ -22,12 +22,18 @@ const (
 
 	// logKeyDir is the structured log key for a directory path.
 	logKeyDir = "dir"
+
+	// lockFileName is the provider lock file that `terraform init -upgrade` rewrites.
+	lockFileName = ".terraform.lock.hcl"
+
+	// noBackup marks a backups entry for a file that did not exist before the update;
+	// rollback removes such a file instead of restoring it.
+	noBackup = ""
 )
 
-// rootMarkers are files whose presence marks a Terraform project root.
-var rootMarkers = []string{
-	"terraform.dev.tfbackend", "terraform.dev.tfvars", "main.tf", "versions.tf", "providers.tf",
-}
+// rootMarkers are files whose presence marks a Terraform project root,
+// independent of the selected environment.
+var rootMarkers = []string{"main.tf", "versions.tf", "providers.tf"}
 
 // apply updates every pending module one at a time, verifying each with a plan
 // comparison unless NoPlan is set, and records the outcome in sum.
@@ -47,7 +53,7 @@ func (u *Updater) apply(ctx context.Context, pending map[string]*pendingModule, 
 		p := pending[source]
 		printf(u.out, "🔄 [%d/%d] Processing module: %s\n", i+1, len(sources), source)
 		if err := u.applyOne(ctx, source, p); err != nil {
-			u.log.Error("Module update failed and was rolled back", logKeySource, source, "error", err)
+			u.log.Error("Module update failed and was rolled back", logKeySource, source, logKeyError, err)
 			sum.Failed = append(sum.Failed, source)
 			// A cancelled run must stop; other failures only affect this module.
 			if ctxErr := ctx.Err(); ctxErr != nil {
@@ -76,7 +82,11 @@ func (u *Updater) applyOne(ctx context.Context, source string, p *pendingModule)
 			return fmt.Errorf("backup %s: %w", file, err)
 		}
 		backups[file] = backup
-		changed, err := modulefile.UpdateFile(ctx, file, source, p.latest)
+		// Only blocks that are older than latest change: another block of the same
+		// source may be pinned at a newer version and must not be downgraded.
+		changed, err := modulefile.UpdateFile(ctx, file, source, p.latest, func(current string) bool {
+			return isNewer(p.latest, current)
+		})
 		// A file that no longer contains the module cannot be verified; treat it as a failure.
 		if err == nil && changed == 0 {
 			err = fmt.Errorf("%w: %s in %s", ErrNoModuleMatched, source, file)
@@ -88,6 +98,12 @@ func (u *Updater) applyOne(ctx context.Context, source string, p *pendingModule)
 	}
 	if u.opts.NoPlan {
 		return nil
+	}
+	// Validation runs `terraform init -upgrade`, which also rewrites the provider
+	// lock file; it must be restored together with the .tf files on failure.
+	if err := u.backupLockFiles(p.files, backups); err != nil {
+		u.rollback(backups)
+		return fmt.Errorf("backup lock files: %w", err)
 	}
 	if err := u.validateFiles(ctx, p.files); err != nil {
 		u.rollback(backups)
@@ -111,6 +127,25 @@ func (u *Updater) backup(file string) (string, error) {
 	return dst, nil
 }
 
+// backupLockFiles records the provider lock file of every project that contains
+// one of files into backups. A project without a lock file is recorded as
+// noBackup so that a lock file created by init is removed again on rollback.
+func (u *Updater) backupLockFiles(files []string, backups map[string]string) error {
+	for _, project := range uniqueProjects(files, u.opts.Env) {
+		lock := filepath.Join(project, lockFileName)
+		if !fileExists(lock) {
+			backups[lock] = noBackup
+			continue
+		}
+		backup, err := u.backup(lock)
+		if err != nil {
+			return fmt.Errorf("backup %s: %w", lock, err)
+		}
+		backups[lock] = backup
+	}
+	return nil
+}
+
 // cleanup removes this run's backup directory unless a rollback failed.
 func (u *Updater) cleanup() {
 	if u.backupDir == "" {
@@ -122,7 +157,7 @@ func (u *Updater) cleanup() {
 		return
 	}
 	if err := os.RemoveAll(u.backupDir); err != nil {
-		u.log.Warn("Could not remove backup directory", logKeyDir, u.backupDir, "error", err)
+		u.log.Warn("Could not remove backup directory", logKeyDir, u.backupDir, logKeyError, err)
 		return
 	}
 	// Best effort: the parent only goes away when no earlier run left restore points in it.
@@ -135,13 +170,20 @@ func (u *Updater) cleanup() {
 // keeps the backup directory alive so the original can be recovered by hand.
 func (u *Updater) rollback(backups map[string]string) {
 	for file, backup := range backups {
+		if backup == noBackup {
+			if err := os.Remove(file); err != nil && !errors.Is(err, os.ErrNotExist) {
+				u.restoreFailed = true
+				u.log.Error("Rollback failed; remove the file by hand", "file", file, logKeyError, err)
+			}
+			continue
+		}
 		data, err := os.ReadFile(filepath.Clean(backup))
 		if err == nil {
 			err = os.WriteFile(file, data, filePerm)
 		}
 		if err != nil {
 			u.restoreFailed = true
-			u.log.Error("Rollback failed; restore the file from the backup", "file", file, "backup", backup, "error", err)
+			u.log.Error("Rollback failed; restore the file from the backup", "file", file, "backup", backup, logKeyError, err)
 			continue
 		}
 		u.log.Info("Rolled back", "file", file)
@@ -160,7 +202,7 @@ func (u *Updater) setupBackupDir() error {
 
 // validateFiles verifies every project that contains one of files.
 func (u *Updater) validateFiles(ctx context.Context, files []string) error {
-	for _, project := range uniqueProjects(files) {
+	for _, project := range uniqueProjects(files, u.opts.Env) {
 		// A project without a baseline cannot be compared; the baseline step already warned.
 		if !u.baselines[project] {
 			u.log.Warn("Skipping validation for project without baseline", "project", project)
@@ -175,21 +217,23 @@ func (u *Updater) validateFiles(ctx context.Context, files []string) error {
 }
 
 // uniqueProjects returns the sorted, de-duplicated project roots of files.
-func uniqueProjects(files []string) []string {
+func uniqueProjects(files []string, env string) []string {
 	seen := make(map[string]struct{}, len(files))
 	for _, file := range files {
-		seen[projectRoot(file)] = struct{}{}
+		seen[projectRoot(file, env)] = struct{}{}
 	}
 	return slices.Sorted(maps.Keys(seen))
 }
 
 // projectRoot walks up from file looking for files that mark a Terraform
-// project root; it falls back to the file's own directory.
-func projectRoot(file string) string {
+// project root (the common markers plus the files of the selected env); it
+// falls back to the file's own directory.
+func projectRoot(file, env string) string {
+	markers := append([]string{"terraform." + env + ".tfbackend", "terraform." + env + ".tfvars"}, rootMarkers...)
 	dir := filepath.Dir(file)
 	// The loop ends at the filesystem root, which is never treated as a project.
 	for cur := dir; cur != filepath.Dir(cur); cur = filepath.Dir(cur) {
-		for _, marker := range rootMarkers {
+		for _, marker := range markers {
 			if fileExists(filepath.Join(cur, marker)) {
 				return cur
 			}

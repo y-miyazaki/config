@@ -131,7 +131,7 @@ func TestUpdate(t *testing.T) {
 			if tt.src != "" {
 				src = tt.src
 			}
-			out, changed, err := Update([]byte(src), "main.tf", tt.source, tt.version)
+			out, changed, err := Update([]byte(src), "main.tf", tt.source, tt.version, nil)
 			if tt.wantErr != nil {
 				if !errors.Is(err, tt.wantErr) {
 					t.Fatalf("Update() error = %v, want %v", err, tt.wantErr)
@@ -185,7 +185,7 @@ func TestUpdateFile(t *testing.T) {
 	if err := os.WriteFile(file, []byte(fixture), 0o640); err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	changed, err := UpdateFile(context.Background(), file, "terraform-aws-modules/rds/aws", "5.0.0")
+	changed, err := UpdateFile(context.Background(), file, "terraform-aws-modules/rds/aws", "5.0.0", nil)
 	if err != nil || changed != 1 {
 		t.Fatalf("UpdateFile() = %d, %v, want 1, nil", changed, err)
 	}
@@ -203,10 +203,10 @@ func TestUpdateFile(t *testing.T) {
 	if info.Mode().Perm() != 0o640 {
 		t.Errorf("mode = %v, want 0640", info.Mode().Perm())
 	}
-	if changed, err = UpdateFile(context.Background(), file, "nonexistent/x/aws", "1.0.0"); err != nil || changed != 0 {
+	if changed, err = UpdateFile(context.Background(), file, "nonexistent/x/aws", "1.0.0", nil); err != nil || changed != 0 {
 		t.Errorf("UpdateFile(no match) = %d, %v, want 0, nil", changed, err)
 	}
-	if _, err = UpdateFile(context.Background(), filepath.Join(t.TempDir(), "missing.tf"), "s", "1"); !errors.Is(err, fs.ErrNotExist) {
+	if _, err = UpdateFile(context.Background(), filepath.Join(t.TempDir(), "missing.tf"), "s", "1", nil); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("UpdateFile(missing) error = %v, want fs.ErrNotExist", err)
 	}
 }
@@ -224,7 +224,7 @@ func TestFileFunctionsCanceledContext(t *testing.T) {
 	if _, err := ExtractFile(ctx, file); !errors.Is(err, context.Canceled) {
 		t.Errorf("ExtractFile(canceled) error = %v, want context.Canceled", err)
 	}
-	if _, err := UpdateFile(ctx, file, "terraform-aws-modules/rds/aws", "5.0.0"); !errors.Is(err, context.Canceled) {
+	if _, err := UpdateFile(ctx, file, "terraform-aws-modules/rds/aws", "5.0.0", nil); !errors.Is(err, context.Canceled) {
 		t.Errorf("UpdateFile(canceled) error = %v, want context.Canceled", err)
 	}
 	b, err := os.ReadFile(file) //nolint:gosec // G304 - the path is a test temp file
@@ -233,5 +233,114 @@ func TestFileFunctionsCanceledContext(t *testing.T) {
 	}
 	if string(b) != fixture {
 		t.Errorf("file modified despite canceled context")
+	}
+}
+
+func TestUpdateShouldUpdate(t *testing.T) {
+	t.Parallel()
+
+	const src = `module "old" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "1.0.0"
+}
+
+module "newer" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "10.0.0"
+}
+
+module "same" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.9.0"
+}
+
+module "unpinned" {
+  source = "terraform-aws-modules/vpc/aws"
+}
+`
+	tests := []struct {
+		name        string
+		shouldWrite func(current string) bool
+		wantChanged int
+		wantHas     []string
+		wantMissing []string
+	}{
+		{
+			name:        "only blocks accepted by the predicate change",
+			shouldWrite: func(current string) bool { return current == "1.0.0" },
+			wantChanged: 1,
+			wantHas:     []string{`version = "5.9.0"`, `version = "10.0.0"`},
+			wantMissing: []string{`"1.0.0"`},
+		},
+		{
+			name:        "block already at the target version is left alone",
+			shouldWrite: func(current string) bool { return current != "5.9.0" },
+			wantChanged: 2,
+			wantHas:     []string{`version = "5.9.0"`},
+			wantMissing: []string{`"1.0.0"`, `"10.0.0"`},
+		},
+		{
+			name:        "predicate rejecting every block leaves src untouched",
+			shouldWrite: func(string) bool { return false },
+			wantChanged: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			out, changed, err := Update([]byte(src), "main.tf", "terraform-aws-modules/vpc/aws", "5.9.0", tt.shouldWrite)
+			if err != nil {
+				t.Fatalf("Update() unexpected error: %v", err)
+			}
+			if changed != tt.wantChanged {
+				t.Fatalf("Update() changed = %d, want %d", changed, tt.wantChanged)
+			}
+			if tt.wantChanged == 0 && string(out) != src {
+				t.Errorf("Update() modified content although no block changed")
+			}
+			for _, want := range tt.wantHas {
+				if !strings.Contains(string(out), want) {
+					t.Errorf("Update() output missing %q\n%s", want, out)
+				}
+			}
+			for _, unwanted := range tt.wantMissing {
+				if strings.Contains(string(out), unwanted) {
+					t.Errorf("Update() output still contains %q\n%s", unwanted, out)
+				}
+			}
+		})
+	}
+}
+
+func TestUpdateFileKeepsSymlink(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	target := filepath.Join(dir, "real.tf")
+	link := filepath.Join(dir, "link.tf")
+	if err := os.WriteFile(target, []byte(fixture), 0o640); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	if err := os.Symlink("real.tf", link); err != nil {
+		t.Skipf("symlinks unavailable: %v", err)
+	}
+
+	changed, err := UpdateFile(context.Background(), link, "terraform-aws-modules/rds/aws", "5.0.0", nil)
+	if err != nil || changed != 1 {
+		t.Fatalf("UpdateFile(symlink) = %d, %v, want 1, nil", changed, err)
+	}
+	info, err := os.Lstat(link)
+	if err != nil {
+		t.Fatalf("lstat: %v", err)
+	}
+	if info.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("link was replaced by a regular file (mode %v)", info.Mode())
+	}
+	b, err := os.ReadFile(target) //nolint:gosec // G304 - the path is a test temp file
+	if err != nil {
+		t.Fatalf("read target: %v", err)
+	}
+	if !strings.Contains(string(b), `version = "5.0.0"`) {
+		t.Errorf("target not updated:\n%s", b)
 	}
 }

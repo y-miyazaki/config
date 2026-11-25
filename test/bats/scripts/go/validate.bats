@@ -4,8 +4,11 @@
 # Tests for scripts/go/validate.sh
 #
 # Use cases:
+# - --changed-only reports a missing golangci-lint even when no go file changed
+# - without --changed-only a missing golangci-lint is still reported
 # - determine_target_pattern fails for a missing directory instead of validating the whole repository
 # - determine_target_pattern fails for a scoped directory without Go files
+# - determine_target_pattern does not prefix ./ to an absolute directory
 # - determine_target_pattern keeps ./... and accepts a scoped directory that contains Go files
 # - determine_changed_patterns emits one package pattern per directory with changed .go files, grouped by module
 # - determine_changed_patterns honors the scope directory, skips testdata and files without a go.mod
@@ -29,6 +32,9 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
+# shellcheck disable=SC1091
+source "$(bats_support_dir)/shell_tool_mock.bash"
+
 VALIDATE_SCRIPT="$(bats_workspace_root)/scripts/go/validate.sh"
 
 setup() {
@@ -38,7 +44,15 @@ setup() {
     echo 'package root' > "${WORK_DIR}/root.go"
 }
 
+teardown() {
+    mock_shell_tool_teardown
+}
+
 @test "--changed-only exits 0 without checking when no go file changed" {
+    # The script requires go and golangci-lint up front; mock them so the result does not depend on the machine
+    mock_shell_tool_setup
+    mock_tool_write go <<< $'#!/usr/bin/env bash\nexit 0'
+    mock_tool_write golangci-lint <<< $'#!/usr/bin/env bash\nexit 0'
     bats_git_fresh_repo "${WORK_DIR}/repo"
     echo 'x' > "${WORK_DIR}/repo/readme.md"
     bats_git_commit "${WORK_DIR}/repo" init
@@ -46,6 +60,35 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output != *"Running go build"* ]]
     [[ $output == *"VALIDATION_RESULT tool=go status=PASS"* ]]
+}
+
+@test "--changed-only reports a missing golangci-lint even when no go file changed" {
+    bats_git_fresh_repo "${WORK_DIR}/repo"
+    echo 'x' > "${WORK_DIR}/repo/readme.md"
+    bats_git_commit "${WORK_DIR}/repo" init
+    # A system-only PATH models a CI runner without golangci-lint; git and bash must still resolve
+    run env PATH=/usr/bin:/bin bash -c "command -v golangci-lint"
+    if [[ $status -eq 0 ]]; then
+        skip "golangci-lint is installed in a system directory"
+    fi
+    local tool
+    for tool in git bash date; do
+        run env PATH=/usr/bin:/bin bash -c "command -v ${tool}"
+        [ "$status" -eq 0 ]
+    done
+    run env PATH=/usr/bin:/bin bash -c "cd '${WORK_DIR}/repo' && '${VALIDATE_SCRIPT}' --changed-only"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Missing required tools"*"golangci-lint"* ]]
+}
+
+@test "without --changed-only a missing golangci-lint is still reported" {
+    run env PATH=/usr/bin:/bin bash -c "command -v golangci-lint"
+    if [[ $status -eq 0 ]]; then
+        skip "golangci-lint is installed in a system directory"
+    fi
+    run env PATH=/usr/bin:/bin bash -c "cd '${WORK_DIR}' && '${VALIDATE_SCRIPT}'"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Missing required tools"*"golangci-lint"* ]]
 }
 
 @test "determine_changed_patterns emits one package pattern per directory with changed go files, grouped by module" {
@@ -236,4 +279,10 @@ setup() {
     run bash "${VALIDATE_SCRIPT}" --help
     [ "$status" -eq 0 ]
     [[ $output == *"[options] [directory]"* ]]
+}
+
+@test "determine_target_pattern does not prefix ./ to an absolute directory" {
+    run bash -c "cd '${WORK_DIR}' && source '${VALIDATE_SCRIPT}' && determine_target_pattern '${WORK_DIR}/pkg dir'"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${WORK_DIR}/pkg dir/..." ]
 }

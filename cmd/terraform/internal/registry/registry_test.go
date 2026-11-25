@@ -87,6 +87,9 @@ func TestCompareVersions(t *testing.T) {
 // fakeRegistry serves /versions and per-version metadata for acme/vpc/aws.
 // published maps version -> RFC3339 timestamp ("" yields an unusable timestamp);
 // versions are listed in the given order.
+// serverErrorMarker as a published value makes the fake answer 500 for that version.
+const serverErrorMarker = "!500"
+
 func fakeRegistry(t *testing.T, order []string, published map[string]string, lookups *atomic.Int32) *Client {
 	t.Helper()
 	mux := http.NewServeMux()
@@ -103,6 +106,10 @@ func fakeRegistry(t *testing.T, order []string, published map[string]string, loo
 		ts, ok := published[version]
 		if !ok {
 			http.NotFound(w, r)
+			return
+		}
+		if ts == serverErrorMarker {
+			http.Error(w, "boom", http.StatusInternalServerError)
 			return
 		}
 		writeJSON(w, versionDetail{PublishedAt: ts})
@@ -157,7 +164,21 @@ func TestLatestEligible(t *testing.T) {
 			want:        "1.0.0",
 			wantLookups: 4,
 		},
-		{name: "per-version lookup failure is an error", minAge: 7 * day, published: map[string]string{}, wantErr: ErrUnexpectedStatus, wantLookups: 1},
+		{name: "versions without a detail page are never eligible", minAge: 7 * day, published: map[string]string{}, wantErr: ErrNoEligibleVersion, wantLookups: 4},
+		{
+			name:        "a missing detail page is skipped and an older version wins",
+			minAge:      7 * day,
+			published:   map[string]string{"2.0.0": ago(90 * day)},
+			want:        "2.0.0",
+			wantLookups: 2,
+		},
+		{
+			name:        "server error on a version lookup is an error",
+			minAge:      7 * day,
+			published:   map[string]string{"2.1.0": serverErrorMarker},
+			wantErr:     ErrUnexpectedStatus,
+			wantLookups: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -57,9 +57,12 @@ func Extract(src []byte, filename string) ([]Ref, error) {
 }
 
 // Update sets version on every module block of src whose literal source equals
-// source and that already has a literal version. It returns the new content and
-// the number of blocks changed; src is returned untouched when nothing matched.
-func Update(src []byte, filename, source, version string) (out []byte, changed int, err error) {
+// source and that already has a literal version for which shouldUpdate returns
+// true (nil updates every such block). shouldUpdate receives the block's current
+// version, so blocks already at or beyond version are left alone instead of being
+// downgraded. It returns the new content and the number of blocks changed; src is
+// returned untouched when nothing matched.
+func Update(src []byte, filename, source, version string, shouldUpdate func(current string) bool) (out []byte, changed int, err error) {
 	f, err := parse(src, filename)
 	if err != nil {
 		return nil, 0, fmt.Errorf("update modules: %w", err)
@@ -72,7 +75,11 @@ func Update(src []byte, filename, source, version string) (out []byte, changed i
 		if !ok || got != source {
 			continue
 		}
-		if _, hasVersion := literalAttr(block.Body(), attrVersion); !hasVersion {
+		current, hasVersion := literalAttr(block.Body(), attrVersion)
+		if !hasVersion {
+			continue
+		}
+		if shouldUpdate != nil && !shouldUpdate(current) {
 			continue
 		}
 		block.Body().SetAttributeValue(attrVersion, cty.StringVal(version))
@@ -101,9 +108,9 @@ func ExtractFile(ctx context.Context, path string) ([]Ref, error) {
 }
 
 // UpdateFile runs Update on the file at path and replaces the file atomically
-// when at least one block changed. It returns the number of blocks changed and
-// returns early when ctx is done.
-func UpdateFile(ctx context.Context, path, source, version string) (int, error) {
+// when at least one block changed. shouldUpdate filters blocks as in Update. It
+// returns the number of blocks changed and returns early when ctx is done.
+func UpdateFile(ctx context.Context, path, source, version string, shouldUpdate func(current string) bool) (int, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, fmt.Errorf("update %s: %w", path, err)
 	}
@@ -111,7 +118,7 @@ func UpdateFile(ctx context.Context, path, source, version string) (int, error) 
 	if err != nil {
 		return 0, fmt.Errorf("update file: %w", err)
 	}
-	out, changed, err := Update(src, path, source, version)
+	out, changed, err := Update(src, path, source, version, shouldUpdate)
 	if err != nil {
 		return 0, fmt.Errorf("update file: %w", err)
 	}
@@ -162,14 +169,19 @@ func readFile(path string) ([]byte, error) {
 	return src, nil
 }
 
-// writeFileAtomic replaces path with data via a temp file in the same directory,
-// preserving the original file mode.
+// writeFileAtomic replaces path (or the target of a symlink at path) with data
+// via a temp file next to it, preserving the original file mode.
 func writeFileAtomic(path string, data []byte) error {
-	info, err := os.Stat(path)
+	// Replace the symlink's target, not the link itself, so the link survives the update.
+	target, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return fmt.Errorf("resolve %s: %w", path, err)
+	}
+	info, err := os.Stat(target)
 	if err != nil {
 		return fmt.Errorf("stat %s: %w", path, err)
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+tempFileMatch)
+	tmp, err := os.CreateTemp(filepath.Dir(target), filepath.Base(target)+tempFileMatch)
 	if err != nil {
 		return fmt.Errorf("create temp file for %s: %w", path, err)
 	}
@@ -189,7 +201,7 @@ func writeFileAtomic(path string, data []byte) error {
 	if err != nil {
 		return fmt.Errorf("chmod %s: %w", tmpName, err)
 	}
-	err = os.Rename(tmpName, path)
+	err = os.Rename(tmpName, target)
 	if err != nil {
 		return fmt.Errorf("replace %s: %w", path, err)
 	}

@@ -215,6 +215,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Control RDS Cluster
+        id: control
         env:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
@@ -238,6 +239,7 @@ jobs:
               exit 0
             elif [[ "$CURRENT_STATUS" != "available" ]]; then
               echo "ℹ️ RDS cluster is not available (status: $CURRENT_STATUS). Cannot stop (skipping)"
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -263,6 +265,7 @@ jobs:
               exit 0
             elif [[ "$CURRENT_STATUS" != "stopped" ]]; then
               echo "ℹ️ RDS cluster is not stopped (status: $CURRENT_STATUS). Cannot start (skipping)"
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -281,7 +284,7 @@ jobs:
           fi
 
       - name: Wait for RDS Cluster Status
-        if: ${{ inputs.wait_for_stable }}
+        if: ${{ inputs.wait_for_stable && steps.control.outputs.skipped != 'true' }}
         timeout-minutes: 30
         env:
           CLUSTER: ${{ matrix.cluster }}

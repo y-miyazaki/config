@@ -131,8 +131,12 @@ function run_additional_checks {
 
     # Run tflint if available
     if command -v tflint &> /dev/null; then
-        log "INFO" "Running tflint with module support..."
-        if ! execute_command tflint --module; then
+        # Plugins from .tflint.hcl must be installed first or the run fails on a clean runner
+        if ! execute_command tflint --init; then
+            log "WARN" "tflint --init failed; linting may be incomplete."
+        fi
+        log "INFO" "Running tflint with module support (--call-module-type=all)..."
+        if ! execute_command tflint --call-module-type=all; then
             log "WARN" "tflint found issues that should be addressed."
         fi
     else

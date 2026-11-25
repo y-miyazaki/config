@@ -43,8 +43,8 @@ on:
         required: false
         type: string
       search_paths:
-        default: "nodejs"
-        description: "Comma-separated root directories whose immediate child directories become matrix workspaces"
+        default: ""
+        description: "Comma-separated root directories whose immediate child directories become matrix workspaces (e.g. nodejs). Required unless workspace_glob is set"
         required: false
         type: string
       workspace_glob:
@@ -119,6 +119,11 @@ jobs:
             component=$(printf '%s' "$workspace_path" | tr '/' '-')
             entries+=("{\"component\":\"${component}\",\"workspace_path\":\"${workspace_path}\"}")
           }
+
+          if [ -z "$WORKSPACE_GLOB" ] && [ -z "$SEARCH_PATHS" ]; then
+            echo "::error::Set search_paths or workspace_glob so Node.js workspaces can be discovered"
+            exit 1
+          fi
 
           if [ -n "$WORKSPACE_GLOB" ]; then
             IFS=',' read -ra patterns <<< "$WORKSPACE_GLOB"
@@ -235,7 +240,8 @@ jobs:
               return 0
             fi
             local from_package
-            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            # Called after `cd` into the project directory; pass the path via env (not spliced into JS source)
+            from_package=$(PACKAGE_JSON_PATH="${PWD}/package.json" node -e "const pm=JSON.parse(require('fs').readFileSync(process.env.PACKAGE_JSON_PATH,'utf8')).packageManager||''; const m=pm.match(/^pnpm@(.+)\$/); process.stdout.write(m?m[1]:'');")
             if [ -n "$from_package" ]; then
               printf '%s' "$from_package"
             else
@@ -381,7 +387,8 @@ jobs:
               return 0
             fi
             local from_package
-            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            # Called after `cd` into the project directory; pass the path via env (not spliced into JS source)
+            from_package=$(PACKAGE_JSON_PATH="${PWD}/package.json" node -e "const pm=JSON.parse(require('fs').readFileSync(process.env.PACKAGE_JSON_PATH,'utf8')).packageManager||''; const m=pm.match(/^pnpm@(.+)\$/); process.stdout.write(m?m[1]:'');")
             if [ -n "$from_package" ]; then
               printf '%s' "$from_package"
             else
@@ -522,7 +529,8 @@ jobs:
               return 0
             fi
             local from_package
-            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            # Called after `cd` into the project directory; pass the path via env (not spliced into JS source)
+            from_package=$(PACKAGE_JSON_PATH="${PWD}/package.json" node -e "const pm=JSON.parse(require('fs').readFileSync(process.env.PACKAGE_JSON_PATH,'utf8')).packageManager||''; const m=pm.match(/^pnpm@(.+)\$/); process.stdout.write(m?m[1]:'');")
             if [ -n "$from_package" ]; then
               printf '%s' "$from_package"
             else
@@ -548,6 +556,7 @@ jobs:
             fi
           }
 
+          audit_rc=0
           project_count=0
           while IFS= read -r pkg_json; do
             project_dir=$(dirname "$pkg_json")
@@ -558,17 +567,33 @@ jobs:
             pm=$(resolve_package_manager "$project_dir")
             echo "Auditing project ${project_count}: ${project_dir} (${pm})"
 
+            # Run without errexit so a failing audit does not skip writing the reports; the
+            # subshell sets its own errexit and exits with the audit status.
+            set +e
             (
+              set -e
               cd "${project_dir}"
               install_dependencies "$project_dir" "$pm"
+              txt_rc=0
+              json_rc=0
               if [ "$pm" = "pnpm" ]; then
-                pnpm audit --audit-level "${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt"
-                pnpm audit --audit-level "${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json"
+                pnpm audit --audit-level "${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt" || txt_rc=$?
+                pnpm audit --audit-level "${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json" || json_rc=$?
               else
-                npm audit --audit-level="${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt"
-                npm audit --audit-level="${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json"
+                npm audit --audit-level="${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt" || txt_rc=$?
+                npm audit --audit-level="${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json" || json_rc=$?
               fi
+              if [ "$txt_rc" -ne 0 ]; then
+                exit "$txt_rc"
+              fi
+              exit "$json_rc"
             )
+            project_rc=$?
+            set -e
+            if [ "$project_rc" -ne 0 ]; then
+              echo "::warning::Audit failed for ${project_dir} (exit ${project_rc})"
+              audit_rc=$project_rc
+            fi
           done < <(
             find "${WORKSPACE_PATH}" -name package.json -type f \
               ! -path '*/node_modules/*' \
@@ -583,7 +608,10 @@ jobs:
             exit 1
           fi
 
+          exit "$audit_rc"
+
       - name: Upload dependency audit Artifact
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pkg-audit-${{ env.COMPONENT }}

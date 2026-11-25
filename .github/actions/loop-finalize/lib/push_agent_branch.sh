@@ -100,7 +100,7 @@ TARGET_JSON="${TARGET_JSON:-}"
 TO_BRANCH="${TO_BRANCH:-}"
 # Maximum number of violating paths quoted in the failure message
 MAX_REPORTED_PATHS=5
-# Branch name after validate_agent_branch passed (empty until then)
+# Branch name after check_agent_branch passed (empty until then)
 VALIDATED_BRANCH=""
 
 #######################################
@@ -207,7 +207,7 @@ function list_changed_files {
 }
 
 #######################################
-# validate_agent_branch: Check the agent branch name against the loop shape
+# check_agent_branch: Check the agent branch name against the loop shape
 #
 # Globals:
 #   None
@@ -227,7 +227,7 @@ function list_changed_files {
 #   differs from to.branch and the state branch; 1 otherwise (also when the
 #   prefix or skill is empty)
 #######################################
-function validate_agent_branch {
+function check_agent_branch {
     local branch="$1"
     local prefix="$2"
     local skill="$3"
@@ -307,7 +307,7 @@ function main {
     fi
 
     # 2. Branch name
-    if ! validate_agent_branch "${AGENT_BRANCH}" "${AGENT_BRANCH_PREFIX}" "${AGENT_MAKER_SKILL_NAME}" "${TO_BRANCH}" "${STATE_BRANCH}"; then
+    if ! check_agent_branch "${AGENT_BRANCH}" "${AGENT_BRANCH_PREFIX}" "${AGENT_MAKER_SKILL_NAME}" "${TO_BRANCH}" "${STATE_BRANCH}"; then
         printf -v quoted '%q' "${AGENT_BRANCH}"
         fail_push "invalid agent branch ${quoted}: expected ${AGENT_BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/YYYYMMDD-HHMMSS[-slug], different from to.branch and the state branch"
     fi

@@ -250,7 +250,7 @@ function list_state_files {
 }
 
 #######################################
-# validate_state_push_branch: Validate resolved state push branch name
+# check_state_push_branch: Validate resolved state push branch name
 #
 # Globals:
 #   STATE_BRANCH - Branch name set before call
@@ -262,13 +262,13 @@ function list_state_files {
 #   None
 #
 # Returns:
-#   Exits 1 on invalid branch name
+#   0 when valid; 1 on invalid branch name
 #
 #######################################
-function validate_state_push_branch {
+function check_state_push_branch {
     if ! check_names_branch "${STATE_BRANCH}"; then
         echo "::error::Invalid state push branch: ${STATE_BRANCH}"
-        exit 1
+        return 1
     fi
 }
 
@@ -299,7 +299,7 @@ function process_state_push_branch {
     local now state_file state_tmp target_key
 
     STATE_BRANCH="${push_branch}"
-    validate_state_push_branch
+    check_state_push_branch || exit 1
 
     git fetch origin "${STATE_BRANCH}" --prune
     git checkout -B "${STATE_BRANCH}" "origin/${STATE_BRANCH}"

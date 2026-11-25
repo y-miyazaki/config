@@ -26,15 +26,15 @@ The architecture separates:
 
 - `.apm/packages/common/`: forge-neutral instructions and skills (review, markdown, docs-creator) and shared MCP (not GitHub)
 - `.apm/packages/repo-maintenance/`: in-repo maintenance skills (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`)
-- `.apm/packages/github/`: GitHub Issue/PR skills and GitHub MCP (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-body`)
+- `.apm/packages/github/`: GitHub Issue/PR skills and GitHub MCP (`github-issue-triage`, `github-issue-autofix`, `github-pr-review`, `github-pr-revise`, `github-pr-body`)
 - `.apm/packages/github-actions/`: GitHub Actions YAML review/validation skills and GHA instructions
 - `.apm/packages/loop/`: generic loop checker skill (`loop-verifier`); callers pass `agent_checker_skill_name` to `loop-execute` — domain entry skills are not here
-- `.apm/packages/common-hooks-*`: target-specific common hooks (6 hooks per target: Claude, Copilot, Cursor)
-- `.apm/packages/aws/`: AWS-focused MCP integrations (5 MCP servers)
+- `.apm/packages/common-hooks-*`: target-specific common hooks (8 hooks per target: Claude, Copilot, Cursor)
+- `.apm/packages/aws/`: AWS-focused MCP integrations (4 MCP servers)
 - `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
 - `.apm/packages/terraform-hooks-*`: target-specific Terraform hooks (2 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration (AWS-specific Terraform instructions + 1 MCP server; install together with `terraform`)
-- `.apm/packages/go/`: Go-focused instructions and skills (1 instruction, 2 skills)
+- `.apm/packages/go/`: Go-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/go-hooks-*`: target-specific Go hooks (2 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)

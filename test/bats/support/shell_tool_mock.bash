@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mock shellcheck/shfmt helpers for bats tests.
+# Mock shellcheck/shfmt (and any other external CLI) helpers for bats tests.
 # Load via: source "$(bats_support_dir)/shell_tool_mock.bash" (after common.bash).
 
 function mock_shell_tool_setup() {
@@ -29,14 +29,19 @@ function mock_shell_tool_teardown() {
 
 # Convenience: write a shellcheck mock script from stdin
 function mock_shellcheck_write() {
-    cat > "$SHELL_TOOL_MOCK_DIR/shellcheck"
-    chmod +x "$SHELL_TOOL_MOCK_DIR/shellcheck"
+    mock_tool_write shellcheck
 }
 
 # Convenience: write a shfmt mock script from stdin
 function mock_shfmt_write() {
-    cat > "$SHELL_TOOL_MOCK_DIR/shfmt"
-    chmod +x "$SHELL_TOOL_MOCK_DIR/shfmt"
+    mock_tool_write shfmt
 }
 
-export -f mock_shell_tool_setup mock_shell_tool_teardown mock_shellcheck_write mock_shfmt_write
+# Convenience: write a mock for any external CLI (name in $1) from stdin; call after
+# mock_shell_tool_setup so the tool is found through PATH
+function mock_tool_write() {
+    cat > "$SHELL_TOOL_MOCK_DIR/$1"
+    chmod +x "$SHELL_TOOL_MOCK_DIR/$1"
+}
+
+export -f mock_shell_tool_setup mock_shell_tool_teardown mock_shellcheck_write mock_shfmt_write mock_tool_write

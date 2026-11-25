@@ -166,7 +166,7 @@ function resolve_package_version {
 }
 
 #######################################
-# validate_engine: Ensure AGENT_ENGINE is provided
+# check_engine: Ensure AGENT_ENGINE is provided
 #
 # Globals:
 #   AGENT_ENGINE - Required engine slug
@@ -181,7 +181,7 @@ function resolve_package_version {
 #   Exits 1 when AGENT_ENGINE is empty
 #
 #######################################
-function validate_engine {
+function check_engine {
     : "${AGENT_ENGINE:?}"
 }
 
@@ -227,7 +227,7 @@ function write_install_outputs {
 #
 #######################################
 function main {
-    validate_engine
+    check_engine
     resolve_engine_package
     resolve_package_version
     write_install_outputs

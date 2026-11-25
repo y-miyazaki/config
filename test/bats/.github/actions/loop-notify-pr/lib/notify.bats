@@ -26,8 +26,8 @@
 # - truncate_text_at_boundary cuts at the last sentence end before max
 # - truncate_text_at_boundary cuts at a word boundary when no sentence end fits
 # - truncate_text_at_boundary honors Japanese sentence endings
-# - validate_required_inputs fails when LOOP_NAME is empty
-# - validate_required_inputs passes when required fields are set
+# - check_required_inputs fails when LOOP_NAME is empty
+# - check_required_inputs passes when required fields are set
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -296,13 +296,13 @@ EOF
     [ "$output" = "最初の文です。 …" ]
 }
 
-@test "validate_required_inputs fails when LOOP_NAME is empty" {
+@test "check_required_inputs fails when LOOP_NAME is empty" {
     LOOP_NAME=""
-    run validate_required_inputs
+    run check_required_inputs
     [ "$status" -ne 0 ]
 }
 
-@test "validate_required_inputs passes when required fields are set" {
-    run validate_required_inputs
+@test "check_required_inputs passes when required fields are set" {
+    run check_required_inputs
     [ "$status" -eq 0 ]
 }

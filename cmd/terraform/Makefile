@@ -1,6 +1,6 @@
 .PHONY: build test lint vet help
 
-# The helper binary is committed next to module_updater.sh (linux/arm64 dev container).
+# The helper binary is committed at scripts/terraform/module_updater (linux/arm64 dev container build).
 BINARY  := ../../scripts/terraform/module_updater
 CMD     := ./module_updater
 VERSION ?= dev

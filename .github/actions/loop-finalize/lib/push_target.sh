@@ -8,13 +8,14 @@
 #
 # Usage:
 #   AGENT_BRANCH=loop/skill/ts TO_BRANCH=feature/foo GITHUB_TOKEN=... \
-#   [GITHUB_OUTPUT=...] bash lib/push_target.sh
+#   [GITHUB_OUTPUT=...] [LOOP_FAILURE_FILE=...] bash lib/push_target.sh
 #
 # Design Rules:
 #   - Agent branch MUST differ from to.branch (never push agent tip over PR head by name)
 #   - Always merge origin/AGENT into a checkout of origin/TO (not the reverse tip push)
 #   - Never force-push; non-fast-forward push failures stay failures
 #   - Conflict or merge failure aborts and exits non-zero (no silent has_changes success)
+#   - Merge and push failures are redacted, then recorded via failure_record_write when LOOP_FAILURE_FILE is set
 #
 # Output:
 #   Optional GITHUB_OUTPUT keys: commit_sha, pushed=true
@@ -34,15 +35,54 @@ export LC_ALL=C.UTF-8
 AGENT_BRANCH="${AGENT_BRANCH:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+LOOP_FAILURE_FILE="${LOOP_FAILURE_FILE:-}"
 TO_BRANCH="${TO_BRANCH:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../../lib/loop/check_names.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/check_names.sh"
+# shellcheck source=../../lib/loop/failure_record.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/failure_record.sh"
 # shellcheck source=../../lib/loop/git_auth.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
+
+#######################################
+# push_target_fail: Redact and print a failure, record it, then exit 1
+#
+# Globals:
+#   LOOP_FAILURE_FILE - Optional failure record path
+#
+# Arguments:
+#   $1 - Summary message
+#   $2 - Raw command output (optional; redacted before printing or recording)
+#
+# Outputs:
+#   STDERR redacted detail and ::error:: line; failure record when LOOP_FAILURE_FILE is set
+#
+# Returns:
+#   Exits 1
+#
+#######################################
+function push_target_fail {
+    local summary="${1:?summary required}"
+    local detail="${2:-}"
+    local redacted_detail
+
+    redacted_detail="$(redact_sensitive_text "${detail}")"
+    if [[ -n ${redacted_detail} ]]; then
+        printf '%s\n' "${redacted_detail}" >&2
+    fi
+    echo "::error::push_target: ${summary}" >&2
+    if [[ -n ${LOOP_FAILURE_FILE} ]]; then
+        if ! failure_record_write "finalize_push" "${summary}: ${redacted_detail}" "${LOOP_FAILURE_FILE}"; then
+            echo "::warning::push_target: could not record the failure" >&2
+        fi
+    fi
+    exit 1
+}
 
 #######################################
 # main: Merge agent branch into latest to.branch and push
@@ -50,6 +90,7 @@ source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
 #   AGENT_BRANCH - Agent worktree branch with approved commits
 #   GITHUB_OUTPUT - Optional path for action outputs
 #   GITHUB_TOKEN - Token for fetch/push auth
+#   LOOP_FAILURE_FILE - Optional failure record path (merge/push failures)
 #   TO_BRANCH - Destination branch (PR head or integration)
 #
 # Arguments:
@@ -62,7 +103,7 @@ source "${SCRIPT_DIR}/../../lib/loop/git_auth.sh"
 #   0 on successful push; non-zero on validation, merge conflict, or push failure
 #######################################
 function main {
-    local commit_sha merge_err merge_status
+    local commit_sha merge_err merge_status push_err
 
     : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
     : "${TO_BRANCH:?TO_BRANCH is required}"
@@ -91,15 +132,12 @@ function main {
     merge_status=$?
     set -e
     if [[ ${merge_status} -ne 0 ]]; then
-        printf '%s\n' "${merge_err}" >&2
-        echo "::error::push_target: merge conflict incorporating ${AGENT_BRANCH} into ${TO_BRANCH}; fail closed (no force push)" >&2
         git merge --abort 2> /dev/null || true
-        exit 1
+        push_target_fail "merge conflict incorporating ${AGENT_BRANCH} into ${TO_BRANCH}; fail closed (no force push)" "${merge_err}"
     fi
 
-    if ! git push origin "HEAD:refs/heads/${TO_BRANCH}"; then
-        echo "::error::push_target: push to ${TO_BRANCH} failed (non-fast-forward or auth); fail closed" >&2
-        exit 1
+    if ! push_err="$(git push origin "HEAD:refs/heads/${TO_BRANCH}" 2>&1)"; then
+        push_target_fail "push to ${TO_BRANCH} failed (non-fast-forward or auth); fail closed" "${push_err}"
     fi
 
     commit_sha="$(git rev-parse HEAD)"

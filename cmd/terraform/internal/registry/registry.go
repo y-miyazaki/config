@@ -44,6 +44,8 @@ var (
 	ErrNoEligibleVersion = errors.New("no version old enough")
 	// ErrUnexpectedStatus is returned for a non-200 registry response.
 	ErrUnexpectedStatus = errors.New("unexpected registry response status")
+	// ErrNotFound is returned (together with ErrUnexpectedStatus) for a 404 registry response.
+	ErrNotFound = errors.New("registry resource not found")
 
 	// releaseVersion matches plain numeric versions; pre-releases are never offered.
 	releaseVersion = regexp.MustCompile(`^\d+(\.\d+)*$`)
@@ -215,6 +217,9 @@ func (c *Client) getJSON(ctx context.Context, path string, out any) error {
 		return fmt.Errorf("request %s: %w", path, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("%w: %w: %s %s", ErrUnexpectedStatus, ErrNotFound, path, resp.Status)
+	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %s %s", ErrUnexpectedStatus, path, resp.Status)
 	}
@@ -244,10 +249,14 @@ func (c *Client) listVersions(ctx context.Context, mod Module) ([]string, error)
 }
 
 // publishedAt returns the publish time of one version. ok is false when the
-// registry gives no usable timestamp.
+// registry gives no usable timestamp or no detail page for the version.
 func (c *Client) publishedAt(ctx context.Context, mod Module, version string) (published time.Time, ok bool, err error) {
 	var body versionDetail
 	err = c.getJSON(ctx, modulePath(mod)+pathSep+url.PathEscape(version), &body)
+	if errors.Is(err, ErrNotFound) {
+		// A listed version without a detail page (for example a yanked release) is not eligible.
+		return time.Time{}, false, nil
+	}
 	if err != nil {
 		return time.Time{}, false, fmt.Errorf("version detail: %w", err)
 	}

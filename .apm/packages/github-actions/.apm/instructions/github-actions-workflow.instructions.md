@@ -1,5 +1,5 @@
 ---
-applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml,.github/actions/**/action.yml"
+applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml,.github/actions/**/action.yml,.github/actions/**/action.yaml"
 description: "GitHub Actions Workflows Instructions"
 ---
 

@@ -134,18 +134,19 @@ jobs:
             --scanners "license,misconfig,secret,vuln" \
             --severity "HIGH,CRITICAL" \
             "${SCAN_REF}"
+          # SBOM is generated before the gating scan so it exists when HIGH/CRITICAL findings fail the job
+          trivy fs \
+            --config "${TRIVY_CONFIG}" \
+            --exit-code 0 \
+            --format cyclonedx \
+            --output "security/sbom-${ARTIFACT_PREFIX}.json" \
+            "${SCAN_REF}" || echo "::warning::SBOM generation failed; continuing with the gating scan"
           trivy fs \
             --config "${TRIVY_CONFIG}" \
             --exit-code 1 \
             --format table \
             --scanners "license,misconfig,secret,vuln" \
             --severity "HIGH,CRITICAL" \
-            "${SCAN_REF}"
-          trivy fs \
-            --config "${TRIVY_CONFIG}" \
-            --exit-code 0 \
-            --format cyclonedx \
-            --output "security/sbom-${ARTIFACT_PREFIX}.json" \
             "${SCAN_REF}"
 
       - name: Upload Trivy SARIF to GitHub Security
@@ -156,7 +157,7 @@ jobs:
           sarif_file: security/trivy-fs.sarif
 
       - name: Upload SBOM Artifact
-        if: hashFiles(format('security/sbom-{0}.json', env.ARTIFACT_PREFIX)) != ''
+        if: always() && hashFiles(format('security/sbom-{0}.json', env.ARTIFACT_PREFIX)) != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sbom-${{ env.ARTIFACT_PREFIX }}

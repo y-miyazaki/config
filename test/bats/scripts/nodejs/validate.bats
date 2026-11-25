@@ -4,6 +4,7 @@
 # Tests for scripts/nodejs/validate.sh
 #
 # Use cases:
+# - main reports missing node and npm before looking for projects
 # - find_nodejs_projects finds projects whose path contains spaces
 # - find_nodejs_projects skips node_modules and build output
 # - filter_changed_projects keeps only projects owning changed files, using the deepest match
@@ -140,4 +141,26 @@ _mock_npm() {
     run bash -c "cd '${repo}' && source '${VALIDATE_SCRIPT}' && filter_changed_projects '${repo}' '${repo}/p1'"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
+}
+
+@test "main reports missing node and npm before looking for projects" {
+    mkdir -p "${BATS_TEST_TMPDIR}/empty"
+    # A system-only PATH models a CI runner without node installed
+    run env PATH=/usr/bin:/bin bash -c "command -v node npm"
+    if [[ $status -eq 0 ]]; then
+        skip "node or npm is installed in a system directory"
+    fi
+    run env PATH=/usr/bin:/bin bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/empty'"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Missing required tools"*"node"*"npm"* ]]
+}
+
+@test "main exits 0 with no projects when node and npm are available" {
+    mkdir -p "${BATS_TEST_TMPDIR}/empty" "${BATS_TEST_TMPDIR}/bin"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${BATS_TEST_TMPDIR}/bin/node"
+    cp "${BATS_TEST_TMPDIR}/bin/node" "${BATS_TEST_TMPDIR}/bin/npm"
+    chmod +x "${BATS_TEST_TMPDIR}/bin/node" "${BATS_TEST_TMPDIR}/bin/npm"
+    run env PATH="${BATS_TEST_TMPDIR}/bin:${PATH}" bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/empty'"
+    [ "$status" -eq 0 ]
+    [[ $output == *"No Node.js projects found"* ]]
 }

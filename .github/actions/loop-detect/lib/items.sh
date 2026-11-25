@@ -47,9 +47,9 @@ function extract_items {
     fi
 
     # Non-string keys and keys containing a newline become "" so that the
-    # line-oriented loop below cannot be fooled; "" fails validate_item_key.
+    # line-oriented loop below cannot be fooled; "" fails check_item_key.
     while IFS= read -r key; do
-        if ! validate_item_key "${key}"; then
+        if ! check_item_key "${key}"; then
             echo "::error::loop-detect: invalid item key '${key}'" >&2
             return 1
         fi
@@ -154,7 +154,7 @@ function order_items_by_last_run {
 }
 
 #######################################
-# validate_item_key: Check an item key against the key rules
+# check_item_key: Check an item key against the key rules
 #
 # Globals:
 #   None
@@ -169,7 +169,7 @@ function order_items_by_last_run {
 #   0 when valid, 1 otherwise
 #
 #######################################
-function validate_item_key {
+function check_item_key {
     local key="$1"
     local LC_ALL=C
 

@@ -201,7 +201,7 @@ source "${_LOOP_NOTIFY_REDACT_LIB}/redact.sh"
 source "${_LOOP_NOTIFY_REDACT_LIB}/text.sh"
 
 #######################################
-# validate_required_inputs: Validate required notify_context environment
+# check_required_inputs: Validate required notify_context environment
 #
 # Globals:
 #   BASE_BRANCH - Base branch for merge-base diff
@@ -218,7 +218,7 @@ source "${_LOOP_NOTIFY_REDACT_LIB}/text.sh"
 #   Exits 1 when required input is missing
 #
 #######################################
-function validate_required_inputs {
+function check_required_inputs {
     : "${GITHUB_OUTPUT:?}"
     : "${WORKTREE_PATH:?}"
     : "${BASE_BRANCH:?}"
@@ -302,7 +302,7 @@ function main {
 
     detect_json="$(handoff_resolve_detect_result_json)"
 
-    validate_required_inputs
+    check_required_inputs
 
     if [[ -n ${detect_json} && ${detect_json} != "{}" ]] \
         && ! jq -e . <<< "${detect_json}" > /dev/null 2>&1; then

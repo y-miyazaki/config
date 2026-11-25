@@ -63,13 +63,13 @@ trap cleanup EXIT ERR INT TERM
 # show_usage: Display usage information
 #
 # Arguments:
-#   None
+#   $1 - exit status (optional, default 0; use 1 after an invalid option)
 #
 # Global Variables:
 #   None
 #
 # Returns:
-#   exit 0
+#   exits with the given status
 #
 #######################################
 show_usage() {
@@ -90,7 +90,7 @@ Examples:
   $(basename "$0") /path/to/project
   $(basename "$0") --force .
 EOF
-    exit 0
+    exit "${1:-0}"
 }
 
 #######################################
@@ -122,7 +122,7 @@ parse_arguments() {
                 ;;
             -*)
                 echo "Error: Unknown option: $1" >&2
-                show_usage
+                show_usage 1
                 ;;
             *)
                 TARGET_DIR="$1"

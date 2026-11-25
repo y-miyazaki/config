@@ -28,7 +28,7 @@
 #
 # Required environment:
 #   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, STATE_BRANCH, AGENT_MAKER_SKILL_NAME
-#   LEVEL, DELIVERY (no defaults; validated by validate_detect_inputs)
+#   LEVEL, DELIVERY (no defaults; validated by check_detect_inputs)
 #
 # Optional environment:
 #   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT (level-keyed; validated)
@@ -1213,7 +1213,7 @@ function state_read_path {
 }
 
 #######################################
-# validate_branch_match: Return 0 when DETECT_BRANCH_MATCH_MODE is valid
+# check_branch_match: Return 0 when DETECT_BRANCH_MATCH_MODE is valid
 #
 # Globals:
 #   DETECT_BRANCH_MATCH_MODE - Match mode under validation
@@ -1228,7 +1228,7 @@ function state_read_path {
 #   0 when valid, 1 otherwise
 #
 #######################################
-function validate_branch_match {
+function check_branch_match {
     case "${DETECT_BRANCH_MATCH_MODE}" in
         list | glob | regex) return 0 ;;
         *)
@@ -1239,7 +1239,7 @@ function validate_branch_match {
 }
 
 #######################################
-# validate_candidate_targets: Fail when a candidate target kind is not allowed by delivery
+# check_candidate_targets: Fail when a candidate target kind is not allowed by delivery
 #
 # Globals:
 #   CANDIDATES_JSON - Candidate JSON strings (read)
@@ -1255,7 +1255,7 @@ function validate_branch_match {
 #   0 when every target is allowed; 1 otherwise
 #
 #######################################
-function validate_candidate_targets {
+function check_candidate_targets {
     local candidate target_json
 
     for candidate in "${CANDIDATES_JSON[@]+"${CANDIDATES_JSON[@]}"}"; do
@@ -1266,7 +1266,7 @@ function validate_candidate_targets {
 }
 
 #######################################
-# validate_detect_inputs: Validate level-keyed inputs and delivery against the detect settings
+# check_detect_inputs: Validate level-keyed inputs and delivery against the detect settings
 #
 # Globals:
 #   LEVEL, DELIVERY - Decision inputs (read; no defaults)
@@ -1285,7 +1285,7 @@ function validate_candidate_targets {
 #   0 when valid; 1 when invalid
 #
 #######################################
-function validate_detect_inputs {
+function check_detect_inputs {
     check_loop_write_contract_all \
         "${LEVEL:-}" "${DELIVERY:-}" "${AGENT_EDIT_TARGET:-}" \
         "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_EDIT_DENYLIST:-}" "${AGENT_UNCHANGED_VERDICT:-}" \
@@ -1294,12 +1294,12 @@ function validate_detect_inputs {
     check_loop_write_contract_agent_tool_denylist "${LEVEL:-}" "${AGENT_ENGINE:-}" "${AGENT_TOOL_DENYLIST:-}" || return 1
     delivery_validate_value "${DELIVERY:-}" || return 1
     delivery_validate_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
-    validate_detect_items_config || return 1
+    check_detect_items_config || return 1
     return 0
 }
 
 #######################################
-# validate_detect_items_config: Validate the detect_items preconditions
+# check_detect_items_config: Validate the detect_items preconditions
 # Items mode needs exactly one literal integration branch (list or glob mode, no comma,
 # newline, or pattern characters) and no PR head scan, so the detect script runs once.
 #
@@ -1316,7 +1316,7 @@ function validate_detect_inputs {
 #   0 when valid or items mode is off; 1 when invalid
 #
 #######################################
-function validate_detect_items_config {
+function check_detect_items_config {
     local branch_match="${DETECT_BRANCH_MATCH:-}"
     local trimmed
 
@@ -1460,7 +1460,7 @@ function main {
     : "${AGENT_MAKER_SKILL_NAME:?}"
 
     # A configuration error fails the job instead of skipping (no outputs written).
-    if ! validate_detect_inputs; then
+    if ! check_detect_inputs; then
         return 1
     fi
     if ! detect_env_build_args "${DETECT_ENV_JSON:-}"; then
@@ -1508,7 +1508,7 @@ function main {
     fi
     migrate_state_targets "${STATE_READ_FILE}" "${STATE_BRANCH}"
 
-    if ! validate_branch_match; then
+    if ! check_branch_match; then
         write_detect_outputs "false" "config_error" "[]"
         write_legacy_outputs "[]"
         return 0
@@ -1562,7 +1562,7 @@ function main {
         return 0
     fi
 
-    if ! validate_candidate_targets; then
+    if ! check_candidate_targets; then
         return 1
     fi
 

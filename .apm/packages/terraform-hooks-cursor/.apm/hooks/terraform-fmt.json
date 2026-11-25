@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "postToolUse": [
+    "afterFileEdit": [
       {
         "command": "./scripts/terraform_fmt.sh",
         "timeout": 120

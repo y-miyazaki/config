@@ -137,7 +137,7 @@ Every loop automation skill MUST:
 7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
 8. Ship `references/category-pr-body-links.md` with per-skill link rules — see each skill's file; enforced for presence and placeholder patterns by `check_loop_pr_body_contract.sh`.
 9. List `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in the `SKILL.md` reference guide (an agent follows only what `SKILL.md` names); enforced by `check_loop_pr_body_contract.sh`.
-10. Mark linkable items in templates with `<linked path>`, `<linked sha>`, `<linked workflow>`, or `<linked job>`, and state `Keep the table columns as written` in each template's rules block. Link and column drift is steered by these rules, not by a `validate_agent_report.sh` REJECT.
+10. Mark linkable items in templates with `<linked path>`, `<linked sha>`, `<linked workflow>`, or `<linked job>`, and state `Keep the table columns as written` in each template's rules block. Link and column drift is steered by these rules, not by a `check_agent_report.sh` REJECT.
 
 Skills that write comments or reviews instead of a PR body (`github-issue-triage`, `github-pr-review`) ship `references/category-pr-body-links.md` for that text and list it in `SKILL.md`; `check_loop_pr_body_contract.sh` enforces both. The skill or its `finalize_script` writes only the text; `loop-finalize` (Deliver Message) posts the comment or review once and appends the marker, Meta and the footer.
 
@@ -177,11 +177,11 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
+Loop automation skills listed in `check_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
 
 ### Four-plane vs validation matrix
 
-| Plane     | Caller input                             | Skill reads? | `validate_agent_report.sh`                                                                              |
+| Plane     | Caller input                             | Skill reads? | `check_agent_report.sh`                                                                                 |
 | --------- | ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
 | Autonomy  | `level`                                  | No           | No                                                                                                      |
 | Edit gate | `agent_edit_allowed`                     | Yes          | Survey vs apply shape                                                                                   |

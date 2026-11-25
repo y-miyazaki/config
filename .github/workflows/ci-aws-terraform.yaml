@@ -297,7 +297,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          terraform fmt -check -recursive
+          terraform -chdir="${TERRAFORM_PATH}" fmt -check -recursive
 
       - name: Exec Terraform validate
         shell: bash

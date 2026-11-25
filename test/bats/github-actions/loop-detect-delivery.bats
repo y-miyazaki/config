@@ -9,8 +9,8 @@ bats_require_minimum_version 1.5.0
 # - action.yml declares the renamed inputs and no removed inputs (may_edit, git_landing_*, loop_*)
 # - action.yml maps every renamed input (and detect_items) to its uppercase environment variable
 # - action.yml has no default for delivery or level and exposes the pr_auto_merge output
-# - validate_detect_inputs fails on write-contract, delivery value, and detect-config errors
-# - validate_candidate_targets rejects target kinds the delivery does not allow
+# - check_detect_inputs fails on write-contract, delivery value, and detect-config errors
+# - check_candidate_targets rejects target kinds the delivery does not allow
 # - write_detect_outputs writes delivery and pr_auto_merge derived from level and delivery
 # - target_json builders emit no finalize key
 
@@ -134,32 +134,32 @@ state_file"
     [ "$output" = '{"mode":"pull_request","key":"pull_request:42","from":{"branch":"feature/x","ref":"abc123"},"to":{"branch":"feature/x","pr_number":42},"base":{"branch":"main"}}' ]
 }
 
-@test "validate_candidate_targets accepts pull_request targets for pr_push" {
+@test "check_candidate_targets accepts pull_request targets for pr_push" {
     DELIVERY="pr_push"
     CANDIDATES_JSON=('{"target_json":{"mode":"pull_request","key":"pull_request:42"}}')
-    run --separate-stderr validate_candidate_targets
+    run --separate-stderr check_candidate_targets
     [ "$status" -eq 0 ]
     [ -z "$stderr" ]
 }
 
-@test "validate_candidate_targets rejects an integration target for pr_push" {
+@test "check_candidate_targets rejects an integration target for pr_push" {
     DELIVERY="pr_push"
     CANDIDATES_JSON=(
         '{"target_json":{"mode":"pull_request","key":"pull_request:42"}}'
         '{"target_json":{"mode":"integration","key":"integration:main"}}'
     )
-    run --separate-stderr validate_candidate_targets
+    run --separate-stderr check_candidate_targets
     [ "$status" -eq 1 ]
     [ "$stderr" = "::error::delivery pr_push allows only pull_request targets (got: integration)" ]
 }
 
-@test "validate_detect_inputs accepts a valid L2 pr_create configuration" {
-    run --separate-stderr validate_detect_inputs
+@test "check_detect_inputs accepts a valid L2 pr_create configuration" {
+    run --separate-stderr check_detect_inputs
     [ "$status" -eq 0 ]
     [ -z "$stderr" ]
 }
 
-@test "validate_detect_inputs fails on each invalid configuration" {
+@test "check_detect_inputs fails on each invalid configuration" {
     local -a cases=(
         'LEVEL=|::error::level is required (L1, L2, or L3)'
         'DELIVERY=|::error::delivery must be issue_comment|issue_create|none|pr_create|pr_push|pr_review (got: empty)'
@@ -179,7 +179,7 @@ state_file"
             AGENT_EDIT_DENYLIST='' AGENT_UNCHANGED_VERDICT=REJECT
             DETECT_PR_ENABLED=false DETECT_BRANCH_MATCH=main
             ${assignment}
-            validate_detect_inputs
+            check_detect_inputs
         "
         [ "$status" -eq 1 ]
         [ "$stderr" = "${expected}" ]
@@ -188,14 +188,14 @@ state_file"
     [ "${checked}" -eq 7 ]
 }
 
-@test "validate_detect_inputs rejects issue_comment and pr_review" {
+@test "check_detect_inputs rejects issue_comment and pr_review" {
     local d checked=0
     for d in issue_comment pr_review; do
         DELIVERY="${d}"
         FINALIZE_SCRIPT="render.sh"
         DETECT_PR_ENABLED="true"
         DETECT_BRANCH_MATCH=""
-        run --separate-stderr validate_detect_inputs
+        run --separate-stderr check_detect_inputs
         [ "$status" -eq 1 ]
         [ "$stderr" = "::error::delivery ${d} requires an entity caller (loop-entity-detect)" ]
         checked=$((checked + 1))
@@ -203,17 +203,17 @@ state_file"
     [ "${checked}" -eq 2 ]
 }
 
-@test "validate_detect_inputs rejects pr_push with detect_branch_match or without detect_pr_enabled" {
+@test "check_detect_inputs rejects pr_push with detect_branch_match or without detect_pr_enabled" {
     DELIVERY="pr_push"
     DETECT_PR_ENABLED="true"
     DETECT_BRANCH_MATCH="main"
-    run --separate-stderr validate_detect_inputs
+    run --separate-stderr check_detect_inputs
     [ "$status" -eq 1 ]
     [ "$stderr" = "::error::delivery pr_push does not allow detect_branch_match (got: main)" ]
 
     DETECT_PR_ENABLED="false"
     DETECT_BRANCH_MATCH=""
-    run --separate-stderr validate_detect_inputs
+    run --separate-stderr check_detect_inputs
     [ "$status" -eq 1 ]
     [ "$stderr" = "::error::delivery pr_push requires detect_pr_enabled true" ]
 }

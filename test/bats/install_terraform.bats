@@ -7,6 +7,8 @@
 # - every download URL carries a cache-busting query string (?cb=<epoch>)
 # - the query string is appended after the source path, not the base URL
 # - existing files are skipped without any download
+# - an unknown option exits non-zero without downloading
+# - --help exits zero
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -62,5 +64,18 @@ EOF
     : > "${CURL_LOG}"
     run bash "${SCRIPT}" "${TARGET}"
     [ "${status}" -eq 0 ]
+    [ ! -s "${CURL_LOG}" ]
+}
+
+@test "install_terraform: --help exits zero" {
+    run bash "${SCRIPT}" --help
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *"Usage:"* ]]
+}
+
+@test "install_terraform: unknown option exits non-zero without download" {
+    run bash "${SCRIPT}" --frce "${TARGET}"
+    [ "${status}" -ne 0 ]
+    [[ ${output} == *"Unknown option: --frce"* ]]
     [ ! -s "${CURL_LOG}" ]
 }

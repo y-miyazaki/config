@@ -23,7 +23,7 @@ umask 027
 export LC_ALL=C.UTF-8
 
 #######################################
-# validate_service_control_inputs: Validate action and resolve targets JSON
+# check_service_control_inputs: Validate action and resolve targets JSON
 #
 # Globals:
 #   ACTION - start|stop
@@ -44,7 +44,7 @@ export LC_ALL=C.UTF-8
 #   Exits non-zero on invalid action or JSON
 #
 #######################################
-function validate_service_control_inputs {
+function check_service_control_inputs {
     local jq_err=""
     local sanitized_targets=""
     local target_count=""
@@ -97,5 +97,5 @@ function validate_service_control_inputs {
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    validate_service_control_inputs || exit $?
+    check_service_control_inputs || exit $?
 fi

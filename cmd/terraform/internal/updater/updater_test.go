@@ -53,11 +53,16 @@ type fakeRunner struct {
 	planCalls      int
 	failInitOnCall int
 	failPlanOnCall int
+	// upgradeFn runs on every Init call that passes -upgrade, like terraform rewriting the lock file.
+	upgradeFn func(dir string)
 }
 
 func (f *fakeRunner) Init(_ context.Context, dir string, args ...string) (string, error) {
 	f.initCalls++
 	f.calls = append(f.calls, "init "+filepath.Base(dir)+" "+strings.Join(args, " "))
+	if f.upgradeFn != nil && slices.Contains(args, "-upgrade") {
+		f.upgradeFn(dir)
+	}
 	if f.failInitOnCall == f.initCalls {
 		return "init output", errTestBoom
 	}
@@ -120,6 +125,12 @@ func TestUpdaterRun(t *testing.T) {
 	}
 	noPlan := func(o *Options) { o.NoPlan = true }
 	vpc := map[string]string{vpcSource: "2.0.0"}
+	// upgradeLock mimics `terraform init -upgrade` rewriting the provider lock file.
+	upgradeLock := func(dir string) {
+		if err := os.WriteFile(filepath.Join(dir, lockFileName), []byte("upgraded-lock"), 0o600); err != nil {
+			t.Errorf("write lock file: %v", err)
+		}
+	}
 
 	tests := []struct {
 		name         string
@@ -133,6 +144,8 @@ func TestUpdaterRun(t *testing.T) {
 		wantUpdated  []string
 		wantFailed   []string
 		wantFiles    map[string]string
+		wantKept     map[string]string
+		wantGone     []string
 		wantOut      []string
 		wantCalls    int
 		wantResolver int
@@ -188,6 +201,27 @@ func TestUpdaterRun(t *testing.T) {
 			wantTotal:    1,
 			wantFailed:   []string{vpcSource},
 			wantFiles:    map[string]string{rootFile: `"1.0.0"`},
+			wantResolver: 1,
+		},
+		{
+			name:         "rollback restores the provider lock file that init upgraded",
+			files:        map[string]string{rootFile: vpcModule, lockFileName: "original-lock"},
+			versions:     vpc,
+			runner:       &fakeRunner{showFn: changedCurrent, upgradeFn: upgradeLock},
+			wantTotal:    1,
+			wantFailed:   []string{vpcSource},
+			wantFiles:    map[string]string{rootFile: `"1.0.0"`, lockFileName: "original-lock"},
+			wantResolver: 1,
+		},
+		{
+			name:         "rollback removes a lock file that init created",
+			files:        map[string]string{rootFile: vpcModule},
+			versions:     vpc,
+			runner:       &fakeRunner{showFn: changedCurrent, upgradeFn: upgradeLock},
+			wantTotal:    1,
+			wantFailed:   []string{vpcSource},
+			wantFiles:    map[string]string{rootFile: `"1.0.0"`},
+			wantGone:     []string{lockFileName},
 			wantResolver: 1,
 		},
 		{
@@ -333,6 +367,23 @@ func TestUpdaterRun(t *testing.T) {
 			wantFiles:    map[string]string{rootFile: `"2.0.0"`},
 			wantResolver: 1,
 		},
+		{
+			name: "block pinned above the latest eligible version is not downgraded",
+			files: map[string]string{rootFile: vpcModule + `
+module "vpc_b" {
+  source  = "acme/vpc/aws"
+  version = "3.0.0"
+}
+`},
+			opts:         noPlan,
+			versions:     vpc,
+			runner:       &fakeRunner{},
+			wantTotal:    2,
+			wantUpdated:  []string{"[1 files]"},
+			wantFiles:    map[string]string{rootFile: `"2.0.0"`},
+			wantKept:     map[string]string{rootFile: `"3.0.0"`},
+			wantResolver: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -368,6 +419,16 @@ func TestUpdaterRun(t *testing.T) {
 			for name, want := range tt.wantFiles {
 				if got := readFile(t, filepath.Join(dir, name)); !strings.Contains(got, want) {
 					t.Errorf("%s = %q, want to contain %q", name, got, want)
+				}
+			}
+			for _, name := range tt.wantGone {
+				if _, statErr := os.Stat(filepath.Join(dir, name)); !errors.Is(statErr, os.ErrNotExist) {
+					t.Errorf("%s still exists after rollback (stat error: %v)", name, statErr)
+				}
+			}
+			for name, want := range tt.wantKept {
+				if got := readFile(t, filepath.Join(dir, name)); !strings.Contains(got, want) {
+					t.Errorf("%s = %q, want unchanged %q", name, got, want)
 				}
 			}
 			for _, want := range tt.wantOut {
@@ -443,25 +504,30 @@ func TestProjectRoot(t *testing.T) {
 	t.Parallel()
 
 	dir := writeProject(t, map[string]string{
-		"app/main.tf":          "",
-		"app/modules/x/y.tf":   "",
-		"lonely/inner/only.tf": "",
+		"app/main.tf":                  "",
+		"app/modules/x/y.tf":           "",
+		"lonely/inner/only.tf":         "",
+		"envonly/terraform.prd.tfvars": "",
+		"envonly/sub/z.tf":             "",
 	})
 	tests := []struct {
 		name string
 		file string
+		env  string
 		want string
 	}{
-		{name: "file next to marker", file: "app/main.tf", want: "app"},
-		{name: "walks up to the marker", file: "app/modules/x/y.tf", want: "app"},
-		{name: "falls back to the file directory", file: "lonely/inner/only.tf", want: "lonely/inner"},
+		{name: "file next to marker", file: "app/main.tf", env: "dev", want: "app"},
+		{name: "walks up to the marker", file: "app/modules/x/y.tf", env: "dev", want: "app"},
+		{name: "falls back to the file directory", file: "lonely/inner/only.tf", env: "dev", want: "lonely/inner"},
+		{name: "selected env file marks the root", file: "envonly/sub/z.tf", env: "prd", want: "envonly"},
+		{name: "other env file is not a marker", file: "envonly/sub/z.tf", env: "dev", want: "envonly/sub"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := projectRoot(filepath.Join(dir, tt.file))
+			got := projectRoot(filepath.Join(dir, tt.file), tt.env)
 			if want := filepath.Join(dir, tt.want); got != want {
-				t.Fatalf("projectRoot(%q) = %q, want %q", tt.file, got, want)
+				t.Fatalf("projectRoot(%q, %q) = %q, want %q", tt.file, tt.env, got, want)
 			}
 		})
 	}
@@ -482,6 +548,10 @@ func TestIsNewer(t *testing.T) {
 		{name: "constraint pins to newer", latest: "1.2.0", current: "~> 1.0", want: true},
 		{name: "constraint already above", latest: "5.9.0", current: ">= 6.0"},
 		{name: "no number is replaced", latest: "1.0.0", current: "latest", want: true},
+		{name: "multi-clause range is kept", latest: "7.1.0", current: ">= 4.0, < 6.0"},
+		{name: "upper bound is kept", latest: "3.0.1", current: "< 3.0"},
+		{name: "exclusion is kept", latest: "2.0.0", current: "!= 1.5.0"},
+		{name: "at-least stays replaceable", latest: "7.1.0", current: ">= 4.0", want: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

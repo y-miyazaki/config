@@ -34,7 +34,8 @@
 # - prepare_open_rejections (called directly, never in a subshell) clears stale open_rejections for a non-rejection outcome and replaces invalid JSON with []
 # - resolve_consecutive_failures prints only the count on stdout
 # - run.sh persists an empty open_rejections for an error outcome and survives invalid open_rejections JSON
-# - validate_state_file_path accepts only .loop/state-<name>.json (the pattern loop-state-promote lists)
+# - check_state_file_path accepts only .loop/state-<name>.json (the pattern loop-state-promote lists)
+# - check_branches and check_required_inputs return a status and leave the caller running
 # - write_state retry leaves no stale temp state file
 # - write_state retry rewrites state when the remote tip lacks the state file
 
@@ -946,28 +947,28 @@ setup() {
     rm -f "${STATE_TMP}"
 }
 
-@test "validate_finalize_commit_path rejects path traversal" {
+@test "check_finalize_commit_path rejects path traversal" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
-    run validate_finalize_commit_path "../outside.json"
+    run check_finalize_commit_path "../outside.json"
     [ "$status" -eq 1 ]
     [ "$output" = "::error::finalize_commit_paths must not contain '..': ../outside.json" ]
 }
 
-@test "validate_state_file_path rejects a state file without the hyphen that loop-state-promote lists" {
+@test "check_state_file_path rejects a state file without the hyphen that loop-state-promote lists" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
     local path
     for path in .loop/state_foo.json .loop/state.foo.json; do
-        run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE='"${path}"' validate_state_file_path'
+        run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE='"${path}"' check_state_file_path'
         [ "$status" -eq 1 ]
     done
 }
 
-@test "validate_state_file_path rejects non-loop path" {
+@test "check_state_file_path rejects non-loop path" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
-    run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE=state.json validate_state_file_path'
+    run bash -c 'source "'"${RUN_SCRIPT}"'"; STATE_FILE=state.json check_state_file_path'
     [ "$status" -eq 1 ]
     [[ $output == *"must match .loop/state-<name>.json"* ]]
 }
@@ -1015,4 +1016,12 @@ setup() {
 
     [ "$status" -eq 0 ]
     [ "$output" = "3" ]
+}
+
+@test "check_branches and check_required_inputs return a status and leave the caller running" {
+    run bash -c 'source "'"${RUN_SCRIPT}"'"; READ_BRANCH="bad branch"; PUSH_BRANCH=main; if ! check_branches; then echo branches-returned; fi; TARGET_KEY=""; if ! check_required_inputs; then echo inputs-returned; fi; echo caller-continued'
+    [ "$status" -eq 0 ]
+    [[ $output == *"branches-returned"* ]]
+    [[ $output == *"inputs-returned"* ]]
+    [[ $output == *"caller-continued"* ]]
 }
