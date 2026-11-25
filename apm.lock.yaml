@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T01:37:47.340576+00:00'
+generated_at: '2026-11-25T01:51:53.446842+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -2492,7 +2492,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:3fa8d41966ff9d2cb20a28ac9a141f6c326cc6770b680ead496dfeac9bf1bef4
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:737bae8e5330831ac933fcd4628b66570225eca7de7686899589239edde94ef6
+    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
     .claude/rules/bats.md: sha256:1d17f095e9ced10a07b6a088c47de639f99f07f6d07647f592faa8373915d73d
     .claude/rules/shell-script.md: sha256:d8c780ac26e04ed0d24eb22972dfc0a879b85cab97762be8a692198ad05fae3b
     .claude/skills/shell-script-review/SKILL.md: sha256:73b023114f5238093d399dff71d348ef4a9cf1793a17362409fd98922a9c2755
@@ -2541,12 +2541,12 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:3fa8d41966ff9d2cb20a28ac9a141f6c326cc6770b680ead496dfeac9bf1bef4
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:737bae8e5330831ac933fcd4628b66570225eca7de7686899589239edde94ef6
+    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
     .cursor/rules/bats.mdc: sha256:f4cbb6ae99732d01905ae2b853475745ce3604f504abf3eb8a3d27fbe4a88f71
     .cursor/rules/shell-script.mdc: sha256:5a3d9d3a3e0f52b4f68267e3c5ae78afc439f264a80563444c1879dc17bb2855
   source: local
   local_path: ./.apm/packages/shell-script
-  content_hash: sha256:4c0a83ca095b462baf45b2d435b652e550e6a9fb6af3626271bb10a9f23e73bf
+  content_hash: sha256:31e1d851010480b0395e575651192ca9d2e9d9fa13c58a58b78a36082dc93fd7
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
   name: shell-script-hooks-claude
@@ -7517,7 +7517,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:737bae8e5330831ac933fcd4628b66570225eca7de7686899589239edde94ef6
+  content_hash: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt
@@ -12908,7 +12908,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:737bae8e5330831ac933fcd4628b66570225eca7de7686899589239edde94ef6
+  content_hash: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt

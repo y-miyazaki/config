@@ -249,6 +249,18 @@ function parse_arguments {
         if [[ $SKIP_TESTS != "true" ]]; then
             user_paths+=(${TEST_PATHS[@]+"${TEST_PATHS[@]}"})
         fi
+        # Synced skill copies derive WORKSPACE_ROOT from their own location, so a path that only
+        # exists relative to the repository root of the current directory selects that root
+        local repo_root=""
+        repo_root="$(git rev-parse --show-toplevel 2> /dev/null || true)"
+        if [[ -n $repo_root && $repo_root != "$WORKSPACE_ROOT" ]]; then
+            for user_path in ${user_paths[@]+"${user_paths[@]}"}; do
+                if [[ $user_path != /* && ! -e "${WORKSPACE_ROOT}/${user_path}" && -e "${repo_root}/${user_path}" ]]; then
+                    WORKSPACE_ROOT="$repo_root"
+                    break
+                fi
+            done
+        fi
         for user_path in ${user_paths[@]+"${user_paths[@]}"}; do
             if [[ ! -e "$(resolve_user_search_path "$user_path")" ]]; then
                 error_exit "Path does not exist: $user_path"
