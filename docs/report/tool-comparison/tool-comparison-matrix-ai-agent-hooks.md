@@ -8,6 +8,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 | 日付       | 内容                                                                                                                                                                                                                                                                                                                                                               |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-11-25 | Cursor `stop` の stdin に `transcript_path`（null 可）を追記。Copilot CLI / Cursor のトランスクリプト行形式は公式ドキュメントに記載なしと確認（未確認として明記）。`stop` の Agent 判定で Cursor 固有フィールドを Kiro より先に判定するようスクリプトを修正 |
 | 2026-11-18 | 全般最新化: Claude Code のイベント数 (33 種)・`tool_response`、Codex の SessionEnd / ModelRequest / Interrupt・設定パス・exit 2 挙動、Cursor の `timeout` キー・matcher・追加イベント、Copilot CLI の 8 回連続ブロック上限・stdin camelCase・`.claude/settings.json` 読込、Kiro V3 の hooks 設定形式 (`version: "v1"` / PascalCase) を公式ドキュメントで確認し修正 |
 | 2026-06-27 | Codex (OpenAI) を全セクションに追加                                                                                                                                                                                                                                                                                                                                |
 | 2026-06-14 | hooks.json 設定方法セクション追加。ツール並び順を A-Z 順に統一                                                                                                                                                                                                                                                                                                     |
@@ -443,7 +444,8 @@ stdin:
   "conversation_id": "...",
   "generation_id": "...",
   "cursor_version": "3.11.13",
-  "workspace_roots": ["/workspace"]
+  "workspace_roots": ["/workspace"],
+  "transcript_path": "..."
 }
 ```
 
@@ -512,6 +514,7 @@ stdout:
 - Kiro CLI / Copilot CLI は exit 0 + JSON が唯一のブロック手段。exit 2 では警告表示のみで修正ループに入らない
 - Claude Code は exit 2 でも stderr が agent に届くため修正ループに入る。JSON 方式も併用可能
 - Antigravity は `"continue"` を使う。stdin に `terminationReason` があることで検出する
+- Cursor の `transcript_path` は文字列、またはトランスクリプト無効時は `null`（公式 hooks ドキュメント。2026-11-25 確認）。Copilot CLI の `agentStop` は `transcriptPath` を渡す。どちらも公式ドキュメントにトランスクリプトの行形式は記載がなく（未確認）、行形式に依存する判定（レビュー実施済みの検出など）は Claude Code / Codex / VS Code の `transcript_path` 形式でのみ検証済み
 - Cursor `stop` は `{"followup_message":"..."}` + exit 0 が修正ループの正規手段。`decision:block` JSON は解釈しない。exit 2 + stderr は ErrorOutput 記録のみで `stop` のゲートには使わない
 - Cursor の `afterFileEdit` 等（非 `stop`）は exit 2 + stderr でブロック可能
 - JSON は `jq -n --arg` で生成し、改行文字のエスケープを保証する

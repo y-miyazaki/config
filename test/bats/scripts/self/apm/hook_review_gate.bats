@@ -11,6 +11,8 @@
 # - a tool result that quotes the review command or an edit never counts as one
 # - a dirty tree without any edit tool call in the session (chat-only turn) passes
 # - Cursor stop events get the followup_message format
+# - Copilot and Cursor (undocumented transcript format) use the counter and their own review command
+# - REVIEW_GATE_COMMAND_<AGENT> overrides the review command for one agent
 # - detect_agent names the agent from the event JSON
 # - every agent package ships the same script
 
@@ -76,7 +78,7 @@ _run_hook() {
 }
 
 @test "detect_agent names the agent from the event JSON" {
-    run bash -c "source '${HOOK}' </dev/null; for j in '{\"conversation_id\":\"c\"}' '{\"transcriptPath\":\"p\"}' '{\"transcript_path\":\"p\"}' '{}'; do HOOK_STDIN_DATA=\$j detect_agent; done"
+    run bash -c "source '${HOOK}' </dev/null; for j in '{\"generation_id\":\"c\"}' '{\"transcriptPath\":\"p\"}' '{\"transcript_path\":\"p\"}' '{}'; do HOOK_STDIN_DATA=\$j detect_agent; done"
     [ "$output" = $'cursor\ncopilot\nclaude\nunknown' ]
 }
 
@@ -124,9 +126,9 @@ _run_hook() {
 
 @test "Cursor stop events get the followup_message format" {
     _dirty
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"stop\",\"conversation_id\":\"c1\"}' | '${HOOK}'"
+    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"stop\",\"conversation_id\":\"c1\",\"cursor_version\":\"3\",\"transcript_path\":null}' | '${HOOK}'"
     [ "$status" -eq 0 ]
-    [[ $(printf '%s' "$output" | jq -r .followup_message) == *"/code-review"* ]]
+    [[ $(printf '%s' "$output" | jq -r .followup_message) == *"/review"* ]]
 }
 
 @test "a hand-edited settings file counts as a change but a synced skill file does not" {
@@ -137,4 +139,24 @@ _run_hook() {
     _run_hook
     [[ $output == *".claude/settings.json"* ]]
     [[ $output != *"skills/s.md"* ]]
+}
+
+@test "Copilot and Cursor use the counter and their own review command because the transcript format is undocumented" {
+    _dirty
+    _review
+    _edit
+    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s2\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | '${HOOK}'"
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    [[ $output == *"/review"* && $output != *"/code-review"* ]]
+    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s2\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | '${HOOK}'"
+    [ -z "$output" ]
+}
+
+@test "REVIEW_GATE_COMMAND_<AGENT> overrides the review command for that agent only" {
+    _dirty
+    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s3\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | REVIEW_GATE_COMMAND_COPILOT=/my-review '${HOOK}'"
+    [[ $output == *"/my-review"* ]]
+    _edit
+    _run_hook
+    [[ $output == *"/code-review"* ]]
 }

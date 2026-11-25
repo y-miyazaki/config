@@ -14,8 +14,9 @@
 #     event JSON (detect_agent); per-agent marker strings live in set_markers only.
 #   - Without a readable transcript the gate falls back to the blocked-state counter: the same
 #     working-tree state is reported at most HOOK_BLOCK_LIMIT times (default 1 for this hook).
-#   - Only the Claude Code transcript format is verified; other agents use the same patterns until
-#     their line formats are added to set_markers (or given through REVIEW_GATE_*MARKER).
+#   - Only the Claude Code transcript format is verified (Claude Code, Codex and VS Code share it).
+#     Copilot CLI and Cursor document the transcript path but not its line format, so for them
+#     the gate relies on the blocked-state counter until REVIEW_GATE_*MARKER or set_markers is set.
 #   - Fail open: any error, a missing jq/git, REVIEW_GATE_DISABLED=1 or stop_hook_active=true
 #     exits 0 without blocking, so a broken hook never traps the agent.
 #   - Supports Kiro CLI, Claude Code, Copilot CLI, Cursor, Antigravity, VS Code
@@ -168,7 +169,7 @@ function report_failure {
             agent="antigravity"
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
-        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("conversation_id")' > /dev/null 2>&1; then
+        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("cursor_version") or has("generation_id") or has("workspace_roots") or has("conversation_id")' > /dev/null 2>&1; then
             agent="cursor"
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // "stop"' 2> /dev/null)
         elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
@@ -429,7 +430,6 @@ function record_blocked_state {
 }
 
 # Agent-specific strings: replace these to adapt the gate to another agent or review command.
-REVIEW_COMMAND="${REVIEW_GATE_COMMAND:-/code-review}"
 
 #######################################
 # detect_agent: Name the agent that sent the hook event
@@ -467,7 +467,8 @@ function detect_agent {
 #   REVIEW_GATE_MARKER / REVIEW_GATE_EDIT_MARKER override the table.
 #
 # Globals:
-#   REVIEW_MARKER, EDIT_MARKER - set here (ERE matched against transcript lines)
+#   REVIEW_MARKER, EDIT_MARKER - set here (ERE matched against transcript lines; empty = unknown format)
+#   REVIEW_COMMAND - set here (review command named in the block reason)
 #
 # Arguments:
 #   $1 - agent name from detect_agent
@@ -480,14 +481,53 @@ function detect_agent {
 #
 #######################################
 function set_markers {
+    local default_command="/code-review"
     case "$1" in
-        copilot | cursor | claude | *)
-            REVIEW_MARKER='"skill": ?"([a-z-]+:)?code-review"|<command-name>/code-review'
+        copilot | cursor)
+            # Official docs give the transcript path but not its line format: leave the markers
+            # empty so review_state reports "unknown" and the blocked-state counter applies.
+            REVIEW_MARKER=""
+            EDIT_MARKER=""
+            default_command="/review"
+            ;;
+        *)
+            REVIEW_MARKER='"skill": ?"([a-z-]+:)?code-review"|"type": ?"user".*<command-name>/code-review'
             EDIT_MARKER='"name": ?"(Edit|Write|MultiEdit|NotebookEdit|apply_patch|str_replace_editor)"'
             ;;
     esac
     REVIEW_MARKER="${REVIEW_GATE_MARKER:-$REVIEW_MARKER}"
     EDIT_MARKER="${REVIEW_GATE_EDIT_MARKER:-$EDIT_MARKER}"
+    REVIEW_COMMAND="${REVIEW_GATE_COMMAND:-$default_command}"
+}
+
+# Agent-managed and generated paths that never need a review (single owner of the ignore list);
+# hand-edited files such as .claude/settings.json still count.
+REVIEW_IGNORE_PATHS='^(\.agents/|\.codex/|\.kiro/|\.vscode/|apm_modules/|apm\.lock\.yaml$|\.github/hooks/|\.claude/(rules|skills|agents|hooks|commands|tmp)/|\.cursor/(rules|skills|agents|hooks)/)'
+
+#######################################
+# get_review_files: Changed files that need a review
+#
+# Globals:
+#   REVIEW_IGNORE_PATHS - ERE of paths to skip
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Newline-separated unique existing file paths to stdout
+#
+# Returns:
+#   0 always
+#
+#######################################
+function get_review_files {
+    local path
+    {
+        git diff --name-only --diff-filter=ACMR HEAD 2> /dev/null || true
+        git ls-files --others --exclude-standard 2> /dev/null || true
+    } | awk 'NF' | grep -v -E "$REVIEW_IGNORE_PATHS" | sort -u | while IFS= read -r path; do
+        [[ -f $path ]] && printf '%s\n' "$path"
+    done || true
 }
 
 #######################################
@@ -509,6 +549,7 @@ function set_markers {
 function review_state {
     local transcript="$1" last_review last_edit
     [[ -n $transcript && -f $transcript ]] || return 2
+    [[ -n $REVIEW_MARKER && -n $EDIT_MARKER ]] || return 2
     # tool_result lines only quote text (files, docs); they never prove a review or an edit
     last_review=$(grep -v '"tool_result"' "$transcript" 2> /dev/null | grep -n -E "$REVIEW_MARKER" | tail -n 1 | cut -d: -f1 || true)
     last_edit=$(grep -v '"tool_result"' "$transcript" 2> /dev/null | grep -n -E "$EDIT_MARKER" | tail -n 1 | cut -d: -f1 || true)
@@ -548,7 +589,7 @@ function main {
     fi
 
     local files=()
-    mapfile -t files < <(get_changed_files | grep -v -E '^(\.codex/|\.github/hooks/|apm\.lock\.yaml$)' || true)
+    mapfile -t files < <(get_review_files)
     if ((${#files[@]} == 0)); then
         clear_blocked_state
         exit 0
