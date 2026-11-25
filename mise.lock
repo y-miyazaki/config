@@ -361,9 +361,8 @@ version = "0.13.9"
 backend = "aqua:astral-sh/uv"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64"]
-checksum = "sha256:0797542018e541a9288855df555c8077eed06f7a47d206362030480e8ecc9f3d"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513657"
+checksum = "sha256:37fbb7c5bc66cf99c12aa881949d216181e201dec449772c4329e56487d61179"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-aarch64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-arm64-musl"]
@@ -373,9 +372,8 @@ url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513671"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64"]
-checksum = "sha256:a7fbaff2b9a271d85c1bdb540941090fd1ce011797b4abeb48e4dcd39c2471d5"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513954"
+checksum = "sha256:58ccf5f1792b8a5a88d01bc910ea131a8b3db4a319a17ad5fad75e0845a3e271"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-x86_64-unknown-linux-musl.tar.gz"
 provenance = "github-attestations"
 
 [tools."aqua:astral-sh/uv"."platforms.linux-x64-musl"]
@@ -3099,43 +3097,36 @@ backend = "github:microsoft/apm"
 
 [tools."github:microsoft/apm"."platforms.linux-arm64"]
 checksum = "sha256:3c4dba006c655db9a6fea51c80936ae194b4be5c1fa9e64d7a4a581ce9458861"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118015"
 
 [tools."github:microsoft/apm"."platforms.linux-arm64-musl"]
 checksum = "sha256:3c4dba006c655db9a6fea51c80936ae194b4be5c1fa9e64d7a4a581ce9458861"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118015"
 
 [tools."github:microsoft/apm"."platforms.linux-x64"]
 checksum = "sha256:f9a8b1c8e008d9b38e081a93cac50f2ecdfb01ffd0fbfd7e3a2d3292ca193f56"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-linux-x86_64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118008"
 
 [tools."github:microsoft/apm"."platforms.linux-x64-musl"]
 checksum = "sha256:f9a8b1c8e008d9b38e081a93cac50f2ecdfb01ffd0fbfd7e3a2d3292ca193f56"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-linux-x86_64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118008"
 
 [tools."github:microsoft/apm"."platforms.macos-arm64"]
 checksum = "sha256:73c06f6d331a80bd91fdeccc99031f9069fd5547136f15c1a212c6d8f1d27ebd"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118007"
 
 [tools."github:microsoft/apm"."platforms.macos-x64"]
 checksum = "sha256:0407db05669996a081d431f8ae60c3890fcf01a0de2af2134b9f23d06d0633c7"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-darwin-x86_64.tar.gz"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118013"
 
 [tools."github:microsoft/apm"."platforms.windows-x64"]
 checksum = "sha256:7eaaa597dfcd9763cb76d4b982517a6b95ed152d8a97c4978c3ef3490b3eebb7"
-checksum_source = "mise-versions"
 url = "https://github.com/microsoft/apm/releases/download/v0.36.0/apm-windows-x86_64.zip"
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/760118010"
 
