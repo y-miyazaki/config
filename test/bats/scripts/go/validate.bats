@@ -4,7 +4,7 @@
 # Tests for scripts/go/validate.sh
 #
 # Use cases:
-# - --changed-only needs no golangci-lint when no go file changed
+# - --changed-only reports a missing golangci-lint even when no go file changed
 # - without --changed-only a missing golangci-lint is still reported
 # - determine_target_pattern fails for a missing directory instead of validating the whole repository
 # - determine_target_pattern fails for a scoped directory without Go files
@@ -32,6 +32,9 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
+# shellcheck disable=SC1091
+source "$(bats_support_dir)/shell_tool_mock.bash"
+
 VALIDATE_SCRIPT="$(bats_workspace_root)/scripts/go/validate.sh"
 
 setup() {
@@ -41,7 +44,15 @@ setup() {
     echo 'package root' > "${WORK_DIR}/root.go"
 }
 
+teardown() {
+    mock_shell_tool_teardown
+}
+
 @test "--changed-only exits 0 without checking when no go file changed" {
+    # The script requires go and golangci-lint up front; mock them so the result does not depend on the machine
+    mock_shell_tool_setup
+    mock_tool_write go <<< $'#!/usr/bin/env bash\nexit 0'
+    mock_tool_write golangci-lint <<< $'#!/usr/bin/env bash\nexit 0'
     bats_git_fresh_repo "${WORK_DIR}/repo"
     echo 'x' > "${WORK_DIR}/repo/readme.md"
     bats_git_commit "${WORK_DIR}/repo" init
@@ -51,7 +62,7 @@ setup() {
     [[ $output == *"VALIDATION_RESULT tool=go status=PASS"* ]]
 }
 
-@test "--changed-only needs no golangci-lint when no go file changed" {
+@test "--changed-only reports a missing golangci-lint even when no go file changed" {
     bats_git_fresh_repo "${WORK_DIR}/repo"
     echo 'x' > "${WORK_DIR}/repo/readme.md"
     bats_git_commit "${WORK_DIR}/repo" init
@@ -66,8 +77,8 @@ setup() {
         [ "$status" -eq 0 ]
     done
     run env PATH=/usr/bin:/bin bash -c "cd '${WORK_DIR}/repo' && '${VALIDATE_SCRIPT}' --changed-only"
-    [ "$status" -eq 0 ]
-    [[ $output == *"VALIDATION_RESULT tool=go status=PASS"* ]]
+    [ "$status" -ne 0 ]
+    [[ $output == *"Missing required tools"*"golangci-lint"* ]]
 }
 
 @test "without --changed-only a missing golangci-lint is still reported" {
@@ -77,7 +88,7 @@ setup() {
     fi
     run env PATH=/usr/bin:/bin bash -c "cd '${WORK_DIR}' && '${VALIDATE_SCRIPT}'"
     [ "$status" -ne 0 ]
-    [[ $output == *"Missing required tools"* ]]
+    [[ $output == *"Missing required tools"*"golangci-lint"* ]]
 }
 
 @test "determine_changed_patterns emits one package pattern per directory with changed go files, grouped by module" {

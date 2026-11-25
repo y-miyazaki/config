@@ -18,6 +18,7 @@ Behavioral rules for `test/bats/**`. Generic Bats rules live in the companion Ba
 CI installs only what the `Setup *` and `Install *` steps of `.github/workflows/ci-shell-script.yaml` list (at the time of writing Bats, GNU parallel, `shfmt`, `actionlint`, `ghalint`, `zizmor` and ShellSpec), on top of the runner's system tools; that workflow is the source of truth, so update this paragraph when the steps change. A developer machine also has the `mise` tools (`golangci-lint`, `terraform`, `tflint`, `trivy`, ...), so a test can pass locally and fail in CI.
 
 - Do not rely on a tool outside the CI set. Mock it (shim under `BATS_TEST_TMPDIR`, prepended to `PATH`) or `skip` with a reason when the real tool is required.
+- Fix a machine-dependent test in the test, never by changing the script's behavior: scripts require their tools first ([scripts/CLAUDE.md](../../scripts/CLAUDE.md)), so give the test mocks (`mock_tool_write`) for every tool the script requires.
 - To prove a no-tool path, run with a system-only `PATH` (`env PATH=/usr/bin:/bin ...`) after checking `command -v <tool>` fails there; do not filter one directory out of `PATH` (here the `mise` shims directory holds every tool, so the filter removes nothing useful).
 - Never call real AWS, GitHub or the network. Use `aws_mock.bash` / `gh_mock.bash` and local bare git repositories.
 - A new test for a bug must fail on the old code: revert the fix temporarily (or run the test on `git show HEAD:<file>`) and confirm it fails before keeping it.

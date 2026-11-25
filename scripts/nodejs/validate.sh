@@ -734,6 +734,9 @@ function main {
 
     start_time=$(date +%s)
 
+    # Validate required dependencies
+    require_dependencies "node" "npm"
+
     echo_section "Starting Node.js code quality checks"
     log "INFO" "Target directory: $TARGET_DIR"
     log "INFO" "Scoped mode: $IS_SCOPED"
@@ -747,7 +750,6 @@ function main {
 
     if [[ ${#projects[@]} -eq 0 ]]; then
         log "WARN" "No Node.js projects found in $TARGET_DIR"
-        print_validation_result nodejs 0 "projects=SKIP|no Node.js projects found" || true
         exit 0
     fi
 
@@ -759,9 +761,6 @@ function main {
             exit 0
         fi
     fi
-
-    # Require the toolchain only now that there is something to validate
-    require_dependencies "node" "npm"
 
     log "INFO" "Found ${#projects[@]} Node.js project(s)"
 

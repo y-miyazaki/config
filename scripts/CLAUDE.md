@@ -22,9 +22,11 @@ Do not run `apm install` or the `scripts/self/apm/sync_*` scripts by hand; the S
 - Build commands as arrays and run them through `execute_command`; do not assemble command strings for `bash -c`.
 - When a contract changes, add an entry to the breaking-change list of the change (migration step for downstream repositories) and update the Bats suite that pins the old behavior.
 
-## Do the cheap decision before requiring tools (MUST)
+## Require tools first (MUST)
 
-Check for tools (`require_dependencies`, `command -v`) only after the script has decided there is work to do. A no-op path (`--changed-only` with no change, an empty target list, no project found) must succeed without the Go toolchain, the linter, Node.js or any other optional tool, because CI runners install fewer tools than a developer machine.
+A script checks the tools it needs (`require_dependencies`, `command -v`) at the start, before it looks at the work. A missing tool then fails every run the same way, on a developer machine and in CI, instead of passing quietly on runs that happen to have nothing to do and failing later on the first change that needs the tool. Do not move the check behind a no-op exit to make a test pass.
+
+The environment is the test's job: a suite that needs go, golangci-lint, node or any other CLI mocks it (`mock_tool_write` in `test/bats/support/shell_tool_mock.bash`) or skips, and a suite that proves the missing-tool report runs with a system-only `PATH` (see [test/bats/CLAUDE.md](../test/bats/CLAUDE.md)).
 
 ## Temporary files (MUST)
 

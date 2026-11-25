@@ -4,8 +4,7 @@
 # Tests for scripts/nodejs/validate.sh
 #
 # Use cases:
-# - main succeeds without node or npm when the directory has no Node.js project
-# - main still reports missing node and npm when a project exists
+# - main reports missing node and npm before looking for projects
 # - find_nodejs_projects finds projects whose path contains spaces
 # - find_nodejs_projects skips node_modules and build output
 # - filter_changed_projects keeps only projects owning changed files, using the deepest match
@@ -144,27 +143,24 @@ _mock_npm() {
     [ -z "$output" ]
 }
 
-@test "main succeeds without node or npm when the directory has no Node.js project" {
+@test "main reports missing node and npm before looking for projects" {
     mkdir -p "${BATS_TEST_TMPDIR}/empty"
     # A system-only PATH models a CI runner without node installed
-    run env PATH=/usr/bin:/bin bash -c "command -v node"
-    if [[ $status -eq 0 ]]; then
-        skip "node is installed in a system directory"
-    fi
-    run env PATH=/usr/bin:/bin bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/empty'"
-    [ "$status" -eq 0 ]
-    [[ $output == *"No Node.js projects found"* ]]
-    [[ $output == *"VALIDATION_RESULT tool=nodejs status=PASS"* ]]
-}
-
-@test "main still reports missing node and npm when a project exists" {
-    mkdir -p "${BATS_TEST_TMPDIR}/app"
-    echo '{}' > "${BATS_TEST_TMPDIR}/app/package.json"
     run env PATH=/usr/bin:/bin bash -c "command -v node npm"
     if [[ $status -eq 0 ]]; then
         skip "node or npm is installed in a system directory"
     fi
-    run env PATH=/usr/bin:/bin bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/app'"
+    run env PATH=/usr/bin:/bin bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/empty'"
     [ "$status" -ne 0 ]
     [[ $output == *"Missing required tools"*"node"*"npm"* ]]
+}
+
+@test "main exits 0 with no projects when node and npm are available" {
+    mkdir -p "${BATS_TEST_TMPDIR}/empty" "${BATS_TEST_TMPDIR}/bin"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${BATS_TEST_TMPDIR}/bin/node"
+    cp "${BATS_TEST_TMPDIR}/bin/node" "${BATS_TEST_TMPDIR}/bin/npm"
+    chmod +x "${BATS_TEST_TMPDIR}/bin/node" "${BATS_TEST_TMPDIR}/bin/npm"
+    run env PATH="${BATS_TEST_TMPDIR}/bin:${PATH}" bash -c "'${VALIDATE_SCRIPT}' '${BATS_TEST_TMPDIR}/empty'"
+    [ "$status" -eq 0 ]
+    [[ $output == *"No Node.js projects found"* ]]
 }
