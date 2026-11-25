@@ -12,7 +12,6 @@ paths:
 - Shell script implementation rules remain in the companion Shell Script rules (stem `shell-script`); this file defines test-suite conventions only.
 - When adding or materially changing a shell script or sourced library, add or update the matching Bats suite in the same change (MUST) — same obligation as companion Shell Script rules (stem `shell-script`).
 - Bats does not mandate a global directory layout — follow the **repository's established test tree** (discover from existing suites, CI config, or maintainer docs).
-- A suite gives the same result on a developer machine and on a minimal CI runner (MUST): it does not depend on tools, versions or services that happen to be installed locally (BDES-06).
 
 ### Rule application (`globs` / `paths`)
 
@@ -119,7 +118,7 @@ Prefer [bats-support](https://github.com/bats-core/bats-support) and [bats-asser
 - TAP-05 (MUST): Real secrets or live tokens in fixtures — use placeholders and assert redaction behavior
 - TAP-06 (SHOULD): Skipping `teardown()` when `setup()` writes temp files or directories
 - TAP-07 (SHOULD): Mandating `test/bats/` when the repository uses a different bats root — discover and match existing layout
-- TAP-08 (MUST): A test that passes only because a tool, version or service is installed locally (for example through a version manager) while CI installs fewer
+- TAP-08 (MUST): Relying on a tool, version or service that is installed only on the developer machine (see BDES-06)
 
 ### Code Modification Guidelines
 

@@ -17,14 +17,14 @@ Do not run `apm install` or the `scripts/self/apm/sync_*` scripts by hand; the S
 
 `scripts/lib/` is copied into every distributed skill, so a function signature, exit status or output change is a breaking change for consumers.
 
-- A function that validates or checks returns a status (`return 1`); it does not call `error_exit` or `exit`. The caller decides (`if ! f; then`, `f || exit 1`).
+- A `check_*` / `is_*` function that tests a value or a contract returns a status (`return 1`) and does not call `error_exit` or `exit`; the caller decides (`if ! f; then`, `f || exit 1`). `require_*` functions and `error_exit` are assertions that stop the run by design (for example `require_dependencies`); keep them out of anything named `check_*`.
 - A function that wraps a command returns that command's status and keeps stdout clean (data only); diagnostics go to stderr.
 - Build commands as arrays and run them through `execute_command`; do not assemble command strings for `bash -c`.
 - When a contract changes, add an entry to the breaking-change list of the change (migration step for downstream repositories) and update the Bats suite that pins the old behavior.
 
 ## Do the cheap decision before requiring tools (MUST)
 
-Check for tools (`require_dependencies`, `command -v`) only after the script has decided there is work to do. A no-op path (`--changed-only` with no change, an empty target list, `--help`) must succeed without the Go toolchain, the linter or any other optional tool, because CI runners install fewer tools than a developer machine.
+Check for tools (`require_dependencies`, `command -v`) only after the script has decided there is work to do. A no-op path (`--changed-only` with no change, an empty target list, no project found) must succeed without the Go toolchain, the linter, Node.js or any other optional tool, because CI runners install fewer tools than a developer machine.
 
 ## Temporary files (MUST)
 

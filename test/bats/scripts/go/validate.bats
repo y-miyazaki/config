@@ -4,7 +4,7 @@
 # Tests for scripts/go/validate.sh
 #
 # Use cases:
-# - --changed-only skips without requiring go or golangci-lint when no go file changed
+# - --changed-only needs no golangci-lint when no go file changed
 # - without --changed-only a missing golangci-lint is still reported
 # - determine_target_pattern fails for a missing directory instead of validating the whole repository
 # - determine_target_pattern fails for a scoped directory without Go files
@@ -51,15 +51,20 @@ setup() {
     [[ $output == *"VALIDATION_RESULT tool=go status=PASS"* ]]
 }
 
-@test "--changed-only skips without requiring go or golangci-lint when no go file changed" {
+@test "--changed-only needs no golangci-lint when no go file changed" {
     bats_git_fresh_repo "${WORK_DIR}/repo"
     echo 'x' > "${WORK_DIR}/repo/readme.md"
     bats_git_commit "${WORK_DIR}/repo" init
-    # A system-only PATH models a CI runner without golangci-lint installed
+    # A system-only PATH models a CI runner without golangci-lint; git and bash must still resolve
     run env PATH=/usr/bin:/bin bash -c "command -v golangci-lint"
     if [[ $status -eq 0 ]]; then
         skip "golangci-lint is installed in a system directory"
     fi
+    local tool
+    for tool in git bash date; do
+        run env PATH=/usr/bin:/bin bash -c "command -v ${tool}"
+        [ "$status" -eq 0 ]
+    done
     run env PATH=/usr/bin:/bin bash -c "cd '${WORK_DIR}/repo' && '${VALIDATE_SCRIPT}' --changed-only"
     [ "$status" -eq 0 ]
     [[ $output == *"VALIDATION_RESULT tool=go status=PASS"* ]]

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T02:15:40.408794+00:00'
+generated_at: '2026-11-25T02:28:15.719934+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -2493,7 +2493,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
-    .claude/rules/bats.md: sha256:5f8ec578c47603e65c10198351b1af9e015bc21caf588857d81196130e4bb49f
+    .claude/rules/bats.md: sha256:eeabec7e4c9d5247b8b573b44a7bd2405790c740367a01f58faf498cd5804014
     .claude/rules/shell-script.md: sha256:d8c780ac26e04ed0d24eb22972dfc0a879b85cab97762be8a692198ad05fae3b
     .claude/skills/shell-script-review/SKILL.md: sha256:73b023114f5238093d399dff71d348ef4a9cf1793a17362409fd98922a9c2755
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
@@ -2542,11 +2542,11 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/shell-script-validation/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:f5648383c43d0341aafc38fcc7e1e49c886d71141c96d11da8e7900c4178d719
-    .cursor/rules/bats.mdc: sha256:9570717a705c8dada6cc972cf98eceadcc4a019c563aa297c8fdff07189fcf9a
+    .cursor/rules/bats.mdc: sha256:1526e0a09f4532bba91b90f0e69e86829a35e0cacde4108f2ea57d87ee0d8ef8
     .cursor/rules/shell-script.mdc: sha256:5a3d9d3a3e0f52b4f68267e3c5ae78afc439f264a80563444c1879dc17bb2855
   source: local
   local_path: ./.apm/packages/shell-script
-  content_hash: sha256:4425828c775fb60761ae0c9ea9dc94bda9375dc40fd0a24dd2e4a99b274535c7
+  content_hash: sha256:dfe0566108d238493c0b9bdb3ce3a9b122856166a36e7b258daa77106a51083c
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
   name: shell-script-hooks-claude
@@ -2711,7 +2711,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:5f8ec578c47603e65c10198351b1af9e015bc21caf588857d81196130e4bb49f
+  content_hash: sha256:eeabec7e4c9d5247b8b573b44a7bd2405790c740367a01f58faf498cd5804014
 - kind: project-relative
   target: claude
   value: .claude/rules/claude-settings.md
@@ -13700,7 +13700,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:9570717a705c8dada6cc972cf98eceadcc4a019c563aa297c8fdff07189fcf9a
+  content_hash: sha256:1526e0a09f4532bba91b90f0e69e86829a35e0cacde4108f2ea57d87ee0d8ef8
 - kind: project-relative
   target: cursor
   value: .cursor/rules/claude-settings.mdc

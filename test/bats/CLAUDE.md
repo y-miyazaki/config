@@ -15,7 +15,7 @@ Behavioral rules for `test/bats/**`. Generic Bats rules live in the companion Ba
 
 ## Tests must not depend on the machine (MUST)
 
-CI installs only Bats, GNU parallel, `shfmt`, `actionlint`, `ghalint`, `zizmor` and ShellSpec (see `.github/workflows/ci-shell-script.yaml`), on top of the runner's system tools. A developer machine also has the `mise` tools (`golangci-lint`, `terraform`, `tflint`, `trivy`, ...), so a test can pass locally and fail in CI.
+CI installs only what the `Setup *` and `Install *` steps of `.github/workflows/ci-shell-script.yaml` list (at the time of writing Bats, GNU parallel, `shfmt`, `actionlint`, `ghalint`, `zizmor` and ShellSpec), on top of the runner's system tools; that workflow is the source of truth, so update this paragraph when the steps change. A developer machine also has the `mise` tools (`golangci-lint`, `terraform`, `tflint`, `trivy`, ...), so a test can pass locally and fail in CI.
 
 - Do not rely on a tool outside the CI set. Mock it (shim under `BATS_TEST_TMPDIR`, prepended to `PATH`) or `skip` with a reason when the real tool is required.
 - To prove a no-tool path, run with a system-only `PATH` (`env PATH=/usr/bin:/bin ...`) after checking `command -v <tool>` fails there; do not filter one directory out of `PATH` (here the `mise` shims directory holds every tool, so the filter removes nothing useful).
@@ -35,4 +35,4 @@ CI runs `bats --jobs "$(nproc)" --no-parallelize-within-files`: suites run in pa
 ## Running (SHOULD)
 
 - Run the suites for the files you changed (`bats test/bats/<path>.bats`). The full suite (`bats -r test/bats`) takes about four minutes; run it before opening a PR, not after every edit.
-- The Stop hook `scripts/self/hooks/bats_changed.sh` runs only the suites mapped from changed files, with a 120 second limit; it does not see suites that merely source a changed library. Run those suites yourself when you change `scripts/lib/`.
+- The Stop hook `scripts/self/hooks/bats_changed.sh` runs only the suites mapped from changed files, with the timeout set in `.claude/settings.local.json` (120 seconds at the time of writing); it does not see suites that merely source a changed library. Run those suites yourself when you change `scripts/lib/`.
