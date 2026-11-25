@@ -145,7 +145,7 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 - `.terraform.lock.hcl` is updated natively by the `terraform` manager together with provider updates (no `postUpdateOptions` entry exists for it)
 - Provider updates (`terraform-provider` datasource): scoped to `**/*.tf`, `**/*.tfvars`, and `**/.terraform.lock.hcl`
 - Lock file maintenance (`lockFileMaintenance`): weekly refresh of provider hashes in `.terraform.lock.hcl` (via `:maintainLockFilesWeekly` preset)
-- Group Terraform module/provider updates into one PR with group name `terraform dependencies`
+- Terraform modules and providers are not grouped: each dependency gets its own PR because modules differ in function
 - Terraform CLI (`hashicorp/terraform` via GitHub Actions / mise) is grouped separately from the Terraform provider (`matchDatasources: ["!terraform-provider"]`)
 
 ### tflint Plugins (`terraform-linters/tflint-ruleset-aws`)
