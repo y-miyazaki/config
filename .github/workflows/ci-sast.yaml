@@ -43,7 +43,7 @@ on:
         required: false
         type: string
       uv_version:
-        default: "0.13.8"
+        default: "0.13.9"
         description: "uv version for Semgrep install; keep aligned with loop composite actions"
         required: false
         type: string
