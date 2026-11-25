@@ -29,7 +29,7 @@ The architecture separates:
 - `.apm/packages/github/`: GitHub Issue/PR skills and GitHub MCP (`github-issue-triage`, `github-issue-autofix`, `github-pr-review`, `github-pr-revise`, `github-pr-body`)
 - `.apm/packages/github-actions/`: GitHub Actions YAML review/validation skills and GHA instructions
 - `.apm/packages/loop/`: generic loop checker skill (`loop-verifier`); callers pass `agent_checker_skill_name` to `loop-execute` — domain entry skills are not here
-- `.apm/packages/common-hooks-*`: target-specific common hooks (8 hooks per target: Claude, Copilot, Cursor)
+- `.apm/packages/common-hooks-*`: target-specific common hooks (9 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/aws/`: AWS-focused MCP integrations (4 MCP servers)
 - `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
 - `.apm/packages/terraform-hooks-*`: target-specific Terraform hooks (2 hooks per target: Claude, Copilot, Cursor)

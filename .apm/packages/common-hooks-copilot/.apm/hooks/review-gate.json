@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/review_gate.sh",
+        "timeoutSec": 15
+      }
+    ]
+  },
+  "version": 1
+}

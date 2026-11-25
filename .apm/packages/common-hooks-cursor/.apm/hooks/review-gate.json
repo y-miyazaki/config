@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "./scripts/review_gate.sh",
+        "timeout": 15
+      }
+    ]
+  },
+  "version": 1
+}

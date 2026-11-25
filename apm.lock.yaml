@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T02:50:26.421726+00:00'
+generated_at: '2026-11-25T03:14:18.437356+00:00'
 apm_version: 0.35.1
 dependencies:
 - repo_url: _local/common
@@ -360,6 +360,7 @@ dependencies:
   - .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh
   - .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh
   - .claude/hooks/common-hooks-claude/scripts/prettier.sh
+  - .claude/hooks/common-hooks-claude/scripts/review_gate.sh
   - .claude/hooks/common-hooks-claude/scripts/zizmor.sh
   deployed_file_hashes:
     .claude/hooks/common-hooks-claude/scripts/actionlint.sh: sha256:c32872a4418f631c829682bb51174a56950be4f865bbb44ac97a0a8b8438fcd6
@@ -369,10 +370,11 @@ dependencies:
     .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:73ec1c1515decd2dce2b8c8ad4583742cc05c8767b8ab8a1a20b250efce38f26
     .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:e2eced48b7918d060c1f4d15f67039ae2f97d8bba2d5dd5fa350925dcff8334b
     .claude/hooks/common-hooks-claude/scripts/prettier.sh: sha256:8c8053c1d8857cdf6c31858d0223f93fa6099659b711edf114c7c49d6c8c865f
+    .claude/hooks/common-hooks-claude/scripts/review_gate.sh: sha256:8af43f1466a766ca60648ae0d1dc07ab407acf254a1aadfb5fb0ffbc750c2812
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:17755760efe4caf8139c2afe1646ec391ca4248303e9e5133c10e26b2dd75731
   source: local
   local_path: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:a893e00c5825b492250c1999f629583acd417f13bcbf046281c264249f15df06
+  content_hash: sha256:a86d54234cf71f8fd8c54605d1a8d60929c8b2ac4e37f216b21e49c4fa586ca5
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
   name: common-hooks-cursor
@@ -386,6 +388,7 @@ dependencies:
   - .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh
   - .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh
   - .cursor/hooks/common-hooks-cursor/scripts/prettier.sh
+  - .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh
   - .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh
   deployed_file_hashes:
     .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:c32872a4418f631c829682bb51174a56950be4f865bbb44ac97a0a8b8438fcd6
@@ -395,10 +398,11 @@ dependencies:
     .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:73ec1c1515decd2dce2b8c8ad4583742cc05c8767b8ab8a1a20b250efce38f26
     .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:e2eced48b7918d060c1f4d15f67039ae2f97d8bba2d5dd5fa350925dcff8334b
     .cursor/hooks/common-hooks-cursor/scripts/prettier.sh: sha256:8c8053c1d8857cdf6c31858d0223f93fa6099659b711edf114c7c49d6c8c865f
+    .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh: sha256:8af43f1466a766ca60648ae0d1dc07ab407acf254a1aadfb5fb0ffbc750c2812
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:17755760efe4caf8139c2afe1646ec391ca4248303e9e5133c10e26b2dd75731
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:f7856bbdcf5f38dcb784e3cfe3f8d754683e724e83e6e6d49a12a0ad7fb34114
+  content_hash: sha256:e7c735c6012c4ae3210e4f4894270196ba00b3e969569dce29a86cf8f5882c9e
   declared_license: Apache-2.0
 - repo_url: _local/github
   name: config-github
@@ -2649,6 +2653,15 @@ deployments:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
   content_hash: sha256:8c8053c1d8857cdf6c31858d0223f93fa6099659b711edf114c7c49d6c8c865f
+- kind: project-relative
+  target: claude
+  value: .claude/hooks/common-hooks-claude/scripts/review_gate.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common-hooks-claude
+  active_owner: ./.apm/packages/common-hooks-claude
+  content_hash: sha256:8af43f1466a766ca60648ae0d1dc07ab407acf254a1aadfb5fb0ffbc750c2812
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/zizmor.sh
@@ -13638,6 +13651,15 @@ deployments:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
   content_hash: sha256:8c8053c1d8857cdf6c31858d0223f93fa6099659b711edf114c7c49d6c8c865f
+- kind: project-relative
+  target: cursor
+  value: .cursor/hooks/common-hooks-cursor/scripts/review_gate.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common-hooks-cursor
+  active_owner: ./.apm/packages/common-hooks-cursor
+  content_hash: sha256:8af43f1466a766ca60648ae0d1dc07ab407acf254a1aadfb5fb0ffbc750c2812
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh

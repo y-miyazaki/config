@@ -88,9 +88,9 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │       ├── agents/        # 1 agent (test-engineer.md)
 │       ├── instructions/  # 5 instruction files
 │       └── skills/        # 4 skills
-├── common-hooks-claude/   # Common hooks for Claude Code (8 hooks)
-├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (8 hooks)
-├── common-hooks-cursor/   # Common hooks for Cursor (8 hooks)
+├── common-hooks-claude/   # Common hooks for Claude Code (9 hooks)
+├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (9 hooks)
+├── common-hooks-cursor/   # Common hooks for Cursor (9 hooks)
 ├── repo-maintenance/  # In-repo maintenance skills
 │   └── .apm/
 │       └── skills/        # 6 skills
@@ -232,6 +232,7 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 | common-hooks-\*       | github-actions-ghalint    | Stop                                                        | Lint GitHub Actions workflows with ghalint                                                   |
 | common-hooks-\*       | github-actions-zizmor     | Stop                                                        | Security scan `.github` with zizmor when workflows/actions change                            |
 | common-hooks-\*       | gitleaks                  | Stop                                                        | Scan changed files for secrets with gitleaks                                                 |
+| common-hooks-\*       | review-gate               | Stop / agentStop / stop                                     | Block finishing until a code review ran after the last edit (transcript-based; fails open)   |
 | common-hooks-\*       | gitleaks-prompt           | UserPromptSubmit / beforeSubmitPrompt / userPromptSubmitted | Scan the submitted prompt for secrets; block on Claude Code and Cursor, warn only on Copilot |
 | go-hooks-\*           | golangci-lint             | Stop                                                        | Auto-fix changed Go packages with golangci-lint                                              |
 | go-hooks-\*           | go-test                   | Stop                                                        | Run `go test -short` on changed Go packages                                                  |
