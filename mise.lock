@@ -2987,45 +2987,63 @@ backend = "aqua:anthropics/claude-code"
 
 [tools.claude."platforms.linux-arm64"]
 checksum = "sha256:39d249137bacdd872d536d2aa50fd52bedd5d55c79e35efce96b9f658b2ea6d8"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-linux-arm64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565151"
 
 [tools.claude."platforms.linux-arm64-musl"]
 checksum = "sha256:410b2b8246a8f67a8a8a56d3adb5d29d6e26efe38c165906093c7b90a9e1fdeb"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-linux-arm64-musl.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565148"
 
 [tools.claude."platforms.linux-x64"]
 checksum = "sha256:7f03a9981918fbd38eca529bdd19807eedb021a9ed2feb9923dc10a581a5aa1f"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-linux-x64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565483"
 
 [tools.claude."platforms.linux-x64-musl"]
 checksum = "sha256:9698506832c8ba304acf80fe32e35d3917d84f112d79b30c0212ee989ad54ba7"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-linux-x64-musl.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565149"
 
 [tools.claude."platforms.macos-arm64"]
 checksum = "sha256:e61d78415072c4f762ec2254236087476764f6b266611a33ef8c66c0a03fbec0"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565144"
 
 [tools.claude."platforms.macos-x64"]
 checksum = "sha256:82248550d146959485d09ab882917c9bdb75389eaad46e986978c977d8097f98"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-darwin-x64.tar.gz"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565146"
 
 [tools.claude."platforms.windows-x64"]
 checksum = "sha256:029e5f63e7ac96411e8d0e4f120a7c40a35f0285cb96007f5c107a6d708af91a"
-checksum_source = "mise-versions"
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.327/claude-win32-x64.zip"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/760565524"
+
+[[tools.claude]]
+version = "2.1.327"
+backend = "aqua:anthropics/claude-code"
+
+[tools.claude.options]
+"vars.lazy" = "true"
+
+[tools.claude."platforms.linux-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/linux-arm64/claude"
+
+[tools.claude."platforms.linux-arm64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/linux-arm64-musl/claude"
+
+[tools.claude."platforms.linux-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/linux-x64/claude"
+
+[tools.claude."platforms.linux-x64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/linux-x64-musl/claude"
+
+[tools.claude."platforms.macos-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/darwin-arm64/claude"
+
+[tools.claude."platforms.macos-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.327/darwin-x64/claude"
 
 [[tools."github:DeusData/codebase-memory-mcp"]]
 version = "0.12.1"
@@ -3249,7 +3267,6 @@ backend = "pipx:yamllint"
 [[tools.pnpm]]
 version = "11.28.13"
 backend = "aqua:pnpm/pnpm"
-unsupported_platforms = ["macos-x64"]
 
 [tools.pnpm."platforms.linux-arm64"]
 checksum = "sha256:a566f3d9f277f6cc67b1d0c47e55ff6a2c59904971fccf9f181c3134ac5b7075"
@@ -3258,6 +3275,8 @@ url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/759796631"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-arm64-musl"]
+checksum = "sha256:a566f3d9f277f6cc67b1d0c47e55ff6a2c59904971fccf9f181c3134ac5b7075"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.13/pnpm-linux-arm64.tar.gz"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64"]
