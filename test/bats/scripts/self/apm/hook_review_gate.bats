@@ -1,19 +1,20 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031
 
 # Tests for .apm/packages/*-hooks-*/.apm/hooks/scripts/review_gate.sh
 #
 # Use cases:
-# - blocks when files changed and the transcript shows no review
-# - passes when a review marker follows the last edit and blocks again for a later edit
-# - passes in a clean working tree (chat-only turn) and after REVIEW_GATE_DISABLED=1 or stop_hook_active
-# - without a readable transcript blocks once per working-tree state, then skips
-# - REVIEW_GATE_MARKER / REVIEW_GATE_EDIT_MARKER adapt the detection to another agent
-# - a tool result that quotes the review command or an edit never counts as one
-# - a dirty tree without any edit tool call in the session (chat-only turn) passes
+# - asks for a review when the working tree changed and the state was not reported yet
+# - passes when the same state was already reported and asks again when the state changes
+# - the reason lets the agent finish without a second review when the diff was already reviewed
+# - passes in a clean working tree and after REVIEW_GATE_DISABLED=1; stop_hook_active does not pass a changed state
+# - REVIEW_GATE_MAX_PROMPTS bounds the review requests of one session, a clean tree resets the count
+#   and a value that is not a positive number falls back to the default
 # - Cursor stop events get the followup_message format
-# - Copilot and Cursor (undocumented transcript format) use the counter and their own review command
+# - Copilot and Cursor use their own review command
 # - REVIEW_GATE_COMMAND_<AGENT> overrides the review command for one agent
 # - REVIEW_GATE_MODEL[_<AGENT>] names the review model in the reason and stays silent when empty
+# - agent-managed synced files are not listed as changes, hand-edited settings are
 # - detect_agent names the agent from the event JSON
 # - every agent package ships the same script
 
@@ -29,9 +30,8 @@ setup() {
     ROOT="$(bats_workspace_root)"
     HOOK="${ROOT}/.apm/packages/common-hooks-claude/.apm/hooks/scripts/review_gate.sh"
     REPO="${BATS_TEST_TMPDIR}/repo"
-    TRANSCRIPT="${BATS_TEST_TMPDIR}/t.jsonl"
     export TMPDIR="${BATS_TEST_TMPDIR}/state-tmp"
-    unset HOOK_BLOCK_LIMIT REVIEW_GATE_MODEL REVIEW_GATE_MODEL_CLAUDE REVIEW_GATE_MODEL_COPILOT REVIEW_GATE_COMMAND REVIEW_GATE_DISABLED REVIEW_GATE_MARKER REVIEW_GATE_EDIT_MARKER
+    unset HOOK_BLOCK_LIMIT REVIEW_GATE_MODEL REVIEW_GATE_MODEL_CLAUDE REVIEW_GATE_MODEL_COPILOT REVIEW_GATE_COMMAND REVIEW_GATE_DISABLED REVIEW_GATE_MAX_PROMPTS
     mkdir -p "${REPO}" "${TMPDIR}"
     git -C "${REPO}" init -q
     git -C "${REPO}" config user.email t@example.com
@@ -39,42 +39,118 @@ setup() {
     printf 'one\n' > "${REPO}/a.txt"
     git -C "${REPO}" add a.txt
     git -C "${REPO}" commit -q -m init
-    : > "$TRANSCRIPT"
 }
 
-_edit() { printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{"file_path":"x"}}]}}\n' >> "$TRANSCRIPT"; }
-_review() { printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Skill","input":{"skill":"code-review"}}]}}\n' >> "$TRANSCRIPT"; }
 _dirty() { printf '%s\n' "$RANDOM" >> "${REPO}/a.txt"; }
 _run_hook() {
     local payload
-    payload=$(jq -nc --arg t "${1-$TRANSCRIPT}" --argjson a "${2:-false}" '{hook_event_name:"Stop",session_id:"s1",transcript_path:$t,stop_hook_active:$a}')
-    run bash -c "cd '${REPO}' && printf '%s' '${payload}' | '${HOOK}'"
+    payload=$(jq -nc --arg s "${1:-s1}" --argjson a "${2:-false}" '{hook_event_name:"Stop",session_id:$s,transcript_path:"/nonexistent",stop_hook_active:$a}')
+    run bash -c "cd '${REPO}' && printf '%s' '${payload}' | ${3:-} '${HOOK}'"
+}
+_run_copilot() {
+    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"${1:-s2}\",\"transcriptPath\":\"/nonexistent\",\"stopReason\":\"end_turn\"}' | ${2:-} '${HOOK}'"
 }
 
-@test "REVIEW_GATE_MARKER and REVIEW_GATE_EDIT_MARKER adapt the detection to another agent" {
+@test "Copilot and Cursor name their own review command" {
     _dirty
-    printf 'AGENT-EDIT\nAGENT-REVIEW\n' > "$TRANSCRIPT"
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s1\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_MARKER=AGENT-REVIEW REVIEW_GATE_EDIT_MARKER=AGENT-EDIT '${HOOK}'"
+    _run_copilot s2
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    [[ $output == *"/review"* && $output != *"/code-review"* ]]
+    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"stop\",\"cursor_version\":\"3\",\"transcript_path\":null}' | '${HOOK}'"
+    [[ $(printf '%s' "$output" | jq -r .followup_message) == *"/review"* ]]
+}
+
+@test "Cursor stop events get the followup_message format" {
+    _dirty
+    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"stop\",\"conversation_id\":\"c1\",\"cursor_version\":\"3\",\"transcript_path\":null}' | '${HOOK}'"
+    [ "$status" -eq 0 ]
+    [[ $(printf '%s' "$output" | jq -r .followup_message) == *"/review"* ]]
+}
+
+@test "REVIEW_GATE_COMMAND_<AGENT> overrides the review command for that agent only" {
+    _dirty
+    _run_copilot s3 "REVIEW_GATE_COMMAND_COPILOT=/my-review"
+    [[ $output == *"/my-review"* ]]
+    _run_hook s3b
+    [[ $output == *"/code-review"* ]]
+}
+
+@test "REVIEW_GATE_MAX_PROMPTS bounds the review requests of one session" {
+    export REVIEW_GATE_MAX_PROMPTS=2
+    _dirty
+    _run_hook
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    _dirty
+    _run_hook
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    _dirty
+    _run_hook
+    [ -z "$output" ]
+    _run_hook other-session
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+}
+
+@test "REVIEW_GATE_MAX_PROMPTS is reset by a clean tree and falls back to 3 when not a positive number" {
+    export REVIEW_GATE_MAX_PROMPTS=1
+    _dirty
+    _run_hook
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    _dirty
+    _run_hook
+    [ -z "$output" ]
+    git -C "${REPO}" checkout -q -- a.txt
+    _run_hook
+    [ -z "$output" ]
+    _dirty
+    _run_hook
+    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    export REVIEW_GATE_MAX_PROMPTS=0
+    git -C "${REPO}" checkout -q -- a.txt
+    for _ in 1 2 3; do
+        _dirty
+        _run_hook other
+        [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
+    done
+    _dirty
+    _run_hook other
     [ -z "$output" ]
 }
 
-@test "blocks when files changed and the transcript shows no review" {
+@test "REVIEW_GATE_MODEL applies to every agent and an empty per-agent value turns it off" {
     _dirty
-    _edit
+    _run_copilot s5 "REVIEW_GATE_MODEL=base-m"
+    [[ $output == *"with the model base-m"* ]]
+    _run_hook s6 false "REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE="
+    [[ $output != *"with the model"* ]]
+}
+
+@test "REVIEW_GATE_MODEL names the model in the reason, per agent first, and stays silent when empty" {
+    _dirty
+    _run_hook s4a
+    [[ $output != *"with the model"* ]]
+    _run_hook s4 false "REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE=claude-m"
+    [[ $output == *"claude-m"* && $output != *"base-m"* ]]
+}
+
+@test "a hand-edited settings file counts as a change but a synced skill file does not" {
+    mkdir -p "${REPO}/.claude/skills"
+    printf 'x\n' > "${REPO}/.claude/skills/s.md"
+    printf '{}\n' > "${REPO}/.claude/settings.json"
+    _run_hook
+    [[ $output == *".claude/settings.json"* ]]
+    [[ $output != *"skills/s.md"* ]]
+}
+
+@test "asks for a review of a changed tree, passes for the same state and asks again when it changes" {
+    _dirty
     _run_hook
     [ "$status" -eq 0 ]
     [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
     [[ $output == *"/code-review"* ]]
-}
-
-@test "blocks once per working-tree state when the transcript is unreadable" {
-    _dirty
-    _run_hook /nonexistent
-    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
-    _run_hook /nonexistent
+    _run_hook
     [ -z "$output" ]
     _dirty
-    _run_hook /nonexistent
+    _run_hook
     [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
 }
 
@@ -89,93 +165,18 @@ _run_hook() {
     done
 }
 
-@test "passes and blocks again according to the order of review and edit" {
-    _dirty
-    _edit
-    _review
+@test "passes in a clean working tree and when disabled, but not for a changed state under stop_hook_active" {
     _run_hook
     [ -z "$output" ]
-    _edit
-    _run_hook
+    _dirty
+    _run_hook s1 false "REVIEW_GATE_DISABLED=1"
+    [ -z "$output" ]
+    _run_hook s1 true
     [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
 }
 
-@test "passes in a clean working tree, when disabled and when stop_hook_active is true" {
-    _edit
-    _run_hook
-    [ -z "$output" ]
-    _dirty
-    _run_hook "$TRANSCRIPT" true
-    [ -z "$output" ]
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s1\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_DISABLED=1 '${HOOK}'"
-    [ -z "$output" ]
-}
-
-@test "a tool result quoting the review command never counts as a review" {
-    _dirty
-    _edit
-    printf '{"type":"user","message":{"content":[{"type":"tool_result","content":"<command-name>/code-review</command-name> \"skill\":\"code-review\""}]}}\n' >> "$TRANSCRIPT"
-    _run_hook
-    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
-}
-
-@test "a dirty tree without any edit tool call in the session passes" {
+@test "the reason lets the agent finish without a second review when the diff was already reviewed" {
     _dirty
     _run_hook
-    [ -z "$output" ]
-}
-
-@test "Cursor stop events get the followup_message format" {
-    _dirty
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"stop\",\"conversation_id\":\"c1\",\"cursor_version\":\"3\",\"transcript_path\":null}' | '${HOOK}'"
-    [ "$status" -eq 0 ]
-    [[ $(printf '%s' "$output" | jq -r .followup_message) == *"/review"* ]]
-}
-
-@test "a hand-edited settings file counts as a change but a synced skill file does not" {
-    mkdir -p "${REPO}/.claude/skills"
-    printf 'x\n' > "${REPO}/.claude/skills/s.md"
-    printf '{}\n' > "${REPO}/.claude/settings.json"
-    _edit
-    _run_hook
-    [[ $output == *".claude/settings.json"* ]]
-    [[ $output != *"skills/s.md"* ]]
-}
-
-@test "Copilot and Cursor use the counter and their own review command because the transcript format is undocumented" {
-    _dirty
-    _review
-    _edit
-    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s2\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | '${HOOK}'"
-    [ "$(printf '%s' "$output" | jq -r .decision)" = "block" ]
-    [[ $output == *"/review"* && $output != *"/code-review"* ]]
-    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s2\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | '${HOOK}'"
-    [ -z "$output" ]
-}
-
-@test "REVIEW_GATE_COMMAND_<AGENT> overrides the review command for that agent only" {
-    _dirty
-    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s3\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | REVIEW_GATE_COMMAND_COPILOT=/my-review '${HOOK}'"
-    [[ $output == *"/my-review"* ]]
-    _edit
-    _run_hook
-    [[ $output == *"/code-review"* ]]
-}
-
-@test "REVIEW_GATE_MODEL names the model in the reason, per agent first, and stays silent when empty" {
-    _dirty
-    _edit
-    _run_hook
-    [[ $output != *"with the model"* ]]
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s4\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE=claude-m '${HOOK}'"
-    [[ $output == *"claude-m"* && $output != *"base-m"* ]]
-}
-
-@test "REVIEW_GATE_MODEL applies to every agent and an empty per-agent value turns it off" {
-    _dirty
-    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s5\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | REVIEW_GATE_MODEL=base-m '${HOOK}'"
-    [[ $output == *"with the model base-m"* ]]
-    _edit
-    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s6\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE= '${HOOK}'"
-    [[ $output != *"with the model"* ]]
+    [[ $output == *"already reviewed"* && $output == *"without reviewing again"* ]]
 }

@@ -6,6 +6,8 @@
 # Use cases:
 # - an unchanged failing state blocks the agent HOOK_BLOCK_LIMIT times (default 2), then is skipped
 # - any file change after a block runs the tool again and blocks again
+# - HOOK_SESSION_LIMIT bounds the reports per session across changing states
+# - stop_hook_active does not stop a hook from reporting a changed state
 # - a passing run clears the remembered state so a restored failing state blocks again
 # - state is kept per session id, so another session is still told about the failure
 # - the session id is read from session_id (Claude, Codex, Kiro, VS Code, Copilot), conversation_id
@@ -27,7 +29,7 @@ setup() {
     REPO="${BATS_TEST_TMPDIR}/repo"
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     export TMPDIR="${BATS_TEST_TMPDIR}/state-tmp"
-    unset HOOK_BLOCK_LIMIT
+    unset HOOK_BLOCK_LIMIT HOOK_SESSION_LIMIT
 
     mkdir -p "${REPO}" "${MOCK_BIN}" "${TMPDIR}"
     git -C "${REPO}" init -q
@@ -59,6 +61,24 @@ run_hook() {
 
     run_hook 1
     [ "$status" -eq 0 ]
+    [ -z "${output}" ]
+}
+
+@test "stop_hook_active does not stop the hook from reporting" {
+    local json='{"hook_event_name":"Stop","stop_hook_active":true,"session_id":"s1"}'
+    run bash -c "cd '${REPO}' && PATH='${MOCK_BIN}':\"\$PATH\" bash '${HOOK}' <<< '${json}'"
+    [[ ${output} == *'"decision": "block"'* ]]
+}
+
+@test "HOOK_SESSION_LIMIT bounds the reports across changing states" {
+    export HOOK_SESSION_LIMIT=2
+    run_hook 1
+    [[ ${output} == *'"decision": "block"'* ]]
+    printf 'three\n' > "${REPO}/a.txt"
+    run_hook 1
+    [[ ${output} == *'"decision": "block"'* ]]
+    printf 'four\n' > "${REPO}/a.txt"
+    run_hook 1
     [ -z "${output}" ]
 }
 
