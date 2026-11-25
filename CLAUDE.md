@@ -48,6 +48,8 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `shfmt`               | `PostToolUse` (Edit, Write) |
 | `zizmor`              | `Stop`                      |
 
+Code review is enforced by the review-gate `Stop` hook (not a tool to skip): it blocks finishing while changed files have no `/code-review` after the last edit. Run `/code-review` on the diff before handing back, fix in-scope findings, and report the review and its dispositions in Completion.
+
 `shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool). The sync is hook-covered too: do not run `apm install`/sync by hand, and omit the sync targets (`.claude/`, `.cursor/`, `.github/hooks`, `apm_modules/`) from Completion — no "not yet synced", "pending sync", or "uncommitted" notes.
 
 ## AGENTS.md portability (MUST)

@@ -30,7 +30,7 @@ The environment is the test's job: a suite that needs go, golangci-lint, node or
 
 ## Temporary files (MUST)
 
-Create disposable files with `mktemp` (system temp dir) and remove them on exit (`trap`); never write them into the repository or into the repo-level `tmp/`. A path derived from `$PWD` or the repository root is not a temp location.
+Where disposable files go is set in [CLAUDE.md § Conventions](../CLAUDE.md#conventions). In a script, create them with `mktemp` and remove them on exit (`trap`); never write them into the repository or the repo-level `tmp/`. A path derived from `$PWD` or the repository root is not a temp location.
 
 ## Failure behavior (MUST)
 
