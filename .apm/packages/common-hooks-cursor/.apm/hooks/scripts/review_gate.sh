@@ -25,6 +25,11 @@
 #   REVIEW_GATE_DISABLED   - 1 disables the gate
 #   REVIEW_GATE_COMMAND    - review command named in the block reason (default per agent: /code-review for
 #                            Claude Code, /review for Copilot CLI and Cursor)
+#   REVIEW_GATE_MODEL      - model the review must use, named in the block reason (default empty: the
+#                            session's base model)
+#   REVIEW_GATE_MODEL_<AGENT> - the same per agent; wins over REVIEW_GATE_MODEL, and an empty value
+#                            (set but empty) turns the model note off for that agent. Advisory only: the
+#                            reason asks the agent to use the model, the gate does not verify it
 #   REVIEW_GATE_COMMAND_<AGENT> - the same per agent (CLAUDE, COPILOT, CURSOR); wins over REVIEW_GATE_COMMAND
 #   REVIEW_GATE_MARKER     - ERE that matches a transcript line proving a review ran
 #   REVIEW_GATE_EDIT_MARKER - ERE that matches a transcript line of a file-edit tool call
@@ -471,6 +476,7 @@ function detect_agent {
 # Globals:
 #   REVIEW_MARKER, EDIT_MARKER - set here (ERE matched against transcript lines; empty = unknown format)
 #   REVIEW_COMMAND - set here (review command named in the block reason)
+#   REVIEW_MODEL - set here (model the review should use; empty = session model)
 #
 # Arguments:
 #   $1 - agent name from detect_agent
@@ -502,6 +508,9 @@ function set_markers {
     # Per-agent override first (REVIEW_GATE_COMMAND_CLAUDE, _COPILOT, _CURSOR), then the global one
     local agent_var="REVIEW_GATE_COMMAND_${1^^}"
     REVIEW_COMMAND="${!agent_var:-${REVIEW_GATE_COMMAND:-$default_command}}"
+    # Optional model for the review; empty keeps the session (base) model
+    local model_var="REVIEW_GATE_MODEL_${1^^}"
+    REVIEW_MODEL="${!model_var-${REVIEW_GATE_MODEL:-}}"
 }
 
 # Agent-managed and generated paths that never need a review (single owner of the ignore list);
@@ -614,7 +623,9 @@ function main {
         exit 0
     fi
 
-    report_failure "${#files[@]} file(s) changed without a code review in this session. Run ${REVIEW_COMMAND} on the diff, fix the in-scope findings, then report the review and its dispositions. Changed: $(printf '%s ' "${files[@]:0:10}")"
+    local model_note=""
+    [[ -z $REVIEW_MODEL ]] || model_note=" Run the review with the model ${REVIEW_MODEL} (use the agent's model option for the review command or its subagent)."
+    report_failure "${#files[@]} file(s) changed without a code review in this session. Run ${REVIEW_COMMAND} on the diff, fix the in-scope findings, then report the review and its dispositions.${model_note} Changed: $(printf '%s ' "${files[@]:0:10}")"
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

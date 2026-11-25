@@ -13,6 +13,7 @@
 # - Cursor stop events get the followup_message format
 # - Copilot and Cursor (undocumented transcript format) use the counter and their own review command
 # - REVIEW_GATE_COMMAND_<AGENT> overrides the review command for one agent
+# - REVIEW_GATE_MODEL[_<AGENT>] names the review model in the reason and stays silent when empty
 # - detect_agent names the agent from the event JSON
 # - every agent package ships the same script
 
@@ -30,7 +31,7 @@ setup() {
     REPO="${BATS_TEST_TMPDIR}/repo"
     TRANSCRIPT="${BATS_TEST_TMPDIR}/t.jsonl"
     export TMPDIR="${BATS_TEST_TMPDIR}/state-tmp"
-    unset HOOK_BLOCK_LIMIT REVIEW_GATE_DISABLED REVIEW_GATE_MARKER REVIEW_GATE_EDIT_MARKER
+    unset HOOK_BLOCK_LIMIT REVIEW_GATE_MODEL REVIEW_GATE_MODEL_CLAUDE REVIEW_GATE_MODEL_COPILOT REVIEW_GATE_COMMAND REVIEW_GATE_DISABLED REVIEW_GATE_MARKER REVIEW_GATE_EDIT_MARKER
     mkdir -p "${REPO}" "${TMPDIR}"
     git -C "${REPO}" init -q
     git -C "${REPO}" config user.email t@example.com
@@ -159,4 +160,22 @@ _run_hook() {
     _edit
     _run_hook
     [[ $output == *"/code-review"* ]]
+}
+
+@test "REVIEW_GATE_MODEL names the model in the reason, per agent first, and stays silent when empty" {
+    _dirty
+    _edit
+    _run_hook
+    [[ $output != *"with the model"* ]]
+    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s4\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE=claude-m '${HOOK}'"
+    [[ $output == *"claude-m"* && $output != *"base-m"* ]]
+}
+
+@test "REVIEW_GATE_MODEL applies to every agent and an empty per-agent value turns it off" {
+    _dirty
+    run bash -c "cd '${REPO}' && printf '%s' '{\"sessionId\":\"s5\",\"transcriptPath\":\"${TRANSCRIPT}\",\"stopReason\":\"end_turn\"}' | REVIEW_GATE_MODEL=base-m '${HOOK}'"
+    [[ $output == *"with the model base-m"* ]]
+    _edit
+    run bash -c "cd '${REPO}' && printf '%s' '{\"hook_event_name\":\"Stop\",\"session_id\":\"s6\",\"transcript_path\":\"${TRANSCRIPT}\"}' | REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE= '${HOOK}'"
+    [[ $output != *"with the model"* ]]
 }
