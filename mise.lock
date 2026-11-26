@@ -3222,7 +3222,7 @@ version = "0.2.0"
 backend = "npm:awsp"
 
 [[tools."npm:cspell"]]
-version = "10.5.1"
+version = "10.5.2"
 backend = "npm:cspell"
 
 [[tools."npm:markdown-link-check"]]
