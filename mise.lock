@@ -403,7 +403,6 @@ provenance = "github-attestations"
 [[tools."aqua:aws/aws-cli"]]
 version = "2.41.1"
 backend = "aqua:aws/aws-cli"
-unsupported_platforms = ["windows-x64"]
 
 [tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
 checksum = "sha256:83f3bb8440cf6a05e6289f8024126b8c8e15e9513adfe0d6c059747350cdb1e2"
@@ -427,6 +426,31 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg"
 
 [tools."aqua:aws/aws-cli"."platforms.macos-x64"]
 checksum = "sha256:fcc64d3b7c5425a7e236bfb2faba4cbdfa580f888c7165268715e474d9d1408d"
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg"
+
+[[tools."aqua:aws/aws-cli"]]
+version = "2.41.1"
+backend = "aqua:aws/aws-cli"
+
+[tools."aqua:aws/aws-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.41.1.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-arm64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.41.1.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.41.1.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.linux-x64-musl"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.41.1.zip"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-arm64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg"
+
+[tools."aqua:aws/aws-cli"."platforms.macos-x64"]
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.41.1.pkg"
 
 [[tools."aqua:aws/aws-sam-cli"]]
