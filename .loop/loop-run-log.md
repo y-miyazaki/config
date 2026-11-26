@@ -6,9 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-26T08:38:32Z","loop_name":"tech-debt","duration_s":896,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40291933085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-26T09:11:04Z","loop_name":"docs-updater","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40297552015"}
-{"run_id":"2026-10-26T10:17:18Z","loop_name":"test-gap","duration_s":55,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40306090172","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-28T02:30:24Z","loop_name":"ci-sweeper","duration_s":50,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621232566","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-28T02:31:26Z","loop_name":"ci-sweeper","duration_s":48,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"40621267551","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","failure_stage":"finalize"}
 {"run_id":"2026-10-28T02:32:34Z","loop_name":"ci-sweeper","duration_s":53,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621356179","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
@@ -358,3 +355,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-25T08:47:30Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"45579323777","skip_detail":"integration:main: consecutive_failures 3"}
 {"run_id":"2026-11-25T09:11:25Z","loop_name":"code-review","duration_s":47,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"45582892490","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","target_key":"integration:main"}
 {"run_id":"2026-11-25T12:15:07Z","loop_name":"github-issue-autofix","duration_s":25,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"45611872223","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
+{"run_id":"2026-11-26T08:37:48Z","loop_name":"ci-sweeper","duration_s":18,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"45784727884","skip_detail":"integration:main: consecutive_failures 3"}
