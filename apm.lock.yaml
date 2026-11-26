@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-11-25T08:30:29.147764+00:00'
-apm_version: 0.35.1
+generated_at: '2026-11-26T09:08:30.662644+00:00'
+apm_version: 0.36.1
 dependencies:
 - repo_url: _local/common
   name: config-common
@@ -346,7 +346,7 @@ dependencies:
     .cursor/rules/markdown.mdc: sha256:3205b9575dcbb829dc84864b87632624b12c44d07e688e237bee3f72d0dee3db
   source: local
   local_path: ./.apm/packages/common
-  content_hash: sha256:dae80866103af27d6b0b960b595e891419ace2994b191ec01a2157925eadd7b9
+  content_hash: sha256:3e3fde9ec1793857a7fea42fc2fb8ed054e1fd90f72fffeee23bfb6ad6d06c63
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   name: common-hooks-claude
@@ -13821,7 +13821,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: sha256:7171be135a04765b195a7cc74586ec83364d87726af18fa53d68d3813fa85ae5
+  content_hash: sha256:b966d272cf4cebcac17388c4c67310f7bee807c59eb5675af927447b9209e4c0
 - kind: uri
   target: mcp
   value: github
@@ -13839,7 +13839,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:0d19b99ba2dbbec3bf12165d391e43d6f65a513058141962cce385cb507456a4
 - kind: uri
   target: mcp
   value: context7
@@ -13848,7 +13848,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:e5b25d33ccc62f972aa8fee903280ff7fcdae5b455cda5595ae3bcf92a5b47c0
 - kind: uri
   target: mcp
   value: fetch
@@ -13857,7 +13857,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:b966d272cf4cebcac17388c4c67310f7bee807c59eb5675af927447b9209e4c0
 - kind: uri
   target: mcp
   value: github
@@ -13866,7 +13866,7 @@ deployments:
   owners:
   - .
   active_owner: .
-  content_hash: null
+  content_hash: sha256:80d5090188cf63cab8d4b4e165168e4c9e19fa4a5e0e0e134a5b241d2893aa7b
 mcp_servers:
 - codebase-memory-mcp
 - context7
@@ -13895,7 +13895,7 @@ mcp_configs:
     name: fetch
     transport: stdio
     args:
-    - mcp-server-fetch==2026.11.11
+    - mcp-server-fetch==2026.11.18
     registry: false
     command: uvx
   github:
