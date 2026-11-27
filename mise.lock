@@ -1285,6 +1285,48 @@ url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/gorele
 url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/770449693"
 provenance = "github-attestations"
 
+[[tools."aqua:goreleaser/goreleaser"]]
+version = "2.20.3"
+backend = "aqua:goreleaser/goreleaser"
+
+[tools."aqua:goreleaser/goreleaser".options]
+"vars.lazy" = "true"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.linux-arm64"]
+checksum = "sha256:cfce0afc7bcc14447df211cc10c0012cfc395646070bcf23e840b16cbce6d204"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Linux_arm64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.linux-arm64-musl"]
+checksum = "sha256:cfce0afc7bcc14447df211cc10c0012cfc395646070bcf23e840b16cbce6d204"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Linux_arm64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.linux-x64"]
+checksum = "sha256:a36d5d7d07a5e538e052cef2a9f93f1cd4af493cf5a3712b9177c1ebe360f0e7"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Linux_x86_64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.linux-x64-musl"]
+checksum = "sha256:a36d5d7d07a5e538e052cef2a9f93f1cd4af493cf5a3712b9177c1ebe360f0e7"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Linux_x86_64.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.macos-arm64"]
+checksum = "sha256:e2c896685fcdb3ec255ce30e86ab073d56f3c02eb539061e749e98d9be1fc2b6"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Darwin_all.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.macos-x64"]
+checksum = "sha256:e2c896685fcdb3ec255ce30e86ab073d56f3c02eb539061e749e98d9be1fc2b6"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Darwin_all.tar.gz"
+provenance = "github-attestations"
+
+[tools."aqua:goreleaser/goreleaser"."platforms.windows-x64"]
+checksum = "sha256:ef69177888fd7f4048a101f3cca8cc62a56b05b246201798fca5214304ba693d"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.20.3/goreleaser_Windows_x86_64.zip"
+provenance = "github-attestations"
+
 [[tools."aqua:grpc/grpc-go/protoc-gen-go-grpc"]]
 version = "1.85.0"
 backend = "aqua:grpc/grpc-go/protoc-gen-go-grpc"
