@@ -1009,45 +1009,73 @@ backend = "aqua:go-swagger/go-swagger"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.linux-arm64"]
 checksum = "sha256:6840162de96d40aeb0ed6f4f3ed32e18d23be44619dbb8868896ee6990df4e0c"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148613"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.linux-arm64-musl"]
 checksum = "sha256:6840162de96d40aeb0ed6f4f3ed32e18d23be44619dbb8868896ee6990df4e0c"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_arm64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148613"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.linux-x64"]
 checksum = "sha256:dad0dbc3eb53d01abeca6055270be4ceac23e92bb38d7be4d0cbf14f156c7df0"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148599"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.linux-x64-musl"]
 checksum = "sha256:dad0dbc3eb53d01abeca6055270be4ceac23e92bb38d7be4d0cbf14f156c7df0"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148599"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.macos-arm64"]
 checksum = "sha256:61b1155c3f0a13b91fe0f07d634222c2bc265d51e3a546eca40726e55b9fb41d"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148849"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.macos-x64"]
 checksum = "sha256:d1dee43fa60c35777fd82eda0cc7656f38520a5aaafccfc03c22fbcc504f39eb"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Darwin_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148874"
 
 [tools."aqua:go-swagger/go-swagger"."platforms.windows-x64"]
 checksum = "sha256:3dcbb78d92100b8d460cd60b89ee97df5c3d0d03bf4509b5228165cdfa7a4f48"
-checksum_source = "mise-versions"
 url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Windows_x86_64.zip"
 url_api = "https://api.github.com/repos/go-swagger/go-swagger/releases/assets/771148612"
+
+[[tools."aqua:go-swagger/go-swagger"]]
+version = "0.36.8"
+backend = "aqua:go-swagger/go-swagger"
+
+[tools."aqua:go-swagger/go-swagger".options]
+"vars.lazy" = "true"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.linux-arm64"]
+checksum = "sha256:6840162de96d40aeb0ed6f4f3ed32e18d23be44619dbb8868896ee6990df4e0c"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_arm64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.linux-arm64-musl"]
+checksum = "sha256:6840162de96d40aeb0ed6f4f3ed32e18d23be44619dbb8868896ee6990df4e0c"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_arm64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.linux-x64"]
+checksum = "sha256:dad0dbc3eb53d01abeca6055270be4ceac23e92bb38d7be4d0cbf14f156c7df0"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_x86_64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.linux-x64-musl"]
+checksum = "sha256:dad0dbc3eb53d01abeca6055270be4ceac23e92bb38d7be4d0cbf14f156c7df0"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Linux_x86_64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.macos-arm64"]
+checksum = "sha256:61b1155c3f0a13b91fe0f07d634222c2bc265d51e3a546eca40726e55b9fb41d"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Darwin_arm64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.macos-x64"]
+checksum = "sha256:d1dee43fa60c35777fd82eda0cc7656f38520a5aaafccfc03c22fbcc504f39eb"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Darwin_x86_64.tar.gz"
+
+[tools."aqua:go-swagger/go-swagger"."platforms.windows-x64"]
+checksum = "sha256:3dcbb78d92100b8d460cd60b89ee97df5c3d0d03bf4509b5228165cdfa7a4f48"
+url = "https://github.com/go-swagger/go-swagger/releases/download/v0.36.8/swagger_0.36.8_Windows_x86_64.zip"
 
 [[tools."aqua:golangci/golangci-lint"]]
 version = "2.15.0"
