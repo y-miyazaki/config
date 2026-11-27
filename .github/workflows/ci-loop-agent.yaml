@@ -318,7 +318,7 @@ jobs:
 
       - name: Run Agent Once
         id: agent
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_cli_version: ${{ inputs.agent_cli_version }}
           agent_engine: ${{ inputs.agent_engine }}
@@ -353,7 +353,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -372,7 +372,7 @@ jobs:
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_engine: ${{ inputs.agent_engine }}
           agent_result: ${{ needs.agent-l1.result }}
@@ -391,7 +391,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-run-log@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_result: ${{ needs.agent-l1.result }}
           failure_message: ${{ steps.finalize.outputs.failure_message }}
@@ -473,7 +473,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
@@ -484,7 +484,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-execute@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
@@ -582,7 +582,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -607,7 +607,7 @@ jobs:
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
           agent_bundle_dir: ${{ runner.temp }}/loop-agent-bundle
@@ -649,7 +649,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-run-log@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_result: ${{ needs.agent-l2.result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
@@ -672,7 +672,7 @@ jobs:
         if: >-
           always() &&
           steps.target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@710dd334661cd8924ec94c480d105216ee02d94d # v1.10.3
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@ac9afc6dd8857031a0aa893ce9fa15e63ad7b877 # v1.10.3
         with:
           agent_engine: ${{ inputs.agent_engine }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
