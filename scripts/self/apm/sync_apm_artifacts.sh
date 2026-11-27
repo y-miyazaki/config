@@ -6,7 +6,8 @@
 #   --check         Dry-run for bash-based sync scripts; skip apm install/audit
 #   --force         Run even when the inputs are unchanged since the last full sync
 #   --mcp-reclaim   Before apm install, drop the .mcp.json entries of MCP servers declared in the
-#                   enabled packages so apm regenerates them (see reclaim_apm_mcp_connections)
+#                   enabled packages so apm regenerates them (see reclaim_apm_mcp_connections);
+#                   a failed apm install restores the original .mcp.json
 #   --apm-force     Pass --force to apm install (recovery when apm has no trusted
 #                   deployment baseline; also bypasses apm's critical security-scan block)
 #   --skip-install  Apply sync but do not run apm install --update
@@ -45,6 +46,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK_MODE="false"
 FORCE="false"
 APM_FORCE="false"
+APM_LAST_FAILURE=""
 MCP_RECLAIM="${APM_SYNC_MCP_RECLAIM:-false}"
 SKIP_INSTALL="false"
 SKIP_AUDIT="false"
@@ -340,6 +342,9 @@ function run_apm_audit_component {
 #   - Skips org policy discovery outside CI: the policy repo (.github-private) is not
 #     published for this repository, so every run only warns "Policy repo ... not found".
 #     CI keeps discovery so real policy violations still surface.
+#   - Streams apm's stdout as it arrives and, when apm fails, replays it on stderr so the
+#     failure reason is visible, and keeps the failed run's output in APM_LAST_FAILURE
+#     (empty after a successful run).
 #   - Drops the "hook event casing mismatch" warning for afterFileEdit: it is a native
 #     Cursor event, but apm has no casing mapping for the cursor target.
 #
@@ -356,12 +361,20 @@ function run_apm_command {
         env_args+=(APM_POLICY_DISABLE=1)
     fi
 
-    # Filter via a temp file (not process substitution) so no stderr arrives after we return
-    local err_file rc=0
+    # Filter via a temp file (not process substitution) so no stderr arrives after we return.
+    # apm reports many failures on stdout; a failing run replays it on stderr, the only stream
+    # a failed Stop hook shows.
+    local err_file out_file rc=0
     err_file="$(mktemp)"
-    env "${env_args[@]}" apm "$@" 2> "${err_file}" || rc=$?
+    out_file="$(mktemp)"
+    env "${env_args[@]}" apm "$@" 2> "${err_file}" | tee "${out_file}" || rc=${PIPESTATUS[0]}
+    APM_LAST_FAILURE=""
+    if [[ ${rc} -ne 0 ]]; then
+        cat "${out_file}" >&2
+        APM_LAST_FAILURE="$(cat "${out_file}" "${err_file}")"
+    fi
     grep -v 'hook event casing mismatch (no mapping): afterFileEdit' "${err_file}" >&2 || true
-    rm -f "${err_file}"
+    rm -f "${err_file}" "${out_file}"
     return "${rc}"
 }
 
@@ -411,7 +424,54 @@ function reclaim_apm_mcp_connections {
 }
 
 #######################################
+# recover_invalid_receipt: Set aside the deployment receipt apm rejected as invalid
+#
+# Description:
+#   apm refuses to run when its receipt under ~/.apm/deployment-receipts no longer matches
+#   the installed files, and --force does not bypass that. The receipt is a derived cache and
+#   the sync targets are git-tracked outputs, so the receipt is renamed (not deleted) and the
+#   caller retries once; the caller restores it when the retry fails. Only a path inside the
+#   receipts directory named by apm's own error is touched.
+#
+# Globals:
+#   APM_LAST_FAILURE - Output of the failed apm run
+#   HOME - Location of the receipts directory
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   STDOUT - Original receipt path (the backup is that path plus .bak)
+#   STDERR - One line naming the receipt that was set aside
+#
+# Returns:
+#   0 when a receipt was set aside, 1 when the failure is not an invalid receipt
+#######################################
+function recover_invalid_receipt {
+    local receipt_dir="${HOME}/.apm/deployment-receipts" receipt
+    [[ ${APM_LAST_FAILURE} == *"Invalid local materialization evidence"* ]] || return 1
+    receipt="$(printf '%s\n' "${APM_LAST_FAILURE}" | sed -n 's/.*Invalid local materialization evidence at[[:space:]]*\([^[:space:]]*\.json\).*/\1/p' | head -n 1)"
+    if [[ -z ${receipt} ]]; then
+        # apm wraps long lines: the path can start on the next line
+        receipt="$(printf '%s\n' "${APM_LAST_FAILURE}" | tr '\n' ' ' | sed -n 's/.*Invalid local materialization evidence at[[:space:]]*\([^[:space:]]*\.json\).*/\1/p' | head -n 1)"
+    fi
+    if [[ ${receipt} != "${receipt_dir}/"* || ${receipt} == *..* || ! -f ${receipt} ]]; then
+        echo "apm-recover: apm reported an invalid receipt but its path is not a usable file in ${receipt_dir}; not recovering" >&2
+        return 1
+    fi
+    mv "${receipt}" "${receipt}.bak" || return 1
+    echo "apm-recover: set aside invalid receipt ${receipt}; retrying once with --force" >&2
+    printf '%s\n' "${receipt}"
+}
+
+#######################################
 # run_apm_install_component: Install APM package outputs into agent directories
+#
+# Description:
+#   With --mcp-reclaim, .mcp.json is backed up first and restored when apm install fails,
+#   because the reclaimed entries are only regenerated by a successful install.
+#   An invalid deployment receipt is set aside and the install retried once (see
+#   recover_invalid_receipt).
 #######################################
 function run_apm_install_component {
     echo "==> apm-install"
@@ -420,7 +480,16 @@ function run_apm_install_component {
         return 1
     fi
     check_agent_config_json "$(resolve_repo_root)" || return 1
+    local mcp_file mcp_backup=""
+    mcp_file="$(resolve_repo_root)/.mcp.json"
     if [[ ${MCP_RECLAIM} == "true" ]]; then
+        # Keep a copy: the reclaim removes entries that only a successful apm install regenerates
+        if [[ -f ${mcp_file} ]]; then
+            mcp_backup="$(mktemp)"
+            # shellcheck disable=SC2064
+            trap "rm -f '${mcp_backup}'; trap - RETURN" RETURN
+            cat "${mcp_file}" > "${mcp_backup}"
+        fi
         reclaim_apm_mcp_connections "$(resolve_repo_root)"
     fi
     local -a install_args=(install --update)
@@ -428,14 +497,36 @@ function run_apm_install_component {
     if [[ ${APM_FORCE} == "true" ]]; then
         install_args+=(--force)
     fi
-    if ! run_apm_command "${install_args[@]}"; then
-        # apm's own advice (delete the receipt) makes the next run skip changed
-        # targets and then clean them as stale; overwriting is safe here because
-        # sync targets are git-tracked outputs that are never hand-edited.
-        echo "HINT: if apm reports an invalid or missing deployment baseline, rerun with --apm-force" \
-            "instead of deleting the receipt; review git status afterwards." >&2
+    local rc=0 receipt="" retried="false"
+    run_apm_command "${install_args[@]}" || rc=$?
+    if [[ ${rc} -ne 0 ]] && receipt="$(recover_invalid_receipt)"; then
+        rc=0
+        retried="true"
+        local -a retry_args=("${install_args[@]}")
+        [[ ${APM_FORCE} == "true" ]] || retry_args+=(--force)
+        run_apm_command "${retry_args[@]}" || rc=$?
+        if [[ ${rc} -eq 0 ]]; then
+            rm -f "${receipt}.bak"
+        else
+            mv "${receipt}.bak" "${receipt}"
+            echo "apm-recover: retry failed; restored ${receipt}" >&2
+        fi
+    fi
+    if [[ ${rc} -ne 0 ]]; then
+        # Sync targets are git-tracked outputs that are never hand-edited, so overwriting
+        # them with --force is safe.
+        if [[ -n ${mcp_backup} ]]; then
+            cat "${mcp_backup}" > "${mcp_file}"
+            rm -f "${mcp_backup}"
+            echo "mcp-reclaim: apm install failed; restored .mcp.json" >&2
+        fi
+        if [[ ${APM_FORCE} != "true" && ${retried} != "true" ]]; then
+            echo "HINT: if apm reports an invalid or missing deployment baseline, rerun with --apm-force" \
+                "instead of deleting the receipt; review git status afterwards." >&2
+        fi
         return 1
     fi
+    [[ -z ${mcp_backup} ]] || rm -f "${mcp_backup}"
 }
 
 #######################################
