@@ -32,19 +32,21 @@ Job graph, phases, and which **workflow / action files** own them. Optional jobs
 
 Each loop is a thin `on-loop-<name>.yaml` plus a design page. Input key lookup is **not** a platform design doc; it is the shared reference for those callers.
 
-| Loop                 | Design                                                                  | Caller file                         |
-| -------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
-| (all)                | [Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)    | `ci-loop-caller.yaml` `with:` keys  |
-| changelog            | [Changelog](workflows/loop-changelog-workflow-design.md)                | `on-loop-changelog.yaml`            |
-| ci-sweeper           | [CI Sweeper](workflows/loop-ci-sweeper-workflow-design.md)              | `on-loop-ci-sweeper.yaml`           |
-| docs-updater         | [Docs Updater](workflows/loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`         |
-| refactor             | [Refactor](workflows/loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`             |
-| tech-debt            | [Report Tech Debt](workflows/loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`            |
-| test-gap             | [Test Gap](workflows/loop-test-gap-workflow-design.md)                  | `on-loop-test-gap.yaml`             |
-| github-issue-triage  | [Issue Triage](workflows/loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
-| github-issue-autofix | [Issue Autofix](workflows/loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |
-| github-pr-revise     | [PR Revise](workflows/loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`     |
-| github-pr-review     | [PR Review](workflows/loop-github-pr-review-workflow-design.md)         | `on-loop-github-pr-review.yaml`     |
+| Loop                 | Design                                                                      | Caller file                         |
+| -------------------- | --------------------------------------------------------------------------- | ----------------------------------- |
+| (all)                | [Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)        | `ci-loop-caller.yaml` `with:` keys  |
+| (all)                | [Loop Workflow Design Template](workflows/loop-workflow-design-template.md) | per-loop design pages               |
+| changelog            | [Changelog](workflows/loop-changelog-workflow-design.md)                    | `on-loop-changelog.yaml`            |
+| ci-sweeper           | [CI Sweeper](workflows/loop-ci-sweeper-workflow-design.md)                  | `on-loop-ci-sweeper.yaml`           |
+| code-review          | [Code Review](workflows/loop-code-review-workflow-design.md)                | `on-loop-code-review.yaml`          |
+| docs-updater         | [Docs Updater](workflows/loop-docs-updater-workflow-design.md)              | `on-loop-docs-updater.yaml`         |
+| refactor             | [Refactor](workflows/loop-refactor-workflow-design.md)                      | `on-loop-refactor.yaml`             |
+| tech-debt            | [Report Tech Debt](workflows/loop-tech-debt-workflow-design.md)             | `on-loop-tech-debt.yaml`            |
+| test-gap             | [Test Gap](workflows/loop-test-gap-workflow-design.md)                      | `on-loop-test-gap.yaml`             |
+| github-issue-triage  | [Issue Triage](workflows/loop-github-issue-triage-workflow-design.md)       | `on-loop-github-issue-triage.yaml`  |
+| github-issue-autofix | [Issue Autofix](workflows/loop-github-issue-autofix-workflow-design.md)     | `on-loop-github-issue-autofix.yaml` |
+| github-pr-revise     | [PR Revise](workflows/loop-github-pr-revise-workflow-design.md)             | `on-loop-github-pr-revise.yaml`     |
+| github-pr-review     | [PR Review](workflows/loop-github-pr-review-workflow-design.md)             | `on-loop-github-pr-review.yaml`     |
 
 Also listed from [Multi-Branch Loops Design — Workflow Design Documents](multi-branch-loops-design.md#workflow-design-documents).
 
@@ -57,6 +59,7 @@ Shared shapes that apply to many loops. They are **not** nested jobs.
 | Action / detect I/O                            | [Specification](../../reference/specification.md)                               | `.github/actions/loop-*`, `detect_*.sh`                  |
 | PR body (templates, Meta and footer, validate) | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                   | `render_pr_body.sh`, skill `assets/pr-body-template*.md` |
 | Survey/apply report shape                      | [Loop Automation Report Format](common-loop-triage-format.md)                   | skill output comments                                    |
+| Issue state transitions                        | [Loop Issue Handoff](loop-issue-handoff.md)                                     | triage and autofix intake                                |
 | PR comment notify                              | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md) | `.github/actions/loop-notify-pr/`                        |
 | New-loop author checklist                      | [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md)     | —                                                        |
 | Canonical map / when to edit docs              | [Documentation Maintenance](documentation-maintenance.md)                       | this `docs/explanation/loop-engineering/` tree           |

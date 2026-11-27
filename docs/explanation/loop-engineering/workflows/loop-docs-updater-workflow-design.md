@@ -40,7 +40,7 @@ Loop callers must not rely on `--scope all` for worktree sync; use `staged` (hoo
 #### Detect → findings pipeline (loop domain)
 
 1. **Detect script** emits mechanical facts: `changed_files`, `deleted_files`, `renamed_files`, `affected_docs`, `commit_range`, `skip`.
-2. **Execute agent** (docs-updater on the automation path) maps facts into `findings[]` with `file`, `reason`, and `source_commit`, then classifies and patches per skill checklists.
+2. **Execute agent** (docs-updater on the automation path) maps facts into `findings[]` with `file`, `reason`, and `source_commit`, verifies each touched statement against its source, then classifies and patches per skill checklists.
 3. Field semantics and `## Constraints` edit gate: [common-loop-triage-format.md](../common-loop-triage-format.md) and skill `references/category-input-schema.md` / `category-automation-envelope.md` (automation path only).
 
 ### Modes
