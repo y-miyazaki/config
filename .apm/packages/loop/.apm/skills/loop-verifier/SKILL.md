@@ -7,6 +7,7 @@ description: >-
   or REJECT a branch diff against stated criteria. Do not implement fixes in
   this role. Caller-supplied domain rubric (when present in the prompt) is an
   additional input, not part of this skill.
+argument-hint: "<target issue, CI failure, or review comment> [maker diff]"
 license: Apache-2.0
 metadata:
   author: y-miyazaki

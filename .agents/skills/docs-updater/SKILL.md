@@ -9,6 +9,7 @@ description: >-
   docs when the request asks for changes to be made (for example fix, apply,
   or update) or automation sets agent_edit_allowed in Constraints. Not for new
   document creation or markdown linting.
+argument-hint: "[all|staged|range <ref>] [path or globs] [survey|apply]"
 license: Apache-2.0
 metadata:
   author: y-miyazaki

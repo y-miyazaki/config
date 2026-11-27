@@ -7,6 +7,7 @@ description: >-
   "add a tutorial", "update the readme", or any request involving markdown documentation authoring,
   even if they don't explicitly say "create documentation". Not for syncing docs after code
   changes (fixing statements that drifted from the code), source code docstrings, or Markdown linting.
+argument-hint: "<what to document> [target_file]"
 license: Apache-2.0
 metadata:
   author: y-miyazaki
