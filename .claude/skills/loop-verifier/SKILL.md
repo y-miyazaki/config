@@ -56,10 +56,12 @@ Report per [common-output-format.md](references/common-output-format.md). End wi
 4. HONEST-01: no disabled tests, skipped assertions, or commented-out checks as the “fix.”
 5. SECRET-01: no credentials or sensitive values added.
 6. RISK-01: classify risk per [common-checklist.md](references/common-checklist.md); for medium or high, note human review in `reason`.
-7. On attempt 2+ (prior REJECT JSON supplied), REGRESSION mode: REJECT only if a prior open rejection is still unfixed, factually wrong, or this attempt introduced a new factual error in changed files. Do not hunt for new nits.
+7. On attempt 2+ (prior REJECT JSON supplied), REGRESSION mode: keep applying steps 2-5 and the domain REJECT rules, and REJECT additionally if a prior open rejection is still unfixed, factually wrong, or this attempt introduced a new factual error in changed files. A newly found violation of steps 2-5 or of a domain REJECT rule counts as a gate failure; do not hunt for other new nits.
 8. Emit [common-output-format.md](references/common-output-format.md). Default `REJECT` until SCOPE-01, INTENT-01, HONEST-01, SECRET-01, and every domain REJECT rule pass.
 
 ### Error Handling
+
+Every `REJECT` below also fills the other required fields of [common-output-format.md](references/common-output-format.md): `issue` and `fix`. When `files` is empty, `issue` states the cause.
 
 | Condition                               | Severity    | Action                                                                                  |
 | --------------------------------------- | ----------- | --------------------------------------------------------------------------------------- |

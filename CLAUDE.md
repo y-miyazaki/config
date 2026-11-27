@@ -48,7 +48,7 @@ Do not run a tool directly when a hook in `.claude/settings.json` already runs i
 | `shfmt`               | `PostToolUse` (Edit, Write) |
 | `zizmor`              | `Stop`                      |
 
-Code review is requested by the review-gate `Stop` hook (not a tool to skip): it asks for a review whenever the working-tree diff differs from the one it already reported in the session (the diff hash), so a change you made after a review is asked about again. Run `/code-review` on the diff before handing back, fix in-scope findings, and report the review and its dispositions in Completion.
+Code review is requested by the review-gate `Stop` hook (not a tool to skip): it asks for a review whenever the working-tree diff differs from the one it already reported in the session (the diff hash), so a change you made after a review is asked about again. Run `/code-review` on the diff before handing back, fix in-scope findings, and report the review and its dispositions in Completion. Choose the review depth by change size and risk (light for a small follow-up to a diff already reviewed in the session, deeper for new logic or risky changes), and prefer a reviewer on a different model than the session's unless the hook names one.
 
 `shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool). The sync is hook-covered too: do not run `apm install`/sync by hand, and omit the sync targets (`.claude/`, `.cursor/`, `.github/hooks`, `apm_modules/`) from Completion — no "not yet synced", "pending sync", or "uncommitted" notes.
 

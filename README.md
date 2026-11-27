@@ -80,17 +80,19 @@ Hooks are split per agent target (`*` is `claude`, `copilot`, or `cursor`); inst
 
 The `review-gate` Stop hook asks for a code review when the working tree changed. It hashes the whole git diff plus untracked files (only the file list in the message skips generated and agent-managed paths, so a change to those paths can also ask again) and keeps the hash per session: a hash it has not reported yet asks for a review, the same hash means it was already reported and the agent may stop. The reason tells the agent to finish without a second review when the diff was already reviewed in the session (for example by an automatic review tool). It fails open: a missing `jq`/`git` or an error lets the agent stop. Review requests per session are bounded (`REVIEW_GATE_MAX_PROMPTS`; a value that is not a positive number means 3).
 
+The block reason also leaves the review depth to the agent: a light review for a small follow-up to a diff already reviewed in the session, deeper for new logic or risky changes.
+
 Set these environment variables (for example in `containerEnv` of `devcontainer.json`) to adjust it. An empty shared variable keeps the default; the one exception is a per-agent `REVIEW_GATE_MODEL_<AGENT>` (see below).
 
-| Variable                                             | Effect                                                                                                         |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `REVIEW_GATE_DISABLED=1`                             | Turn the gate off                                                                                              |
-| `REVIEW_GATE_COMMAND`, `REVIEW_GATE_COMMAND_<AGENT>` | Review command named in the block reason (default `/code-review`; `/review` for Copilot CLI and Cursor)        |
-| `REVIEW_GATE_MODEL`, `REVIEW_GATE_MODEL_<AGENT>`     | Model the review should use, named in the block reason (advisory, not verified; empty keeps the session model) |
-| `REVIEW_GATE_MAX_PROMPTS`                            | Review requests per session before the gate lets the agent stop (default 3)                                    |
-| `HOOK_BLOCK_LIMIT`                                   | Times the same working-tree state is reported before the gate lets it pass (default 1 for this hook)           |
+| Variable                                             | Effect                                                                                                                                                                  |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `REVIEW_GATE_DISABLED=1`                             | Turn the gate off                                                                                                                                                       |
+| `REVIEW_GATE_COMMAND`, `REVIEW_GATE_COMMAND_<AGENT>` | Review command named in the block reason (default `/code-review`; `/review` for Copilot CLI and Cursor)                                                                 |
+| `REVIEW_GATE_MODEL`, `REVIEW_GATE_MODEL_<AGENT>`     | Model the review should use, named in the block reason (advisory, not verified; empty asks for a model different from the session's and leaves the choice to the agent) |
+| `REVIEW_GATE_MAX_PROMPTS`                            | Review requests per session before the gate lets the agent stop (default 3)                                                                                             |
+| `HOOK_BLOCK_LIMIT`                                   | Times the same working-tree state is reported before the gate lets it pass (default 1 for this hook)                                                                    |
 
-`<AGENT>` is `CLAUDE`, `COPILOT` or `CURSOR`; the per-agent value wins over the shared one, and a set-but-empty `REVIEW_GATE_MODEL_<AGENT>` turns the model note off for that agent, while an empty `REVIEW_GATE_COMMAND_<AGENT>` falls back to the shared or default command.
+`<AGENT>` is `CLAUDE`, `COPILOT` or `CURSOR`; the per-agent value wins over the shared one, and a set-but-empty `REVIEW_GATE_MODEL_<AGENT>` stops naming a model for that agent (the agent then chooses a different model itself), while an empty `REVIEW_GATE_COMMAND_<AGENT>` falls back to the shared or default command.
 
 For detailed package contents (MCP servers, hooks, skills, instructions), see the [Specification](https://y-miyazaki.github.io/config/reference/specification/).
 

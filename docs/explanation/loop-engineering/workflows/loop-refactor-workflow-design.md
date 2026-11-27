@@ -150,11 +150,11 @@ Schedule: **`0 10 * * 0`** (Sunday 10:00 UTC, weekly), plus `workflow_dispatch` 
 
 ### Domain detect environment (`detect_env_json`)
 
-| JSON key / env var              | Description                                                 | Dogfood value                 |
-| ------------------------------- | ----------------------------------------------------------- | ----------------------------- |
-| `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` | `8`                           |
-| `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` (size only)  | `400`                         |
-| `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots                        | `.apm/packages/**,scripts/**` |
+| JSON key / env var              | Description                                                 | Dogfood value                                                                         |
+| ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` | `8`                                                                                   |
+| `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` (size only)  | `400`                                                                                 |
+| `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots                        | unset (all tracked files); `on-loop-refactor.yaml` sets `.apm/packages/**,scripts/**` |
 
 The prompt key `agent_edit_allowed` is not a caller input: the platform derives it from `level` (`true` at L2 and L3).
 

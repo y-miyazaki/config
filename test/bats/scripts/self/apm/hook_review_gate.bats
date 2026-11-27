@@ -13,7 +13,8 @@
 # - Cursor stop events get the followup_message format
 # - Copilot and Cursor use their own review command
 # - REVIEW_GATE_COMMAND_<AGENT> overrides the review command for one agent
-# - REVIEW_GATE_MODEL[_<AGENT>] names the review model in the reason and stays silent when empty
+# - REVIEW_GATE_MODEL[_<AGENT>] names the review model in the reason; when empty the reason asks for a different model and leaves the model choice to the agent
+# - the reason leaves the review depth to the agent in every case
 # - agent-managed synced files are not listed as changes, hand-edited settings are
 # - detect_agent names the agent from the event JSON
 # - every agent package ships the same script
@@ -130,6 +131,14 @@ _run_copilot() {
     [[ $output != *"with the model"* ]]
     _run_hook s4 false "REVIEW_GATE_MODEL=base-m REVIEW_GATE_MODEL_CLAUDE=claude-m"
     [[ $output == *"claude-m"* && $output != *"base-m"* ]]
+}
+
+@test "the reason leaves the review depth and, without REVIEW_GATE_MODEL, the model choice to the agent" {
+    _dirty
+    _run_hook s4b
+    [[ $output == *"different model than this session"* && $output == *"review depth"* ]]
+    _run_hook s4c false "REVIEW_GATE_MODEL=base-m"
+    [[ $output == *"with the model base-m"* && $output != *"different model than this session"* && $output == *"review depth"* ]]
 }
 
 @test "a hand-edited settings file counts as a change but a synced skill file does not" {

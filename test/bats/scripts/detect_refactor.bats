@@ -12,6 +12,9 @@
 # - detect_refactor.sh reports physical line ranges when blank lines separate blocks
 # - detect_refactor.sh prioritizes duplication_block hints before oversized_unit cap
 # - detect_refactor.sh reports oversized_unit when file exceeds line threshold
+# - detect_refactor.sh scans all tracked files when REFACTOR_SCAN_GLOBS is blank or unset
+# - detect_refactor.sh skips lockfiles when scanning all tracked files
+# - detect_refactor.sh scans the whole repository when run from a subdirectory
 # - detect_refactor.sh scans changed files for range scope with --since
 # - detect_refactor.sh scans staged files only for staged scope
 # - detect_refactor.sh reports oversized_unit for staged file in staged scope
@@ -302,6 +305,73 @@ EOF
     [ "$status" -eq 0 ]
     assert_detect_refactor_ok_json "${output}" "all"
     run jq -e '.skip == false and ([.hints[] | select(.kind == "oversized_unit")] | length) >= 1' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh scans all tracked files when REFACTOR_SCAN_GLOBS is blank" {
+    mkdir -p "${GIT_TEST_REPO}/other"
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 20); do
+            echo "echo unique_line_${i}"
+        done
+    } > "${GIT_TEST_REPO}/other/big.sh"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add big script"
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS=' , ' REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '[.hints[] | select(.path == "other/big.sh")] | length >= 1' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh scans all tracked files when REFACTOR_SCAN_GLOBS is unset" {
+    mkdir -p "${GIT_TEST_REPO}/other"
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 20); do
+            echo "echo unique_line_${i}"
+        done
+    } > "${GIT_TEST_REPO}/other/big.sh"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add big script"
+
+    git_test_repo_run "REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '[.hints[] | select(.path == "other/big.sh")] | length >= 1' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh skips lockfiles when scanning all tracked files" {
+    {
+        for i in $(seq 1 20); do
+            echo "locked_line_${i}: value"
+        done
+    } > "${GIT_TEST_REPO}/tool.lock.yaml"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add lockfile"
+
+    git_test_repo_run "REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '[.hints[] | select(.path == "tool.lock.yaml")] | length == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh scans the whole repository when run from a subdirectory" {
+    mkdir -p "${GIT_TEST_REPO}/other" "${GIT_TEST_REPO}/sub"
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 20); do
+            echo "echo unique_line_${i}"
+        done
+    } > "${GIT_TEST_REPO}/other/big.sh"
+    echo "x" > "${GIT_TEST_REPO}/sub/small.txt"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add files"
+
+    git_test_repo_run "cd sub && REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '[.hints[] | select(.path == "other/big.sh")] | length >= 1' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
