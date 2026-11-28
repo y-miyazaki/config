@@ -85,6 +85,12 @@ Every rule is mandatory.
 - In follow-up messages of the same exchange, refer back to an item by ID instead of repeating its text. The final Completion restates each item's text next to its ID, because it is read without the earlier messages.
 - Label the choices under a Q as O items and reference them by O-ID. O numbering runs across all questions of the conversation (Q1 offers O1 and O2, Q2 offers O3 and O4), so an O-ID is never ambiguous. An O can stand alone, for example a Request Evaluation alternative. Use A for one proposed step awaiting yes or no, and Q for an open question. Treat a reply such as `I2: fix, Q1: O2` as the answer to those items only.
 
+## Turn Structure
+
+- Finish a request in one turn (or one run, for non-interactive work): implement, run the tests that Accuracy and Verification requires, run the review the repository requires, and fix in-scope findings before reporting. Why: partial reports force the user to re-read and re-prompt, and each turn boundary can trigger another review request.
+- End the turn early only for a Stop and Ask item, a Request Evaluation alternative that needs the user's decision, or a non-interactive blocker (see Escalation).
+- When a review runs in the background, wait for its result in the same turn instead of reporting without it. If it fails or never returns, report the review as unavailable under Verification.
+
 ## Completion (state in the final response when files were changed or state-changing commands were run)
 
 1. **Implementation:** Overview of changes made.
