@@ -6,31 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-10-28T02:30:24Z","loop_name":"ci-sweeper","duration_s":50,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621232566","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T02:31:26Z","loop_name":"ci-sweeper","duration_s":48,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"40621267551","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","failure_stage":"finalize"}
-{"run_id":"2026-10-28T02:32:34Z","loop_name":"ci-sweeper","duration_s":53,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621356179","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T02:37:16Z","loop_name":"ci-sweeper","duration_s":49,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40621918169","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T02:38:24Z","loop_name":"ci-sweeper","duration_s":50,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"40621961640","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","failure_stage":"finalize"}
-{"run_id":"2026-10-28T02:39:35Z","loop_name":"ci-sweeper","duration_s":56,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"40622004143","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success","failure_stage":"finalize"}
-{"run_id":"2026-10-28T04:36:25Z","loop_name":"ci-sweeper","duration_s":53,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40633179218","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T04:37:00Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633179287"}
-{"run_id":"2026-10-28T04:37:36Z","loop_name":"ci-sweeper","duration_s":21,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633249249"}
-{"run_id":"2026-10-28T04:38:41Z","loop_name":"ci-sweeper","duration_s":18,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633438990"}
-{"run_id":"2026-10-28T04:39:38Z","loop_name":"ci-sweeper","duration_s":47,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40633446160","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T04:40:10Z","loop_name":"ci-sweeper","duration_s":18,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633495027"}
-{"run_id":"2026-10-28T04:41:49Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633735728"}
-{"run_id":"2026-10-28T04:42:57Z","loop_name":"ci-sweeper","duration_s":57,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40633736085","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T04:43:32Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40633805512"}
-{"run_id":"2026-10-28T06:53:10Z","loop_name":"ci-sweeper","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40646551647"}
-{"run_id":"2026-10-28T06:53:34Z","loop_name":"ci-sweeper","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40646572009"}
-{"run_id":"2026-10-28T06:54:09Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40646651933"}
-{"run_id":"2026-10-28T09:13:20Z","loop_name":"ci-sweeper","duration_s":57,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40662414891","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-10-28T09:14:47Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40662692965"}
-{"run_id":"2026-10-28T09:42:43Z","loop_name":"ci-sweeper","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40666326176"}
-{"run_id":"2026-10-28T18:24:27Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40744747224"}
-{"run_id":"2026-10-28T21:41:44Z","loop_name":"ci-sweeper","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774017986"}
-{"run_id":"2026-10-28T21:43:58Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774311555"}
-{"run_id":"2026-10-28T21:44:52Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40774424007"}
 {"run_id":"2026-10-29T06:40:06Z","loop_name":"ci-sweeper","duration_s":53,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"40830491617","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-29T06:40:37Z","loop_name":"ci-sweeper","duration_s":19,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40830506297"}
 {"run_id":"2026-10-29T06:41:08Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"40830542697"}
@@ -365,3 +340,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-11-27T10:27:19Z","loop_name":"ci-sweeper","duration_s":21,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"45982174483","skip_detail":"integration:main: consecutive_failures 3"}
 {"run_id":"2026-11-27T10:48:42Z","loop_name":"ci-sweeper","duration_s":23,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"45985159024","skip_detail":"integration:main: consecutive_failures 3"}
 {"run_id":"2026-11-27T12:15:09Z","loop_name":"github-issue-autofix","duration_s":25,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"45997000378","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
+{"run_id":"2026-11-28T12:12:32Z","loop_name":"github-issue-autofix","duration_s":24,"outcome":"skipped","skip_reason":"no_changes","tokens_total":0,"workflow_run":"46143466105","skip_detail":"integration:main: github-issue-autofix: no eligible Issues"}
