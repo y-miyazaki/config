@@ -16,7 +16,8 @@
 # - --help succeeds; unknown options, malformed --min-age-days, and malformed --vscode-version fail
 # - --registry openvsx reads versions and publish dates from the Open VSX API, skips pre-release and undated versions, and defaults to the Cursor example
 # - --registry openvsx adopts a version published exactly 7 days ago and skips one a second younger
-# - --registry rejects an unknown value; --registry openvsx rejects --vscode-version
+# - --registry rejects an unknown value
+# - --registry openvsx with --vscode-version skips versions whose engines.vscode minimum is newer (equal is allowed); without it engines.vscode is ignored
 # - --registry openvsx keeps the pin and exits 1 when the API request fails
 # - without a FILE argument only the VS Code example (env/example/.devcontainer/vscode/devcontainer.json) is targeted
 
@@ -103,13 +104,15 @@ openvsx_fixture() {
     printf '%s' "$2" > "${FIXTURE_DIR}/openvsx/$1"
 }
 
-# openvsx_detail <namespace/name> <version> <timestamp|-> <prerelease>: serve one version detail.
+# openvsx_detail <namespace/name> <version> <timestamp|-> <prerelease> [engines.vscode]: serve one version detail.
 openvsx_detail() {
     local key="${1//\//_}_$2"
+    local engines=""
+    [[ -z ${5:-} ]] || engines=",\"engines\":{\"vscode\":\"$5\"}"
     if [[ $3 == "-" ]]; then
-        openvsx_fixture "${key}" "{\"version\":\"$2\",\"preRelease\":$4}"
+        openvsx_fixture "${key}" "{\"version\":\"$2\",\"preRelease\":$4${engines}}"
     else
-        openvsx_fixture "${key}" "{\"version\":\"$2\",\"timestamp\":\"$3\",\"preRelease\":$4}"
+        openvsx_fixture "${key}" "{\"version\":\"$2\",\"timestamp\":\"$3\",\"preRelease\":$4${engines}}"
     fi
 }
 
@@ -152,12 +155,6 @@ EOF
     run bash "${PIN_SCRIPT}" --min-age-days 7d "${DEVCONTAINER}"
     [ "${status}" -eq 1 ]
     [[ ${output} == *"--min-age-days needs a non-negative integer"* ]]
-}
-
-@test "--registry openvsx rejects --vscode-version" {
-    run bash "${PIN_SCRIPT}" --registry openvsx --vscode-version 1.106.0 "${DEVCONTAINER}"
-    [ "${status}" -eq 1 ]
-    [[ ${output} == *"--vscode-version applies to --registry marketplace only"* ]]
 }
 
 @test "--registry rejects an unknown value" {
@@ -293,6 +290,58 @@ EOF
     run bash "${PIN_SCRIPT}" --registry openvsx --dry-run
     [[ ${output} == *"env/example/.devcontainer/cursor/devcontainer.json: "* ]]
     [[ ${output} != *"/vscode/devcontainer.json"* ]]
+}
+
+@test "openvsx with --vscode-version keeps the pin and exits 1 when every version needs a newer VS Code" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "a.new@1.0.0"
+] } } }
+EOF
+    openvsx_fixture "a_new_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/new" "1.1.0" "2026-10-01T00:00:00Z" false "^1.100.0"
+    run bash "${PIN_SCRIPT}" --registry openvsx --vscode-version 1.99.3 "${DEVCONTAINER}"
+    [ "${status}" -eq 1 ]
+    [[ ${output} == *"a.new 1.0.0 (no stable Open VSX version found; unchanged)"* ]]
+    grep -q '"a.new@1.0.0"' "${DEVCONTAINER}"
+}
+
+@test "openvsx with --vscode-version skips versions that need a newer VS Code and allows an equal minimum" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "a.skip@1.0.0",
+  "a.equal@1.0.0",
+  "a.plain@1.0.0"
+] } } }
+EOF
+    openvsx_fixture "a_skip_versions_size_20" '{"versions":{"1.3.0":"u","1.2.0":"u"}}'
+    openvsx_detail "a/skip" "1.3.0" "2026-10-01T00:00:00Z" false "^1.100.0"
+    openvsx_detail "a/skip" "1.2.0" "2026-10-01T00:00:00Z" false "^1.99.0"
+    openvsx_fixture "a_equal_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/equal" "1.1.0" "2026-10-01T00:00:00Z" false ">=1.99.3"
+    openvsx_fixture "a_plain_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/plain" "1.1.0" "2026-10-01T00:00:00Z" false
+    run bash "${PIN_SCRIPT}" --registry openvsx --vscode-version 1.99.3 --dry-run "${DEVCONTAINER}"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *"a.skip 1.0.0 -> 1.2.0"* ]]
+    [[ ${output} == *"a.equal 1.0.0 -> 1.1.0"* ]]
+    [[ ${output} == *"a.plain 1.0.0 -> 1.1.0"* ]]
+}
+
+@test "openvsx without --vscode-version ignores engines.vscode" {
+    use_openvsx_stub
+    cat > "${DEVCONTAINER}" << 'EOF'
+{ "customizations": { "vscode": { "extensions": [
+  "a.new@1.0.0"
+] } } }
+EOF
+    openvsx_fixture "a_new_versions_size_20" '{"versions":{"1.1.0":"u"}}'
+    openvsx_detail "a/new" "1.1.0" "2026-10-01T00:00:00Z" false "^1.200.0"
+    run bash "${PIN_SCRIPT}" --registry openvsx --dry-run "${DEVCONTAINER}"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *"a.new 1.0.0 -> 1.1.0"* ]]
 }
 
 @test "pinned entries move to the highest stable version and skip pre-release" {

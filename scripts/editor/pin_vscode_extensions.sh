@@ -15,9 +15,10 @@
 #     openvsx updates the Cursor example; the two registries publish different versions, so never mix pins
 #   - marketplace: one extensionquery POST covers every pinned ID
 #   - openvsx: one versions request per ID, then one detail request per candidate among the newest
-#     OPENVSX_CANDIDATES versions (the detail holds the publish date and the pre-release flag)
-#   - Pre-release versions are skipped; with --vscode-version (marketplace only), versions whose
-#     engines.vscode minimum is newer than that VS Code version are skipped too
+#     OPENVSX_CANDIDATES versions (the detail holds the publish date, the pre-release flag and engines.vscode)
+#   - Pre-release versions are skipped; with --vscode-version (either registry), versions whose
+#     engines.vscode minimum is newer than that VS Code version are skipped too (for openvsx pass
+#     the VS Code version Cursor is based on)
 #   - Versions published less than --min-age-days ago (default 7, matching Renovate
 #     minimumReleaseAge) are skipped; versions without a publish date are skipped too
 #   - A pin is never downgraded: a pin newer than every allowed version stays unchanged
@@ -96,12 +97,14 @@ Options:
   --dry-run               Report updates without rewriting files
   --min-age-days N        Skip versions published less than N days ago (default: ${MIN_AGE_DAYS}; 0 disables)
   --registry NAME         marketplace (VS Code, default) or openvsx (Cursor)
-  --vscode-version X.Y.Z  Skip versions whose engines.vscode needs a newer VS Code (marketplace only)
+  --vscode-version X.Y.Z  Skip versions whose engines.vscode needs a newer VS Code
+                          (for openvsx: the VS Code version Cursor is based on)
 
 Examples:
   bash scripts/editor/pin_vscode_extensions.sh --dry-run
   bash scripts/editor/pin_vscode_extensions.sh --registry openvsx
   bash scripts/editor/pin_vscode_extensions.sh --vscode-version 1.106.0
+  bash scripts/editor/pin_vscode_extensions.sh --registry openvsx --vscode-version 1.99.3
   bash scripts/editor/pin_vscode_extensions.sh --min-age-days 0
   bash scripts/editor/pin_vscode_extensions.sh .devcontainer/devcontainer.json
 EOF
@@ -128,8 +131,7 @@ EOF
 #   Error messages to stderr
 #
 # Returns:
-#   Exits 1 on unknown options, an invalid --min-age-days, --registry, or --vscode-version,
-#   or --vscode-version combined with --registry openvsx
+#   Exits 1 on unknown options or an invalid --min-age-days, --registry, or --vscode-version
 #
 #######################################
 function parse_arguments {
@@ -176,10 +178,6 @@ function parse_arguments {
                 ;;
         esac
     done
-    if [[ ${REGISTRY} == "openvsx" && -n ${VSCODE_VERSION} ]]; then
-        echo "--vscode-version applies to --registry marketplace only" >&2
-        exit 1
-    fi
 }
 
 #######################################
@@ -298,15 +296,16 @@ function latest_version {
 #
 # Description:
 #   Lists the newest OPENVSX_CANDIDATES versions of the extension, reads the detail of each,
-#   drops pre-release versions and versions published within MIN_AGE_DAYS (or without a publish
-#   date), and prints the highest remaining version. The engines.vscode range is not evaluated:
-#   Cursor's VS Code base version differs from the one in --vscode-version.
+#   drops pre-release versions, versions published within MIN_AGE_DAYS (or without a publish
+#   date), and versions rejected by engine_allows, and prints the highest remaining version.
+#   VSCODE_VERSION must then be the VS Code version Cursor is based on.
 #
 # Globals:
 #   MIN_AGE_DAYS      - Minimum age in days of an adopted version
 #   NOW_EPOCH         - Current time in epoch seconds
 #   OPENVSX_CANDIDATES - Number of newest versions inspected
 #   OPENVSX_URL       - Open VSX API base URL
+#   VSCODE_VERSION    - Passed to engine_allows
 #
 # Arguments:
 #   $1 - Extension ID (publisher.name)
@@ -322,7 +321,7 @@ function openvsx_latest_version {
     local id="$1"
     local namespace="${id%%.*}"
     local name="${id#*.}"
-    local version old_enough
+    local version old_enough engine detail
     local -a candidates=() versions=()
 
     mapfile -t versions < <(curl -fsS --max-time 60 "${OPENVSX_URL}/${namespace}/${name}/versions?size=${OPENVSX_CANDIDATES}" \
@@ -330,13 +329,18 @@ function openvsx_latest_version {
 
     for version in "${versions[@]}"; do
         [[ ${version} =~ ^[A-Za-z0-9.+_-]+$ ]] || continue
-        old_enough="$(curl -fsS --max-time 60 "${OPENVSX_URL}/${namespace}/${name}/${version}" \
+        detail="$(curl -fsS --max-time 60 "${OPENVSX_URL}/${namespace}/${name}/${version}" \
             | jq -r --argjson cutoff "$((NOW_EPOCH - MIN_AGE_DAYS * 86400))" '
-                if .preRelease == true then "false"
-                else ((.timestamp // "" | sub("\\.[0-9]+"; "") | try fromdateiso8601 catch null) as $t
-                    | if $t == null then "false" else ($t <= $cutoff | tostring) end)
-                end')" || continue
-        [[ ${old_enough} == "true" ]] && candidates+=("${version}")
+                (if .preRelease == true then "false"
+                 else ((.timestamp // "" | sub("\\.[0-9]+"; "") | try fromdateiso8601 catch null) as $t
+                     | if $t == null then "false" else ($t <= $cutoff | tostring) end)
+                 end) as $ok
+                | [$ok, (.engines.vscode? // "" | tostring)]
+                | join("\u001f")')" || continue
+        IFS=$'\x1f' read -r old_enough engine <<< "${detail}"
+        [[ ${old_enough} == "true" ]] || continue
+        engine_allows "${engine}" "${VSCODE_VERSION}" || continue
+        candidates+=("${version}")
     done
 
     [[ ${#candidates[@]} -gt 0 ]] || return 1
